@@ -378,3 +378,8 @@ audit/
 
 # Vitest
 coverage/
+
+# Framing detector experiment outputs
+data/cache/
+audit/framing-validator/
+.pytest_cache/
