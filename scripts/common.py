@@ -10,7 +10,7 @@ Key design points (production-quality, 2026-05-14 refactor):
     API record fetches stay sequential (so we respect per-API rate limits
     while still saturating CDN throughput).
   * Manifest writer auto-migrates schema on init.
-  * Filename convention: {source_id}_{source}_{subject_type}_{name}.jpg
+  * Filename convention: {source_id}_{source}_{subject_state}_{name}.jpg
 """
 from __future__ import annotations
 import csv
@@ -55,8 +55,15 @@ MANIFEST_FIELDS = [
     "license", "license_url",
     "photographer_attribution", "photographer", "institution",
     "taxon_order", "taxon_species", "common_name",
-    "subject_type", "view_label",
+    # Classification — DwC-aligned: wild / captive / specimen
+    "subject_state", "view_label",
+    # Biology extracted from source metadata (annotations / descriptors).
+    "life_stage", "sex", "host_organism", "specimen_condition",
+    # Context
     "description", "captured_date",
+    # Full raw API response (JSON string); populated by fetchers and
+    # backfilled by scripts/backfill_metadata.py.
+    "raw_metadata",
 ]
 
 
@@ -178,12 +185,12 @@ def name_for_filename(common_name: str, scientific: str) -> str:
     return n
 
 
-def build_filename(source: str, source_id: str, subject_type: str,
+def build_filename(source: str, source_id: str, subject_state: str,
                    common_name: str, scientific: str,
                    suffix_hint: str = "") -> str:
     sid = slugify(source_id)
     src = slugify(source)
-    st = slugify(subject_type)
+    st = slugify(subject_state)
     name = name_for_filename(common_name, scientific)
     parts = [sid, src, st]
     if name:
@@ -358,7 +365,7 @@ class ConsecutiveFailureGuard:
 
 def manifest_count_by(mw_path: Path, *fields: str) -> Counter:
     """Group-by count of an existing manifest. e.g.,
-    manifest_count_by(p, 'license', 'subject_type')."""
+    manifest_count_by(p, 'license', 'subject_state')."""
     out: Counter = Counter()
     if not mw_path.exists():
         return out
@@ -417,9 +424,6 @@ class ManifestWriter:
         if row["image_id"] in self.seen:
             return False
         self.seen.add(row["image_id"])
-        for k in ("description", "photographer_attribution"):
-            if row.get(k):
-                row[k] = str(row[k])[:1000]
         for f in MANIFEST_FIELDS:
             row.setdefault(f, "")
         self.w.writerow(row)

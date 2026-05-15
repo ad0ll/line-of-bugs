@@ -15,8 +15,22 @@ import { integer, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
 
 // ──────────────────────────── images ────────────────────────────
 
-export const subjectTypes = ["nature", "specimen"] as const;
-export type SubjectType = (typeof subjectTypes)[number];
+/**
+ * Maps to Darwin Core `basisOfRecord`:
+ *   wild     ↔ HumanObservation (alive, natural habitat)
+ *   captive  ↔ LivingSpecimen   (alive, human care; zoo/lab/garden)
+ *   specimen ↔ PreservedSpecimen (mounted/dried/pinned)
+ */
+export const subjectStates = ["wild", "captive", "specimen"] as const;
+export type SubjectState = (typeof subjectStates)[number];
+
+export const lifeStages = [
+  "adult", "nymph", "larva", "pupa", "egg", "cocoon", "juvenile", "unknown",
+] as const;
+export type LifeStage = (typeof lifeStages)[number];
+
+export const sexes = ["male", "female", "worker", "unknown"] as const;
+export type Sex = (typeof sexes)[number];
 
 export const sources = ["inaturalist", "bugwood", "smithsonian", "usda-ars"] as const;
 export type Source = (typeof sources)[number];
@@ -35,8 +49,7 @@ export const images = sqliteTable(
     imageUrl: text("image_url").notNull(),
     filename: text("filename").notNull(),
     thumbnailFilename: text("thumbnail_filename").notNull(),
-    // 1024-max-edge JPEG q88 — used by gallery hover preview to limit
-    // bandwidth (especially for the EU-served deployment).
+    // 1024-max-edge JPEG q88 — used by the gallery hover-zoom preview.
     mediumFilename: text("medium_filename").notNull(),
 
     // File facts
@@ -59,13 +72,23 @@ export const images = sqliteTable(
     taxonSpecies: text("taxon_species"),
     commonName: text("common_name"),
 
-    // Classification
-    subjectType: text("subject_type", { enum: subjectTypes }).notNull(),
+    // Classification — DwC-aligned (see subjectStates docstring above)
+    subjectState: text("subject_state", { enum: subjectStates }).notNull(),
     viewLabel: text("view_label"),
+    // Biology extracted from source metadata (iNat annotations, Bugwood descriptor/gender).
+    // Nullable — most older iNat photos won't have these.
+    lifeStage: text("life_stage", { enum: lifeStages }),
+    sex: text("sex", { enum: sexes }),
+    // Bugwood-only structured extras.
+    hostOrganism: text("host_organism"),
+    specimenCondition: text("specimen_condition"),
 
     // Context
     description: text("description"),
     capturedDate: text("captured_date"),
+    // Full raw API response (JSON string) from the source. Lossless archive
+    // for future re-analysis. Backfilled by scripts/backfill_metadata.py.
+    rawMetadata: text("raw_metadata"),
 
     // Bookkeeping
     hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
@@ -80,9 +103,13 @@ export const images = sqliteTable(
     // Filters
     index("idx_images_collection").on(t.collectionId),
     index("idx_images_source").on(t.source),
-    index("idx_images_subject_type").on(t.subjectType),
+    index("idx_images_subject_state").on(t.subjectState),
     index("idx_images_institution").on(t.institution),
     index("idx_images_taxon_order").on(t.taxonOrder),
+    index("idx_images_license").on(t.license),
+    index("idx_images_view_label").on(t.viewLabel),
+    index("idx_images_life_stage").on(t.lifeStage),
+    index("idx_images_sex").on(t.sex),
     // Non-unique: same content may exist under different image_ids
     // (e.g., one photographer's image pulled via both iNat and Bugwood).
     // The manifest already dedups by image_id; sha256 here is for audit only.

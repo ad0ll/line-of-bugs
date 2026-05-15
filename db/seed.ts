@@ -43,10 +43,15 @@ function rowFromCsv(r: Record<string, string>): schema.NewImage {
     taxonOrder: r.taxon_order || null,
     taxonSpecies: r.taxon_species || null,
     commonName: r.common_name || null,
-    subjectType: r.subject_type as schema.SubjectType,
+    subjectState: r.subject_state as schema.SubjectState,
     viewLabel: r.view_label || null,
+    lifeStage: (r.life_stage || null) as schema.LifeStage | null,
+    sex: (r.sex || null) as schema.Sex | null,
+    hostOrganism: r.host_organism || null,
+    specimenCondition: r.specimen_condition || null,
     description: r.description || null,
     capturedDate: r.captured_date || null,
+    rawMetadata: r.raw_metadata || null,
   };
 }
 
@@ -101,10 +106,15 @@ async function main() {
                 taxonOrder: row.taxonOrder,
                 taxonSpecies: row.taxonSpecies,
                 commonName: row.commonName,
-                subjectType: row.subjectType,
+                subjectState: row.subjectState,
                 viewLabel: row.viewLabel,
+                lifeStage: row.lifeStage,
+                sex: row.sex,
+                hostOrganism: row.hostOrganism,
+                specimenCondition: row.specimenCondition,
                 description: row.description,
                 capturedDate: row.capturedDate,
+                rawMetadata: row.rawMetadata,
               },
             })
             .run();
