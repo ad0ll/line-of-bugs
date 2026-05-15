@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Zen_Maru_Gothic, JetBrains_Mono, Fraunces } from "next/font/google";
+import { ReactQueryProvider } from "./providers/ReactQueryProvider";
 import "./globals.css";
 
 const sans = Zen_Maru_Gothic({
@@ -38,7 +39,9 @@ export default function RootLayout({
       lang="en"
       className={`${sans.variable} ${mono.variable} ${display.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <ReactQueryProvider>{children}</ReactQueryProvider>
+      </body>
     </html>
   );
 }
