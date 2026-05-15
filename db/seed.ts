@@ -10,7 +10,7 @@
  *   npx tsx db/seed.ts             # all sources
  *   npx tsx db/seed.ts inaturalist # specific source(s)
  */
-import { parse } from "csv-parse/sync";
+import { parse } from "csv-parse";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -18,6 +18,7 @@ import { db, schema } from "./index";
 
 const MANIFEST_DIR = path.resolve("data/manifest");
 const ALL_SOURCES = ["inaturalist", "bugwood", "smithsonian", "usda_ars"] as const;
+const CHUNK = 500;
 
 // CSV column name → schema field (snake_case → camelCase)
 function rowFromCsv(r: Record<string, string>): schema.NewImage {
@@ -55,14 +56,82 @@ function rowFromCsv(r: Record<string, string>): schema.NewImage {
   };
 }
 
-function loadCsv(file: string): schema.NewImage[] {
-  const text = fs.readFileSync(file, "utf8");
-  const records = parse(text, {
-    columns: true,
-    skip_empty_lines: true,
-    relax_column_count: true,
-  }) as Record<string, string>[];
-  return records.map(rowFromCsv);
+function upsertChunk(batch: schema.NewImage[]) {
+  db.transaction((tx) => {
+    for (const row of batch) {
+      tx.insert(schema.images)
+        .values(row)
+        .onConflictDoUpdate({
+          target: schema.images.imageId,
+          set: {
+            collectionId: row.collectionId,
+            sourcePageUrl: row.sourcePageUrl,
+            imageUrl: row.imageUrl,
+            filename: row.filename,
+            thumbnailFilename: row.thumbnailFilename,
+            mediumFilename: row.mediumFilename,
+            fileSizeBytes: row.fileSizeBytes,
+            fileSha256: row.fileSha256,
+            width: row.width,
+            height: row.height,
+            license: row.license,
+            licenseUrl: row.licenseUrl,
+            photographerAttribution: row.photographerAttribution,
+            photographer: row.photographer,
+            institution: row.institution,
+            taxonOrder: row.taxonOrder,
+            taxonSpecies: row.taxonSpecies,
+            commonName: row.commonName,
+            subjectState: row.subjectState,
+            viewLabel: row.viewLabel,
+            lifeStage: row.lifeStage,
+            sex: row.sex,
+            hostOrganism: row.hostOrganism,
+            specimenCondition: row.specimenCondition,
+            description: row.description,
+            capturedDate: row.capturedDate,
+            rawMetadata: row.rawMetadata,
+          },
+        })
+        .run();
+    }
+  });
+}
+
+// Stream-parse the CSV instead of readFileSync because manifests with
+// raw_metadata can exceed V8's string size limit (~512 MB).
+async function seedSource(src: string): Promise<number> {
+  const file = path.join(MANIFEST_DIR, `${src}.csv`);
+  if (!fs.existsSync(file)) {
+    console.warn(`  missing manifest: ${file}`);
+    return 0;
+  }
+  return new Promise((resolve, reject) => {
+    const parser = fs.createReadStream(file).pipe(
+      parse({
+        columns: true,
+        skip_empty_lines: true,
+        relax_column_count: true,
+        max_record_size: 4 * 1024 * 1024, // 4 MB per row — fits iNat raw_metadata
+      }),
+    );
+    let buffer: schema.NewImage[] = [];
+    let count = 0;
+    parser.on("data", (rec: Record<string, string>) => {
+      buffer.push(rowFromCsv(rec));
+      count++;
+      if (buffer.length >= CHUNK) {
+        const chunk = buffer;
+        buffer = [];
+        upsertChunk(chunk);
+      }
+    });
+    parser.on("end", () => {
+      if (buffer.length) upsertChunk(buffer);
+      resolve(count);
+    });
+    parser.on("error", reject);
+  });
 }
 
 async function main() {
@@ -71,58 +140,9 @@ async function main() {
 
   let total = 0;
   for (const src of sources) {
-    const file = path.join(MANIFEST_DIR, `${src}.csv`);
-    if (!fs.existsSync(file)) {
-      console.warn(`  missing manifest: ${file}`);
-      continue;
-    }
-    const rows = loadCsv(file);
-    // Upsert in chunks of 500 inside a single transaction per chunk
-    const CHUNK = 500;
-    for (let i = 0; i < rows.length; i += CHUNK) {
-      const batch = rows.slice(i, i + CHUNK);
-      db.transaction((tx) => {
-        for (const row of batch) {
-          tx.insert(schema.images)
-            .values(row)
-            .onConflictDoUpdate({
-              target: schema.images.imageId,
-              set: {
-                collectionId: row.collectionId,
-                sourcePageUrl: row.sourcePageUrl,
-                imageUrl: row.imageUrl,
-                filename: row.filename,
-                thumbnailFilename: row.thumbnailFilename,
-                mediumFilename: row.mediumFilename,
-                fileSizeBytes: row.fileSizeBytes,
-                fileSha256: row.fileSha256,
-                width: row.width,
-                height: row.height,
-                license: row.license,
-                licenseUrl: row.licenseUrl,
-                photographerAttribution: row.photographerAttribution,
-                photographer: row.photographer,
-                institution: row.institution,
-                taxonOrder: row.taxonOrder,
-                taxonSpecies: row.taxonSpecies,
-                commonName: row.commonName,
-                subjectState: row.subjectState,
-                viewLabel: row.viewLabel,
-                lifeStage: row.lifeStage,
-                sex: row.sex,
-                hostOrganism: row.hostOrganism,
-                specimenCondition: row.specimenCondition,
-                description: row.description,
-                capturedDate: row.capturedDate,
-                rawMetadata: row.rawMetadata,
-              },
-            })
-            .run();
-        }
-      });
-    }
-    console.log(`  ${src.padEnd(14)} seeded ${rows.length} rows`);
-    total += rows.length;
+    const n = await seedSource(src);
+    console.log(`  ${src.padEnd(14)} seeded ${n} rows`);
+    total += n;
   }
 
   // Quick sanity check

@@ -62,7 +62,10 @@ def build_html_for_variant(
             "gt_iou": row["gt_iou"],
             "common_name": mrow.get("common_name", ""),
             "taxon_species": mrow.get("taxon_species", ""),
-            "original_path": mrow.get("filename", ""),
+            # Resolved relative to the HTML's location (audit/framing-validator/<file>.html).
+            # Manifest stores filenames as "images/<file>.jpg" relative to data/, so we go up
+            # two levels then into data/. Crops live next to the HTML.
+            "original_path": f"../../data/{mrow.get('filename', '')}",
             "crop_path": crop_path,
         })
         sources.add(row["source"])
@@ -74,7 +77,10 @@ def build_html_for_variant(
     html = template_text.replace("{{ variant }}", variant)
     html = html.replace("{{ data_json }}", json.dumps(records))
     html = html.replace("{{ total }}", str(len(records)))
-    html = html.replace("{{ root }}", "../..")
+    # ROOT is no longer prepended to image URLs — original_path and crop_path are
+    # already resolved relative to the HTML's location. Keep ROOT="" for backward
+    # compat in case the template still references it.
+    html = html.replace("{{ root }}", "")
     html = html.replace(
         '{% for s in sources %}<option value="{{ s }}">{{ s }}</option>{% endfor %}',
         sources_html,
