@@ -1,0 +1,206 @@
+"""Pipeline orchestrator for the framing experiment (V1)."""
+from __future__ import annotations
+import time
+from pathlib import Path
+
+import numpy as np
+import pyarrow as pa
+import pyarrow.parquet as pq
+import torch
+from PIL import Image
+
+from scripts.detect_subjects.caches import load_completed_pairs
+from scripts.detect_subjects.classify import classify_framing
+from scripts.detect_subjects.config import (
+    CROPS_DIR,
+    DATA_DIR,
+    DINO_MODEL_ID,
+    INSECTSAM_MODEL_ID,
+    PARQUET_PATH,
+    PARQUET_WRITE_BATCH,
+    SCHEMA_VERSION,
+)
+from scripts.detect_subjects.crop import compute_crop_bbox, save_medium_and_thumb
+from scripts.detect_subjects.detector_dino import GroundingDinoDetector
+from scripts.detect_subjects.ground_truth import GroundTruthIndex, lookup_gt_bbox
+from scripts.detect_subjects.metrics import (
+    bbox_area_ratio_normalized,
+    boundary_sharpness,
+    iou_xywh_normalized,
+    lab_delta_e_mask_vs_background,
+    offcenter_normalized,
+)
+from scripts.detect_subjects.schema import (
+    DetectionRow,
+    SCHEMA,
+    row_to_pyarrow_record,
+)
+from scripts.detect_subjects.segmenter_insectsam import InsectSAMSegmenter
+
+V1_NAME = "v1_dino_insectsam"
+
+
+def _image_path_for(row: dict) -> Path:
+    return DATA_DIR / row["filename"]
+
+
+def _now_ms() -> int:
+    return int(time.time() * 1000)
+
+
+def _flush_records(records: list[dict], parquet_path: Path) -> None:
+    """Append records to the parquet file via read-concat-rewrite."""
+    new_table = pa.Table.from_pylist(records, schema=SCHEMA)
+    if parquet_path.exists():
+        existing = pq.read_table(parquet_path)
+        combined = pa.concat_tables([existing, new_table])
+    else:
+        combined = new_table
+    pq.write_table(combined, parquet_path, compression="snappy")
+
+
+def run_v1_on_sample(
+    sample_rows: list[dict],
+    gt_index: GroundTruthIndex | None = None,
+    parquet_path: Path = PARQUET_PATH,
+    device: str = "mps",
+    dtype: torch.dtype = torch.float16,
+) -> dict:
+    """Run V1 (DINO + InsectSAM) over every row in sample_rows."""
+    completed = load_completed_pairs(parquet_path)
+    to_process = [r for r in sample_rows
+                  if (r["image_id"], V1_NAME) not in completed]
+    print(f"[v1] {len(sample_rows)} total, {len(completed)} cached, "
+          f"{len(to_process)} to process")
+
+    detector = GroundingDinoDetector(device=device, dtype=dtype)
+    segmenter = InsectSAMSegmenter(device=device, dtype=dtype)
+
+    CROPS_DIR.joinpath(V1_NAME).mkdir(parents=True, exist_ok=True)
+
+    pending_records: list[dict] = []
+    summary = {"processed": 0, "errors": 0, "elapsed_s": 0.0}
+    t_start = time.perf_counter()
+
+    for i, row in enumerate(to_process):
+        try:
+            image_id = row["image_id"]
+            source = row["source"]
+            subject_state = row.get("subject_state") or "wild"
+            img_path = _image_path_for(row)
+            if not img_path.exists():
+                print(f"[v1] WARN missing image {img_path}")
+                continue
+
+            with Image.open(img_path) as im:
+                im = im.convert("RGB")
+                W, H = im.size
+
+                det = detector.detect(im)
+
+                seg = None
+                mask = None
+                if det.bbox_xywh_normalized is not None:
+                    seg = segmenter.segment_with_bbox(image_id, im,
+                                                      det.bbox_xywh_normalized)
+                    mask = seg.mask
+
+                bbox_area = None
+                offc = None
+                if det.bbox_xywh_normalized is not None:
+                    bx, by, bw, bh = det.bbox_xywh_normalized
+                    bbox_area = bbox_area_ratio_normalized(bw, bh)
+                    offc = offcenter_normalized(bx, by, bw, bh)
+
+                mask_area = None
+                mask_iou = seg.iou_score if seg else None
+                d_e = None
+                sharp = None
+                if mask is not None and mask.any():
+                    rgb_np = np.array(im)
+                    mask_area = float(mask.sum()) / float(mask.size)
+                    d_e = lab_delta_e_mask_vs_background(rgb_np, mask)
+                    sharp = boundary_sharpness(rgb_np, mask)
+
+                crop_x = crop_y = crop_w = crop_h = None
+                post_area = None
+                if det.bbox_xywh_normalized is not None:
+                    cd = compute_crop_bbox(
+                        bbox_x=det.bbox_xywh_normalized[0],
+                        bbox_y=det.bbox_xywh_normalized[1],
+                        bbox_w=det.bbox_xywh_normalized[2],
+                        bbox_h=det.bbox_xywh_normalized[3],
+                        subject_state=subject_state,
+                    )
+                    crop_x, crop_y, crop_w, crop_h = (
+                        cd.crop_x, cd.crop_y, cd.crop_w, cd.crop_h)
+                    post_area = cd.post_crop_subject_area
+                    if not cd.skip:
+                        save_medium_and_thumb(
+                            im,
+                            (crop_x, crop_y, crop_w, crop_h),
+                            CROPS_DIR / V1_NAME / f"{image_id}.jpg",
+                            CROPS_DIR / V1_NAME / f"{image_id}_thumb.jpg",
+                        )
+
+                quality = classify_framing(
+                    confidence=det.confidence,
+                    bbox_area_ratio=bbox_area,
+                    n_distinct_detections=det.n_distinct_detections,
+                    mask_area_ratio=mask_area,
+                    lab_delta_e=d_e,
+                )
+
+                gt_bbox = lookup_gt_bbox(gt_index, image_id)
+                gt_iou = None
+                if gt_bbox is not None and det.bbox_xywh_normalized is not None:
+                    gt_iou = iou_xywh_normalized(det.bbox_xywh_normalized, gt_bbox)
+
+                dr = DetectionRow(
+                    image_id=image_id, source=source, variant=V1_NAME,
+                    img_w=W, img_h=H, subject_state=subject_state,
+                    n_raw_detections=det.n_raw_detections,
+                    n_distinct_detections=det.n_distinct_detections,
+                    bbox_x=det.bbox_xywh_normalized[0] if det.bbox_xywh_normalized else None,
+                    bbox_y=det.bbox_xywh_normalized[1] if det.bbox_xywh_normalized else None,
+                    bbox_w=det.bbox_xywh_normalized[2] if det.bbox_xywh_normalized else None,
+                    bbox_h=det.bbox_xywh_normalized[3] if det.bbox_xywh_normalized else None,
+                    confidence=det.confidence,
+                    bbox_area_ratio=bbox_area, offcenter=offc,
+                    mask_area_ratio=mask_area, mask_iou_score=mask_iou,
+                    lab_delta_e=d_e, boundary_sharpness=sharp,
+                    crop_x=crop_x, crop_y=crop_y, crop_w=crop_w, crop_h=crop_h,
+                    post_crop_subject_area=post_area,
+                    framing_quality=quality,
+                    gt_bbox_x=gt_bbox[0] if gt_bbox else None,
+                    gt_bbox_y=gt_bbox[1] if gt_bbox else None,
+                    gt_bbox_w=gt_bbox[2] if gt_bbox else None,
+                    gt_bbox_h=gt_bbox[3] if gt_bbox else None,
+                    gt_iou=gt_iou,
+                    detection_ms=det.detection_ms,
+                    segmentation_ms=seg.segmentation_ms if seg else None,
+                    detector_model=DINO_MODEL_ID,
+                    segmenter_model=INSECTSAM_MODEL_ID,
+                    processed_at=_now_ms(),
+                    schema_version=SCHEMA_VERSION,
+                )
+                pending_records.append(row_to_pyarrow_record(dr))
+
+                if len(pending_records) >= PARQUET_WRITE_BATCH:
+                    _flush_records(pending_records, parquet_path)
+                    pending_records.clear()
+
+                summary["processed"] += 1
+                if (i + 1) % 25 == 0:
+                    elapsed = time.perf_counter() - t_start
+                    rate = (i + 1) / elapsed if elapsed > 0 else 0
+                    print(f"[v1] {i+1}/{len(to_process)}  ({rate:.2f} img/s)")
+        except Exception as e:
+            summary["errors"] += 1
+            print(f"[v1] ERROR on {row.get('image_id', '?')}: "
+                  f"{type(e).__name__}: {e}")
+
+    if pending_records:
+        _flush_records(pending_records, parquet_path)
+    summary["elapsed_s"] = time.perf_counter() - t_start
+    return summary
