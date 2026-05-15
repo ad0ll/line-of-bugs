@@ -21,7 +21,7 @@ sudo install -d -o bawler -g bawler "$APP/releases" "$APP/shared/data"/{images,m
 # 2. Python venv for fetcher scripts (one venv, reused across releases via $APP/current)
 if [ ! -d "$APP/shared/venv" ]; then
     sudo apt-get update -qq
-    sudo apt-get install -y python3-venv python3-pip
+    sudo apt-get install -y python3-venv python3-pip sqlite3
     python3 -m venv "$APP/shared/venv"
 fi
 
