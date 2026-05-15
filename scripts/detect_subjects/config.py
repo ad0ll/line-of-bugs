@@ -54,13 +54,13 @@ NMS_IOU_THRESHOLD = 0.5
 HIGH_CONF_THRESHOLD = 0.30  # 2026-05-15: raised from 0.20 — the 0.20-0.25 band was mostly flower/leaf false-positives in validator labelling. CLASSIFY_HIDDEN_CONF (no-bug gate) intentionally stays at 0.20.
 
 # ─── Classification thresholds (initial — tuned later) ─────────────
-CLASSIFY_HIDDEN_CONF       = 0.20  # GroundingDINO's calibration is low for multi-class period-separated prompts; 0.20 matches the actual distribution while keeping BOX_THRESHOLD=0.15 as the "any signal" floor
+CLASSIFY_HIDDEN_CONF       = 0.05  # 2026-05-15: tuned 0.20 → 0.05 via grid sweep against 318 manual labels. Old value fired no-bug on conf=0.17-0.20 detections where the bug was actually present; F1 jumped 0.33 → 0.67. BOX_THRESHOLD=0.15 still gates raw detection.
 CLASSIFY_HIDDEN_AREA       = 0.02
 CLASSIFY_WIDE_AREA         = 0.20
 CLASSIFY_TIGHT_AREA        = 0.50
-CLASSIFY_CAMOUFLAGED_DELTA = 8.0   # was 12 — data showed 17% being flagged camouflaged; 8 catches the genuinely-low-contrast 6%
+CLASSIFY_CAMOUFLAGED_DELTA = 10.5  # 2026-05-15: tuned 8.0 → 10.5 via grid sweep against manual labels (F1 0.33 → 0.39). Catches a few more genuinely-low-contrast bugs the old threshold missed.
 CLASSIFY_BUG_TOO_SMALL_EDGE_PX = 512
-BBOX_EDGE_TOLERANCE_NORMALIZED = 0.005  # how close to image edge counts as 'touching' (~5 px on a 1000px image)
+BBOX_EDGE_TOLERANCE_NORMALIZED = 0.014  # 2026-05-15: tuned 0.005 → 0.014 (F1 0.36 → 0.49). Still poor recall because user-clipped bugs often have bboxes far from the frame edge (bug body extends past bbox) — fundamental fix would require a mask-edge-proximity metric, not just bbox.
 # Bbox-selection rule (the bark-beetle fix): prefer larger high-confidence bboxes over
 # the top-1, because DINO sometimes top-ranks small distinctive sub-features (head, eye)
 # above the whole-subject box.
