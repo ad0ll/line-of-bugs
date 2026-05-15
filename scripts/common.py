@@ -1,6 +1,6 @@
 """Shared helpers for the four insect-image downloaders.
 
-Key design points (production-quality, 2026-05-14 refactor):
+Key design points:
   * Streaming chunked downloads (memory-safe; soft-cap via max_bytes).
   * Fail-fast Retry adapter: connection-level errors don't retry; only
     HTTP-level (429/5xx) do. DNS / refused-connection bail immediately,
@@ -9,17 +9,14 @@ Key design points (production-quality, 2026-05-14 refactor):
   * ParallelDownloader fans out image fetches across a thread pool while
     API record fetches stay sequential (so we respect per-API rate limits
     while still saturating CDN throughput).
-  * Manifest writer auto-migrates schema on init.
+  * Persistence is via scripts.db.DbWriter (SQLite UPSERT direct).
+    The CSV intermediate was removed in R5.
   * Filename convention: {source_id}_{source}_{subject_state}_{name}.jpg
 """
 from __future__ import annotations
-import csv
 import hashlib
 import logging
 import re
-import sys
-import time
-from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -27,20 +24,14 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-# Bump csv field-size cap so raw_metadata JSON (sometimes 200KB+ for iNat
-# observations with many identifications/comments) doesn't trip the default
-# 128KB limit. Applied globally for any script that imports common.
-csv.field_size_limit(sys.maxsize)
-
 # ───────────────────────── paths + constants ────────────────────
 
 ROOT = Path(__file__).resolve().parent.parent
 IMG_DIR = ROOT / "data" / "images"
 THUMB_DIR = ROOT / "data" / "thumbnails"
 MEDIUM_DIR = ROOT / "data" / "medium"
-MANIFEST_DIR = ROOT / "data" / "manifest"
 LOG_DIR = ROOT / "data" / "logs"
-for d in (IMG_DIR, THUMB_DIR, MEDIUM_DIR, MANIFEST_DIR, LOG_DIR):
+for d in (IMG_DIR, THUMB_DIR, MEDIUM_DIR, LOG_DIR):
     d.mkdir(parents=True, exist_ok=True)
 
 USER_AGENT = "line-of-bugs/0.1 (spew_footrest858@simplelogin.com)"
@@ -50,27 +41,6 @@ THUMB_QUALITY = 85
 MEDIUM_MAX_EDGE = 1024
 MEDIUM_QUALITY = 88
 DEFAULT_MAX_BYTES = 50_000_000  # soft cap; we abort mid-stream if exceeded
-
-MANIFEST_FIELDS = [
-    "image_id",
-    "collection_id",
-    "source", "source_id",
-    "source_page_url", "image_url",
-    "filename", "thumbnail_filename", "medium_filename",
-    "file_size_bytes", "file_sha256", "width", "height",
-    "license", "license_url",
-    "photographer_attribution", "photographer", "institution",
-    "taxon_order", "taxon_species", "common_name",
-    # Classification — DwC-aligned: wild / captive / specimen
-    "subject_state", "view_label",
-    # Biology extracted from source metadata (annotations / descriptors).
-    "life_stage", "sex", "host_organism", "specimen_condition",
-    # Context
-    "description", "captured_date",
-    # Full raw API response (JSON string); populated by fetchers and
-    # backfilled by scripts/backfill_metadata.py.
-    "raw_metadata",
-]
 
 
 # ───────────────────────── logging ──────────────────────────────
@@ -367,77 +337,6 @@ class ConsecutiveFailureGuard:
         return self.tripped
 
 
-# ───────────────────────── manifest reader / writer ────────────
-
-def manifest_count_by(mw_path: Path, *fields: str) -> Counter:
-    """Group-by count of an existing manifest. e.g.,
-    manifest_count_by(p, 'license', 'subject_state')."""
-    out: Counter = Counter()
-    if not mw_path.exists():
-        return out
-    with mw_path.open("r", newline="", encoding="utf-8") as f:
-        for row in csv.DictReader(f):
-            key = tuple(row.get(field, "") for field in fields)
-            out[key] += 1
-    return out
-
-
-def read_existing_rows(mw_path: Path) -> list[dict]:
-    """One-shot read of the manifest. Use at script startup; don't call repeatedly."""
-    if not mw_path.exists():
-        return []
-    with mw_path.open("r", newline="", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
-
-
-class ManifestWriter:
-    """CSV writer that migrates schema on init (rewrites header + existing
-    rows to canonical MANIFEST_FIELDS, filling missing with ""). Safe
-    across schema bumps."""
-
-    def __init__(self, source_name: str):
-        self.path = MANIFEST_DIR / f"{source_name}.csv"
-        self.seen: set[str] = set()
-        existing_rows: list[dict] = []
-        existing_header: list[str] = []
-        if self.path.exists():
-            with self.path.open("r", newline="", encoding="utf-8") as f:
-                reader = csv.DictReader(f)
-                existing_header = list(reader.fieldnames or [])
-                for row in reader:
-                    existing_rows.append(dict(row))
-                    self.seen.add(row.get("image_id", ""))
-        with self.path.open("w", newline="", encoding="utf-8") as f:
-            w = csv.DictWriter(f, fieldnames=MANIFEST_FIELDS, extrasaction="ignore")
-            w.writeheader()
-            for row in existing_rows:
-                for fname in MANIFEST_FIELDS:
-                    row.setdefault(fname, "")
-                w.writerow(row)
-        if existing_header and existing_header != list(MANIFEST_FIELDS):
-            added = [c for c in MANIFEST_FIELDS if c not in existing_header]
-            removed = [c for c in existing_header if c not in MANIFEST_FIELDS]
-            logging.getLogger("lob").info(
-                f"manifest migrated: {self.path.name}  +{added}  -{removed}",
-            )
-        self.fh = self.path.open("a", newline="", encoding="utf-8")
-        self.w = csv.DictWriter(self.fh, fieldnames=MANIFEST_FIELDS, extrasaction="ignore")
-
-    def has(self, image_id: str) -> bool:
-        return image_id in self.seen
-
-    def write(self, row: dict) -> bool:
-        if row["image_id"] in self.seen:
-            return False
-        self.seen.add(row["image_id"])
-        for f in MANIFEST_FIELDS:
-            row.setdefault(f, "")
-        self.w.writerow(row)
-        self.fh.flush()
-        return True
-
-    def count(self) -> int:
-        return len(self.seen)
-
-    def close(self):
-        self.fh.close()
+# Persistence layer (DbWriter) lives in scripts.db. The CSV-based
+# ManifestWriter + helpers (manifest_count_by, read_existing_rows) were
+# removed in R5 — fetchers now UPSERT directly into SQLite.
