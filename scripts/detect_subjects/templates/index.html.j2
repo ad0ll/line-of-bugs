@@ -171,7 +171,8 @@
   <code>no-bug</code> no insect in the image at all ·
   <code>bug-too-small</code> bug is correctly boxed but too tiny for drawing
   <br><b>Image properties:</b>
-  <code>subject-blurred</code> the bug is out of focus (blurred background is fine) ·
+  <code>subject-blurred_partially-usable</code> some blur but still drawable ·
+  <code>subject-blurred_unusable</code> too blurred to use (blurred background alone doesn't count) ·
   <code>poor-contrast</code> bug nearly indistinguishable from background ·
   <code>multi-bug</code> more than one insect ·
   <code>subject-clipped</code> body runs off the frame edge ·
@@ -195,7 +196,8 @@ const DATA = {{ data_json }};
 const FLAGS = [
   "bbox-wrong_correct-subject", "bbox-wrong_better-subject-other-bbox",
   "no-bug", "bug-too-small",
-  "subject-blurred", "poor-contrast", "multi-bug",
+  "subject-blurred_partially-usable", "subject-blurred_unusable",
+  "poor-contrast", "multi-bug",
   "subject-clipped", "other-bad",
   "crop-too-tight", "crop-too-loose",
 ];
@@ -205,7 +207,8 @@ const FLAG_TITLES = {
   "bbox-wrong_better-subject-other-bbox": "One of the CYAN secondary boxes is on a better subject than the pink primary — system picked the wrong detection",
   "no-bug":           "There's no insect in this image at all",
   "bug-too-small":    "Bug is correctly identified but too tiny for drawing (even after crop)",
-  "subject-blurred":  "The bug in the ORIGINAL is out of focus (DOF / camera shake). Blurred background is fine. Blurry crop from over-zooming a small bug is 'bug-too-small' instead.",
+  "subject-blurred_partially-usable": "Some blur on the subject, but enough is in focus to be drawable. Blurred background alone doesn't count.",
+  "subject-blurred_unusable":         "Subject is too blurred to draw — out of focus / camera shake on the bug body. Blurred background alone doesn't count.",
   "poor-contrast":    "Bug nearly indistinguishable from background (camouflaged, dim)",
   "multi-bug":        "More than one insect in the image",
   "subject-clipped":  "Bug's body is cut off by the frame edge",
