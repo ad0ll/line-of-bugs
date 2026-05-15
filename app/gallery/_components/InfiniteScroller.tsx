@@ -7,7 +7,7 @@ import { GridTile } from "./GridTile";
 
 interface Props {
   initial: SearchGalleryResult;
-  q: string;
+  q: string[];
   subject: SubjectType;
   institutions: string[];
   views: string[];
@@ -38,7 +38,7 @@ export function InfiniteScroller({
     try {
       const next = page + 1;
       const params = new URLSearchParams();
-      if (q) params.set("q", q);
+      if (q.length > 0) params.set("q", q.join(","));
       if (subject !== "all") params.set("subject", subject);
       if (institutions.length > 0) params.set("inst", institutions.join(","));
       if (views.length > 0) params.set("view", views.join(","));
@@ -76,10 +76,13 @@ export function InfiniteScroller({
 
   return (
     <>
-      <div className="gallery-grid" id="gallery-grid">
+      <div className="gallery-grid" id="gallery-grid" aria-busy={loading}>
         {rows.map((row) => (
           <GridTile key={row.image_id} row={row} />
         ))}
+      </div>
+      <div className="u-sr-only" role="status" aria-live="polite">
+        {loading ? "loading more bugs" : ""}
       </div>
       {hasMore && (
         <div ref={sentinelRef} className="gallery-sentinel" aria-hidden>

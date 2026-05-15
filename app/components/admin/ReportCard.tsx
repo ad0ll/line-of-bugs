@@ -23,7 +23,7 @@ export function ReportCard({ report, onDismiss, onHide, onDelete }: ReportCardPr
       <div className="report-card-thumb">
         <Image
           src={`/api/thumb/${basename(report.thumbnail_filename)}`}
-          alt=""
+          alt={report.common_name ?? report.taxon_species ?? "reported specimen"}
           width={120}
           height={120}
         />
@@ -35,9 +35,9 @@ export function ReportCard({ report, onDismiss, onHide, onDelete }: ReportCardPr
             <RelativeAge unixSeconds={report.created_at} />
           </span>
         </header>
-        <p className="report-card-name">
+        <h2 className="report-card-name">
           {report.common_name ?? report.taxon_species ?? report.image_id}
-        </p>
+        </h2>
         <p className="report-card-meta">
           <span className="report-card-id">{report.image_id}</span>
           {" · "}

@@ -20,7 +20,7 @@ export function GridTile({ row }: { row: GalleryRow }) {
       <div className="grid-item-image">
         <Image
           src={`/api/thumb/${thumbName}`}
-          alt=""
+          alt={row.common_name || row.taxon_species || (row.taxon_order ? `${row.taxon_order} specimen` : 'specimen')}
           fill
           sizes="(min-width: 1024px) 240px, (min-width: 600px) 200px, 50vw"
           style={{ objectFit: 'cover' }}

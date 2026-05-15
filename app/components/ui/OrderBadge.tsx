@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { orderColor } from "@/lib/order-colors";
 
 interface Props {
@@ -8,7 +9,7 @@ interface Props {
 // Text-first badge: the order name spelled out (e.g. "Coleoptera"), tinted with
 // its locked palette color. Art students aren't entomologists — color alone
 // doesn't communicate "beetle"; the word + color together does.
-export function OrderBadge({ order, size = "sm" }: Props) {
+export const OrderBadge = memo(function OrderBadge({ order, size = "sm" }: Props) {
   if (!order) return null;
   const color = orderColor(order);
   return (
@@ -25,4 +26,4 @@ export function OrderBadge({ order, size = "sm" }: Props) {
       {order}
     </span>
   );
-}
+});

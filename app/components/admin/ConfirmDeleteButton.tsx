@@ -34,19 +34,46 @@ export function ConfirmDeleteButton({ onConfirm }: ConfirmDeleteButtonProps) {
     }
   }
 
-  if (stage === "loading") {
-    return <button type="button" className="btn-destructive" disabled>deleting…</button>;
-  }
-  if (stage === "armed") {
-    return (
-      <button type="button" className="btn-destructive btn-armed" onClick={onClick}>
-        are you sure?
-      </button>
-    );
-  }
+  const announcement =
+    stage === "armed"
+      ? "confirm delete — click again to delete permanently"
+      : stage === "loading"
+        ? "deleting"
+        : "";
+
   return (
-    <button type="button" className="btn-destructive-idle" onClick={onClick}>
-      delete
-    </button>
+    <>
+      {stage === "loading" ? (
+        <button
+          type="button"
+          className="btn-destructive"
+          disabled
+          aria-label="deleting"
+        >
+          deleting…
+        </button>
+      ) : stage === "armed" ? (
+        <button
+          type="button"
+          className="btn-destructive btn-armed"
+          onClick={onClick}
+          aria-label="confirm delete — click again to delete permanently"
+        >
+          are you sure?
+        </button>
+      ) : (
+        <button
+          type="button"
+          className="btn-destructive-idle"
+          onClick={onClick}
+          aria-label="delete"
+        >
+          delete
+        </button>
+      )}
+      <span role="status" aria-live="polite" className="u-sr-only">
+        {announcement}
+      </span>
+    </>
   );
 }

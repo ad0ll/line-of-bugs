@@ -18,9 +18,16 @@ function readList(v: string | string[] | undefined): string[] {
   return raw.split(',').filter(Boolean);
 }
 
+/** Parse the booru-style multi-tag search param. Comma separates tags;
+ *  empty strings dropped. "monarch,butterfly" → ["monarch", "butterfly"]. */
+function parseQTags(raw: string): string[] {
+  if (!raw) return [];
+  return raw.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
 export default async function GalleryPage({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;
-  const q = readArg(sp.q, '') as string;
+  const q = parseQTags(readArg(sp.q, ''));
   const subjectRaw = Array.isArray(sp.subject) ? sp.subject[0] : sp.subject;
   const subject = parseSubject(subjectRaw);
   const institutions = readList(sp.inst);

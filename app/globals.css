@@ -176,23 +176,63 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 }
 
 .species-autocomplete { position: relative; max-width: 480px; }
-.species-autocomplete-input {
-  width: 100%;
+
+/* Tag-input field: pill-shaped container that grows to fit the
+   selected chips plus a free-text input on the trailing edge.
+   `:focus-within` highlights the whole field so the focus state
+   reads correctly even when the visible focus ring is on the
+   nested <input>. */
+.species-autocomplete-field {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  align-items: center;
   background: var(--surface-1);
-  color: var(--text-primary);
   border: 1px solid var(--border-medium);
-  border-radius: var(--r-pill);
-  padding: var(--s4) var(--s8);
-  font-family: var(--font-sans), system-ui, sans-serif;
-  font-size: 1rem;
+  border-radius: var(--r-3xl);
+  padding: var(--s2) var(--s4);
+  min-height: 44px;
   transition: border-color var(--timing-base), box-shadow var(--timing-base);
 }
-.species-autocomplete-input::placeholder { color: var(--text-tertiary); }
-.species-autocomplete-input:focus {
-  outline: none;
+.species-autocomplete-field:focus-within {
   border-color: var(--accent-pink);
   box-shadow: 0 0 0 4px var(--accent-pink-soft);
 }
+.species-autocomplete-input {
+  flex: 1 1 200px;
+  min-width: 120px;
+  background: transparent;
+  color: var(--text-primary);
+  border: none;
+  outline: none;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 1rem;
+  padding: var(--s2) var(--s2);
+}
+.species-autocomplete-input::placeholder { color: var(--text-tertiary); }
+.species-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+  background: var(--accent-pink-soft);
+  color: var(--text-primary);
+  border-radius: var(--r-pill);
+  padding: 2px var(--s2) 2px var(--s3);
+  font-size: 0.9rem;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+.species-tag-label { line-height: 1.3; }
+.species-tag-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  border-radius: var(--r-md);
+}
+.species-tag-remove:hover { color: var(--text-primary); background: var(--accent-pink-border); }
 .species-autocomplete-dropdown {
   position: absolute;
   top: calc(100% + 4px);
@@ -219,9 +259,29 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   cursor: pointer;
 }
 .species-row.active { background: var(--accent-pink-soft); }
+.species-row b { color: var(--accent-pink); font-weight: 700; }
+.species-row-disabled { opacity: 0.45; cursor: not-allowed; }
+.species-row-disabled:hover { background: transparent; }
 .species-name { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 600; }
 .species-sci { font-family: var(--font-display), serif; font-style: italic; color: var(--text-tertiary); font-size: 0.85rem; }
-.species-count { font-family: var(--font-mono), monospace; color: var(--text-secondary); font-size: 0.85rem; }
+.species-count {
+  font-family: var(--font-mono), monospace;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+}
+.species-added {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  color: var(--accent-pink);
+  background: var(--accent-pink-soft);
+  padding: 1px 6px;
+  border-radius: var(--r-pill);
+}
 
 .filter-chips-bar { display: flex; gap: var(--s4); flex-wrap: wrap; align-items: center; }
 .subject-type-chips { display: flex; gap: var(--s2); }
@@ -446,10 +506,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   gap: var(--s6);
 }
 @media (min-width: 600px) {
-  .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
-}
-@media (min-width: 1024px) {
-  .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+  .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(clamp(180px, 18vw, 280px), 1fr)); }
 }
 .grid-item {
   position: relative;
@@ -568,8 +625,10 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 
 /* Touch-target floor on coarse pointers — applies to both pill systems
    (.chip is the gallery dense pill; .home-pill is the touch-friendly
-   home pill; .modal-close is the dialog close affordance). */
-@media (pointer: coarse) {
+   home pill; .modal-close is the dialog close affordance). The
+   any-hover:none branch picks up hybrid touch devices that report
+   fine pointers but no hover (Surface, some Chromebooks). */
+@media (pointer: coarse), (any-hover: none) {
   .chip { min-height: 44px; padding: var(--s4) var(--s8); }
   .home-pill { min-height: 44px; padding: var(--s4) var(--s8); }
   .modal-close { width: 44px; height: 44px; }
@@ -714,6 +773,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   box-shadow: var(--shadow-panel);
   animation: fade-in 0.25s var(--ease-out);
 }
+.toast--error { border-color: var(--accent-danger); }
 
 .admin-page { max-width: 1100px; margin: 0 auto; padding: var(--s8); }
 .admin-page-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--s8); }
@@ -772,6 +832,12 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 }
 .report-card-actions button:hover { border-color: var(--accent-pink-border); }
 
+@media (max-width: 480px) {
+  .report-card { grid-template-columns: 1fr; }
+  .report-card-thumb img { width: 100%; height: auto; max-height: 200px; object-fit: cover; }
+  .report-card-actions { flex-wrap: wrap; }
+}
+
 /* Destructive button (Delete) uses danger red, NOT brand pink */
 .btn-destructive-idle {
   border: 1px solid var(--border-medium);
@@ -821,6 +887,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   filter: blur(40px);
   opacity: 0.55;
   pointer-events: none;
+  will-change: transform;
 }
 .home-bloom::before {
   top: 5%; left: -5%;
@@ -954,7 +1021,9 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   padding: var(--s4) var(--s8);
   color: var(--text-primary);
   font-family: var(--font-mono), monospace;
-  width: 140px;
+  width: 100%;
+  max-width: 140px;
+  min-width: 88px;
 }
 
 /* Repeat mode list — radio cards */
@@ -1185,7 +1254,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: 0.85rem;
   cursor: pointer;
-  min-height: 36px;
+  min-height: 40px;
 }
 .taxon-group-clear:hover {
   background: var(--accent-pink-soft);

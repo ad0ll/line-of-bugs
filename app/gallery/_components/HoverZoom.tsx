@@ -59,18 +59,7 @@ export function HoverZoom({ itemSelector, gridRef, delay }: HoverZoomProps) {
 
     let currentHoverId: string | null = null;
 
-    function onOver(e: MouseEvent) {
-      const target = e.target as HTMLElement;
-      const item = target.closest<HTMLElement>(itemSelector);
-      const id = item?.dataset.id ?? null;
-      const isOverThumb = !!target.closest('.grid-item-image');
-      if (!isOverThumb) {
-        if (currentHoverId) {
-          currentHoverId = null;
-          hide();
-        }
-        return;
-      }
+    function enter(item: HTMLElement | null, id: string | null) {
       if (id === currentHoverId) return;
       currentHoverId = id;
       if (!item || !id) {
@@ -84,6 +73,21 @@ export function HoverZoom({ itemSelector, gridRef, delay }: HoverZoomProps) {
       }
     }
 
+    function onOver(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      const item = target.closest<HTMLElement>(itemSelector);
+      const id = item?.dataset.id ?? null;
+      const isOverThumb = !!target.closest('.grid-item-image');
+      if (!isOverThumb) {
+        if (currentHoverId) {
+          currentHoverId = null;
+          hide();
+        }
+        return;
+      }
+      enter(item, id);
+    }
+
     function onOut(e: MouseEvent) {
       const related = (e.relatedTarget as HTMLElement | null)?.closest<HTMLElement>(itemSelector);
       if (!related || related.dataset.id !== currentHoverId) {
@@ -92,11 +96,37 @@ export function HoverZoom({ itemSelector, gridRef, delay }: HoverZoomProps) {
       }
     }
 
+    function onFocusIn(e: FocusEvent) {
+      const target = e.target as HTMLElement;
+      const item = target.closest<HTMLElement>(itemSelector);
+      const id = item?.dataset.id ?? null;
+      enter(item, id);
+    }
+
+    function onFocusOut(e: FocusEvent) {
+      const fromItem = (e.target as HTMLElement | null)?.closest<HTMLElement>(itemSelector);
+      if (!fromItem || fromItem.dataset.id !== currentHoverId) return;
+      // focusout fires before focusin on the next element; defer so we can
+      // see whether focus landed on another tile before hiding.
+      setTimeout(() => {
+        const active = document.activeElement as HTMLElement | null;
+        const stillOnTile = active?.closest<HTMLElement>(itemSelector);
+        if (!stillOnTile || stillOnTile.dataset.id !== currentHoverId) {
+          currentHoverId = null;
+          hide();
+        }
+      }, 0);
+    }
+
     grid.addEventListener('mouseover', onOver);
     grid.addEventListener('mouseout', onOut);
+    grid.addEventListener('focusin', onFocusIn);
+    grid.addEventListener('focusout', onFocusOut);
     return () => {
       grid.removeEventListener('mouseover', onOver);
       grid.removeEventListener('mouseout', onOut);
+      grid.removeEventListener('focusin', onFocusIn);
+      grid.removeEventListener('focusout', onFocusOut);
       hide();
     };
   }, [gridRef, itemSelector, delay]);

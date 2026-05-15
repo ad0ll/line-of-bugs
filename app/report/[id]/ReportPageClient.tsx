@@ -32,7 +32,7 @@ export function ReportPageClient({
       <div className="report-page-preview">
         <Image
           src={`/api/thumb/${basename(thumbnail)}`}
-          alt=""
+          alt={commonName ?? speciesName ?? "reported specimen"}
           width={width}
           height={height}
           style={{ width: "100%", height: "auto", maxWidth: 320, borderRadius: "var(--r-3xl)" }}

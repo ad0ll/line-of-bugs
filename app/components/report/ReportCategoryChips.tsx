@@ -11,11 +11,19 @@ const CATEGORIES: { value: ReportCategory; label: string }[] = REPORT_CATEGORIES
 export interface ReportCategoryChipsProps {
   value: ReportCategory | null;
   onChange: (v: ReportCategory) => void;
+  ariaLabelledBy?: string;
+  required?: boolean;
 }
 
-export function ReportCategoryChips({ value, onChange }: ReportCategoryChipsProps) {
+export function ReportCategoryChips({ value, onChange, ariaLabelledBy, required }: ReportCategoryChipsProps) {
   return (
-    <div className="report-category-chips" role="group" aria-label="report category">
+    <div
+      className="report-category-chips"
+      role="radiogroup"
+      aria-label={ariaLabelledBy ? undefined : "report category"}
+      aria-labelledby={ariaLabelledBy}
+      aria-required={required ? true : undefined}
+    >
       {CATEGORIES.map((c) => (
         <Chip
           key={c.value}

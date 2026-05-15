@@ -7,7 +7,7 @@
  * list with counts) but renders `unknown` first when present so it's
  * obvious to users that filtering would shrink the pool.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 export interface FilterOption {
   name: string;
@@ -36,14 +36,18 @@ export function FilterPopover({
   options,
   selected,
   onChange,
-  ariaLabel,
 }: FilterPopoverProps) {
   const [open, setOpen] = useState(false);
   const popRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelId = useId();
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
     }
     function onClick(e: MouseEvent) {
       if (popRef.current && !popRef.current.contains(e.target as Node)) {
@@ -75,16 +79,18 @@ export function FilterPopover({
   return (
     <div className="filter-popover" ref={popRef}>
       <button
+        ref={triggerRef}
         type="button"
         className={`chip ${selected.length > 0 ? 'chip-active' : ''}`}
         onClick={() => setOpen((o) => !o)}
-        aria-haspopup="dialog"
+        aria-haspopup="listbox"
         aria-expanded={open}
+        aria-controls={panelId}
       >
         {label}
       </button>
       {open && (
-        <div className="filter-popover-panel" role="dialog" aria-label={ariaLabel ?? idleLabel}>
+        <div id={panelId} className="filter-popover-panel">
           <ul className="filter-popover-list">
             {[...options]
               .sort((a, b) => {

@@ -22,7 +22,7 @@ export function SessionImage({ image, bw, zoom, pan }: Props) {
       <NextImage
         key={image.imageId}
         src={`/api/img/${filename}`}
-        alt={image.commonName || image.taxonSpecies || image.imageId}
+        alt={image.commonName || image.taxonSpecies || (image.taxonOrder ? `${image.taxonOrder} specimen` : "specimen")}
         aria-describedby={SOURCE_INFO_CHIP_ID}
         width={w}
         height={h}

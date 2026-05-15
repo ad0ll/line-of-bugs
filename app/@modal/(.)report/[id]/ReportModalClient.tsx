@@ -24,7 +24,12 @@ export function ReportModalClient({ imageId, thumbnail, commonName, speciesName 
     <Modal onClose={close} ariaLabel="report image">
       <div className="report-modal-content">
         <div className="report-modal-preview">
-          <Image src={`/api/thumb/${basename(thumbnail)}`} alt="" width={160} height={160} />
+          <Image
+            src={`/api/thumb/${basename(thumbnail)}`}
+            alt={commonName ?? speciesName ?? "reported specimen"}
+            width={160}
+            height={160}
+          />
           <p className="preview-name">{commonName ?? speciesName ?? imageId}</p>
         </div>
         <ReportForm

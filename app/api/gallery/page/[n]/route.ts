@@ -11,7 +11,8 @@ export async function GET(req: Request, { params }: Params): Promise<Response> {
   const { n } = await params;
   const page = Math.max(1, parseInt(n, 10) || 1);
   const url = new URL(req.url);
-  const q = url.searchParams.get("q") ?? "";
+  const qRaw = url.searchParams.get("q") ?? "";
+  const q = qRaw.split(",").map((s) => s.trim()).filter(Boolean);
   const subject = parseSubject(url.searchParams.get("subject"));
   const institutions = readList(url.searchParams.get("inst"));
   const views = readList(url.searchParams.get("view"));

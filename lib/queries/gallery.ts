@@ -25,7 +25,9 @@ export type GalleryRow = {
 };
 
 export type SearchGalleryArgs = {
-  q: string;
+  /** Search tags. Each tag is its own AND-joined token; tags are OR'd
+   *  together (booru-style). Empty array = no FTS filter. */
+  q: string[];
   subject: SubjectType;
   institutions: string[];
   // Multi-select arrays. Empty array = no filter on that axis.
@@ -49,7 +51,12 @@ export type SearchGalleryResult = {
 
 const PAGE_SIZE = 50;
 
-function buildFtsQuery(raw: string): string | null {
+/**
+ * Build one FTS5 MATCH expression from one search tag. Multi-word
+ * tags are AND'd internally with the last word prefix-matched (so
+ * "tiger swal" matches "tiger swallowtail").
+ */
+function buildFtsTag(raw: string): string | null {
   const cleaned = raw.replace(/[^\p{L}\p{N}\s]/gu, " ").trim();
   if (!cleaned) return null;
   const tokens = cleaned.split(/\s+/).filter(Boolean);
@@ -57,6 +64,20 @@ function buildFtsQuery(raw: string): string | null {
   const head = tokens.slice(0, -1).map((t) => `"${t}"`);
   const last = `"${tokens.at(-1)!}"*`;
   return [...head, last].join(" ");
+}
+
+/**
+ * Combine multiple tags into one FTS5 expression. Tags are OR'd
+ * together — selecting "monarch" + "swallowtail" matches rows that
+ * mention either. Returns null if no tags produce valid FTS terms.
+ */
+function buildFtsQuery(tags: readonly string[]): string | null {
+  const sub = tags
+    .map((t) => buildFtsTag(t))
+    .filter((s): s is string => s !== null)
+    .map((s) => `(${s})`);
+  if (sub.length === 0) return null;
+  return sub.join(" OR ");
 }
 
 export async function searchGallery(args: SearchGalleryArgs): Promise<SearchGalleryResult> {
@@ -81,7 +102,8 @@ export async function searchGallery(args: SearchGalleryArgs): Promise<SearchGall
     filters.push(sql`institution IN (${list})`);
   }
 
-  if (args.q.trim() && !ftsQuery) {
+  // User typed something but every tag was unsanitizable — return empty.
+  if (args.q.length > 0 && args.q.some((t) => t.trim()) && !ftsQuery) {
     return { rows: [], totalCount: 0, hasMore: false, page: args.page, pageSize: PAGE_SIZE };
   }
 
@@ -158,7 +180,7 @@ export async function searchSpecies(q: string): Promise<SpeciesRow[]> {
   const trimmed = q.trim();
   if (trimmed.length < 2) return [];
 
-  const ftsQuery = buildFtsQuery(trimmed);
+  const ftsQuery = buildFtsQuery([trimmed]);
   if (!ftsQuery) return [];
 
   return db.all<SpeciesRow>(sql`

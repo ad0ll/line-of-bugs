@@ -167,10 +167,14 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
 
   useEffect(() => {
     bumpChrome();
-    const onMove = () => bumpChrome();
-    window.addEventListener("mousemove", onMove);
+    const onActivity = () => bumpChrome();
+    window.addEventListener("mousemove", onActivity);
+    window.addEventListener("keydown", onActivity);
+    window.addEventListener("focusin", onActivity);
     return () => {
-      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mousemove", onActivity);
+      window.removeEventListener("keydown", onActivity);
+      window.removeEventListener("focusin", onActivity);
       if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current);
     };
   }, [bumpChrome]);

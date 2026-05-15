@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { ReportCategory, SubmitReportArgs } from "@/lib/report-categories";
 import { ReportCategoryChips } from "./ReportCategoryChips";
 import { showToast } from "@/app/components/ui/Toast";
@@ -12,6 +12,8 @@ export interface ReportFormProps {
 }
 
 export function ReportForm({ imageId, onSubmit, onClose }: ReportFormProps) {
+  const helpId = useId();
+  const errorId = useId();
   const [category, setCategory] = useState<ReportCategory | null>(null);
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -46,8 +48,17 @@ export function ReportForm({ imageId, onSubmit, onClose }: ReportFormProps) {
       }}
     >
       <h2>report this image</h2>
-      <p className="report-form-help">why should the admin take another look?</p>
-      <ReportCategoryChips value={category} onChange={setCategory} />
+      <p className="report-form-help" id={helpId}>
+        why should the admin take another look?
+        <span aria-hidden="true" style={{ color: "var(--accent-pink)" }}> *</span>
+        <span className="u-sr-only">required</span>
+      </p>
+      <ReportCategoryChips
+        value={category}
+        onChange={setCategory}
+        ariaLabelledBy={helpId}
+        required
+      />
       {category === "other" && (
         <textarea
           maxLength={250}
@@ -58,10 +69,18 @@ export function ReportForm({ imageId, onSubmit, onClose }: ReportFormProps) {
           onChange={(e) => setMessage(e.target.value)}
         />
       )}
-      {error && <p className="report-form-error">{error}</p>}
+      {error && (
+        <p className="report-form-error" id={errorId} role="alert">
+          {error}
+        </p>
+      )}
       <div className="report-form-actions">
         <button type="button" onClick={onClose}>cancel</button>
-        <button type="submit" disabled={!canSubmit}>
+        <button
+          type="submit"
+          disabled={!canSubmit}
+          aria-describedby={error ? errorId : undefined}
+        >
           {submitting ? "submitting…" : "submit"}
         </button>
       </div>

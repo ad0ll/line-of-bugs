@@ -13,11 +13,15 @@ function fmt(ms: number): string {
 }
 
 export function Timer({ remainingMs, paused }: Props) {
+  // Why polite not assertive: assertive would interrupt screen-reader narration
+  // of the image alt text on every tick.
   return (
     <div
       className="session-timer"
       style={{ opacity: paused ? 0.55 : 1 }}
-      aria-live="off"
+      aria-live="polite"
+      aria-atomic="true"
+      aria-label="time remaining"
     >
       {fmt(remainingMs)}
     </div>

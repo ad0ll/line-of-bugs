@@ -3,7 +3,7 @@ import { InfiniteScroller } from './InfiniteScroller';
 import type { SubjectType } from '@/lib/subject';
 
 export interface GalleryGridProps {
-  q: string;
+  q: string[];
   subject: SubjectType;
   institutions: string[];
   views: string[];

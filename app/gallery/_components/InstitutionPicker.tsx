@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 export interface InstitutionPickerProps {
   institutions: { name: string; count: number }[];
@@ -11,10 +11,15 @@ export interface InstitutionPickerProps {
 export function InstitutionPicker({ institutions, selected, onChange }: InstitutionPickerProps) {
   const [open, setOpen] = useState(false);
   const popRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelId = useId();
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
     }
     function onClick(e: MouseEvent) {
       if (popRef.current && !popRef.current.contains(e.target as Node)) setOpen(false);
@@ -41,14 +46,18 @@ export function InstitutionPicker({ institutions, selected, onChange }: Institut
   return (
     <div className="institution-picker" ref={popRef}>
       <button
+        ref={triggerRef}
         type="button"
         className={`chip ${selected.length > 0 ? 'chip-active' : ''}`}
         onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={panelId}
       >
         {label}
       </button>
       {open && (
-        <div className="institution-popover" role="dialog" aria-label="institution selector">
+        <div id={panelId} className="institution-popover">
           <ul className="institution-list">
             {institutions.map((i) => (
               <li key={i.name}>

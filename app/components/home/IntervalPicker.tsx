@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 const PRESETS = [
   { label: "30s", seconds: 30 },
@@ -17,6 +17,7 @@ interface Props {
 
 export function IntervalPicker({ value, onChange }: Props) {
   const [customOpen, setCustomOpen] = useState(false);
+  const inputId = useId();
   const isPreset = PRESETS.some((p) => p.seconds === value);
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -35,20 +36,27 @@ export function IntervalPicker({ value, onChange }: Props) {
           type="button"
           onClick={() => setCustomOpen((v) => !v)}
           className={`home-pill${!isPreset || customOpen ? " is-active" : ""}`}
+          aria-expanded={customOpen}
+          aria-controls={inputId}
         >
           custom…
         </button>
       </div>
       {customOpen ? (
-        <input
-          type="number"
-          min={10}
-          max={3600}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="home-custom-seconds"
-          aria-label="custom seconds"
-        />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <label htmlFor={inputId} className="home-radio-hint">
+            seconds (10–3600)
+          </label>
+          <input
+            id={inputId}
+            type="number"
+            min={10}
+            max={3600}
+            value={value}
+            onChange={(e) => onChange(Number(e.target.value))}
+            className="home-custom-seconds"
+          />
+        </div>
       ) : null}
     </div>
   );
