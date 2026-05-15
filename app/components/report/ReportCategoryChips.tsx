@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReportCategory } from "@/actions/submitReport";
+import type { ReportCategory } from "@/lib/report-categories";
 
 const CATEGORIES: { value: ReportCategory; label: string }[] = [
   { value: "low-resolution", label: "low-resolution" },

@@ -4,22 +4,7 @@ import { db } from "@/db";
 import { images, reports } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { invalidateOnReportSubmit } from "./_invalidation";
-
-export const REPORT_CATEGORIES = [
-  "low-resolution",
-  "spooky",
-  "cropped",
-  "ai-generated",
-  "other",
-] as const;
-
-export type ReportCategory = (typeof REPORT_CATEGORIES)[number];
-
-export interface SubmitReportArgs {
-  imageId: string;
-  category: ReportCategory;
-  message: string | null;
-}
+import { REPORT_CATEGORIES, type SubmitReportArgs } from "@/lib/report-categories";
 
 const MESSAGE_MAX = 250;
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ReportCategory, SubmitReportArgs } from "@/actions/submitReport";
+import type { ReportCategory, SubmitReportArgs } from "@/lib/report-categories";
 import { ReportCategoryChips } from "./ReportCategoryChips";
 import { showToast } from "@/app/components/ui/Toast";
 

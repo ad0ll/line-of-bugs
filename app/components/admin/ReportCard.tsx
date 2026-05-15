@@ -36,7 +36,7 @@ export function ReportCard({ report, onDismiss, onHide, onDelete }: ReportCardPr
       <div className="report-card-body">
         <header className="report-card-header">
           <span className="report-card-category">{report.category}</span>
-          <span className="report-card-age">{formatAge(report.created_at)}</span>
+          <span className="report-card-age" suppressHydrationWarning>{formatAge(report.created_at)}</span>
         </header>
         <p className="report-card-name">
           {report.common_name ?? report.taxon_species ?? report.image_id}
