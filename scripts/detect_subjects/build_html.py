@@ -50,6 +50,10 @@ def build_html_for_variant(
     out_dir: Path = VALIDATOR_DIR,
 ) -> Path:
     df = pl.read_parquet(parquet_path).filter(pl.col("variant") == variant)
+    # Smithsonian support is being deprecated project-wide (separate session).
+    # Drop those rows here so the validator HTML doesn't list them as
+    # labelling work — saves the human from labelling images we'll never use.
+    df = df.filter(pl.col("source") != "smithsonian")
     if df.height == 0:
         raise RuntimeError(f"no rows in parquet for variant={variant}")
 
