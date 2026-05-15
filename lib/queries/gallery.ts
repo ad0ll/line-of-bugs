@@ -1,8 +1,9 @@
 import { sql, type SQL } from "drizzle-orm";
 import { cacheTag, cacheLife } from "next/cache";
 import { db } from "@/db";
-import { TAXON_GROUPS, buildTaxonGroupSQL } from "@/lib/taxonomy";
+import { TAXON_GROUPS } from "@/lib/taxonomy";
 import type { SubjectType } from "@/lib/subject";
+import { buildFilterClauses } from "@/lib/queries/filter-clauses";
 
 export type GalleryRow = {
   image_id: string;
@@ -39,22 +40,6 @@ export type SearchGalleryArgs = {
   page: number;
 };
 
-function inOrUnknown(column: SQL, values: string[]): SQL {
-  // Helper: build `column IN (...)` clause that also handles the synthetic
-  // "unknown" sentinel mapping to NULL OR ''.
-  const real = values.filter((v) => v !== "unknown");
-  const includeUnknown = values.includes("unknown");
-  const parts: SQL[] = [];
-  if (real.length > 0) {
-    parts.push(sql`${column} IN (${sql.join(real.map((v) => sql`${v}`), sql`, `)})`);
-  }
-  if (includeUnknown) {
-    parts.push(sql`(${column} IS NULL OR ${column} = '')`);
-  }
-  if (parts.length === 0) return sql`1=1`;
-  return sql.join(parts, sql` OR `);
-}
-
 export type SearchGalleryResult = {
   rows: GalleryRow[];
   totalCount: number;
@@ -83,32 +68,18 @@ export async function searchGallery(args: SearchGalleryArgs): Promise<SearchGall
   const offset = (args.page - 1) * PAGE_SIZE;
   const ftsQuery = buildFtsQuery(args.q);
 
-  const filters: SQL[] = [sql`i.hidden = 0`];
-  filters.push(sql`NOT EXISTS (SELECT 1 FROM reports r WHERE r.image_id = i.image_id AND r.resolved_at IS NULL)`);
+  const filters: SQL[] = buildFilterClauses({
+    subjectType: args.subject,
+    views: args.views,
+    lifeStages: args.lifeStages,
+    sexes: args.sexes,
+    groups: args.groups,
+  });
 
-  // Subject-type chip values map 1:1 to subject_state DB enum; "all"
-  // skips the clause entirely.
-  if (args.subject !== "all") {
-    filters.push(sql`i.subject_state = ${args.subject}`);
-  }
-
+  // Institution is gallery-only — not part of the shared FilterState.
   if (args.institutions.length > 0) {
     const list = sql.join(args.institutions.map((x) => sql`${x}`), sql`, `);
-    filters.push(sql`i.institution IN (${list})`);
-  }
-
-  if (args.views.length > 0) {
-    filters.push(sql`(${inOrUnknown(sql`i.view_label`, args.views)})`);
-  }
-  if (args.lifeStages.length > 0) {
-    filters.push(sql`(${inOrUnknown(sql`i.life_stage`, args.lifeStages)})`);
-  }
-  if (args.sexes.length > 0) {
-    filters.push(sql`(${inOrUnknown(sql`i.sex`, args.sexes)})`);
-  }
-  if (args.groups.length > 0) {
-    const groupClause = buildTaxonGroupSQL(args.groups, sql`i.taxon_subgroup`);
-    if (groupClause) filters.push(groupClause);
+    filters.push(sql`institution IN (${list})`);
   }
 
   if (args.q.trim() && !ftsQuery) {
@@ -116,7 +87,7 @@ export async function searchGallery(args: SearchGalleryArgs): Promise<SearchGall
   }
 
   if (ftsQuery) {
-    filters.push(sql`i.image_id IN (SELECT image_id FROM images_fts WHERE images_fts MATCH ${ftsQuery})`);
+    filters.push(sql`image_id IN (SELECT image_id FROM images_fts WHERE images_fts MATCH ${ftsQuery})`);
   }
 
   const whereClause = sql.join(filters, sql` AND `);

@@ -1,72 +1,15 @@
 import { cache } from "react";
-import { and, eq, sql, type SQL } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { applyRepeatMode, type RepeatMode } from "@/lib/repeat-mode";
 import type { Image } from "@/db/schema";
-import { buildTaxonGroupSQL } from "@/lib/taxonomy";
-import type { SubjectType } from "@/lib/subject";
+import { buildFilterClauses, type FilterState } from "@/lib/queries/filter-clauses";
 
-export interface SessionFilters {
-  subjectType: SubjectType;
-  /** Multi-select arrays. Empty = no filter on that axis.
-   *  "unknown" sentinel matches NULL or empty-string. */
-  views: string[];
-  lifeStages: string[];
-  sexes: string[];
-  /** R6 layperson taxonomy chip keys. */
-  groups: string[];
-}
+export type SessionFilters = FilterState;
 
 export interface BuildSessionPoolOpts extends SessionFilters {
   repeatMode: RepeatMode;
   limit?: number;
-}
-
-function inOrUnknownArr(column: SQL, values: string[]): SQL {
-  const real = values.filter((v) => v !== "unknown");
-  const includeUnknown = values.includes("unknown");
-  const parts: SQL[] = [];
-  if (real.length > 0) {
-    parts.push(sql`${column} IN (${sql.join(real.map((v) => sql`${v}`), sql`, `)})`);
-  }
-  if (includeUnknown) {
-    parts.push(sql`(${column} IS NULL OR ${column} = '')`);
-  }
-  if (parts.length === 0) return sql`1=1`;
-  return sql.join(parts, sql` OR `);
-}
-
-function buildSessionFilterClauses(opts: SessionFilters): SQL[] {
-  const conditions: SQL[] = [
-    eq(schema.images.hidden, false),
-    sql`NOT EXISTS (
-      SELECT 1 FROM ${schema.reports}
-      WHERE ${schema.reports.imageId} = ${schema.images.imageId}
-        AND ${schema.reports.resolvedAt} IS NULL
-    )`,
-  ];
-  // Subject-type chip values map 1:1 to subject_state DB enum, except
-  // "all" → no clause (the user picked everything).
-  if (opts.subjectType !== "all") {
-    conditions.push(eq(schema.images.subjectState, opts.subjectType));
-  }
-  if (opts.views.length > 0) {
-    conditions.push(sql`(${inOrUnknownArr(sql`${schema.images.viewLabel}`, opts.views)})`);
-  }
-  if (opts.lifeStages.length > 0) {
-    conditions.push(sql`(${inOrUnknownArr(sql`${schema.images.lifeStage}`, opts.lifeStages)})`);
-  }
-  if (opts.sexes.length > 0) {
-    conditions.push(sql`(${inOrUnknownArr(sql`${schema.images.sex}`, opts.sexes)})`);
-  }
-  if (opts.groups.length > 0) {
-    const groupClause = buildTaxonGroupSQL(
-      opts.groups,
-      sql`${schema.images.taxonSubgroup}`,
-    );
-    if (groupClause) conditions.push(groupClause);
-  }
-  return conditions;
 }
 
 /**
@@ -77,7 +20,7 @@ function buildSessionFilterClauses(opts: SessionFilters): SQL[] {
 export async function buildSessionPool(
   opts: BuildSessionPoolOpts,
 ): Promise<Image[]> {
-  const conditions = buildSessionFilterClauses(opts);
+  const conditions = buildFilterClauses(opts);
   const all = await db
     .select()
     .from(schema.images)
@@ -94,7 +37,7 @@ export async function buildSessionPool(
  * "X images in your session pool" indicator before the user starts.
  */
 export async function countSessionPool(opts: SessionFilters): Promise<number> {
-  const conditions = buildSessionFilterClauses(opts);
+  const conditions = buildFilterClauses(opts);
   const result = await db
     .select({ c: sql<number>`COUNT(*)` })
     .from(schema.images)
