@@ -18,6 +18,8 @@
 
 **Out of scope for this plan:** V2-V6 model wrappers (DINO+SAM 2.1, OWLv2+InsectSAM, SAM 3.1, Florence-2, PaliGemma 2). After V1 review, a follow-up plan adds them.
 
+**Schema reality note (post-round-4):** Between writing the spec and starting implementation, round-4 renamed `subject_type` → `subject_state` (now DwC-aligned: `wild` / `captive` / `specimen` instead of the old `nature` / `specimen`). The manifest CSVs have been migrated. New nullable columns also exist (`life_stage`, `sex`, `host_organism`, `specimen_condition`, `raw_metadata`) but are NOT used by this experiment — they're available for future analysis. This plan uses the post-round-4 names throughout. For cropping rules, `wild` and `captive` both use the "nature target" (30% post-crop subject area); only `specimen` uses the tight target (60%).
+
 ---
 
 ## File structure (created by this plan)
@@ -323,7 +325,7 @@ from scripts.detect_subjects.schema import (
 def test_schema_has_required_columns():
     expected = {
         "image_id", "source", "variant",
-        "img_w", "img_h", "subject_type",
+        "img_w", "img_h", "subject_state",
         "n_raw_detections", "n_distinct_detections",
         "bbox_x", "bbox_y", "bbox_w", "bbox_h", "confidence",
         "bbox_area_ratio", "offcenter",
@@ -343,7 +345,7 @@ def test_detection_row_to_pyarrow_record_minimal():
     row = DetectionRow(
         image_id="inat-1", source="inaturalist",
         variant="v1_dino_insectsam",
-        img_w=4000, img_h=3000, subject_type="nature",
+        img_w=4000, img_h=3000, subject_state="wild",
         n_raw_detections=2, n_distinct_detections=1,
         bbox_x=0.25, bbox_y=0.30, bbox_w=0.15, bbox_h=0.20,
         confidence=0.87,
@@ -370,7 +372,7 @@ def test_schema_round_trip_in_memory():
         DetectionRow(
             image_id=f"test-{i}", source="inaturalist",
             variant="v1_dino_insectsam",
-            img_w=4000, img_h=3000, subject_type="nature",
+            img_w=4000, img_h=3000, subject_state="wild",
             n_raw_detections=1, n_distinct_detections=1,
             bbox_x=0.25, bbox_y=0.30, bbox_w=0.15, bbox_h=0.20,
             confidence=0.87,
@@ -424,7 +426,7 @@ class DetectionRow:
     variant: str
     img_w: int
     img_h: int
-    subject_type: str
+    subject_state: str
     n_raw_detections: int
     n_distinct_detections: int
     bbox_x: Optional[float]
@@ -463,7 +465,7 @@ SCHEMA = pa.schema([
     ("variant", pa.string()),
     ("img_w", pa.int32()),
     ("img_h", pa.int32()),
-    ("subject_type", pa.string()),
+    ("subject_state", pa.string()),
     ("n_raw_detections", pa.int16()),
     ("n_distinct_detections", pa.int16()),
     ("bbox_x", pa.float32()),
@@ -795,7 +797,7 @@ from scripts.detect_subjects.crop import (
 def test_skip_crop_when_bbox_already_large():
     d = compute_crop_bbox(
         bbox_x=0.30, bbox_y=0.30, bbox_w=0.40, bbox_h=0.40,
-        subject_type="nature",
+        subject_state="wild",
     )
     assert d.skip is True
     assert d.skip_reason == "already_well_framed"
@@ -804,7 +806,7 @@ def test_skip_crop_when_bbox_already_large():
 def test_skip_crop_when_bbox_tiny():
     d = compute_crop_bbox(
         bbox_x=0.50, bbox_y=0.50, bbox_w=0.05, bbox_h=0.05,
-        subject_type="nature",
+        subject_state="wild",
     )
     assert d.skip is True
     assert d.skip_reason == "subject_too_small"
@@ -813,7 +815,7 @@ def test_skip_crop_when_bbox_tiny():
 def test_crop_nature_targets_30pct_subject_area():
     d = compute_crop_bbox(
         bbox_x=0.30, bbox_y=0.30, bbox_w=0.20, bbox_h=0.50,
-        subject_type="nature",
+        subject_state="wild",
     )
     assert d.skip is False
     bbox_area = 0.20 * 0.50
@@ -824,7 +826,7 @@ def test_crop_nature_targets_30pct_subject_area():
 def test_crop_specimen_targets_60pct_subject_area():
     d = compute_crop_bbox(
         bbox_x=0.30, bbox_y=0.30, bbox_w=0.20, bbox_h=0.20,
-        subject_type="specimen",
+        subject_state="specimen",
     )
     assert d.skip is False
     bbox_area = 0.20 * 0.20
@@ -835,7 +837,7 @@ def test_crop_specimen_targets_60pct_subject_area():
 def test_crop_clamps_to_image_bounds():
     d = compute_crop_bbox(
         bbox_x=0.02, bbox_y=0.02, bbox_w=0.10, bbox_h=0.10,
-        subject_type="nature",
+        subject_state="wild",
     )
     assert d.crop_x >= 0.0
     assert d.crop_y >= 0.0
@@ -898,15 +900,15 @@ class CropDecision:
     post_crop_subject_area: float
 
 
-def _target_area_for(subject_type: str) -> float:
-    if subject_type == "specimen":
+def _target_area_for(subject_state: str) -> float:
+    if subject_state == "specimen":
         return CROP_TARGET_AREA_SPECIMEN
     return CROP_TARGET_AREA_NATURE
 
 
 def compute_crop_bbox(
     bbox_x: float, bbox_y: float, bbox_w: float, bbox_h: float,
-    subject_type: str,
+    subject_state: str,
 ) -> CropDecision:
     """Compute crop bbox so the subject fills `target` fraction of the crop."""
     bbox_area = bbox_w * bbox_h
@@ -924,7 +926,7 @@ def compute_crop_bbox(
             post_crop_subject_area=bbox_area,
         )
 
-    target = _target_area_for(subject_type)
+    target = _target_area_for(subject_state)
     pad = math.sqrt(1.0 / target)
     crop_w = min(1.0, bbox_w * pad)
     crop_h = min(1.0, bbox_h * pad)
@@ -1017,7 +1019,7 @@ from scripts.detect_subjects.data import (
 def fake_manifests(tmp_path):
     manifest_dir = tmp_path / "manifest"
     manifest_dir.mkdir()
-    cols = ["image_id", "source", "taxon_order", "subject_type",
+    cols = ["image_id", "source", "taxon_order", "subject_state",
             "description", "width", "height", "filename"]
 
     def write(source: str, rows: list[dict]):
@@ -1031,7 +1033,7 @@ def fake_manifests(tmp_path):
     write("inaturalist", [
         {"image_id": f"inat-{i}", "source": "inaturalist",
          "taxon_order": "Coleoptera" if i % 2 == 0 else "Mantodea",
-         "subject_type": "nature",
+         "subject_state": "wild",
          "description": "habitat" if i < 30 else "adult on leaf",
          "width": "4000", "height": "3000",
          "filename": f"images/inat-{i}.jpg"}
@@ -1040,7 +1042,7 @@ def fake_manifests(tmp_path):
     write("bugwood", [
         {"image_id": f"bw-{i}", "source": "bugwood",
          "taxon_order": "Lepidoptera",
-         "subject_type": "nature",
+         "subject_state": "wild",
          "description": "adult",
          "width": "2000", "height": "1500",
          "filename": f"images/bw-{i}.jpg"}
@@ -1049,7 +1051,7 @@ def fake_manifests(tmp_path):
     write("smithsonian", [
         {"image_id": f"sm-{i}", "source": "smithsonian",
          "taxon_order": "Coleoptera",
-         "subject_type": "specimen",
+         "subject_state": "specimen",
          "description": "specimen",
          "width": "2000", "height": "1500",
          "filename": f"images/sm-{i}.jpg"}
@@ -1275,7 +1277,7 @@ def test_load_completed_pairs_reads_existing_rows(tmp_path):
     null_fields = {c: None for c in SCHEMA.names
                    if c not in {"image_id", "variant", "framing_quality",
                                 "detector_model", "source", "img_w", "img_h",
-                                "subject_type", "n_raw_detections",
+                                "subject_state", "n_raw_detections",
                                 "n_distinct_detections", "processed_at",
                                 "schema_version"}}
     base = {
@@ -1284,7 +1286,7 @@ def test_load_completed_pairs_reads_existing_rows(tmp_path):
         "detector_model": "m",
         "source": "inaturalist",
         "img_w": 100, "img_h": 100,
-        "subject_type": "nature",
+        "subject_state": "wild",
         "n_raw_detections": 0, "n_distinct_detections": 0,
         "processed_at": 1747278900_000,
         "schema_version": 1,
@@ -2007,7 +2009,7 @@ def run_v1_on_sample(
         try:
             image_id = row["image_id"]
             source = row["source"]
-            subject_type = row.get("subject_type") or "nature"
+            subject_state = row.get("subject_state") or "wild"
             img_path = _image_path_for(row)
             if not img_path.exists():
                 print(f"[v1] WARN missing image {img_path}")
@@ -2051,7 +2053,7 @@ def run_v1_on_sample(
                         bbox_y=det.bbox_xywh_normalized[1],
                         bbox_w=det.bbox_xywh_normalized[2],
                         bbox_h=det.bbox_xywh_normalized[3],
-                        subject_type=subject_type,
+                        subject_state=subject_state,
                     )
                     crop_x, crop_y, crop_w, crop_h = (
                         cd.crop_x, cd.crop_y, cd.crop_w, cd.crop_h)
@@ -2079,7 +2081,7 @@ def run_v1_on_sample(
 
                 dr = DetectionRow(
                     image_id=image_id, source=source, variant=V1_NAME,
-                    img_w=W, img_h=H, subject_type=subject_type,
+                    img_w=W, img_h=H, subject_state=subject_state,
                     n_raw_detections=det.n_raw_detections,
                     n_distinct_detections=det.n_distinct_detections,
                     bbox_x=det.bbox_xywh_normalized[0] if det.bbox_xywh_normalized else None,
@@ -2555,7 +2557,7 @@ def run_smoke_benchmark() -> int:
     try:
         dr = DetectionRow(
             image_id="smoke-1", source="test", variant="smoke",
-            img_w=100, img_h=100, subject_type="nature",
+            img_w=100, img_h=100, subject_state="wild",
             n_raw_detections=1, n_distinct_detections=1,
             bbox_x=0.25, bbox_y=0.25, bbox_w=0.25, bbox_h=0.25,
             confidence=0.8, bbox_area_ratio=0.0625, offcenter=0.0,
