@@ -89,7 +89,7 @@
   <label>Source <select id="source"><option value="all">all</option>{% for s in sources %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></label>
   <label>Predicted <select id="quality"><option value="all">all</option><option value="good">good</option><option value="tight">tight</option><option value="wide">wide</option><option value="no_bug">no_bug</option><option value="bug_too_small">bug_too_small</option><option value="multi_bug">multi_bug</option><option value="poor_contrast">poor_contrast</option></select></label>
   <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="looks-good">looks-good</option><option value="flagged">any flag</option></select></label>
-  <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_min_edge">min-edge px ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="random">random</option></select></label>
+  <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="random">random</option></select></label>
   <span class="totals" id="totals">{{ total }} images</span>
   <button onclick="exportLabels()" title="Download all labels as labels.json">Export labels</button>
   <button onclick="document.getElementById('importLabels').click()" title="Load a previously-exported labels.json (merges)">Import labels</button>
@@ -370,6 +370,7 @@ function render() {
   }
   if (sortBy === "random") rows.sort(() => Math.random() - 0.5);
   else if (sortBy === "bbox_area") rows.sort((a, b) => (a.bbox_area_ratio ?? 0) - (b.bbox_area_ratio ?? 0));
+  else if (sortBy === "bbox_long_edge") rows.sort((a, b) => (a.bbox_long_edge_px ?? 0) - (b.bbox_long_edge_px ?? 0));
   else if (sortBy === "bbox_min_edge") rows.sort((a, b) => (a.bbox_min_edge_px ?? 0) - (b.bbox_min_edge_px ?? 0));
   else if (sortBy === "confidence") rows.sort((a, b) => (a.confidence ?? 0) - (b.confidence ?? 0));
   else if (sortBy === "lab_delta_e") rows.sort((a, b) => (a.lab_delta_e ?? 999) - (b.lab_delta_e ?? 999));
@@ -409,8 +410,10 @@ function render() {
       '<span class="badge ' + r.framing_quality + '">' + r.framing_quality + '</span>' +
       '<span class="action">→ ' + predictedAction(r.framing_quality) + '</span>' +
       '<div class="metrics">' +
-        'bbox: ' + fmtPct(r.bbox_area_ratio) + ' (' + (r.bbox_min_edge_px !== null && r.bbox_min_edge_px !== undefined ? r.bbox_min_edge_px.toFixed(0) : "—") + ' px min edge) · ' +
-        'crop fills: ' + fmtPct(r.post_crop_subject_area) + '<br>' +
+        'bbox: ' + fmtPct(r.bbox_area_ratio) + ' (' +
+          (r.bbox_long_edge_px !== null && r.bbox_long_edge_px !== undefined ? r.bbox_long_edge_px.toFixed(0) + 'px long' : '—') + ' / ' +
+          (r.bbox_min_edge_px !== null && r.bbox_min_edge_px !== undefined ? r.bbox_min_edge_px.toFixed(0) + 'px short' : '—') +
+        ') · crop fills: ' + fmtPct(r.post_crop_subject_area) + '<br>' +
         'conf: ' + fmtNum(r.confidence, 2) + ' · ΔE: ' + fmtNum(r.lab_delta_e, 1) + ' · sharpness: ' + fmtNum(r.subject_sharpness, 0) + '<br>' +
         'detected: ' + r.n_distinct_detections + ' bug' + (r.n_distinct_detections === 1 ? '' : 's') +
         (r.bbox_touches_edge ? ' · ⚠ bbox touches frame edge' : '') +

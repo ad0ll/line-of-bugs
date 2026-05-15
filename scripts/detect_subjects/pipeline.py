@@ -110,13 +110,16 @@ def run_v1_on_sample(
                 bbox_area = None
                 offc = None
                 bbox_min_edge_px = None
+                bbox_long_edge_px = None
                 bbox_touches_edge = None
                 if det.bbox_xywh_normalized is not None:
                     bx, by, bw, bh = det.bbox_xywh_normalized
                     bbox_area = bbox_area_ratio_normalized(bw, bh)
                     offc = offcenter_normalized(bx, by, bw, bh)
-                    # Absolute bug size in pixels (short edge — what limits usability for fullscreen drawing).
+                    # Absolute bug size in pixels — long edge is what we classify on
+                    # (at least one side must clear the 512px threshold), short edge is kept for diagnostics.
                     bbox_min_edge_px = float(min(bw * W, bh * H))
+                    bbox_long_edge_px = float(max(bw * W, bh * H))
                     # Bug body extends to / runs off the image edge?
                     bbox_touches_edge = bool(
                         bx < BBOX_EDGE_TOLERANCE_NORMALIZED
@@ -172,7 +175,7 @@ def run_v1_on_sample(
                 quality = classify_framing(
                     confidence=det.confidence,
                     bbox_area_ratio=bbox_area,
-                    bbox_min_edge_px=bbox_min_edge_px,
+                    bbox_long_edge_px=bbox_long_edge_px,
                     n_distinct_detections=det.n_distinct_detections,
                     mask_area_ratio=mask_area,
                     lab_delta_e=d_e,
@@ -198,6 +201,7 @@ def run_v1_on_sample(
                     lab_delta_e=d_e, boundary_sharpness=sharp,
                     subject_sharpness=subj_sharp,
                     bbox_min_edge_px=bbox_min_edge_px,
+                    bbox_long_edge_px=bbox_long_edge_px,
                     bbox_touches_edge=bbox_touches_edge,
                     crop_x=crop_x, crop_y=crop_y, crop_w=crop_w, crop_h=crop_h,
                     post_crop_subject_area=post_area,

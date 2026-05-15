@@ -69,6 +69,7 @@ def build_html_for_variant(
             "bbox_w": row["bbox_w"], "bbox_h": row["bbox_h"],
             "bbox_area_ratio": row["bbox_area_ratio"],
             "bbox_min_edge_px": row.get("bbox_min_edge_px"),
+            "bbox_long_edge_px": row.get("bbox_long_edge_px"),
             "bbox_touches_edge": row.get("bbox_touches_edge"),
             "post_crop_subject_area": row["post_crop_subject_area"],
             "confidence": row["confidence"],

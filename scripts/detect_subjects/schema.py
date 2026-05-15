@@ -29,6 +29,7 @@ class DetectionRow:
     boundary_sharpness: Optional[float]
     subject_sharpness: Optional[float]
     bbox_min_edge_px: Optional[float]
+    bbox_long_edge_px: Optional[float]
     bbox_touches_edge: Optional[bool]
     crop_x: Optional[float]
     crop_y: Optional[float]
@@ -71,6 +72,7 @@ SCHEMA = pa.schema([
     ("boundary_sharpness", pa.float32()),
     ("subject_sharpness", pa.float32()),
     ("bbox_min_edge_px", pa.float32()),
+    ("bbox_long_edge_px", pa.float32()),
     ("bbox_touches_edge", pa.bool_()),
     ("crop_x", pa.float32()),
     ("crop_y", pa.float32()),

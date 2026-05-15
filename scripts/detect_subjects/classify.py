@@ -32,7 +32,7 @@ from scripts.detect_subjects.config import (
 def classify_framing(
     confidence: Optional[float],
     bbox_area_ratio: Optional[float],
-    bbox_min_edge_px: Optional[float],
+    bbox_long_edge_px: Optional[float],
     n_distinct_detections: int,
     mask_area_ratio: Optional[float],
     lab_delta_e: Optional[float],
@@ -44,7 +44,7 @@ def classify_framing(
     # We found a bug, but it's tiny — by frame fraction or by absolute pixels.
     if bbox_area_ratio < CLASSIFY_HIDDEN_AREA:
         return "bug_too_small"
-    if bbox_min_edge_px is not None and bbox_min_edge_px < CLASSIFY_BUG_TOO_SMALL_EDGE_PX:
+    if bbox_long_edge_px is not None and bbox_long_edge_px < CLASSIFY_BUG_TOO_SMALL_EDGE_PX:
         return "bug_too_small"
     # Multiple distinct detections.
     if n_distinct_detections >= 2:
