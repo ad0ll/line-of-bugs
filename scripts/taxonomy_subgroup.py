@@ -1,33 +1,13 @@
-"""R6 backfill: derive `taxon_subgroup` for every row in the images table.
+"""Taxonomy classifier — maps an iNat-style (taxon_order, ancestor_ids)
+pair to a layperson chip key (`taxon_subgroup`).
 
-This is a one-shot — once it's run and the fetchers themselves populate
-the column at write time (see scripts/fetch_inaturalist.py +
-scripts/fetch_bugwood.py post-R6), this script's purpose is exhausted
-and it can be deleted.
-
-Strategy:
-  1. For iNat rows: parse raw_metadata.taxon.ancestor_ids and walk
-     TAXON_ID_TO_SUBGROUP (insertion-order = specific-first). First match
-     wins.
-  2. Per-order default for rows that don't hit a specific ancestor
-     (Mantodea → mantis, Blattodea → cockroach, etc.).
-  3. Last-resort Lepidoptera-without-Papilionoidea → moth, Coleoptera
-     without Coccinellidae → beetle, etc.
-  4. Anything in the WEIRD_ORDERS set → "weird".
-  5. Anything we can't classify → leaves taxon_subgroup NULL (caller's
-     UI shows "weird" as the catch-all for nulls if it wants).
-
-Bugwood + Smithsonian rows have no rich `ancestor_ids` (we don't fetch
-iNat-style taxonomy from them). They fall through to step 2-4.
+Used by the fetchers at write time so every new row gets its chip
+assignment without needing a backfill. The original one-shot backfill
+that populated existing rows was deleted after running (commits
+ba43e7c / preceding R6 task 4); recover it from git history if a new
+column lookup ever needs to be backfilled the same way.
 """
 from __future__ import annotations
-import json
-import sqlite3
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from db import DB_PATH
 
 
 # Specific ancestor IDs we look for in raw_metadata.taxon.ancestor_ids.
@@ -114,50 +94,3 @@ def classify(taxon_order: str, ancestor_ids: list[int]) -> str | None:
     # 4. Final catch-all — a known order that we just don't have a chip
     # for goes to "weird" rather than NULL.
     return "weird"
-
-
-def main() -> int:
-    conn = sqlite3.connect(DB_PATH, isolation_level=None)
-    conn.execute("PRAGMA busy_timeout = 5000")
-
-    rows = conn.execute(
-        "SELECT image_id, taxon_order, raw_metadata "
-        "FROM images WHERE taxon_subgroup IS NULL"
-    ).fetchall()
-    print(f"backfill: {len(rows)} rows needing classification", flush=True)
-
-    updates: list[tuple[str, str]] = []
-    none_count = 0
-    for image_id, taxon_order, raw in rows:
-        ancestor_ids: list[int] = []
-        if raw and raw != "{}":
-            try:
-                obj = json.loads(raw)
-                ancestor_ids = (obj.get("taxon") or {}).get("ancestor_ids") or []
-            except Exception:
-                pass
-        subgroup = classify(taxon_order or "", ancestor_ids)
-        if subgroup:
-            updates.append((subgroup, image_id))
-        else:
-            none_count += 1
-
-    print(f"backfill: applying {len(updates)} updates ({none_count} unclassifiable)",
-          flush=True)
-    conn.executemany(
-        "UPDATE images SET taxon_subgroup = ? WHERE image_id = ?",
-        updates,
-    )
-
-    print("backfill: distribution after run:", flush=True)
-    for subgroup, count in conn.execute(
-        "SELECT COALESCE(taxon_subgroup, '<NULL>'), COUNT(*) "
-        "FROM images GROUP BY taxon_subgroup ORDER BY 2 DESC"
-    ):
-        print(f"  {subgroup:<14}  {count:>6}", flush=True)
-    conn.close()
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())

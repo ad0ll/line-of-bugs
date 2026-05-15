@@ -5,7 +5,7 @@ looking for the IDs in TAXON_ID_TO_SUBGROUP. First match wins, so
 more-specific IDs must precede general ones. Then a per-order default
 applies for everything else.
 """
-from scripts.backfill_taxon_subgroup import classify
+from scripts.taxonomy_subgroup import classify
 
 
 # Ancestor lists are illustrative — they only need the FIRST matching

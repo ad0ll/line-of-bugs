@@ -39,7 +39,7 @@ from common import (
     setup_logging, build_filename, slugify,
 )
 from db import DbWriter
-from backfill_taxon_subgroup import classify as classify_subgroup
+from taxonomy_subgroup import classify as classify_subgroup
 
 log = setup_logging("inat")
 S = session()
