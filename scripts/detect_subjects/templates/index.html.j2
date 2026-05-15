@@ -93,7 +93,10 @@
   <label>Quality <select id="quality"><option value="all">all</option><option value="good">good</option><option value="tight">tight</option><option value="wide">wide</option><option value="hidden">hidden</option><option value="multi_bug">multi_bug</option><option value="camouflaged">camouflaged</option></select></label>
   <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="random">random</option></select></label>
   <span class="totals" id="totals">{{ total }} images</span>
-  <button onclick="exportLabels()">Export labels</button>
+  <button onclick="exportLabels()" title="Download all labels as labels.json">Export labels</button>
+  <button onclick="document.getElementById('importLabels').click()" title="Load a previously-exported labels.json (merges with current)">Import labels</button>
+  <input type="file" id="importLabels" accept=".json" style="display:none">
+  <span id="saveStatus" style="font-size:12px;color:#666;margin-left:8px"></span>
 </header>
 
 <div class="help">
@@ -132,6 +135,7 @@ function label(id, kind) {
   if (cur.status === null && cur.should_be === null) delete all[id];
   else all[id] = cur;
   setLabels(all);
+  bumpSaveMeta();
   render();
 }
 
@@ -145,16 +149,86 @@ function setShouldBe(id, value) {
   if (cur.status === null && cur.should_be === null) delete all[id];
   else all[id] = cur;
   setLabels(all);
+  bumpSaveMeta();
   render();
 }
 
-function exportLabels() {
-  const blob = new Blob([JSON.stringify(getLabels(), null, 2)], { type: "application/json" });
+const SAVE_META_KEY = "framing_labels_meta";
+function getSaveMeta() {
+  return JSON.parse(localStorage.getItem(SAVE_META_KEY) || '{"changes_since_export":0, "last_export":null, "last_change":null}');
+}
+function setSaveMeta(m) {
+  try {
+    localStorage.setItem(SAVE_META_KEY, JSON.stringify(m));
+  } catch (e) { /* localStorage may fail under quota; we silently degrade. */ }
+}
+function updateSaveStatus() {
+  const el = document.getElementById("saveStatus");
+  if (!el) return;
+  const m = getSaveMeta();
+  const n = Object.keys(getLabels()).length;
+  const t = m.last_change ? new Date(m.last_change).toLocaleTimeString() : "—";
+  el.textContent = n + " labels · last saved " + t + (m.changes_since_export ? " · " + m.changes_since_export + " since export" : "");
+}
+
+function bumpSaveMeta() {
+  const m = getSaveMeta();
+  m.changes_since_export = (m.changes_since_export || 0) + 1;
+  m.last_change = Date.now();
+  setSaveMeta(m);
+  updateSaveStatus();
+  // Best-effort auto-export every 25 changes
+  if (m.changes_since_export >= 25 && m.changes_since_export % 25 === 0) {
+    try { exportLabels(true); }
+    catch (e) {
+      const el = document.getElementById("saveStatus");
+      if (el) { el.textContent = "auto-export failed: " + e.message; el.style.color = "#ef4444"; }
+    }
+  }
+}
+
+function exportLabels(auto) {
+  const data = JSON.stringify(getLabels(), null, 2);
+  const blob = new Blob([data], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "labels.json";
+  const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  a.download = auto ? ("labels-autosave-" + ts + ".json") : "labels.json";
   a.click();
+  const m = getSaveMeta();
+  m.changes_since_export = 0;
+  m.last_export = Date.now();
+  setSaveMeta(m);
+  updateSaveStatus();
 }
+
+document.getElementById("importLabels").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      const cur = getLabels();
+      let added = 0;
+      for (const [k, v] of Object.entries(imported)) {
+        // Upgrade old-shape string entries to {status, should_be}
+        cur[k] = typeof v === "string" ? { status: v, should_be: null } : v;
+        added++;
+      }
+      setLabels(cur);
+      updateSaveStatus();
+      render();
+      const el = document.getElementById("saveStatus");
+      if (el) { el.textContent = "imported " + added + " labels"; el.style.color = "#a8e6a8"; setTimeout(updateSaveStatus, 2000); }
+    } catch (err) {
+      const el = document.getElementById("saveStatus");
+      if (el) { el.textContent = "import failed: " + err.message; el.style.color = "#ef4444"; }
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";  // allow re-importing the same file
+});
 
 function fmtPct(n) { return n === null || n === undefined ? "—" : (n * 100).toFixed(1) + "%"; }
 function fmtNum(n, d) { return n === null || n === undefined ? "—" : n.toFixed(d); }
@@ -242,6 +316,7 @@ document.getElementById("source").addEventListener("change", render);
 document.getElementById("quality").addEventListener("change", render);
 document.getElementById("sort").addEventListener("change", render);
 render();
+updateSaveStatus();
 
 // ─── Mouse-follow zoom (with bbox preserved on originals) ─────────
 const zoomPopup = document.createElement("div");
