@@ -53,7 +53,7 @@ INSECT_PROMPT = (
 BOX_THRESHOLD = 0.15  # lowered so we capture bbox data on low-conf cases (still classify as 'hidden')
 TEXT_THRESHOLD = 0.20
 NMS_IOU_THRESHOLD = 0.5
-HIGH_CONF_THRESHOLD = 0.20  # matches CLASSIFY_HIDDEN_CONF; "distinct" means above the calibrated signal floor, not the (overly strict) original 0.40
+HIGH_CONF_THRESHOLD = 0.30  # 2026-05-15: raised from 0.20 — the 0.20-0.25 band was mostly flower/leaf false-positives in validator labelling. CLASSIFY_HIDDEN_CONF (no-bug gate) intentionally stays at 0.20.
 
 # ─── Classification thresholds (initial — tuned later) ─────────────
 CLASSIFY_HIDDEN_CONF       = 0.20  # GroundingDINO's calibration is low for multi-class period-separated prompts; 0.20 matches the actual distribution while keeping BOX_THRESHOLD=0.15 as the "any signal" floor
