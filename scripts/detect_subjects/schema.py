@@ -27,6 +27,7 @@ class DetectionRow:
     mask_iou_score: Optional[float]
     lab_delta_e: Optional[float]
     boundary_sharpness: Optional[float]
+    subject_sharpness: Optional[float]
     crop_x: Optional[float]
     crop_y: Optional[float]
     crop_w: Optional[float]
@@ -66,6 +67,7 @@ SCHEMA = pa.schema([
     ("mask_iou_score", pa.float32()),
     ("lab_delta_e", pa.float32()),
     ("boundary_sharpness", pa.float32()),
+    ("subject_sharpness", pa.float32()),
     ("crop_x", pa.float32()),
     ("crop_y", pa.float32()),
     ("crop_w", pa.float32()),

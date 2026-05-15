@@ -29,11 +29,19 @@
   .badge.hidden { background: #4a2d2d; color: #e6a8a8; }
   .badge.multi_bug { background: #4a2d4a; color: #e6a8e6; }
   .badge.camouflaged { background: #2d3a4a; color: #a8c8e6; }
+  .badge.blurred { background: #3a2d4a; color: #c8a8e6; }
   .metrics { font-size: 12px; color: #aaa; font-family: 'JetBrains Mono', monospace; margin: 4px 0; line-height: 1.5; }
-  .labels { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 4px; margin-top: 8px; }
-  .labels button { padding: 6px 4px; border: 1px solid #444; background: #1a1820; color: #aaa; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 400; }
-  .labels button:hover { color: #f5f5f5; border-color: #666; }
-  .labels button.active { background: #FF6EC7; color: #0d0c10; border-color: #FF6EC7; font-weight: 600; }
+  /* Single button language used by both .labels and .should-be. */
+  .row-buttons { display: grid; gap: 4px; margin-top: 8px; }
+  .row-buttons button {
+    padding: 6px 4px; border: 1px solid #444; background: #1a1820;
+    color: #aaa; border-radius: 4px; cursor: pointer;
+    font-size: 11px; font-weight: 400; white-space: nowrap;
+    transition: background 0.08s, border-color 0.08s, color 0.08s;
+  }
+  .row-buttons button:hover { color: #f5f5f5; border-color: #666; }
+  .row-buttons button.active { background: #FF6EC7; color: #0d0c10; border-color: #FF6EC7; font-weight: 600; }
+  .labels { grid-template-columns: 1fr 1fr 1fr 1fr 1fr; }
   .labels button.wrong-bbox.active { background: #ef4444; color: #fff; border-color: #ef4444; }
   .labels button.wrong-class.active { background: #f59e0b; color: #0d0c10; border-color: #f59e0b; }
   .labels button.wrong-crop.active { background: #A78BFA; color: #0d0c10; border-color: #A78BFA; }
@@ -65,17 +73,10 @@
     pointer-events: none;
     display: none;
   }
-  /* "Should be" override row — buttons instead of a dropdown for fast clicking */
-  .should-be { display: grid; grid-template-columns: auto repeat(6, 1fr) auto; gap: 0.3vw; margin-top: 0.5vw; align-items: stretch; font-size: 0.8vw; color: #888; }
-  @media (max-width: 1400px) { .should-be { font-size: 11px; gap: 4px; margin-top: 6px; } }
-  .should-be > .label { display: flex; align-items: center; padding: 0 0.3vw; }
-  .should-be button {
-    padding: 0.35vw 0.2vw; border: 1px solid #444; background: #1a1820;
-    color: #aaa; border-radius: 4px; cursor: pointer;
-    font-size: inherit; font-weight: 400; white-space: nowrap;
-  }
-  @media (max-width: 1400px) { .should-be button { padding: 4px 2px; } }
-  .should-be button:hover { color: #f5f5f5; border-color: #666; }
+  /* "should be" row: same button language as .labels, with an amber active state to
+     mirror the .labels .wrong-class color cue. */
+  .should-be { grid-template-columns: auto repeat(7, 1fr) auto; align-items: stretch; }
+  .should-be > .label { display: flex; align-items: center; padding: 0 6px; font-size: 11px; color: #888; }
   .should-be button.active { background: #f59e0b; color: #0d0c10; border-color: #f59e0b; font-weight: 600; }
   .should-be .clear { color: #666; font-weight: 700; }
   /* Help blurb */
@@ -164,13 +165,14 @@ const CLASS_DESC = {
   wide:        "bbox covers 2-20% of frame; bug small (auto-crop to 30% nature / 60% specimen)",
   hidden:      "no detection, or conf<0.20, or bbox<2% (don't show; flag for review)",
   multi_bug:   "2+ distinct detections after NMS (don't crop; flag for review)",
-  camouflaged: "subject and background nearly the same color (LAB ΔE<12)",
+  blurred:     "subject is out of focus (Laplacian variance over bbox < 60) — bad for drawing",
+  camouflaged: "subject and background nearly the same color (LAB ΔE<8)",
 };
 function classTitle(c) { return CLASS_DESC[c] || c; }
 
 const STATUS_DESC = {
   ok:           "Everything looks correct: bbox + class + crop are all right",
-  "wrong-bbox": "Bbox missed the bug, captured the wrong part, or wrong subject",
+  "wrong-bbox": "Bbox is wrong: missed the bug, too small (clipped the body), captured the wrong part (head/wing only), or wrong subject entirely",
   "wrong-class":"Bbox is fine but the framing class (good/wide/hidden/...) is wrong",
   "wrong-crop": "Bbox + class are fine but the crop aesthetic is bad (too tight/loose/off-center)",
   unsure:       "Ambiguous — not sure how to label this one",
@@ -218,16 +220,16 @@ function render() {
         'detected: ' + r.n_distinct_detections + ' bug' + (r.n_distinct_detections === 1 ? '' : 's') +
         (r.gt_iou !== null ? ' · gt_iou: ' + r.gt_iou.toFixed(2) : '') +
       '</div>' +
-      '<div class="labels">' +
+      '<div class="row-buttons labels">' +
         '<button title="' + STATUS_DESC.ok + '" class="' + (status === 'ok' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'ok\')">✓ correct</button>' +
         '<button title="' + STATUS_DESC['wrong-bbox'] + '" class="wrong-bbox ' + (status === 'wrong-bbox' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-bbox\')">✗ bbox</button>' +
         '<button title="' + STATUS_DESC['wrong-class'] + '" class="wrong-class ' + (status === 'wrong-class' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-class\')">✗ class</button>' +
         '<button title="' + STATUS_DESC['wrong-crop'] + '" class="wrong-crop ' + (status === 'wrong-crop' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-crop\')">✗ crop</button>' +
         '<button title="' + STATUS_DESC.unsure + '" class="' + (status === 'unsure' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'unsure\')">? unsure</button>' +
       '</div>' +
-      '<div class="should-be">' +
+      '<div class="row-buttons should-be">' +
         '<span class="label">should be:</span>' +
-        ['good', 'tight', 'wide', 'hidden', 'multi_bug', 'camouflaged'].map(v =>
+        ['good', 'tight', 'wide', 'hidden', 'multi_bug', 'blurred', 'camouflaged'].map(v =>
           '<button class="' + (shouldBe === v ? 'active' : '') + '" title="' + classTitle(v) + '" onclick="setShouldBe(\'' + r.image_id + '\',\'' + v + '\')">' + v + '</button>'
         ).join('') +
         '<button class="clear" title="clear the override" onclick="setShouldBe(\'' + r.image_id + '\',null)">×</button>' +

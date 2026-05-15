@@ -60,7 +60,8 @@ CLASSIFY_HIDDEN_CONF       = 0.20  # GroundingDINO's calibration is low for mult
 CLASSIFY_HIDDEN_AREA       = 0.02
 CLASSIFY_WIDE_AREA         = 0.20
 CLASSIFY_TIGHT_AREA        = 0.50
-CLASSIFY_CAMOUFLAGED_DELTA = 12.0
+CLASSIFY_CAMOUFLAGED_DELTA = 8.0   # was 12 — data showed 17% being flagged camouflaged; 8 catches the genuinely-low-contrast 6%
+CLASSIFY_BLURRED_SHARPNESS = 60.0  # Laplacian variance over the bbox region — flags subjects out of focus (~20% of v1 at this threshold)
 
 # ─── Crop targets ──────────────────────────────────────────────────
 CROP_TARGET_AREA_NATURE   = 0.30
