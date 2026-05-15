@@ -2,13 +2,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
-import { parseBasicAuth } from "./lib/auth";
+import { ADMIN_USER, constantTimeEq, parseBasicAuth } from "./lib/auth";
 
 export const config = {
   matcher: ["/admin/:path*", "/api/admin/:path*"],
 };
-
-const ADMIN_USER = "admin";
 
 function unauthorized() {
   return new NextResponse("auth required", {
@@ -17,11 +15,11 @@ function unauthorized() {
   });
 }
 
-export function proxy(req: NextRequest): NextResponse {
+export async function proxy(req: NextRequest): Promise<NextResponse> {
   const hash = process.env.ADMIN_PASSWORD_HASH;
   if (!hash) return unauthorized();
   const creds = parseBasicAuth(req.headers.get("authorization"));
-  if (!creds || creds.user !== ADMIN_USER) return unauthorized();
-  if (!bcrypt.compareSync(creds.password, hash)) return unauthorized();
+  if (!creds || !constantTimeEq(creds.user, ADMIN_USER)) return unauthorized();
+  if (!(await bcrypt.compare(creds.password, hash))) return unauthorized();
   return NextResponse.next();
 }
