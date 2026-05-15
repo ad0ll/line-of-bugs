@@ -1,12 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { HomeClient } from "./components/home/HomeClient";
-import {
-  listViewCounts,
-  listLifeStageCounts,
-  listSexCounts,
-  listTaxonGroupCounts,
-} from "@/lib/queries/gallery";
+import { getUnfilteredFacets } from "@/lib/queries/facets";
 import { parseSubject } from "@/lib/subject";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -26,21 +21,18 @@ async function HomeShell({ searchParams }: { searchParams: SearchParams }) {
     repeatRaw === "never-repeat-animals" || repeatRaw === "allow-different-angles"
       ? repeatRaw
       : "default";
-  const [views, lifeStages, sexes, taxonGroups] = await Promise.all([
-    listViewCounts(),
-    listLifeStageCounts(),
-    listSexCounts(),
-    listTaxonGroupCounts(),
-  ]);
+  // Initial render uses the *unfiltered* facets — they double as both
+  // "filtered" and "total" at render time (count === total → single
+  // number). The client refreshes filtered counts via /api/facets on
+  // every filter change; totals stay frozen for the lifetime of the
+  // page load.
+  const initialFacets = await getUnfilteredFacets();
   return (
     <HomeClient
       initialInterval={interval}
       initialSubject={subject}
       initialRepeat={repeat}
-      viewCounts={views}
-      lifeStageCounts={lifeStages}
-      sexCounts={sexes}
-      taxonGroupCounts={taxonGroups}
+      initialFacets={initialFacets}
     />
   );
 }

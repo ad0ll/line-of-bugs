@@ -247,7 +247,17 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 }
 .chip-active .chip-count { color: var(--text-on-accent); opacity: 0.75; }
 .chip-count { font-family: var(--font-mono), monospace; margin-left: var(--s2); opacity: 0.6; }
+.chip-count-total {
+  opacity: 0.55;
+  margin-left: 1px;
+  font-variant-numeric: tabular-nums;
+}
 .chip-label { display: inline-block; }
+/* Chips greyed because their filtered count is 0 given the current
+   other-axis selection. Still clickable — the user might want to
+   toggle them as a way to clear a contradictory filter elsewhere. */
+.chip-disabled { opacity: 0.4; }
+.chip-disabled:hover { opacity: 0.55; }
 
 .gallery-filters-skeleton {
   height: 36px;
@@ -366,6 +376,9 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   color: var(--text-tertiary);
   font-size: 0.8rem;
 }
+.filter-popover-count-total { opacity: 0.6; }
+.filter-popover-row-disabled label { opacity: 0.5; }
+.filter-popover-row-disabled label:hover { opacity: 0.65; }
 .filter-popover-clear {
   background: transparent;
   border: none;

@@ -9,21 +9,26 @@
  * Chips with a `tooltip` field in TAXON_GROUPS (e.g., aphids, stick
  * insects) pass it through to the shared <Chip>; the rest pass
  * `tooltip={null}` — both paths are forced at the type level.
+ *
+ * Counts come from the merged facet snapshot — `count` is the filtered
+ * count (every other axis applied, this axis ignored), `total` is the
+ * absolute unfiltered count. Zero-filtered chips render greyed so the
+ * user sees that clicking them won't help given the current other-axis
+ * filters. Zero-total chips (data we never had) stay hidden.
  */
 import { TAXON_GROUPS } from '@/lib/taxonomy';
 import type { FilterOption } from '@/app/components/filters/FilterPopover';
 import { Chip } from '@/app/components/ui/Chip';
 
 export interface TaxonGroupChipsProps {
-  /** Per-chip counts keyed by chip `name` (matches the chip key). Comes
-   *  from listTaxonGroupCounts(). */
+  /** Per-chip counts keyed by chip `name`. From the facet snapshot. */
   counts: FilterOption[];
   selected: string[];
   onChange: (next: string[]) => void;
 }
 
 export function TaxonGroupChips({ counts, selected, onChange }: TaxonGroupChipsProps) {
-  const countByKey = new Map(counts.map((c) => [c.name, c.count]));
+  const byKey = new Map(counts.map((c) => [c.name, c]));
 
   function toggle(key: string) {
     const set = new Set(selected);
@@ -35,14 +40,19 @@ export function TaxonGroupChips({ counts, selected, onChange }: TaxonGroupChipsP
   return (
     <div className="taxon-group-chips" role="group" aria-label="filter by what kind of bug">
       {TAXON_GROUPS.map((g, i) => {
-        const count = countByKey.get(g.key);
-        if (count === undefined || count === 0) return null;
+        const opt = byKey.get(g.key);
+        // No total → no data ever for this chip; hide it permanently.
+        const total = opt?.total ?? opt?.count;
+        if (total === undefined || total === 0) return null;
+        const filtered = opt?.count ?? 0;
         return (
           <Chip
             key={g.key}
             label={g.label}
-            count={count}
+            count={filtered}
+            total={total}
             active={selected.includes(g.key)}
+            disabled={filtered === 0}
             tooltip={g.tooltip ?? null}
             onClick={() => toggle(g.key)}
             className="taxon-group-chip"

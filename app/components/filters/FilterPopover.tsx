@@ -11,7 +11,11 @@ import { useEffect, useRef, useState } from 'react';
 
 export interface FilterOption {
   name: string;
+  /** Filtered count — how many rows would match given other-axis filters. */
   count: number;
+  /** Absolute unfiltered count. When present and != count, the option
+   *  renders "filtered / total"; otherwise just one number. */
+  total?: number;
 }
 
 export interface FilterPopoverProps {
@@ -82,19 +86,30 @@ export function FilterPopover({
       {open && (
         <div className="filter-popover-panel" role="dialog" aria-label={ariaLabel ?? idleLabel}>
           <ul className="filter-popover-list">
-            {options.map((o) => (
-              <li key={o.name}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(o.name)}
-                    onChange={() => toggle(o.name)}
-                  />
-                  <span className="filter-popover-name">{o.name}</span>
-                  <span className="filter-popover-count">{o.count.toLocaleString()}</span>
-                </label>
-              </li>
-            ))}
+            {options.map((o) => {
+              const total = o.total ?? o.count;
+              if (total === 0) return null;
+              const showSplit = typeof o.total === "number" && o.count !== o.total;
+              const disabled = o.count === 0;
+              return (
+                <li key={o.name} className={disabled ? "filter-popover-row-disabled" : ""}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={selected.includes(o.name)}
+                      onChange={() => toggle(o.name)}
+                    />
+                    <span className="filter-popover-name">{o.name}</span>
+                    <span className="filter-popover-count">
+                      {o.count.toLocaleString()}
+                      {showSplit && (
+                        <span className="filter-popover-count-total"> / {total.toLocaleString()}</span>
+                      )}
+                    </span>
+                  </label>
+                </li>
+              );
+            })}
           </ul>
           {selected.length > 0 && (
             <button

@@ -13,15 +13,31 @@ import { Tooltip } from "@/app/components/ui/Tooltip";
 import { TOOLTIPS } from "@/lib/tooltips";
 import type { RepeatMode } from "@/lib/repeat-mode";
 import type { SubjectType } from "@/lib/subject";
+import type { FacetCount, FacetSnapshot } from "@/lib/queries/facets";
 
 interface Props {
   initialInterval: number;
   initialSubject: SubjectType;
   initialRepeat: RepeatMode;
-  viewCounts: FilterOption[];
-  lifeStageCounts: FilterOption[];
-  sexCounts: FilterOption[];
-  taxonGroupCounts: FilterOption[];
+  initialFacets: FacetSnapshot;
+}
+
+/**
+ * Merge the absolute "totals" snapshot with the live "filtered" one
+ * into the {name, count, total} shape FilterPopover/TaxonGroupChips
+ * expect. Order is preserved from the totals array (whichever order
+ * server-side returned them in).
+ */
+function mergeFacetCounts(
+  filtered: FacetCount[],
+  totals: FacetCount[],
+): FilterOption[] {
+  const byName = new Map(filtered.map((f) => [f.name, f.count]));
+  return totals.map((t) => ({
+    name: t.name,
+    count: byName.get(t.name) ?? 0,
+    total: t.count,
+  }));
 }
 
 function parseList(v: string | null): string[] {
@@ -44,10 +60,7 @@ export function HomeClient({
   initialInterval,
   initialSubject,
   initialRepeat,
-  viewCounts,
-  lifeStageCounts,
-  sexCounts,
-  taxonGroupCounts,
+  initialFacets,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -79,33 +92,44 @@ export function HomeClient({
     });
   }, [intervalSec, subject, repeat, views, life, sexes, groups, pathname, router]);
 
-  // Live count.
-  const [poolCount, setPoolCount] = useState<number | null>(null);
-  const [countLoading, setCountLoading] = useState(false);
+  // Faceted snapshot — refreshed on every filter change so chips
+  // re-count with own-axis exclusion semantics.
+  const [facets, setFacets] = useState<FacetSnapshot>(initialFacets);
+  const [facetsLoading, setFacetsLoading] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
-    setCountLoading(true);
+    setFacetsLoading(true);
     const q = new URLSearchParams();
     q.set("subject", subject);
     if (views.length) q.set("view", views.join(","));
     if (life.length) q.set("life", life.join(","));
     if (sexes.length) q.set("sex", sexes.join(","));
     if (groups.length) q.set("type", groups.join(","));
-    fetch(`/api/session/count?${q.toString()}`, { signal: controller.signal })
+    fetch(`/api/facets?${q.toString()}`, { signal: controller.signal })
       .then((r) => r.json())
-      .then((d: { count: number }) => setPoolCount(d.count))
+      .then((d: FacetSnapshot) => setFacets(d))
       .catch((err) => {
-        if (err?.name !== "AbortError") setPoolCount(null);
+        if (err?.name !== "AbortError") setFacets(initialFacets);
       })
       .finally(() => {
-        if (!controller.signal.aborted) setCountLoading(false);
+        if (!controller.signal.aborted) setFacetsLoading(false);
       });
     return () => controller.abort();
-  }, [subject, views, life, sexes, groups]);
+  }, [subject, views, life, sexes, groups, initialFacets]);
+
+  const poolCount = facets.total;
+  const countLoading = facetsLoading;
 
   const typeBadge = groups.length > 0 ? `${groups.length} selected` : null;
   const advancedActive = views.length + life.length + sexes.length;
   const advancedBadge = advancedActive > 0 ? `${advancedActive} selected` : null;
+
+  // Merge filtered counts (axis-excluded) with unchanging totals so
+  // chips render "filtered / total" when they differ.
+  const taxonGroupOptions = mergeFacetCounts(facets.taxonGroups, initialFacets.taxonGroups);
+  const viewOptions = mergeFacetCounts(facets.views, initialFacets.views);
+  const lifeOptions = mergeFacetCounts(facets.lifeStages, initialFacets.lifeStages);
+  const sexOptions = mergeFacetCounts(facets.sexes, initialFacets.sexes);
 
   return (
     <div className="home-wrap">
@@ -140,7 +164,7 @@ export function HomeClient({
           <CollapsibleSection title="what kind of bug?" badge={typeBadge}>
             <Tooltip content={TOOLTIPS.taxonGroup.content} showIcon={false}>
               <TaxonGroupChips
-                counts={taxonGroupCounts}
+                counts={taxonGroupOptions}
                 selected={groups}
                 onChange={setGroups}
               />
@@ -156,7 +180,7 @@ export function HomeClient({
                   idleLabel="view: all"
                   selectedLabel={(n) => `view: ${n} selected`}
                   ariaLabel="view filter"
-                  options={viewCounts}
+                  options={viewOptions}
                   selected={views}
                   onChange={setViews}
                 />
@@ -166,7 +190,7 @@ export function HomeClient({
                   idleLabel="life stage: all"
                   selectedLabel={(n) => `life: ${n} selected`}
                   ariaLabel="life stage filter"
-                  options={lifeStageCounts}
+                  options={lifeOptions}
                   selected={life}
                   onChange={setLife}
                 />
@@ -176,7 +200,7 @@ export function HomeClient({
                   idleLabel="sex: all"
                   selectedLabel={(n) => `sex: ${n} selected`}
                   ariaLabel="sex filter"
-                  options={sexCounts}
+                  options={sexOptions}
                   selected={sexes}
                   onChange={setSexes}
                 />
