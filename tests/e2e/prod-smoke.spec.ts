@@ -47,7 +47,9 @@ test("/admin returns 401 unauthorized", async ({ request }) => {
 });
 
 test("admin with valid auth returns 200", async ({ request }) => {
-  const creds = Buffer.from("admin:cdxC9hqaQtnHhFJXCJadUdGB").toString("base64");
+  const password = process.env.ADMIN_PASSWORD;
+  test.skip(!password, "ADMIN_PASSWORD env var required for this test");
+  const creds = Buffer.from(`admin:${password}`).toString("base64");
   const res = await request.get("/admin/reports", {
     headers: { Authorization: `Basic ${creds}` },
   });
