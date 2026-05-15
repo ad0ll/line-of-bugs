@@ -58,15 +58,19 @@
   .badge.poor_contrast { background: #2d3a4a; color: #a8c8e6; }
   .metrics { font-size: 11px; color: #888; font-family: 'JetBrains Mono', monospace; margin: 4px 0; line-height: 1.5; }
 
-  /* Flag buttons — multi-select. Each describes a property of the image. */
-  .flags { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 8px; }
+  /* Flag buttons — multi-select. Each describes a property of the image.
+     Fixed grid-auto-rows so every button is the same height regardless of
+     whether its text wraps to 2-3 lines or fits on one. */
+  .flags { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 52px; gap: 4px; margin-top: 8px; }
   .flags button {
-    padding: 6px 4px; border: 1px solid #444; background: #1a1820;
+    padding: 4px; border: 1px solid #444; background: #1a1820;
     color: #aaa; border-radius: 4px; cursor: pointer;
     font-size: 11px; font-weight: 400;
-    /* Some flag names (bbox-wrong_*) are very long; allow wrap on whitespace
-       AND let the browser break at hyphens/underscores when needed. */
-    overflow-wrap: anywhere; line-height: 1.25; min-height: 30px;
+    /* Some flag names (bbox-wrong_*, subject-blurred_*) wrap to 2-3 lines.
+       overflow-wrap:anywhere lets the browser break at hyphens / underscores. */
+    overflow-wrap: anywhere; line-height: 1.25;
+    /* Center the (possibly multi-line) label inside the fixed-height cell. */
+    display: flex; align-items: center; justify-content: center; text-align: center;
     transition: background 0.08s, border-color 0.08s, color 0.08s;
   }
   .flags button:hover { color: #f5f5f5; border-color: #666; }
@@ -220,6 +224,12 @@ const FLAG_TITLES = {
 // Suggested-label → preference key for the mutually-exclusive pref row.
 const PREF_LABELS = { "original-good": "original", "cropped-good": "cropped" };
 
+// Groups of flags where picking one clears the others. Used for the two
+// subject-blurred severities (partially-usable vs unusable can't both apply).
+const FLAG_MUTEX_GROUPS = [
+  ["subject-blurred_partially-usable", "subject-blurred_unusable"],
+];
+
 // Source of truth: server-owned `data/cache/labels.json`. We mirror it
 // in-memory here; every mutation POSTs the full dict back. localStorage
 // is no longer used — origin / port changes don't lose work anymore.
@@ -329,8 +339,18 @@ function toggleFlag(id, flag) {
   const cur = LABELS[id] || _emptyLabel();
   _ensureMaterialized(cur, _suggestedFor(id));
   const i = cur.flags.indexOf(flag);
-  if (i >= 0) cur.flags.splice(i, 1);
-  else cur.flags.push(flag);
+  if (i >= 0) {
+    cur.flags.splice(i, 1);
+  } else {
+    // If this flag is in a mutex group, clear the others before adding.
+    for (const group of FLAG_MUTEX_GROUPS) {
+      if (group.includes(flag)) {
+        cur.flags = cur.flags.filter(f => !group.includes(f) || f === flag);
+        break;
+      }
+    }
+    cur.flags.push(flag);
+  }
   cur.unsure = false;
   _persist(id, cur);
 }
