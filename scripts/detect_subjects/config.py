@@ -56,7 +56,7 @@ NMS_IOU_THRESHOLD = 0.5
 HIGH_CONF_THRESHOLD = 0.4
 
 # ─── Classification thresholds (initial — tuned later) ─────────────
-CLASSIFY_HIDDEN_CONF       = 0.40
+CLASSIFY_HIDDEN_CONF       = 0.20  # GroundingDINO's calibration is low for multi-class period-separated prompts; 0.20 matches the actual distribution while keeping BOX_THRESHOLD=0.15 as the "any signal" floor
 CLASSIFY_HIDDEN_AREA       = 0.02
 CLASSIFY_WIDE_AREA         = 0.20
 CLASSIFY_TIGHT_AREA        = 0.50
