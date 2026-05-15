@@ -5,8 +5,14 @@ interface Pool {
   createdAt: number;
 }
 
-// Module-level cache. Survives within a Node process; lost on restart.
-const POOLS = new Map<string, Pool>();
+// Hoist to globalThis so the route handler + RSC share state even when
+// Turbopack bundles them into separate module instances.
+const g = globalThis as typeof globalThis & {
+  __lineOfBugsPools?: Map<string, Pool>;
+};
+const POOLS: Map<string, Pool> = g.__lineOfBugsPools ?? new Map();
+g.__lineOfBugsPools = POOLS;
+
 const POOL_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 export function setPool(sessionId: string, items: Image[]): void {
