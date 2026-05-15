@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Framing Validator · {{ variant }}</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; background: #16141a; color: #f5f5f5; margin: 0; padding: 0; }
+  header { position: sticky; top: 0; background: #0d0c10; padding: 12px 24px; border-bottom: 1px solid #28252e; z-index: 10; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 18px; color: #FF6EC7; }
+  header label { font-size: 13px; color: #aaa; }
+  header select { background: #16141a; color: #f5f5f5; border: 1px solid #444; border-radius: 4px; padding: 4px 8px; }
+  header button { background: #FF6EC7; color: #0d0c10; border: none; border-radius: 4px; padding: 6px 12px; font-weight: 600; cursor: pointer; }
+  .totals { margin-left: auto; font-size: 13px; color: #aaa; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 16px; padding: 24px; }
+  .card { background: #1a1820; border: 1px solid #28252e; border-radius: 8px; padding: 12px; }
+  .imgs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .imgs figure { margin: 0; }
+  .imgs figcaption { font-size: 11px; color: #888; margin-top: 2px; }
+  .imgs img { width: 100%; height: 200px; object-fit: contain; background: #0d0c10; border-radius: 4px; display: block; }
+  .name { font-size: 14px; margin: 4px 0; color: #f5f5f5; }
+  .name code { color: #67D4E6; font-size: 11px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 4px 0; }
+  .badge.good { background: #2d4a2d; color: #a8e6a8; }
+  .badge.tight { background: #2d4a2d; color: #a8e6a8; }
+  .badge.wide { background: #4a3d2d; color: #e6c8a8; }
+  .badge.hidden { background: #4a2d2d; color: #e6a8a8; }
+  .badge.multi_bug { background: #4a2d4a; color: #e6a8e6; }
+  .badge.camouflaged { background: #2d3a4a; color: #a8c8e6; }
+  .metrics { font-size: 12px; color: #aaa; font-family: 'JetBrains Mono', monospace; margin: 4px 0; line-height: 1.5; }
+  .labels { display: flex; gap: 4px; margin-top: 8px; }
+  .labels button { flex: 1; padding: 6px; border: 1px solid #444; background: #1a1820; color: #aaa; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 400; }
+  .labels button.active { background: #FF6EC7; color: #0d0c10; border-color: #FF6EC7; font-weight: 600; }
+  .bbox-overlay { position: relative; }
+  .bbox-overlay .box { position: absolute; border: 2px solid #FF6EC7; pointer-events: none; box-sizing: border-box; }
+  .nocrop { width: 100%; height: 200px; display: flex; align-items: center; justify-content: center; background: #0d0c10; color: #666; font-size: 12px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>✿ Framing Validator</h1>
+  <label>Variant <select id="variant"><option>{{ variant }}</option></select></label>
+  <label>Source <select id="source"><option value="all">all</option>{% for s in sources %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></label>
+  <label>Quality <select id="quality"><option value="all">all</option><option value="good">good</option><option value="tight">tight</option><option value="wide">wide</option><option value="hidden">hidden</option><option value="multi_bug">multi_bug</option><option value="camouflaged">camouflaged</option></select></label>
+  <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="random">random</option></select></label>
+  <span class="totals" id="totals">{{ total }} images</span>
+  <button onclick="exportLabels()">Export labels</button>
+</header>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const DATA = {{ data_json }};
+const ROOT = "{{ root }}";
+const LABEL_KEY = "framing_labels";
+
+function getLabels() {
+  return JSON.parse(localStorage.getItem(LABEL_KEY) || "{}");
+}
+function setLabels(o) {
+  localStorage.setItem(LABEL_KEY, JSON.stringify(o));
+}
+
+function label(id, kind) {
+  const all = getLabels();
+  if (all[id] === kind) { delete all[id]; } else { all[id] = kind; }
+  setLabels(all);
+  render();
+}
+
+function exportLabels() {
+  const blob = new Blob([JSON.stringify(getLabels(), null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "labels.json";
+  a.click();
+}
+
+function fmtPct(n) { return n === null || n === undefined ? "—" : (n * 100).toFixed(1) + "%"; }
+function fmtNum(n, d) { return n === null || n === undefined ? "—" : n.toFixed(d); }
+
+function render() {
+  const sf = document.getElementById("source").value;
+  const qf = document.getElementById("quality").value;
+  const sortBy = document.getElementById("sort").value;
+  const labels = getLabels();
+  let rows = DATA.filter(r => sf === "all" || r.source === sf);
+  rows = rows.filter(r => qf === "all" || r.framing_quality === qf);
+  if (sortBy === "random") rows.sort(() => Math.random() - 0.5);
+  else if (sortBy === "bbox_area") rows.sort((a, b) => (a.bbox_area_ratio ?? 0) - (b.bbox_area_ratio ?? 0));
+  else if (sortBy === "confidence") rows.sort((a, b) => (a.confidence ?? 0) - (b.confidence ?? 0));
+  else if (sortBy === "lab_delta_e") rows.sort((a, b) => (a.lab_delta_e ?? 999) - (b.lab_delta_e ?? 999));
+  document.getElementById("totals").textContent = rows.length + " of " + DATA.length + " images";
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  for (const r of rows) {
+    const lbl = labels[r.image_id];
+    const div = document.createElement("div");
+    div.className = "card";
+    const boxHTML = r.bbox_x !== null
+      ? '<div class="box" style="left:' + (r.bbox_x*100) + '%;top:' + (r.bbox_y*100) + '%;width:' + (r.bbox_w*100) + '%;height:' + (r.bbox_h*100) + '%"></div>'
+      : '';
+    const cropHTML = r.crop_path
+      ? '<img src="' + ROOT + '/' + r.crop_path + '" alt="">'
+      : '<div class="nocrop">no crop (' + r.framing_quality + ')</div>';
+    div.innerHTML =
+      '<div class="imgs">' +
+        '<figure>' +
+          '<div class="bbox-overlay"><img src="' + ROOT + '/' + r.original_path + '" alt="">' + boxHTML + '</div>' +
+          '<figcaption>original · bbox shown in pink</figcaption>' +
+        '</figure>' +
+        '<figure>' + cropHTML + '<figcaption>proposed crop · what users see</figcaption></figure>' +
+      '</div>' +
+      '<div class="name">' + (r.common_name || r.taxon_species || "?") + ' <code>· ' + r.image_id + '</code></div>' +
+      '<span class="badge ' + r.framing_quality + '">' + r.framing_quality + '</span>' +
+      '<div class="metrics">' +
+        'bbox: ' + fmtPct(r.bbox_area_ratio) + ' → crop: ' + fmtPct(r.post_crop_subject_area) + '<br>' +
+        'conf: ' + fmtNum(r.confidence, 2) + ' · ΔE: ' + fmtNum(r.lab_delta_e, 1) + ' · off-center: ' + fmtNum(r.offcenter, 2) + '<br>' +
+        'detected: ' + r.n_distinct_detections + ' bug' + (r.n_distinct_detections === 1 ? '' : 's') +
+        (r.gt_iou !== null ? ' · gt_iou: ' + r.gt_iou.toFixed(2) : '') +
+      '</div>' +
+      '<div class="labels">' +
+        '<button class="' + (lbl === 'ok' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'ok\')">✓ correct</button>' +
+        '<button class="' + (lbl === 'wrong' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong\')">✗ wrong</button>' +
+        '<button class="' + (lbl === 'unsure' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'unsure\')">? unsure</button>' +
+      '</div>';
+    grid.appendChild(div);
+  }
+}
+
+document.getElementById("source").addEventListener("change", render);
+document.getElementById("quality").addEventListener("change", render);
+document.getElementById("sort").addEventListener("change", render);
+render();
+</script>
+</body>
+</html>
