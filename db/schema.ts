@@ -82,6 +82,12 @@ export const images = sqliteTable(
     // Bugwood-only structured extras.
     hostOrganism: text("host_organism"),
     specimenCondition: text("specimen_condition"),
+    // Layperson grouping (R6). Values mirror lib/taxonomy.ts:
+    // butterfly / moth / caterpillar / ladybug / beetle / bee / wasp /
+    // ant / fly / mosquito / dragonfly / grasshopper / cricket / mantis /
+    // stick_insect / cockroach / stink_bug / cicada / aphid / earwig / weird.
+    // Populated by scripts/backfill_taxon_subgroup.py + at fetch time.
+    taxonSubgroup: text("taxon_subgroup"),
 
     // Context
     description: text("description"),
@@ -110,6 +116,7 @@ export const images = sqliteTable(
     index("idx_images_view_label").on(t.viewLabel),
     index("idx_images_life_stage").on(t.lifeStage),
     index("idx_images_sex").on(t.sex),
+    index("idx_images_taxon_subgroup").on(t.taxonSubgroup),
     // Non-unique: same content may exist under different image_ids
     // (e.g., one photographer's image pulled via both iNat and Bugwood).
     // The manifest already dedups by image_id; sha256 here is for audit only.

@@ -13,6 +13,7 @@ const img: Image = {
   taxonSpecies: "Harmonia axyridis", commonName: "Asian Lady Beetle",
   subjectState: "wild", viewLabel: null, description: null, capturedDate: null,
   lifeStage: null, sex: null, hostOrganism: null, specimenCondition: null, rawMetadata: null,
+  taxonSubgroup: null,
   hidden: false, addedAt: new Date(),
 };
 

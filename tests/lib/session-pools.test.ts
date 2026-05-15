@@ -11,6 +11,7 @@ const fakeImg = (id: string): Image => ({
   commonName: null, subjectState: "wild", viewLabel: null, description: null,
   capturedDate: null, hidden: false, addedAt: new Date(),
   lifeStage: null, sex: null, hostOrganism: null, specimenCondition: null, rawMetadata: null,
+  taxonSubgroup: null,
 });
 
 describe("session-pools", () => {

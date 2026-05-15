@@ -11,6 +11,7 @@ const mk = (id: string, species: string, collection: string): Image => ({
   commonName: species, subjectState: "wild", viewLabel: null, description: null,
   capturedDate: null, hidden: false, addedAt: new Date(),
   lifeStage: null, sex: null, hostOrganism: null, specimenCondition: null, rawMetadata: null,
+  taxonSubgroup: null,
 });
 
 describe("applyRepeatMode", () => {

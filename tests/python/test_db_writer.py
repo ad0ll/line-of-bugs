@@ -45,6 +45,7 @@ CREATE TABLE images (
     description TEXT,
     captured_date TEXT,
     raw_metadata TEXT,
+    taxon_subgroup TEXT,
     hidden INTEGER DEFAULT 0 NOT NULL,
     added_at INTEGER DEFAULT (unixepoch()) NOT NULL
 );

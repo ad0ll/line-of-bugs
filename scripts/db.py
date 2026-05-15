@@ -38,6 +38,7 @@ COLUMNS = [
     "life_stage", "sex", "host_organism", "specimen_condition",
     "description", "captured_date",
     "raw_metadata",
+    "taxon_subgroup",
 ]
 
 # Updated on conflict — everything except the primary key. hidden +
@@ -62,6 +63,7 @@ _NULLABLE = {
     "taxon_order", "taxon_species", "common_name", "view_label",
     "life_stage", "sex", "host_organism", "specimen_condition",
     "description", "captured_date", "raw_metadata",
+    "taxon_subgroup",
 }
 
 
