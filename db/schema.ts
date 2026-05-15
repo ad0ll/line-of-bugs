@@ -68,6 +68,7 @@ export const images = sqliteTable(
     capturedDate: text("captured_date"),
 
     // Bookkeeping
+    hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
     addedAt: integer("added_at", { mode: "timestamp" })
       .notNull()
       .default(sql`(unixepoch())`),
@@ -86,6 +87,7 @@ export const images = sqliteTable(
     // (e.g., one photographer's image pulled via both iNat and Bugwood).
     // The manifest already dedups by image_id; sha256 here is for audit only.
     index("idx_images_sha256").on(t.fileSha256),
+    index("idx_images_hidden").on(t.hidden),
   ],
 );
 
