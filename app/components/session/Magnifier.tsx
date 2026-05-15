@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Image } from "@/db/schema";
 import type { MagnifierSize } from "@/app/components/session/SessionActionBar";
-import { T } from "@/lib/tokens";
 
 interface Props {
   image: Image;
@@ -73,26 +72,19 @@ export function Magnifier({ image, size, bw }: Props) {
   const cursorInImageY = pos.y - offsetY;
 
   const filename = image.filename.replace(/^images\//, "");
+  // Square hit area so the circle isn't an ellipse when source aspect != 1.
+  const side = Math.max(loupeW, loupeH);
   return (
     <div
+      className="session-magnifier"
       style={{
-        position: "fixed",
-        // Lock to a square so the circle isn't an ellipse when aspect != 1
-        left: pos.x - Math.max(loupeW, loupeH) / 2,
-        top: pos.y - Math.max(loupeW, loupeH) / 2,
-        width: Math.max(loupeW, loupeH),
-        height: Math.max(loupeW, loupeH),
-        borderRadius: "50%",
-        border: `3px solid ${T.accentPink}`,
-        boxShadow: T.shadowMagnifier,
-        overflow: "hidden",
-        pointerEvents: "none",
-        zIndex: 40,
+        left: pos.x - side / 2,
+        top: pos.y - side / 2,
+        width: side,
+        height: side,
         backgroundImage: `url(/api/img/${filename})`,
-        backgroundRepeat: "no-repeat",
-        backgroundColor: T.surface0,
         backgroundSize: `${renderedW * ZOOM}px ${renderedH * ZOOM}px`,
-        backgroundPosition: `${-(cursorInImageX * ZOOM - Math.max(loupeW, loupeH) / 2)}px ${-(cursorInImageY * ZOOM - Math.max(loupeW, loupeH) / 2)}px`,
+        backgroundPosition: `${-(cursorInImageX * ZOOM - side / 2)}px ${-(cursorInImageY * ZOOM - side / 2)}px`,
         filter: bw ? "grayscale(1) contrast(1.05)" : "none",
       }}
     />

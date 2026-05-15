@@ -11,7 +11,6 @@ type Params = Promise<{ id: string }>;
 export default function ReportPage({ params }: { params: Params }) {
   return (
     <main className="report-page">
-      <h1 className="u-sr-only">report image</h1>
       <header className="report-page-header">
         <a href="/" className="report-page-back">← back</a>
       </header>

@@ -1,5 +1,4 @@
 "use client";
-import { T } from "@/lib/tokens";
 
 interface IconBtnProps {
   label: string;
@@ -26,45 +25,14 @@ export function IconBtn({
   target,
   children,
 }: IconBtnProps) {
-  const className = `u-icon-btn${active ? " is-active" : ""}`;
-  const style: React.CSSProperties = {
-    minWidth: 54,
-    minHeight: 44,
-    display: "inline-flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 2,
-    padding: `${T.s2}px ${T.s3}px`,
-    fontFamily: "var(--font-sans), system-ui, sans-serif",
-  };
+  const className = `u-icon-btn u-icon-btn-stacked${active ? " is-active" : ""}`;
   const content = (
     <>
-      <span aria-hidden style={{ fontSize: 18, lineHeight: 1 }}>
+      <span aria-hidden className="u-icon-btn-stacked-glyph">
         {children}
       </span>
-      <span
-        style={{
-          fontSize: T.textXs,
-          letterSpacing: T.trackingWider,
-          textTransform: "uppercase",
-          fontWeight: 500,
-        }}
-      >
-        {label}
-      </span>
-      {hint ? (
-        <span
-          style={{
-            fontSize: 11,
-            fontFamily: "var(--font-mono), monospace",
-            opacity: active ? 1 : 0.7,
-            lineHeight: 1,
-          }}
-        >
-          {hint}
-        </span>
-      ) : null}
+      <span className="u-icon-btn-stacked-label">{label}</span>
+      {hint ? <span className="u-icon-btn-stacked-hint">{hint}</span> : null}
     </>
   );
 
@@ -75,7 +43,6 @@ export function IconBtn({
         target={target}
         rel={target === "_blank" ? "noopener noreferrer" : undefined}
         className={className}
-        style={style}
         onClick={onClick}
         onContextMenu={onContextMenu}
       >
@@ -87,7 +54,6 @@ export function IconBtn({
     <button
       type="button"
       className={className}
-      style={style}
       onClick={disabled ? undefined : onClick}
       onContextMenu={onContextMenu}
       disabled={disabled}

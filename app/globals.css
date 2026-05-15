@@ -561,6 +561,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   .home-pill { min-height: 44px; padding: var(--s4) var(--s8); }
   .modal-close { width: 44px; height: 44px; }
   .tooltip-icon { width: 44px; height: 44px; font-size: 16px; }
+  .taxon-group-clear { min-height: 44px; padding: var(--s4) var(--s8); }
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -1077,16 +1078,6 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 }
 
 /* ════════════════════════════════════════════════════════════
-   SESSION ACTION BAR — responsive collapse
-   ════════════════════════════════════════════════════════════ */
-@media (max-width: 720px) {
-  .u-icon-btn span:nth-child(2),
-  .u-icon-btn span:nth-child(3) {
-    display: none; /* hide text label + hint, keep glyph */
-  }
-}
-
-/* ════════════════════════════════════════════════════════════
    COLLAPSIBLE SECTION (R6) — disclosure widget for hiding
    advanced filters behind a chevron.
    ════════════════════════════════════════════════════════════ */
@@ -1200,4 +1191,277 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 @keyframes chip-pop {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ════════════════════════════════════════════════════════════
+   SESSION — extracted from inline styles in session/* components.
+   Components keep dynamic values (opacity / transform / pan / zoom)
+   inline; everything else lives here so :hover, :focus-visible, and
+   responsive @media rules can reach it.
+   ════════════════════════════════════════════════════════════ */
+
+/* IconBtn stacked layout (glyph above label above hint). The base
+   .u-icon-btn handles hover/active/disabled visual state; this class
+   only adds the column layout used in SessionActionBar + TimerDropdown. */
+.u-icon-btn-stacked {
+  min-width: 54px;
+  min-height: 44px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--s2) var(--s3);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+.u-icon-btn-stacked-glyph { font-size: 18px; line-height: 1; }
+.u-icon-btn-stacked-label {
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+.u-icon-btn-stacked-hint {
+  font-size: 11px;
+  font-family: var(--font-mono), monospace;
+  opacity: 0.7;
+  line-height: 1;
+}
+.u-icon-btn-stacked.is-active .u-icon-btn-stacked-hint { opacity: 1; }
+
+.session-image-frame {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.session-image-frame img {
+  user-select: none;
+  pointer-events: none;
+  transform-origin: center center;
+  transition: filter 0.15s;
+}
+
+.session-progress-track {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--surface-progress-track);
+  z-index: 20;
+}
+.session-progress-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--accent-pink);
+  transform-origin: left center;
+}
+
+.session-timer {
+  position: fixed;
+  top: var(--s8);
+  right: var(--s8);
+  background: var(--surface-chip);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-2xl);
+  padding: var(--s3) var(--s5);
+  font-family: var(--font-mono), monospace;
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  transition: opacity var(--timing-base);
+  z-index: 30;
+}
+
+.session-source-chip {
+  position: fixed;
+  bottom: var(--chrome-bottom-offset);
+  right: var(--s8);
+  max-width: 320px;
+  background: var(--surface-chip-strong);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-2xl);
+  padding: var(--s4) var(--s5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  align-items: flex-start;
+  transition: opacity var(--timing-base), transform var(--timing-base);
+  z-index: 25;
+}
+.session-source-chip-line {
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+.session-source-chip-line-species { font-style: italic; }
+
+/* Edge-positioned prev/next buttons — large invisible click targets on
+   the left and right viewport edges, revealed on chrome hover. */
+.session-edge-btn {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 96px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 48px;
+  font-weight: 300;
+  cursor: pointer;
+  transition: opacity var(--timing-slow);
+  z-index: 28;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.session-edge-btn-prev { left: 0; }
+.session-edge-btn-next { right: 0; }
+
+.session-magnifier {
+  position: fixed;
+  border-radius: 50%;
+  border: 3px solid var(--accent-pink);
+  box-shadow: var(--shadow-magnifier);
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 40;
+  background-color: var(--surface-0);
+  background-repeat: no-repeat;
+}
+
+.session-action-bar-wrap {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  padding: 0 var(--s10) calc(var(--s8) + 2px);
+  transition: opacity var(--timing-slow), transform var(--timing-slow);
+  z-index: 30;
+}
+.session-action-bar-panel {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-4xl);
+  padding: var(--s3);
+  box-shadow: var(--shadow-panel);
+}
+.session-zoom-cluster {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-3xl);
+  padding: 2px;
+  margin: 0 2px;
+}
+.session-zoom-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 16px;
+  border-radius: var(--r-2xl);
+}
+.session-zoom-btn-reset {
+  min-width: 56px;
+  padding: 0 var(--s3);
+  font-size: 12px;
+}
+.session-counter {
+  padding: var(--s2) var(--s4);
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  color: var(--accent-sky);
+  min-width: 64px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.session-timer-dropdown {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-panel);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-2xl);
+  padding: var(--s2);
+  display: flex;
+  flex-direction: column;
+  min-width: 80px;
+  box-shadow: var(--shadow-panel);
+}
+.session-timer-dropdown-option {
+  padding: var(--s3) var(--s5);
+  font-family: var(--font-mono), monospace;
+  font-size: 13px;
+  text-align: left;
+}
+
+.end-of-session-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--surface-backdrop);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: var(--s10);
+  z-index: 50;
+  animation: fade-in 0.3s ease forwards;
+}
+.end-of-session-overlay h2 {
+  font-family: var(--font-display), serif;
+  font-weight: 500;
+  font-size: 36px;
+  margin: 0;
+}
+.end-of-session-overlay-count {
+  color: var(--text-secondary);
+  font-size: 16px;
+  margin: 0;
+}
+.end-of-session-overlay-actions {
+  display: flex;
+  gap: var(--s6);
+}
+.end-of-session-overlay-btn {
+  background: var(--surface-1);
+  color: var(--text-primary);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-2xl);
+  padding: var(--s4) var(--s10);
+  font-size: 15px;
+  cursor: pointer;
+}
+.end-of-session-overlay-btn-primary {
+  background: var(--surface-2);
+  border-color: var(--border-emphasis);
+  font-weight: 500;
+}
+.end-of-session-overlay-hint {
+  color: var(--text-tertiary);
+  font-size: 13px;
+  margin: 0;
+}
+
+/* Responsive collapse — at narrow widths, the action bar's stacked
+   buttons hide everything except the glyph to fit. */
+@media (max-width: 720px) {
+  .u-icon-btn-stacked-label,
+  .u-icon-btn-stacked-hint {
+    display: none;
+  }
 }

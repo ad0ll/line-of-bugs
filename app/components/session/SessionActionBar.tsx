@@ -1,5 +1,4 @@
 "use client";
-import { T } from "@/lib/tokens";
 import { IconBtn } from "@/app/components/ui/IconBtn";
 import { TimerDropdown } from "@/app/components/session/TimerDropdown";
 
@@ -30,34 +29,14 @@ interface Props {
 export function SessionActionBar(props: Props) {
   return (
     <div
+      className="session-action-bar-wrap"
       style={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        display: "flex",
-        justifyContent: "center",
-        padding: `0 ${T.s10}px ${T.s8 + 2}px`,
         opacity: props.visible ? 1 : 0,
         transform: `translateY(${props.visible ? 0 : 12}px)`,
-        transition: `opacity ${T.timingSlow}, transform ${T.timingSlow}`,
         pointerEvents: props.visible ? "auto" : "none",
-        zIndex: 30,
       }}
     >
-      <div
-        className="u-backdrop-blur-md"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: T.s2,
-          background: T.surfaceRaised,
-          border: `1px solid ${T.borderSubtle}`,
-          borderRadius: T.r4xl,
-          padding: T.s3,
-          boxShadow: T.shadowPanel,
-        }}
-      >
+      <div className="session-action-bar-panel u-backdrop-blur-md">
         <IconBtn label={props.paused ? "play" : "pause"} hint="space" active={props.paused} onClick={props.onPause}>
           {props.paused ? "▶" : "⏸"}
         </IconBtn>
@@ -70,30 +49,13 @@ export function SessionActionBar(props: Props) {
         </IconBtn>
 
         {/* Zoom cluster: −  ⤢ (reset, shows current zoom)  + */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            background: T.surfaceInput,
-            border: `1px solid ${T.borderSubtle}`,
-            borderRadius: T.r3xl,
-            padding: 2,
-            marginLeft: 2,
-            marginRight: 2,
-          }}
-        >
+        <div className="session-zoom-cluster">
           <button
             type="button"
             aria-label="zoom out"
             onClick={props.onZoomOut}
             disabled={props.zoom <= 0.25}
-            className="u-icon-btn"
-            style={{
-              minWidth: 32, height: 32, padding: 0,
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 16,
-              borderRadius: T.r2xl,
-            }}
+            className="u-icon-btn session-zoom-btn"
           >
             −
           </button>
@@ -101,13 +63,7 @@ export function SessionActionBar(props: Props) {
             type="button"
             aria-label="reset zoom"
             onClick={props.onResetZoom}
-            className={`u-icon-btn${props.zoom !== 1 ? " is-active" : ""}`}
-            style={{
-              minWidth: 56, height: 32, padding: `0 ${T.s3}px`,
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 12,
-              borderRadius: T.r2xl,
-            }}
+            className={`u-icon-btn session-zoom-btn session-zoom-btn-reset${props.zoom !== 1 ? " is-active" : ""}`}
             title="reset zoom (0)"
           >
             {props.zoom === 1 ? "1.00×" : `${props.zoom.toFixed(2)}×`}
@@ -117,13 +73,7 @@ export function SessionActionBar(props: Props) {
             aria-label="zoom in"
             onClick={props.onZoomIn}
             disabled={props.zoom >= 4}
-            className="u-icon-btn"
-            style={{
-              minWidth: 32, height: 32, padding: 0,
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: 16,
-              borderRadius: T.r2xl,
-            }}
+            className="u-icon-btn session-zoom-btn"
           >
             +
           </button>
@@ -138,17 +88,7 @@ export function SessionActionBar(props: Props) {
         <IconBtn label="source" as="a" href={props.sourceUrl} target="_blank">
           ↗
         </IconBtn>
-        <div
-          style={{
-            padding: `${T.s2}px ${T.s4}px`,
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: T.textXs,
-            color: "var(--accent-sky)",
-            minWidth: 64,
-            textAlign: "center",
-            fontVariantNumeric: "tabular-nums",
-          }}
-        >
+        <div className="session-counter">
           {props.currentIdx + 1} / {props.total}
         </div>
       </div>

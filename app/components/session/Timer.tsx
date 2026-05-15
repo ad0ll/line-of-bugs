@@ -1,5 +1,4 @@
 "use client";
-import { T } from "@/lib/tokens";
 
 interface Props {
   remainingMs: number;
@@ -16,22 +15,8 @@ function fmt(ms: number): string {
 export function Timer({ remainingMs, paused }: Props) {
   return (
     <div
-      style={{
-        position: "fixed",
-        top: T.s8,
-        right: T.s8,
-        background: T.surfaceChip,
-        border: `1px solid ${T.borderSubtle}`,
-        borderRadius: T.r2xl,
-        padding: `${T.s3}px ${T.s5}px`,
-        fontFamily: "var(--font-mono), monospace",
-        fontSize: T.text2xl,
-        fontVariantNumeric: "tabular-nums",
-        color: T.textPrimary,
-        opacity: paused ? 0.55 : 1,
-        transition: `opacity ${T.timingBase}`,
-        zIndex: 30,
-      }}
+      className="session-timer"
+      style={{ opacity: paused ? 0.55 : 1 }}
       aria-live="off"
     >
       {fmt(remainingMs)}
