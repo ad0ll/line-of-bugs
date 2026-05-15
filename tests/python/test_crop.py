@@ -14,8 +14,11 @@ from scripts.detect_subjects.crop import (
 
 
 def test_skip_crop_when_bbox_already_large():
+    # bbox area = 0.30 × 0.40 = 0.12 → below 0.25, NOT skipped
+    # but 0.20 × 0.60 = 0.12, same area, would also not skip
+    # 0.55 × 0.50 = 0.275 → above 0.25 area threshold, IS skipped
     d = compute_crop_bbox(
-        bbox_x=0.30, bbox_y=0.30, bbox_w=0.40, bbox_h=0.40,
+        bbox_x=0.20, bbox_y=0.25, bbox_w=0.55, bbox_h=0.50,
         subject_state="wild",
     )
     assert d.skip is True

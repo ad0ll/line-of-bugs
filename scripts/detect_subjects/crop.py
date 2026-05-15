@@ -42,7 +42,7 @@ def compute_crop_bbox(
     """Compute crop bbox so the subject fills `target` fraction of the crop."""
     bbox_area = bbox_w * bbox_h
 
-    if min(bbox_w, bbox_h) >= CROP_SKIP_IF_AREA_ABOVE:
+    if bbox_area >= CROP_SKIP_IF_AREA_ABOVE:
         return CropDecision(
             skip=True, skip_reason="already_well_framed",
             crop_x=0.0, crop_y=0.0, crop_w=1.0, crop_h=1.0,
