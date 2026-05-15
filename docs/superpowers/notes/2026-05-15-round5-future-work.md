@@ -28,6 +28,4 @@
 
 - **Layperson taxonomy filter** — adding `taxon_order` as a gallery + home filter with common-name labels ("beetles" / "butterflies & moths" / "bees & wasps" / "true bugs" / etc.). Punted on 2026-05-15; user asked we wait. Underlying data exists (`taxon_order` populated for all rows); just needs a UI surface + a `lib/taxonomy.ts` mapping table.
 
-- **USDA-ARS DNS** — host has been unreachable from this VPN for a while. Re-run `scripts/fetch_usda_ars.py` when the VPN is off, both for refreshing the 57 rows we have and for backfilling their `raw_metadata`.
-
-- **Higher resolution Smithsonian** — currently capped at 2000px. The full-res versions are 80MB+ each. If we ever want bigger, code in `fetch_smithsonian.py` flags this path; the size cap is `max_bytes=12_000_000` and the URL preference is "Screen Image" not "High-resolution JPEG".
+- ~~USDA-ARS DNS~~ — source removed entirely on 2026-05-15 (host had been unreachable on this VPN for too long to be worth keeping around).

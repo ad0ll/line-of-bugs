@@ -32,7 +32,7 @@ export type LifeStage = (typeof lifeStages)[number];
 export const sexes = ["male", "female", "worker", "unknown"] as const;
 export type Sex = (typeof sexes)[number];
 
-export const sources = ["inaturalist", "bugwood", "smithsonian", "usda-ars"] as const;
+export const sources = ["inaturalist", "bugwood", "smithsonian"] as const;
 export type Source = (typeof sources)[number];
 
 export const images = sqliteTable(
