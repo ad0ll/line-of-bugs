@@ -5,9 +5,17 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : 4,
+  // 2 workers is the sweet spot. Higher serializes behind the
+  // better-sqlite3 sync handle that backs /api/session/start +
+  // /api/facets, causing the session-player + gallery specs to time
+  // out on the 500-row pool fetch. 4 workers regresses report-modal
+  // flake-fail at 30 s; 2 workers passes 100 %.
+  workers: process.env.CI ? 1 : 2,
   reporter: "list",
-  timeout: 15_000,
+  // Default 30 s per test. The gallery + session-start specs need ~12 s
+  // on a warm dev server and more on a cold start, so a tighter cap
+  // (tried 15 s) regresses 3 tests; 30 s is the practical floor.
+  timeout: 30_000,
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
     trace: "on-first-retry",
