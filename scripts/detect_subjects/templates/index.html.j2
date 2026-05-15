@@ -67,7 +67,7 @@
   #zoomPopup img {
     display: block;
     width: auto; height: auto;
-    max-width: 50vw; max-height: 90vh;
+    max-width: 55vw; max-height: 96vh;
     object-fit: contain;
     background: #0d0c10;
     border: 0.2vw solid #FF6EC7; border-radius: 0.3vw;
@@ -134,7 +134,7 @@ const FLAG_TITLES = {
   "bbox-wrong":       "Bbox missed the bug, captured wrong part, or wrong subject",
   "no-bug":           "There's no insect in this image at all",
   "bug-too-small":    "Bug is correctly identified but too tiny for drawing (even after crop)",
-  "subject-blurred":  "The bug itself is out of focus (blurred background is OK)",
+  "subject-blurred":  "The bug in the ORIGINAL is out of focus (DOF / camera shake). Blurred background is fine. Blurry crop from over-zooming a small bug is 'bug-too-small' instead.",
   "poor-contrast":    "Bug nearly indistinguishable from background (camouflaged, dim)",
   "multi-bug":        "More than one insect in the image",
   "subject-clipped":  "Bug's body is cut off by the frame edge",
@@ -143,13 +143,82 @@ const FLAG_TITLES = {
   "crop-too-loose":   "Proposed crop has too much background",
 };
 
+// Map old {status, should_be} fields to flags in the new multi-select model.
+// Lossy where the old vocabulary doesn't have a clean new equivalent — we make
+// the best guess and tag the entry with `migrated_from` so the user can re-check.
+const STATUS_TO_FLAGS = {
+  "ok":          { looks_good: true },
+  "unsure":      { unsure: true },
+  "wrong-bbox":  { flags: ["bbox-wrong"] },
+  "wrong-crop":  { flags: ["crop-too-loose"] },  // lossy: was either too-tight or too-loose
+  "wrong-class": { flags: [] },                   // lossy: should_be (below) carries the real signal
+  "wrong":       { flags: ["other-bad"] },        // very-old single-button-✗ shape
+};
+const SHOULD_BE_TO_FLAG = {
+  "multi_bug":     "multi-bug",
+  "camouflaged":   "poor-contrast",
+  "poor_contrast": "poor-contrast",
+  "blurred":       "subject-blurred",
+  "hidden":        "no-bug",
+  "no_bug":        "no-bug",
+  "bug_too_small": "bug-too-small",
+  // good / tight / wide on the old should_be axis meant "this is fine" → looks_good
+};
+const FRAMING_OK = new Set(["good", "tight", "wide"]);
+
+function _upgradeOldLabel(v) {
+  // String-only shape (oldest): treat as wrong-*
+  if (typeof v === "string") {
+    const mapped = STATUS_TO_FLAGS[v];
+    if (mapped) return Object.assign({
+      flags: [], looks_good: false, unsure: false,
+      reviewed_at: Date.now(), migrated_from: "string:" + v,
+    }, mapped);
+    return { flags: ["other-bad"], looks_good: false, unsure: false,
+             reviewed_at: Date.now(), migrated_from: "string:" + v };
+  }
+  // Object with new shape — leave alone.
+  if (v && Array.isArray(v.flags)) return v;
+  // Object with old {status, should_be} shape — migrate.
+  if (v && typeof v === "object") {
+    const out = { flags: [], looks_good: false, unsure: false,
+                  reviewed_at: v.reviewed_at || Date.now(),
+                  migrated_from: "status:" + (v.status || "—") + "/should_be:" + (v.should_be || "—") };
+    const statusMap = v.status ? STATUS_TO_FLAGS[v.status] : null;
+    if (statusMap) {
+      if (statusMap.looks_good) out.looks_good = true;
+      if (statusMap.unsure) out.unsure = true;
+      if (statusMap.flags) out.flags.push(...statusMap.flags);
+    }
+    if (v.should_be) {
+      if (FRAMING_OK.has(v.should_be)) {
+        // user said "this should be in a fine bucket" — interpret as approval
+        out.looks_good = true;
+        out.unsure = false;
+      } else {
+        const flag = SHOULD_BE_TO_FLAG[v.should_be];
+        if (flag && !out.flags.includes(flag)) out.flags.push(flag);
+        out.looks_good = false;
+      }
+    }
+    return out;
+  }
+  return { flags: [], looks_good: false, unsure: false, reviewed_at: Date.now() };
+}
+
 function getLabels() {
   const raw = JSON.parse(localStorage.getItem(LABEL_KEY) || "{}");
-  // Upgrade older shapes to the multi-select model.
+  let upgraded = false;
   for (const k of Object.keys(raw)) {
     const v = raw[k];
-    if (typeof v === "string") raw[k] = { flags: [], unsure: false, looks_good: false, reviewed_at: Date.now() };
-    else if (v && Array.isArray(v.flags) === false) raw[k] = { flags: [], unsure: false, looks_good: false, reviewed_at: Date.now() };
+    if (!v || (typeof v === "object" && Array.isArray(v.flags))) continue;
+    raw[k] = _upgradeOldLabel(v);
+    upgraded = true;
+  }
+  // Persist the upgrade once so subsequent reads are clean.
+  if (upgraded) {
+    try { localStorage.setItem(LABEL_KEY, JSON.stringify(raw)); }
+    catch (e) { /* tolerate — render still works in-memory */ }
   }
   return raw;
 }
