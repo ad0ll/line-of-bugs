@@ -16,7 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (
-    session, ManifestWriter, IMG_DIR, THUMB_DIR, MIN_LONG_EDGE_DEFAULT,
+    session, ManifestWriter, IMG_DIR, THUMB_DIR, MEDIUM_DIR, MIN_LONG_EDGE_DEFAULT,
     parallel_download, ConsecutiveFailureGuard, read_existing_rows,
     setup_logging, build_filename, slugify,
 )
@@ -192,7 +192,9 @@ def fetch_order(mw: ManifestWriter, existing_by_label: Counter,
             )
             out_path = IMG_DIR / filename
             thumb_path = THUMB_DIR / filename
-            batch.append({"url": url, "out_path": out_path, "thumb_path": thumb_path})
+            medium_path = MEDIUM_DIR / filename
+            batch.append({"url": url, "out_path": out_path,
+                          "thumb_path": thumb_path, "medium_path": medium_path})
             page_meta.append({
                 "obs": obs, "photo": ph, "photo_id": photo_id,
                 "image_id": image_id, "filename": filename,
@@ -217,6 +219,7 @@ def fetch_order(mw: ManifestWriter, existing_by_label: Counter,
                 "image_url": meta["url"],
                 "filename": f"images/{meta['filename']}",
                 "thumbnail_filename": f"thumbnails/{meta['filename']}",
+                "medium_filename": f"medium/{meta['filename']}",
                 "file_size_bytes": dl["file_size_bytes"],
                 "file_sha256": dl["file_sha256"],
                 "width": dl["width"],

@@ -31,15 +31,18 @@ from urllib3.util.retry import Retry
 ROOT = Path(__file__).resolve().parent.parent
 IMG_DIR = ROOT / "data" / "images"
 THUMB_DIR = ROOT / "data" / "thumbnails"
+MEDIUM_DIR = ROOT / "data" / "medium"
 MANIFEST_DIR = ROOT / "data" / "manifest"
 LOG_DIR = ROOT / "data" / "logs"
-for d in (IMG_DIR, THUMB_DIR, MANIFEST_DIR, LOG_DIR):
+for d in (IMG_DIR, THUMB_DIR, MEDIUM_DIR, MANIFEST_DIR, LOG_DIR):
     d.mkdir(parents=True, exist_ok=True)
 
 USER_AGENT = "line-of-bugs/0.1 (spew_footrest858@simplelogin.com)"
 MIN_LONG_EDGE_DEFAULT = 1500
 THUMB_MAX_EDGE = 512
 THUMB_QUALITY = 85
+MEDIUM_MAX_EDGE = 1024
+MEDIUM_QUALITY = 88
 DEFAULT_MAX_BYTES = 50_000_000  # soft cap; we abort mid-stream if exceeded
 
 MANIFEST_FIELDS = [
@@ -47,7 +50,7 @@ MANIFEST_FIELDS = [
     "collection_id",
     "source", "source_id",
     "source_page_url", "image_url",
-    "filename", "thumbnail_filename",
+    "filename", "thumbnail_filename", "medium_filename",
     "file_size_bytes", "file_sha256", "width", "height",
     "license", "license_url",
     "photographer_attribution", "photographer", "institution",
@@ -192,10 +195,8 @@ def build_filename(source: str, source_id: str, subject_type: str,
 
 # ───────────────────────── thumbnails ───────────────────────────
 
-def make_thumbnail(src_path: Path, dst_path: Path,
-                   max_dim: int = THUMB_MAX_EDGE,
-                   quality: int = THUMB_QUALITY) -> bool:
-    """Generate a fit-within-{max_dim} JPEG q{quality} thumbnail.
+def make_resized(src_path: Path, dst_path: Path, max_dim: int, quality: int) -> bool:
+    """Generate a fit-within-{max_dim} JPEG q{quality} resized variant.
     Preserves aspect ratio (long edge ≤ max_dim)."""
     try:
         from PIL import Image
@@ -210,6 +211,18 @@ def make_thumbnail(src_path: Path, dst_path: Path,
         return True
     except Exception:
         return False
+
+
+def make_thumbnail(src_path: Path, dst_path: Path,
+                   max_dim: int = THUMB_MAX_EDGE,
+                   quality: int = THUMB_QUALITY) -> bool:
+    return make_resized(src_path, dst_path, max_dim, quality)
+
+
+def make_medium(src_path: Path, dst_path: Path,
+                max_dim: int = MEDIUM_MAX_EDGE,
+                quality: int = MEDIUM_QUALITY) -> bool:
+    return make_resized(src_path, dst_path, max_dim, quality)
 
 
 # ───────────────────────── download (streaming) ────────────────
@@ -241,9 +254,10 @@ def _download_stream(s: requests.Session, url: str, out_path: Path,
 
 def download(s: requests.Session, url: str, out_path: Path,
              thumb_path: Path | None = None,
+             medium_path: Path | None = None,
              min_edge: int = MIN_LONG_EDGE_DEFAULT,
              max_bytes: int = DEFAULT_MAX_BYTES) -> dict | None:
-    """Download with streaming, validate min long-edge, generate thumbnail.
+    """Download with streaming, validate min long-edge, generate thumb + medium.
     Returns dict on success, None on any failure."""
     # Reuse if already on disk and meets min_edge
     if out_path.exists():
@@ -251,6 +265,8 @@ def download(s: requests.Session, url: str, out_path: Path,
         if w and max(w, h) >= min_edge:
             if thumb_path and not thumb_path.exists():
                 make_thumbnail(out_path, thumb_path)
+            if medium_path and not medium_path.exists():
+                make_medium(out_path, medium_path)
             return {
                 "file_size_bytes": out_path.stat().st_size,
                 "file_sha256": sha256_of(out_path),
@@ -270,6 +286,8 @@ def download(s: requests.Session, url: str, out_path: Path,
         return None
     if thumb_path:
         make_thumbnail(out_path, thumb_path)
+    if medium_path:
+        make_medium(out_path, medium_path)
     return {
         "file_size_bytes": size,
         "file_sha256": sha256_of(out_path),
@@ -300,6 +318,7 @@ def parallel_download(s: requests.Session, items: list[dict],
         return idx, download(
             s, it["url"], it["out_path"],
             thumb_path=it.get("thumb_path"),
+            medium_path=it.get("medium_path"),
             min_edge=it.get("min_edge", MIN_LONG_EDGE_DEFAULT),
             max_bytes=it.get("max_bytes", max_bytes),
         )

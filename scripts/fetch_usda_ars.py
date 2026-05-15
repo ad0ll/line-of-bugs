@@ -18,7 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (
-    session, ManifestWriter, IMG_DIR, THUMB_DIR,
+    session, ManifestWriter, IMG_DIR, THUMB_DIR, MEDIUM_DIR,
     parallel_download, ConsecutiveFailureGuard,
     setup_logging, build_filename, slugify,
 )
@@ -220,6 +220,7 @@ def main() -> int:
             "url": image_url,
             "out_path": IMG_DIR / filename,
             "thumb_path": THUMB_DIR / filename,
+            "medium_path": MEDIUM_DIR / filename,
             "min_edge": 1200,
             "_meta": {
                 "image_id": image_id, "collection_id": collection_id,
@@ -256,6 +257,7 @@ def main() -> int:
             "image_url": job["url"],
             "filename": f"images/{m['filename']}",
             "thumbnail_filename": f"thumbnails/{m['filename']}",
+            "medium_filename": f"medium/{m['filename']}",
             "file_size_bytes": dl["file_size_bytes"],
             "file_sha256": dl["file_sha256"],
             "width": dl["width"],

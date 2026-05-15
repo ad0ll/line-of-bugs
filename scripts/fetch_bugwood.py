@@ -19,7 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (
-    session, ManifestWriter, IMG_DIR, THUMB_DIR,
+    session, ManifestWriter, IMG_DIR, THUMB_DIR, MEDIUM_DIR,
     parallel_download, ConsecutiveFailureGuard,
     manifest_count_by, setup_logging, build_filename, slugify,
 )
@@ -29,7 +29,15 @@ S = session()
 BASE = "https://api.bugwoodcloud.org/v2"
 MAX_WORKERS = 6
 
-INSECT_ORDER_IDS = "39,131,98,92,58,159,121,155,238,369,152,139,52,220,169,341,189,137,340,142,347,343,40,346"
+# Order IDs split into 2 batches of 12 because Bugwood's API Gateway / Lambda
+# backend reliably 504s when the order= filter has all 24 IDs (29 s timeout,
+# 3/3 trials). Batches of ≤22 work; 22 sits at the edge so we use 12 for safety
+# margin (each request returns in ~5-7 s, ~0.6 s after Lambda warm-up).
+# Verified empirically 2026-05-14.
+INSECT_ORDER_BATCHES = [
+    "39,131,98,92,58,159,121,155,238,369,152,139",   # 12 IDs: big orders + Mantodea/Neuroptera
+    "52,220,169,341,189,137,340,142,347,343,40,346", # 12 IDs: smaller orders + Collembola/Microcoryphia
+]
 GOOD_DESCRIPTORS = "7,9,57,47,8,77"
 
 PASSES = [
@@ -135,7 +143,9 @@ def run_pass(mw: ManifestWriter, existing_in_bucket: int,
              subject_type: str, license_list: str,
              lic_code: str, lic_url: str, target: int, label: str,
              api_guard: ConsecutiveFailureGuard) -> int:
-    """Returns number added in this pass."""
+    """Returns number added in this pass.
+    Round-robins across order-ID batches for taxonomic variety + to keep
+    each request under Bugwood's backend timeout."""
     needed = max(0, target - existing_in_bucket)
     if needed == 0:
         log.info("[%s] already have %d ≥ target %d — skipping",
@@ -146,18 +156,22 @@ def run_pass(mw: ManifestWriter, existing_in_bucket: int,
 
     voucher_value = 1 if subject_type == "specimen" else 0
     kept = 0
-    page = 1
-    while kept < needed:
+    pages_per_batch = [1] * len(INSECT_ORDER_BATCHES)
+    exhausted = [False] * len(INSECT_ORDER_BATCHES)
+    while kept < needed and not all(exhausted):
+      for batch_idx, order_batch in enumerate(INSECT_ORDER_BATCHES):
+        if kept >= needed or exhausted[batch_idx]:
+            continue
         params = {
             "division": 1,
             "descriptor": GOOD_DESCRIPTORS,
-            "order": INSECT_ORDER_IDS,
+            "order": order_batch,
             "person": 0,
             "voucher": voucher_value,
             "license": license_list,
             "resolution": "4,5",
             "pagesize": 200,
-            "page": page,
+            "page": pages_per_batch[batch_idx],
         }
         try:
             r = S.get(f"{BASE}/image", params=params, timeout=45)
@@ -175,8 +189,8 @@ def run_pass(mw: ManifestWriter, existing_in_bucket: int,
         j = r.json()
         data = j.get("data") or []
         if not data:
-            log.info("[%s] exhausted at page %d", label, page)
-            break
+            exhausted[batch_idx] = True
+            continue
 
         # First pass: filter + detail-fetch (sequential, per-image API call)
         page_jobs: list[dict] = []
@@ -212,6 +226,7 @@ def run_pass(mw: ManifestWriter, existing_in_bucket: int,
                 "url": url,
                 "out_path": IMG_DIR / filename,
                 "thumb_path": THUMB_DIR / filename,
+                "medium_path": MEDIUM_DIR / filename,
                 "min_edge": 1200,
                 "_meta": {
                     "img": img, "detail": detail,
@@ -253,6 +268,7 @@ def run_pass(mw: ManifestWriter, existing_in_bucket: int,
                 "image_url": job["url"],
                 "filename": f"images/{m['filename']}",
                 "thumbnail_filename": f"thumbnails/{m['filename']}",
+                "medium_filename": f"medium/{m['filename']}",
                 "file_size_bytes": dl["file_size_bytes"],
                 "file_sha256": dl["file_sha256"],
                 "width": dl["width"],
@@ -273,8 +289,8 @@ def run_pass(mw: ManifestWriter, existing_in_bucket: int,
             kept += 1
             if (kept % 25) == 0:
                 log.info("[%s] %d / %d", label, kept, needed)
-        page += 1
-        time.sleep(0.6)
+        pages_per_batch[batch_idx] += 1
+        time.sleep(0.5)
     return kept
 
 

@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>line of bugs · palette candidates</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --surface-0: #0d0c10;
+  --surface-1: #16141a;
+  --surface-2: #201e24;
+  --surface-raised: rgba(16, 15, 18, 0.78);
+  --surface-chip-strong: rgba(10, 10, 11, 0.78);
+  --text-primary: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.70);
+  --text-tertiary: rgba(255, 255, 255, 0.55);
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-medium: rgba(255, 255, 255, 0.12);
+
+  /* Candidate A — Sanrio Strawberry Milk */
+  --a-col: #E07B9E; --a-lep: #F4A8C8; --a-hym: #F5C97A; --a-hem: #D4869C;
+  --a-dip: #9CB4D8; --a-odo: #7AC9D9; --a-ort: #B8D89C; --a-man: #9ED4B0;
+  --a-neu: #D4C5E8; --a-bla: #B89B7D; --a-der: #C49B95; --a-pha: #C8D6A4;
+  --a-tri: #D6B8D6; --a-eph: #E8D6A8; --a-ple: #A8C0D4; --a-iso: #C9B8A0;
+  --a-oth: #E8DCD0;
+
+  /* Candidate B — Pastel Goth Kawaii (Kuromi-coded) */
+  --b-col: #FF6EC7; --b-lep: #F8B4D9; --b-hym: #FFD166; --b-hem: #E16AAA;
+  --b-dip: #A78BFA; --b-odo: #67D4E6; --b-ort: #A8E6A1; --b-man: #7FD89A;
+  --b-neu: #D4C5F9; --b-bla: #9C8AAC; --b-der: #C9A8D4; --b-pha: #B8D898;
+  --b-tri: #E8A8D4; --b-eph: #F0D796; --b-ple: #88B8D4; --b-iso: #A89684;
+  --b-oth: #B8B0C4;
+
+  /* Candidate C — NewJeans Soft Era (muted doll) */
+  --c-col: #D4A5B5; --c-lep: #E8B8C0; --c-hym: #D4B898; --c-hem: #B89090;
+  --c-dip: #9BA8B8; --c-odo: #8EB4C0; --c-ort: #B0BC9C; --c-man: #9CB89C;
+  --c-neu: #C0B4C8; --c-bla: #7D6E68; --c-der: #A89484; --c-pha: #A8B894;
+  --c-tri: #C8B0B8; --c-eph: #D4C8A0; --c-ple: #A4BCC4; --c-iso: #9C8474;
+  --c-oth: #C4B8AC;
+
+  /* Candidate D — Y2K Sugar Rush */
+  --d-col: #FF4F9D; --d-lep: #FF8FCB; --d-hym: #FFDC4F; --d-hem: #FF5EBC;
+  --d-dip: #9D7FFF; --d-odo: #5FC8FF; --d-ort: #7FE860; --d-man: #5FDDB0;
+  --d-neu: #D89EFF; --d-bla: #FF9F5C; --d-der: #FFB8E0; --d-pha: #A8E5A0;
+  --d-tri: #FFA8B8; --d-eph: #FFE89C; --d-ple: #8AC5FF; --d-iso: #C8B8A4;
+  --d-oth: #E8E4F0;
+
+  /* Candidate E — Senshi Constellation (Sailor Moon character-coded) */
+  --e-col: #FF4E6F; --e-lep: #FFB3DF; --e-hym: #FFCE54; --e-hem: #D87AB8;
+  --e-dip: #7C8FFF; --e-odo: #67C8E8; --e-ort: #7BC274; --e-man: #5FA868;
+  --e-neu: #C8B4F0; --e-bla: #6B5878; --e-der: #A88FB8; --e-pha: #A8C886;
+  --e-tri: #E8B0D4; --e-eph: #F0E0A8; --e-ple: #94B4D8; --e-iso: #9C8474;
+  --e-oth: #D4C8DC;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--surface-0); color: var(--text-primary); font-family: 'Zen Maru Gothic', system-ui, sans-serif; }
+body { min-height: 100vh; padding: 56px 64px 96px; max-width: 1320px; margin: 0 auto; }
+
+h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 38px; letter-spacing: -0.5px; margin: 0 0 6px; }
+.lead { color: var(--text-tertiary); font-size: 14px; max-width: 720px; line-height: 1.6; margin-bottom: 36px; }
+
+.candidate {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  padding: 32px 36px 36px;
+  margin-bottom: 24px;
+}
+.cand-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 6px; }
+.cand-letter {
+  font-family: 'Fraunces', serif; font-weight: 600; font-size: 36px;
+  background: var(--surface-2); border-radius: 12px;
+  padding: 0 16px; line-height: 56px;
+  color: var(--text-secondary);
+}
+.cand-title { font-family: 'Fraunces', serif; font-weight: 500; font-size: 28px; }
+.cand-rec { color: #f8b4d9; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; margin-left: auto; }
+.cand-soul { color: var(--text-secondary); font-size: 14px; line-height: 1.6; max-width: 820px; margin: 8px 0 24px; font-style: italic; }
+
+/* swatch row */
+.swatch-row { display: grid; grid-template-columns: repeat(17, 1fr); gap: 5px; margin-bottom: 24px; }
+.swatch-tile {
+  aspect-ratio: 1;
+  border-radius: 7px;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding-bottom: 4px;
+  font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 600;
+  color: rgba(0,0,0,0.5);
+  letter-spacing: 0.3px;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+/* mock layouts */
+.mock-row { display: grid; grid-template-columns: 480px 1fr; gap: 24px; margin-top: 8px; }
+
+/* autocomplete mock */
+.ac-mock {
+  background: var(--surface-2);
+  border: 1px solid var(--border-medium);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  height: fit-content;
+}
+.ac-input {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: 'Zen Maru Gothic', sans-serif; font-size: 14px; font-weight: 500;
+  color: var(--text-secondary);
+}
+.ac-results { padding: 4px 0; }
+.ac-row { display: flex; align-items: baseline; gap: 10px; padding: 7px 16px; font-size: 13px; }
+.ac-row.active { background: rgba(255,255,255,0.04); }
+.ac-name { font-weight: 500; }
+.ac-sci { color: var(--text-tertiary); font-style: italic; font-size: 11px; flex: 1; }
+.ac-count { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-tertiary); }
+
+/* tile grid */
+.tile-grid { display: grid; grid-template-columns: repeat(6, 100px); gap: 8px; align-content: start; }
+.tile {
+  width: 100px; height: 100px;
+  background: var(--surface-2);
+  border-radius: 9px;
+  overflow: hidden;
+  position: relative;
+}
+.tile .img {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, #1a1820, #2a2530);
+}
+.tile .img.lep { background: linear-gradient(135deg, #251c30, #322640); }
+.tile .img.hym { background: linear-gradient(135deg, #2a2415, #3a3525); }
+.tile .img.col { background: linear-gradient(135deg, #2a1525, #3a2540); }
+.tile .img.odo { background: linear-gradient(135deg, #15303a, #1f4050); }
+.tile .img.hem { background: linear-gradient(135deg, #182a20, #253525); }
+.tile .img.man { background: linear-gradient(135deg, #301820, #402030); }
+.tile .stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+.tile .badge {
+  position: absolute; right: 5px; bottom: 5px;
+  background: rgba(10,10,11,0.8); backdrop-filter: blur(8px);
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  padding: 2px 5px; border-radius: 4px;
+}
+
+/* candidate-specific class application */
+.cand-a .col-bg { background: var(--a-col); } .cand-a .col-fg { color: var(--a-col); }
+.cand-a .lep-bg { background: var(--a-lep); } .cand-a .lep-fg { color: var(--a-lep); }
+.cand-a .hym-bg { background: var(--a-hym); } .cand-a .hym-fg { color: var(--a-hym); }
+.cand-a .hem-bg { background: var(--a-hem); } .cand-a .hem-fg { color: var(--a-hem); }
+.cand-a .dip-bg { background: var(--a-dip); } .cand-a .dip-fg { color: var(--a-dip); }
+.cand-a .odo-bg { background: var(--a-odo); } .cand-a .odo-fg { color: var(--a-odo); }
+.cand-a .ort-bg { background: var(--a-ort); } .cand-a .ort-fg { color: var(--a-ort); }
+.cand-a .man-bg { background: var(--a-man); } .cand-a .man-fg { color: var(--a-man); }
+.cand-a .neu-bg { background: var(--a-neu); } .cand-a .neu-fg { color: var(--a-neu); }
+.cand-a .bla-bg { background: var(--a-bla); } .cand-a .bla-fg { color: var(--a-bla); }
+.cand-a .der-bg { background: var(--a-der); } .cand-a .der-fg { color: var(--a-der); }
+.cand-a .pha-bg { background: var(--a-pha); } .cand-a .pha-fg { color: var(--a-pha); }
+.cand-a .tri-bg { background: var(--a-tri); } .cand-a .tri-fg { color: var(--a-tri); }
+.cand-a .eph-bg { background: var(--a-eph); } .cand-a .eph-fg { color: var(--a-eph); }
+.cand-a .ple-bg { background: var(--a-ple); } .cand-a .ple-fg { color: var(--a-ple); }
+.cand-a .iso-bg { background: var(--a-iso); } .cand-a .iso-fg { color: var(--a-iso); }
+.cand-a .oth-bg { background: var(--a-oth); } .cand-a .oth-fg { color: var(--a-oth); }
+
+.cand-b .col-bg { background: var(--b-col); } .cand-b .col-fg { color: var(--b-col); }
+.cand-b .lep-bg { background: var(--b-lep); } .cand-b .lep-fg { color: var(--b-lep); }
+.cand-b .hym-bg { background: var(--b-hym); } .cand-b .hym-fg { color: var(--b-hym); }
+.cand-b .hem-bg { background: var(--b-hem); } .cand-b .hem-fg { color: var(--b-hem); }
+.cand-b .dip-bg { background: var(--b-dip); } .cand-b .dip-fg { color: var(--b-dip); }
+.cand-b .odo-bg { background: var(--b-odo); } .cand-b .odo-fg { color: var(--b-odo); }
+.cand-b .ort-bg { background: var(--b-ort); } .cand-b .ort-fg { color: var(--b-ort); }
+.cand-b .man-bg { background: var(--b-man); } .cand-b .man-fg { color: var(--b-man); }
+.cand-b .neu-bg { background: var(--b-neu); } .cand-b .neu-fg { color: var(--b-neu); }
+.cand-b .bla-bg { background: var(--b-bla); } .cand-b .bla-fg { color: var(--b-bla); }
+.cand-b .der-bg { background: var(--b-der); } .cand-b .der-fg { color: var(--b-der); }
+.cand-b .pha-bg { background: var(--b-pha); } .cand-b .pha-fg { color: var(--b-pha); }
+.cand-b .tri-bg { background: var(--b-tri); } .cand-b .tri-fg { color: var(--b-tri); }
+.cand-b .eph-bg { background: var(--b-eph); } .cand-b .eph-fg { color: var(--b-eph); }
+.cand-b .ple-bg { background: var(--b-ple); } .cand-b .ple-fg { color: var(--b-ple); }
+.cand-b .iso-bg { background: var(--b-iso); } .cand-b .iso-fg { color: var(--b-iso); }
+.cand-b .oth-bg { background: var(--b-oth); } .cand-b .oth-fg { color: var(--b-oth); }
+
+.cand-c .col-bg { background: var(--c-col); } .cand-c .col-fg { color: var(--c-col); }
+.cand-c .lep-bg { background: var(--c-lep); } .cand-c .lep-fg { color: var(--c-lep); }
+.cand-c .hym-bg { background: var(--c-hym); } .cand-c .hym-fg { color: var(--c-hym); }
+.cand-c .hem-bg { background: var(--c-hem); } .cand-c .hem-fg { color: var(--c-hem); }
+.cand-c .dip-bg { background: var(--c-dip); } .cand-c .dip-fg { color: var(--c-dip); }
+.cand-c .odo-bg { background: var(--c-odo); } .cand-c .odo-fg { color: var(--c-odo); }
+.cand-c .ort-bg { background: var(--c-ort); } .cand-c .ort-fg { color: var(--c-ort); }
+.cand-c .man-bg { background: var(--c-man); } .cand-c .man-fg { color: var(--c-man); }
+.cand-c .neu-bg { background: var(--c-neu); } .cand-c .neu-fg { color: var(--c-neu); }
+.cand-c .bla-bg { background: var(--c-bla); } .cand-c .bla-fg { color: var(--c-bla); }
+.cand-c .der-bg { background: var(--c-der); } .cand-c .der-fg { color: var(--c-der); }
+.cand-c .pha-bg { background: var(--c-pha); } .cand-c .pha-fg { color: var(--c-pha); }
+.cand-c .tri-bg { background: var(--c-tri); } .cand-c .tri-fg { color: var(--c-tri); }
+.cand-c .eph-bg { background: var(--c-eph); } .cand-c .eph-fg { color: var(--c-eph); }
+.cand-c .ple-bg { background: var(--c-ple); } .cand-c .ple-fg { color: var(--c-ple); }
+.cand-c .iso-bg { background: var(--c-iso); } .cand-c .iso-fg { color: var(--c-iso); }
+.cand-c .oth-bg { background: var(--c-oth); } .cand-c .oth-fg { color: var(--c-oth); }
+
+.cand-d .col-bg { background: var(--d-col); } .cand-d .col-fg { color: var(--d-col); }
+.cand-d .lep-bg { background: var(--d-lep); } .cand-d .lep-fg { color: var(--d-lep); }
+.cand-d .hym-bg { background: var(--d-hym); } .cand-d .hym-fg { color: var(--d-hym); }
+.cand-d .hem-bg { background: var(--d-hem); } .cand-d .hem-fg { color: var(--d-hem); }
+.cand-d .dip-bg { background: var(--d-dip); } .cand-d .dip-fg { color: var(--d-dip); }
+.cand-d .odo-bg { background: var(--d-odo); } .cand-d .odo-fg { color: var(--d-odo); }
+.cand-d .ort-bg { background: var(--d-ort); } .cand-d .ort-fg { color: var(--d-ort); }
+.cand-d .man-bg { background: var(--d-man); } .cand-d .man-fg { color: var(--d-man); }
+.cand-d .neu-bg { background: var(--d-neu); } .cand-d .neu-fg { color: var(--d-neu); }
+.cand-d .bla-bg { background: var(--d-bla); } .cand-d .bla-fg { color: var(--d-bla); }
+.cand-d .der-bg { background: var(--d-der); } .cand-d .der-fg { color: var(--d-der); }
+.cand-d .pha-bg { background: var(--d-pha); } .cand-d .pha-fg { color: var(--d-pha); }
+.cand-d .tri-bg { background: var(--d-tri); } .cand-d .tri-fg { color: var(--d-tri); }
+.cand-d .eph-bg { background: var(--d-eph); } .cand-d .eph-fg { color: var(--d-eph); }
+.cand-d .ple-bg { background: var(--d-ple); } .cand-d .ple-fg { color: var(--d-ple); }
+.cand-d .iso-bg { background: var(--d-iso); } .cand-d .iso-fg { color: var(--d-iso); }
+.cand-d .oth-bg { background: var(--d-oth); } .cand-d .oth-fg { color: var(--d-oth); }
+
+.cand-e .col-bg { background: var(--e-col); } .cand-e .col-fg { color: var(--e-col); }
+.cand-e .lep-bg { background: var(--e-lep); } .cand-e .lep-fg { color: var(--e-lep); }
+.cand-e .hym-bg { background: var(--e-hym); } .cand-e .hym-fg { color: var(--e-hym); }
+.cand-e .hem-bg { background: var(--e-hem); } .cand-e .hem-fg { color: var(--e-hem); }
+.cand-e .dip-bg { background: var(--e-dip); } .cand-e .dip-fg { color: var(--e-dip); }
+.cand-e .odo-bg { background: var(--e-odo); } .cand-e .odo-fg { color: var(--e-odo); }
+.cand-e .ort-bg { background: var(--e-ort); } .cand-e .ort-fg { color: var(--e-ort); }
+.cand-e .man-bg { background: var(--e-man); } .cand-e .man-fg { color: var(--e-man); }
+.cand-e .neu-bg { background: var(--e-neu); } .cand-e .neu-fg { color: var(--e-neu); }
+.cand-e .bla-bg { background: var(--e-bla); } .cand-e .bla-fg { color: var(--e-bla); }
+.cand-e .der-bg { background: var(--e-der); } .cand-e .der-fg { color: var(--e-der); }
+.cand-e .pha-bg { background: var(--e-pha); } .cand-e .pha-fg { color: var(--e-pha); }
+.cand-e .tri-bg { background: var(--e-tri); } .cand-e .tri-fg { color: var(--e-tri); }
+.cand-e .eph-bg { background: var(--e-eph); } .cand-e .eph-fg { color: var(--e-eph); }
+.cand-e .ple-bg { background: var(--e-ple); } .cand-e .ple-fg { color: var(--e-ple); }
+.cand-e .iso-bg { background: var(--e-iso); } .cand-e .iso-fg { color: var(--e-iso); }
+.cand-e .oth-bg { background: var(--e-oth); } .cand-e .oth-fg { color: var(--e-oth); }
+
+.tradeoff { color: var(--text-tertiary); font-size: 12px; line-height: 1.6; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-subtle); }
+.tradeoff strong { color: var(--text-secondary); font-weight: 500; }
+
+.intro-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  padding: 24px 32px;
+  margin-bottom: 28px;
+}
+.intro-card h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 18px; margin: 0 0 10px; }
+.intro-card ul { padding-left: 20px; color: var(--text-secondary); font-size: 13px; line-height: 1.8; }
+.intro-card li b { color: var(--text-primary); font-weight: 600; }
+</style>
+</head>
+<body>
+
+  <h1>line of bugs · palette candidates</h1>
+  <p class="lead">5 candidate palettes for the 16 insect orders + fallback, after deep research on Sanrio characters, Sailor Moon senshi, sweet-lolita, Y2K-girly, NewJeans-doll-cute, and pastel-goth references. Each candidate is shown with its 17-color swatch row, an autocomplete mock, and a gallery-tile mock on the eagle dark surface.</p>
+
+  <div class="intro-card">
+    <h2>Distilled color theory of cuteness — 7 principles from the research</h2>
+    <ul>
+      <li><b>Pink is the anchor, not just a color.</b> Authentic cute = 30-60% of visual weight in pink/rose/coral.</li>
+      <li><b>At least one "broken" off-spectrum dusty shade.</b> Mauve, milk-tea, dusty plum. Signals "this was chosen, not defaulted."</li>
+      <li><b>Warm temperature dominance — the "strawberry milk" effect.</b> Even when including blue, shift toward periwinkle/lavender.</li>
+      <li><b>Two anchors + accent constellation.</b> Never 16 equal hues. 2 dominants + 14 supporting satellites.</li>
+      <li><b>Three sub-modes: shoujo / kawaii / doll-cute.</b> Soft-dreamy / poppy-playful / dusty-vintage. Pick a lane.</li>
+      <li><b>Dark theme cute = mid-lightness tinted-mid, not full pastels.</b> L≈65-75, not 85+. Pastels bleach on black; "pastel-goth" pinks are actually neon-leaning.</li>
+      <li><b>SaaS-pastel anti-pattern: equal saturation across all hues.</b> That reads as "system color wheel" not "palette of objects."</li>
+    </ul>
+  </div>
+
+  <!-- =================== CANDIDATE A =================== -->
+  <div class="candidate cand-a">
+    <div class="cand-head">
+      <div class="cand-letter">A</div>
+      <div class="cand-title">Sanrio Strawberry Milk</div>
+    </div>
+    <p class="cand-soul">"Pulled from the Sanrio cast — pink/strawberry-milk dominance with butter, sky, lavender, and one earthy beetle-brown. Soft, dreamy, feminine. Ambient cuteness; the dot/stripe is a sticker, not signage."</p>
+    <div class="swatch-row">
+      <div class="swatch-tile col-bg" title="Coleoptera #E07B9E">col</div>
+      <div class="swatch-tile lep-bg" title="Lepidoptera #F4A8C8">lep</div>
+      <div class="swatch-tile hym-bg" title="Hymenoptera #F5C97A">hym</div>
+      <div class="swatch-tile hem-bg" title="Hemiptera #D4869C">hem</div>
+      <div class="swatch-tile dip-bg" title="Diptera #9CB4D8">dip</div>
+      <div class="swatch-tile odo-bg" title="Odonata #7AC9D9">odo</div>
+      <div class="swatch-tile ort-bg" title="Orthoptera #B8D89C">ort</div>
+      <div class="swatch-tile man-bg" title="Mantodea #9ED4B0">man</div>
+      <div class="swatch-tile neu-bg" title="Neuroptera #D4C5E8">neu</div>
+      <div class="swatch-tile bla-bg" title="Blattodea #B89B7D">bla</div>
+      <div class="swatch-tile der-bg" title="Dermaptera #C49B95">der</div>
+      <div class="swatch-tile pha-bg" title="Phasmatodea #C8D6A4">pha</div>
+      <div class="swatch-tile tri-bg" title="Trichoptera #D6B8D6">tri</div>
+      <div class="swatch-tile eph-bg" title="Ephemeroptera #E8D6A8">eph</div>
+      <div class="swatch-tile ple-bg" title="Plecoptera #A8C0D4">ple</div>
+      <div class="swatch-tile iso-bg" title="Isoptera #C9B8A0">iso</div>
+      <div class="swatch-tile oth-bg" title="Other #E8DCD0">oth</div>
+    </div>
+    <div class="mock-row">
+      <div class="ac-mock">
+        <div class="ac-input">but<span style="color:var(--text-tertiary)">|</span></div>
+        <div class="ac-results">
+          <div class="ac-row active"><span class="ac-name lep-fg">Sleepy Orange Butterfly</span><span class="ac-sci">Abaeis nicippe</span><span class="ac-count">38</span></div>
+          <div class="ac-row"><span class="ac-name lep-fg">Cabbage White Butterfly</span><span class="ac-sci">Pieris rapae</span><span class="ac-count">24</span></div>
+          <div class="ac-row"><span class="ac-name col-fg">Asian Lady Beetle</span><span class="ac-sci">Harmonia axyridis</span><span class="ac-count">40</span></div>
+          <div class="ac-row"><span class="ac-name col-fg">Longhorned Beetle</span><span class="ac-sci">Acalolepta sublusca</span><span class="ac-count">121</span></div>
+          <div class="ac-row"><span class="ac-name man-fg">Praying Mantis</span><span class="ac-sci">Mantis religiosa</span><span class="ac-count">7</span></div>
+          <div class="ac-row"><span class="ac-name odo-fg">Common Blue-eye Dragonfly</span><span class="ac-sci">Anatya guttata</span><span class="ac-count">5</span></div>
+          <div class="ac-row"><span class="ac-name hym-fg">Honey Bee</span><span class="ac-sci">Apis mellifera</span><span class="ac-count">68</span></div>
+        </div>
+      </div>
+      <div class="tile-grid">
+        <div class="tile"><div class="stripe col-bg"></div><div class="img col"></div></div>
+        <div class="tile"><div class="stripe col-bg"></div><div class="img col"></div><div class="badge">2/3</div></div>
+        <div class="tile"><div class="stripe lep-bg"></div><div class="img lep"></div></div>
+        <div class="tile"><div class="stripe hym-bg"></div><div class="img hym"></div></div>
+        <div class="tile"><div class="stripe odo-bg"></div><div class="img odo"></div></div>
+        <div class="tile"><div class="stripe man-bg"></div><div class="img man"></div></div>
+        <div class="tile"><div class="stripe hem-bg"></div><div class="img hem"></div></div>
+        <div class="tile"><div class="stripe lep-bg"></div><div class="img lep"></div></div>
+        <div class="tile"><div class="stripe ort-bg"></div><div class="img"></div></div>
+        <div class="tile"><div class="stripe col-bg"></div><div class="img col"></div></div>
+        <div class="tile"><div class="stripe der-bg"></div><div class="img"></div></div>
+        <div class="tile"><div class="stripe bla-bg"></div><div class="img"></div></div>
+      </div>
+    </div>
+    <div class="tradeoff"><strong>Vibe:</strong> sketchbook-with-stickers. <strong>Risk:</strong> swatches sit close in hue; distinguishing Coleoptera vs Hemiptera at-a-glance needs the text label. <strong>Best for:</strong> ambient cuteness over long drawing sessions.</div>
+  </div>
+
+  <!-- =================== CANDIDATE B =================== -->
+  <div class="candidate cand-b">
+    <div class="cand-head">
+      <div class="cand-letter">B</div>
+      <div class="cand-title">Pastel Goth Kawaii</div>
+      <div class="cand-rec">research recommendation</div>
+    </div>
+    <p class="cand-soul">"Kuromi on the dark theme. Pinks/lavenders shifted toward neon-mid (L≈65) so they actually pop against #0d0c10 without bleaching. Cute, but with edge — appropriate for entomology art, already a slightly macabre subject."</p>
+    <div class="swatch-row">
+      <div class="swatch-tile col-bg" title="Coleoptera #FF6EC7">col</div>
+      <div class="swatch-tile lep-bg" title="Lepidoptera #F8B4D9">lep</div>
+      <div class="swatch-tile hym-bg" title="Hymenoptera #FFD166">hym</div>
+      <div class="swatch-tile hem-bg" title="Hemiptera #E16AAA">hem</div>
+      <div class="swatch-tile dip-bg" title="Diptera #A78BFA">dip</div>
+      <div class="swatch-tile odo-bg" title="Odonata #67D4E6">odo</div>
+      <div class="swatch-tile ort-bg" title="Orthoptera #A8E6A1">ort</div>
+      <div class="swatch-tile man-bg" title="Mantodea #7FD89A">man</div>
+      <div class="swatch-tile neu-bg" title="Neuroptera #D4C5F9">neu</div>
+      <div class="swatch-tile bla-bg" title="Blattodea #9C8AAC">bla</div>
+      <div class="swatch-tile der-bg" title="Dermaptera #C9A8D4">der</div>
+      <div class="swatch-tile pha-bg" title="Phasmatodea #B8D898">pha</div>
+      <div class="swatch-tile tri-bg" title="Trichoptera #E8A8D4">tri</div>
+      <div class="swatch-tile eph-bg" title="Ephemeroptera #F0D796">eph</div>
+      <div class="swatch-tile ple-bg" title="Plecoptera #88B8D4">ple</div>
+      <div class="swatch-tile iso-bg" title="Isoptera #A89684">iso</div>
+      <div class="swatch-tile oth-bg" title="Other #B8B0C4">oth</div>
+    </div>
+    <div class="mock-row">
+      <div class="ac-mock">
+        <div class="ac-input">but<span style="color:var(--text-tertiary)">|</span></div>
+        <div class="ac-results">
+          <div class="ac-row active"><span class="ac-name lep-fg">Sleepy Orange Butterfly</span><span class="ac-sci">Abaeis nicippe</span><span class="ac-count">38</span></div>
+          <div class="ac-row"><span class="ac-name lep-fg">Cabbage White Butterfly</span><span class="ac-sci">Pieris rapae</span><span class="ac-count">24</span></div>
+          <div class="ac-row"><span class="ac-name col-fg">Asian Lady Beetle</span><span class="ac-sci">Harmonia axyridis</span><span class="ac-count">40</span></div>
+          <div class="ac-row"><span class="ac-name col-fg">Longhorned Beetle</span><span class="ac-sci">Acalolepta sublusca</span><span class="ac-count">121</span></div>
+          <div class="ac-row"><span class="ac-name man-fg">Praying Mantis</span><span class="ac-sci">Mantis religiosa</span><span class="ac-count">7</span></div>
+          <div class="ac-row"><span class="ac-name odo-fg">Common Blue-eye Dragonfly</span><span class="ac-sci">Anatya guttata</span><span class="ac-count">5</span></div>
+          <div class="ac-row"><span class="ac-name hym-fg">Honey Bee</span><span class="ac-sci">Apis mellifera</span><span class="ac-count">68</span></div>
+        </div>
+      </div>
+      <div class="tile-grid">
+        <div class="tile"><div class="stripe col-bg"></div><div class="img col"></div></div>
+        <div class="tile"><div class="stripe col-bg"></div><div class="img col"></div><div class="badge">2/3</div></div>
+        <div class="tile"><div class="stripe lep-bg"></div><div class="img lep"></div></div>
+        <div class="tile"><div class="stripe hym-bg"></div><div class="img hym"></div></div>
+        <div class="tile"><div class="stripe odo-bg"></div><div class="img odo"></div></div>
+        <div class="tile"><div class="stripe man-bg"></div><div class="img man"></div></div>
+        <div class="tile"><div class="stripe hem-bg"></div><div class="img hem"></div></div>
+        <div class="tile"><div class="stripe lep-bg"></div><div class="img lep"></div></div>
+        <div class="tile"><div class="stripe ort-bg"></div><div class="img"></div></div>
+        <div class="tile"><div class="stripe col-bg"></div><div class="img col"></div></div>
+        <div class="tile"><div class="stripe der-bg"></div><div class="img"></div></div>
+        <div class="tile"><div class="stripe bla-bg"></div><div class="img"></div></div>
+      </div>
+    </div>
+    <div class="tradeoff"><strong>Vibe:</strong> Spotify-Wrapped meets Kuromi. <strong>Strength:</strong> 4.5:1 contrast on all 17 against #0d0c10; pink-family still dominates with attitude. <strong>Best for:</strong> "cute, but designed by someone who knows what they're doing" — exactly the tone for art students who'd be put off by infantilizing palettes.</div>
+  </div>
+
+  <!-- =================== CANDIDATE C =================== -->
+  <div class="candidate cand-c">
+    <div class="cand-head">
+      <div class="cand-letter">C</div>
+      <div class="cand-title">NewJeans Soft Era</div>
+    </div>
+    <p class="cand-soul">"NewJeans / Red Velvet Ice Cream Cake / Sumikko Gurashi territory. Muted, dusty, vintage. Only TWO true pinks anchor; the rest are mauves, sages, creams, soft denim. For users who hate babyish-cute and want sophisticated-cute."</p>
+    <div class="swatch-row">
+      <div class="swatch-tile col-bg" title="Coleoptera #D4A5B5">col</div>
+      <div class="swatch-tile lep-bg" title="Lepidoptera #E8B8C0">lep</div>
+      <div class="swatch-tile hym-bg" title="Hymenoptera #D4B898">hym</div>
+      <div class="swatch-tile hem-bg" title="Hemiptera #B89090">hem</div>
+      <div class="swatch-tile dip-bg" title="Diptera #9BA8B8">dip</div>
+      <div class="swatch-tile odo-bg" title="Odonata #8EB4C0">odo</div>
+      <div class="swatch-tile ort-bg" title="Orthoptera #B0BC9C">ort</div>
+      <div class="swatch-tile man-bg" title="Mantodea #9CB89C">man</div>
+      <div class="swatch-tile neu-bg" title="Neuroptera #C0B4C8">neu</div>
+      <div class="swatch-tile bla-bg" title="Blattodea #7D6E68">bla</div>
+      <div class="swatch-tile der-bg" title="Dermaptera #A89484">der</div>
+      <div class="swatch-tile pha-bg" title="Phasmatodea #A8B894">pha</div>
+      <div class="swatch-tile tri-bg" title="Trichoptera #C8B0B8">tri</div>
+      <div class="swatch-tile eph-bg" title="Ephemeroptera #D4C8A0">eph</div>
+      <div class="swatch-tile ple-bg" title="Plecoptera #A4BCC4">ple</div>
+      <div class="swatch-tile iso-bg" title="Isoptera #9C8474">iso</div>
+      <div class="swatch-tile oth-bg" title="Other #C4B8AC">oth</div>
+    </div>
+    <div class="mock-row">
+      <div class="ac-mock">
+        <div class="ac-input">but<span style="color:var(--text-tertiary)">|</span></div>
+        <div class="ac-results">
+          <div class="ac-row active"><span class="ac-name lep-fg">Sleepy Orange Butterfly</span><span class="ac-sci">Abaeis nicippe</span><span class="ac-count">38</span></div>
+          <div class="ac-row"><span class="ac-name lep-fg">Cabbage White Butterfly</span><span class="ac-sci">Pieris rapae</span><span class="ac-count">24</span></div>
+          <div class="ac-row"><span class="ac-name col-fg">Asian Lady Beetle</span><span class="ac-sci">Harmonia axyridis</span><span class="ac-count">40</span></div>
+          <div class="ac-row"><span class="ac-name col-fg">Longhorned Beetle</span><span class="ac-sci">Acalolepta sublusca</span><span class="ac-count">121</span></div>
+          <div class="ac-row"><span class="ac-name man-fg">Praying Mantis</span><span class="ac-sci">Mantis religiosa</span><span class="ac-count">7</span></div>
+          <div class="ac-row"><span class="ac-name odo-fg">Common Blue-eye Dragonfly</span><span class="ac-sci">Anatya guttata</span><span class="ac-count">5</span></div>
+          <div class="ac-row"><span class="ac-name hym-fg">Honey Bee</span><span class="ac-sci">Apis mellifera</span><span class="ac-count">68</span></div>
+        </div>
+      </div>
+      <div class="tile-grid">
+        <div class="tile"><div class="stripe col-bg"></div><div class="img col"></div></div>
+        <div class="tile"><div class="stripe col-bg"></div><div class="img col"></div><div class="badge">2/3</div></div>
+        <div class="tile"><div class="stripe lep-bg"></div><div class="img lep"></div></div>
+        <div class="tile"><div class="stripe hym-bg"></div><div class="img hym"></div></div>
+        <div class="tile"><div class="stripe odo-bg"></div><div class="img odo"></div></div>
+        <div class="tile"><div class="stripe man-bg"></div><div class="img man"></div></div>
+        <div class="tile"><div class="stripe hem-bg"></div><div class="img hem"></div></div>
+        <div class="tile"><div class="stripe lep-bg"></div><div class="img lep"></div></div>
+        <div class="tile"><div class="stripe ort-bg"></div><div class="img"></div></div>
+        <div class="tile"><div class="stripe col-bg"></div><div class="img col"></div></div>
+        <div class="tile"><div class="stripe der-bg"></div><div class="img"></div></div>
+        <div class="tile"><div class="stripe bla-bg"></div><div class="img"></div></div>
+      </div>
+    </div>
+    <div class="tradeoff"><strong>Vibe:</strong> Kinfolk magazine meets Sanrio. <strong>Strength:</strong> never overpowers a sketch; cohesive doll-cute. <strong>Risk:</strong> may not register as "girly" — too quiet for users who want the palette to announce itself. Also: distinguishing 16 muted hues is genuinely hard.</div>
+  </div>
+
+  <!-- =================== CANDIDATE D =================== -->
+  <div class="candidate cand-d">
+    <div class="cand-head">
+      <div class="cand-letter">D</div>
+      <div class="cand-title">Y2K Sugar Rush</div>
+    </div>
+    <p class="cand-soul">"Decora-kei + Y2K-girly maximalism. Hot pinks, candy lavender, holo-cyan, butter yellow, chrome. Every color is doing the most. Tool feels like a sticker-decorated Lisa Frank trapper-keeper diary."</p>
+    <div class="swatch-row">
+      <div class="swatch-tile col-bg" title="Coleoptera #FF4F9D">col</div>
+      <div class="swatch-tile lep-bg" title="Lepidoptera #FF8FCB">lep</div>
+      <div class="swatch-tile hym-bg" title="Hymenoptera #FFDC4F">hym</div>
+      <div class="swatch-tile hem-bg" title="Hemiptera #FF5EBC">hem</div>
+      <div class="swatch-tile dip-bg" title="Diptera #9D7FFF">dip</div>
+      <div class="swatch-tile odo-bg" title="Odonata #5FC8FF">odo</div>
+      <div class="swatch-tile ort-bg" title="Orthoptera #7FE860">ort</div>
+      <div class="swatch-tile man-bg" title="Mantodea #5FDDB0">man</div>
+      <div class="swatch-tile neu-bg" title="Neuroptera #D89EFF">neu</div>
+      <div class="swatch-tile bla-bg" title="Blattodea #FF9F5C">bla</div>
+      <div class="swatch-tile der-bg" title="Dermaptera #FFB8E0">der</div>
+      <div class="swatch-tile pha-bg" title="Phasmatodea #A8E5A0">pha</div>
+      <div class="swatch-tile tri-bg" title="Trichoptera #FFA8B8">tri</div>
+      <div class="swatch-tile eph-bg" title="Ephemeroptera #FFE89C">eph</div>
+      <div class="swatch-tile ple-bg" title="Plecoptera #8AC5FF">ple</div>
+      <div class="swatch-tile iso-bg" title="Isoptera #C8B8A4">iso</div>
+      <div class="swatch-tile oth-bg" title="Other #E8E4F0">oth</div>
+    </div>
+    <div class="mock-row">
+      <div class="ac-mock">
+        <div class="ac-input">but<span style="color:var(--text-tertiary)">|</span></div>
+        <div class="ac-results">
+          <div class="ac-row active"><span class="ac-name lep-fg">Sleepy Orange Butterfly</span><span class="ac-sci">Abaeis nicippe</span><span class="ac-count">38</span></div>
+          <div class="ac-row"><span class="ac-name lep-fg">Cabbage White Butterfly</span><span class="ac-sci">Pieris rapae</span><span class="ac-count">24</span></div>
+          <div class="ac-row"><span class="ac-name col-fg">Asian Lady Beetle</span><span class="ac-sci">Harmonia axyridis</span><span class="ac-count">40</span></div>
+          <div class="ac-row"><span class="ac-name col-fg">Longhorned Beetle</span><span class="ac-sci">Acalolepta sublusca</span><span class="ac-count">121</span></div>
+          <div class="ac-row"><span class="ac-name man-fg">Praying Mantis</span><span class="ac-sci">Mantis religiosa</span><span class="ac-count">7</span></div>
+          <div class="ac-row"><span class="ac-name odo-fg">Common Blue-eye Dragonfly</span><span class="ac-sci">Anatya guttata</span><span class="ac-count">5</span></div>
+          <div class="ac-row"><span class="ac-name hym-fg">Honey Bee</span><span class="ac-sci">Apis mellifera</span><span class="ac-count">68</span></div>
+        </div>
+      </div>
+      <div class="tile-grid">
+        <div class="tile"><div class="stripe col-bg"></div><div class="img col"></div></div>
+        <div class="tile"><div class="stripe col-bg"></div><div class="img col"></div><div class="badge">2/3</div></div>
+        <div class="tile"><div class="stripe lep-bg"></div><div class="img lep"></div></div>
+        <div class="tile"><div class="stripe hym-bg"></div><div class="img hym"></div></div>
+        <div class="tile"><div class="stripe odo-bg"></div><div class="img odo"></div></div>
+        <div class="tile"><div class="stripe man-bg"></div><div class="img man"></div></div>
+        <div class="tile"><div class="stripe hem-bg"></div><div class="img hem"></div></div>
+        <div class="tile"><div class="stripe lep-bg"></div><div class="img lep"></div></div>
+        <div class="tile"><div class="stripe ort-bg"></div><div class="img"></div></div>
+        <div class="tile"><div class="stripe col-bg"></div><div class="img col"></div></div>
+        <div class="tile"><div class="stripe der-bg"></div><div class="img"></div></div>
+        <div class="tile"><div class="stripe bla-bg"></div><div class="img"></div></div>
+      </div>
+    </div>
+    <div class="tradeoff"><strong>Vibe:</strong> joyful, loud, maximalist. <strong>Strength:</strong> max distinguishability between 16 orders; "make a 16-year-old art student delighted" energy. <strong>Risk:</strong> saturation may get overstimulating across 30-min sessions; close to "Tumblr-2014" if one UI element goes wrong.</div>
+  </div>
+
+  <!-- =================== CANDIDATE E =================== -->
+  <div class="candidate cand-e">
+    <div class="cand-head">
+      <div class="cand-letter">E</div>
+      <div class="cand-title">Senshi Constellation</div>
+    </div>
+    <p class="cand-soul">"Sailor Moon character-coded: most-drawn orders get inner-senshi anchor colors; rare orders get outer-senshi mystery tones. Each order has an identity. Cute, but with narrative legibility — Blattodea gets Pluto-plum dignity instead of a punishment color."</p>
+    <div class="swatch-row">
+      <div class="swatch-tile col-bg" title="Coleoptera #FF4E6F (Mars)">col</div>
+      <div class="swatch-tile lep-bg" title="Lepidoptera #FFB3DF (Moon)">lep</div>
+      <div class="swatch-tile hym-bg" title="Hymenoptera #FFCE54 (Venus)">hym</div>
+      <div class="swatch-tile hem-bg" title="Hemiptera #D87AB8 (Saturn)">hem</div>
+      <div class="swatch-tile dip-bg" title="Diptera #7C8FFF (Mercury)">dip</div>
+      <div class="swatch-tile odo-bg" title="Odonata #67C8E8 (Mercury frost)">odo</div>
+      <div class="swatch-tile ort-bg" title="Orthoptera #7BC274 (Jupiter)">ort</div>
+      <div class="swatch-tile man-bg" title="Mantodea #5FA868 (Jupiter deep)">man</div>
+      <div class="swatch-tile neu-bg" title="Neuroptera #C8B4F0 (Neptune)">neu</div>
+      <div class="swatch-tile bla-bg" title="Blattodea #6B5878 (Pluto)">bla</div>
+      <div class="swatch-tile der-bg" title="Dermaptera #A88FB8 (Pluto light)">der</div>
+      <div class="swatch-tile pha-bg" title="Phasmatodea #A8C886 (Jupiter sage)">pha</div>
+      <div class="swatch-tile tri-bg" title="Trichoptera #E8B0D4 (Chibi)">tri</div>
+      <div class="swatch-tile eph-bg" title="Ephemeroptera #F0E0A8 (Venus cream)">eph</div>
+      <div class="swatch-tile ple-bg" title="Plecoptera #94B4D8 (Neptune ocean)">ple</div>
+      <div class="swatch-tile iso-bg" title="Isoptera #9C8474 (Saturn earth)">iso</div>
+      <div class="swatch-tile oth-bg" title="Other #D4C8DC (moonlight)">oth</div>
+    </div>
+    <div class="mock-row">
+      <div class="ac-mock">
+        <div class="ac-input">but<span style="color:var(--text-tertiary)">|</span></div>
+        <div class="ac-results">
+          <div class="ac-row active"><span class="ac-name lep-fg">Sleepy Orange Butterfly</span><span class="ac-sci">Abaeis nicippe</span><span class="ac-count">38</span></div>
+          <div class="ac-row"><span class="ac-name lep-fg">Cabbage White Butterfly</span><span class="ac-sci">Pieris rapae</span><span class="ac-count">24</span></div>
+          <div class="ac-row"><span class="ac-name col-fg">Asian Lady Beetle</span><span class="ac-sci">Harmonia axyridis</span><span class="ac-count">40</span></div>
+          <div class="ac-row"><span class="ac-name col-fg">Longhorned Beetle</span><span class="ac-sci">Acalolepta sublusca</span><span class="ac-count">121</span></div>
+          <div class="ac-row"><span class="ac-name man-fg">Praying Mantis</span><span class="ac-sci">Mantis religiosa</span><span class="ac-count">7</span></div>
+          <div class="ac-row"><span class="ac-name odo-fg">Common Blue-eye Dragonfly</span><span class="ac-sci">Anatya guttata</span><span class="ac-count">5</span></div>
+          <div class="ac-row"><span class="ac-name hym-fg">Honey Bee</span><span class="ac-sci">Apis mellifera</span><span class="ac-count">68</span></div>
+        </div>
+      </div>
+      <div class="tile-grid">
+        <div class="tile"><div class="stripe col-bg"></div><div class="img col"></div></div>
+        <div class="tile"><div class="stripe col-bg"></div><div class="img col"></div><div class="badge">2/3</div></div>
+        <div class="tile"><div class="stripe lep-bg"></div><div class="img lep"></div></div>
+        <div class="tile"><div class="stripe hym-bg"></div><div class="img hym"></div></div>
+        <div class="tile"><div class="stripe odo-bg"></div><div class="img odo"></div></div>
+        <div class="tile"><div class="stripe man-bg"></div><div class="img man"></div></div>
+        <div class="tile"><div class="stripe hem-bg"></div><div class="img hem"></div></div>
+        <div class="tile"><div class="stripe lep-bg"></div><div class="img lep"></div></div>
+        <div class="tile"><div class="stripe ort-bg"></div><div class="img"></div></div>
+        <div class="tile"><div class="stripe col-bg"></div><div class="img col"></div></div>
+        <div class="tile"><div class="stripe der-bg"></div><div class="img"></div></div>
+        <div class="tile"><div class="stripe bla-bg"></div><div class="img"></div></div>
+      </div>
+    </div>
+    <div class="tradeoff"><strong>Vibe:</strong> magical-girl color sheet — heroes vs supporting cast. <strong>Strength:</strong> rich narrative cohesion; Blattodea/Isoptera get dignified mystery colors. <strong>Risk:</strong> high saturation; the Mars and Saturn pinks need careful pairing or gallery looks pink-mush.</div>
+  </div>
+
+  <div style="margin-top: 60px; padding: 32px; background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: 16px;">
+    <h2 style="font-family: 'Fraunces', serif; font-weight: 500; font-size: 20px; margin: 0 0 14px;">Research recommendation</h2>
+    <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.7; max-width: 820px; margin: 0;">
+      <strong style="color: var(--text-primary)">Candidate B (Pastel Goth Kawaii)</strong> — the only palette explicitly designed for cute-on-dark.
+      Kuromi/Cinnamoroll merchandise is the proof-of-concept that you can have girly-cute and dark theme simultaneously.
+      Insects are already a slightly macabre subject; a palette with a little edge gives cockroaches and earwigs dignity instead of a punishment color.
+      Art students will recoil from condescending pastels; pastel-goth is the cute palette that's already passed teen taste-tests.
+      <br><br>
+      Fallback alternates if B isn't right: <strong style="color: var(--text-primary)">C</strong> for "I want quiet & sophisticated", <strong style="color: var(--text-primary)">A</strong> for "I want ambient sweetness", <strong style="color: var(--text-primary)">D</strong> for "I want maximum joy", <strong style="color: var(--text-primary)">E</strong> if Sailor Moon narrative speaks to you.
+    </p>
+  </div>
+
+</body>
+</html>

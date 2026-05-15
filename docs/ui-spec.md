@@ -33,17 +33,43 @@ Locked in:
 
 > *"We just have to get things in sqlite + drizzle I think."* — 2026-05-14
 
-- Framework: **Next.js** (TypeScript), **app router**.
+- Framework: **Next.js 16.x** (TypeScript), **app router**.
 - **Filesystem-based** image storage (not Eagle-DB-based, not S3, just files on the VPS).
-- **SQLite** for `images`, `species`, `reports`, `admin_sessions`.
-- **Drizzle ORM** for typed queries / migrations.
+- **SQLite** for `images`, `reports`. Admin auth is stateless signed cookies — no DB table.
+- **Drizzle ORM** (`drizzle({ client: sqlite, schema })` object form per current docs).
+- **`serverExternalPackages: ['better-sqlite3']`** in `next.config.ts` to keep
+  Webpack/Turbopack from trying to bundle the native binding.
+- **HMR-safe singleton** for the SQLite handle via `globalThis` guard in
+  non-production builds (eliminates file-handle leakage on dev edits — same
+  Prisma-style pattern, not strictly required by Drizzle but cheap insurance).
+- **Cache Components** opt-in (`cacheComponents: true` in next.config.ts) +
+  the `'use cache'` directive with `cacheLife` / `cacheTag` / `updateTag`
+  for Drizzle query caching. This is the modern caching model in Next 16;
+  `unstable_cache` is being superseded.
+- **Auth**: **HTTP Basic Auth** via `proxy.ts` — verified against an
+  env-var bcrypt hash (`ADMIN_PASSWORD_HASH`). Browser handles the credential
+  prompt natively; no login page to build. Admin Server Functions
+  *re-verify* the Authorization header before mutating (defense in depth,
+  per Next.js docs guidance).
+- **Admin page is unlinked** — security-by-obscurity:
+  - No "Admin" link in nav / footer / any user-facing page
+  - `robots.txt` Disallow `/admin/`
+  - Only accessible by knowing the URL `/admin/reports`
+  - Plus Basic Auth gate via `proxy.ts`
+- **Image serving**: `app/api/img/[name]/route.ts` + `app/api/thumb/[name]/route.ts`
+  (streaming Route Handlers — see §4b below).
 - **Styling**: lift from `/Users/adoll/projects/eagle-gesture-drawing` —
   see §2. CSS approach matches eagle (CSS custom properties in `globals.css`
   + ported `designTokens.ts` for inline-style consumers).
 
-Not yet locked (open):
-- Admin auth flavor (env-var password vs library like NextAuth).
-- Image-serving (public/ vs API route streaming from `data/images/`).
+Sources for the Next.js 16-specific decisions:
+- https://nextjs.org/docs/app/api-reference/file-conventions/proxy (renamed
+  from `middleware.ts`)
+- https://nextjs.org/docs/app/getting-started/caching (Cache Components +
+  `'use cache'`)
+- https://nextjs.org/docs/app/getting-started/mutating-data (Server
+  Functions — formerly "Server Actions")
+- https://orm.drizzle.team/docs/connect-better-sqlite3 (object-form init)
 
 ## 2. Visual influence — eagle-gesture-drawing (port list)
 
@@ -135,6 +161,70 @@ Style markers (already exhaustively documented in agent report; key points):
 - **Collection**: a group of images sharing a `collection_id` (e.g., the
   4 angles of one Acalolepta beetle specimen on Bugwood).
 
+## 4b. Image serving (three tiers, EU-latency conscious)
+
+Three "sizes" pre-baked on disk by the download scripts (inline, no
+post-hoc pass):
+- **Full-size** — `data/images/<name>.jpg`, ~0.25-8 MB, avg ~1.2 MB. The
+  original we downloaded.
+- **Medium (1024px)** — `data/medium/<name>.jpg`, 1024 max edge, ~130 KB
+  avg, JPEG q88. Added 2026-05-14 specifically for EU server latency
+  (~150 ms RTT × ~10 hovers = noticeable). Saves ~1 MB per hover.
+- **Thumbnail (512px)** — `data/thumbnails/<name>.jpg`, ~70 KB, JPEG q85.
+
+Three Route Handlers (Next.js 16 — chosen because they expose Web Streams
+API, needed for chunked file serving):
+
+```typescript
+// app/api/img/[name]/route.ts
+export async function GET(_req: Request, { params }: { params: Promise<{ name: string }> }) {
+  const { name } = await params;
+  const safe = name.replace(/[^a-z0-9_.-]/gi, '');  // path-traversal guard
+  const filePath = path.join(process.cwd(), 'data', 'images', safe);
+  const stream = fs.createReadStream(filePath);
+  return new Response(stream as unknown as ReadableStream, {
+    headers: {
+      'Content-Type': 'image/jpeg',
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    },
+  });
+}
+```
+
+(Mirror for `/api/thumb/[name]/route.ts` → `data/thumbnails/`, and
+`/api/medium/[name]/route.ts` → `data/medium/`.)
+
+**Where each tier is used:**
+- **Session/practice view** — `<img src="/api/img/<name>">`, `object-fit: contain`,
+  fullscreen. Full-size, full quality — this is the actual subject for drawing.
+- **Gallery thumbnail grid** — `<img src="/api/thumb/<name>">` (~70 KB per tile, snappy).
+- **Gallery hover preview** — `<img src="/api/medium/<name>">` (~130 KB),
+  displayed via CSS `max-width: 1024px; max-height: 1024px; object-fit: contain`.
+  ~8× smaller download than full-size, important for EU-served deployment.
+- **Click in gallery → new tab** — opens the row's `image_url` field (the
+  source CDN URL, e.g. iNat S3 or Bugwood). User clarification 2026-05-14:
+  *"Open image source url in tab so the user can see the original full scale
+  image (we'll likely served compressed images on the website)"*. No serving
+  from us; the source has the original.
+
+**Disk impact of three tiers** (5092 images, validated):
+- full: 6.36 GB · medium: 0.67 GB · thumb: 0.18 GB · SQLite: 5.2 MB
+- Total: ~7.2 GB. At 50K image scale, project to ~70 GB.
+
+**Why route handlers, not `next/image`:**
+- `next/image` requires `images.localPatterns: [{ pathname: '/api/img/**' }]`
+  config + adds the Sharp native dep (~30-50 MB), plus writes optimized
+  variants to `.next/cache/images` (potentially several GB for 5K-50K source
+  images × default device-size variants).
+- We already have the variants we need pre-baked.
+- Plain `<img>` + immutable Cache-Control is the lighter, correct call.
+
+**Why not symlink to `public/`:**
+- Next.js copies `public/` into the build output; 5K-50K files would slow
+  builds and bloat the artifact.
+- `data/` stays gitignored and outside the build entirely with route handlers.
+- nginx/HAProxy can still bypass-Node-cache us via CDN headers (immutable).
+
 ## 4. Session / render screen
 
 > *"When they proceed they will be taken to the main render window where
@@ -143,19 +233,71 @@ Style markers (already exhaustively documented in agent report; key points):
 
 Layout:
 - **Timer**: top-right, always visible (eagle pattern: `mm:ss`, JetBrains
-  Mono, tabular-nums).
+  Mono, tabular-nums). Always visible — does NOT auto-hide.
 - **Progress bar**: top edge, 4px height, fills left→right; transition
   `0.1s linear` when playing, removed when paused.
-- **Image**: `object-fit: contain` at 100% viewport.
+- **Image**: `<img object-fit="contain">` at 100% viewport.
+- **Source-info chip**: lower-right (our adaptation; eagle uses top-left
+  with different content). Shows photographer · license · institution +
+  link to source page. Visibility tied to `chromeVisible`.
 
-Sound cues (mirror eagle audio palette, Web Audio procedural — no asset
-files):
+### Image preload (port from eagle's PreloadManager pattern)
+
+`lib/preload-manager.ts` — separate module, owns:
+- `setQueue(items: Image[])` — called when session pool is set
+- `onIndexChange(idx: number)` — called on advance
+- `markUsed(id: string)` — touches LRU on render
+- `.cache.get(id) → { status: 'ok' | 'loading' | 'error', img?: HTMLImageElement }`
+
+Behavior: keeps next 2 image elements in cache via `new Image(); img.src = …`;
+evicts old ones beyond the LRU window. Provides "broken image" detection
+for the renderer (so we can skip a 404'd image gracefully).
+
+Sound cues — verbatim port from `eagle/src/audio-cues.js` (verified
+2026-05-14, exact frequencies + durations from source).
 
 > *"A sound will play at half time, 30s, 10s, and then 3, 2, 1."*
 
-- Halfway, 30s remaining, 10s remaining: bell tone.
-- 3-2-1 countdown: ascending tones.
-- (At "time up" → advance to next image.)
+API surface to port to `lib/audio.ts`:
+
+```typescript
+export function makeAudio(): {
+  ding: () => void;                     // 880 Hz triangle + 1760 Hz sine octave
+                                        //   triangle vol 0.55, sine vol 0.165
+                                        //   5 ms attack, 30 ms hold, 0.55 s tail
+                                        //   used for: halftime, 30 s, 10 s
+  countdown: (step: 0 | 1 | 2) => void; // T-3 / T-2 / T-1
+                                        //   step 0: 660 Hz triangle, 0.18 s, vol 0.45
+                                        //   step 1: 784 Hz triangle, 0.18 s, vol 0.45
+                                        //   step 2: 988 Hz triangle + 1976 Hz sine,
+                                        //           0.35 s, vol 0.6 + 0.18 (bigger
+                                        //           final beat)
+  transition: () => void;               // advance ding: C5→G5 rise, ~0.43 s
+                                        //   note 1: 523.25 Hz triangle, 0.18 s, vol 0.40
+                                        //   note 2: 784 Hz triangle, 0.25 s, vol 0.45
+};
+```
+
+Implementation notes (also from eagle):
+- Singleton AudioContext, created lazily on first cue, reused.
+- DynamicsCompressor in the output chain: threshold -12 dB, knee 6,
+  ratio 4, attack 3 ms, release 150 ms. Catches overlapping cues.
+- All envelopes are 5 ms attack → 30 ms hold → exponential decay.
+- Layered cues use a triangle root + sine octave (1.5× higher freq + lower
+  vol) for warmth.
+
+Trigger logic lives in `SessionPlayer`'s `onTick(elapsed)` callback — the
+hook itself doesn't emit cues. Per-slide flag tracks "already fired" so
+each cue fires once per slide:
+
+- `elapsed >= durationMs / 2` → `ding()` (only if duration ≥ 60 s; on a
+  30-s session there's no half-time cue separate from the 30-s mark)
+- `remaining ≤ 30_000` → `ding()`
+- `remaining ≤ 10_000` → `ding()`
+- `remaining ≤ 3_000` → `countdown(0)`
+- `remaining ≤ 2_000` → `countdown(1)`
+- `remaining ≤ 1_000` → `countdown(2)`
+- On advance (auto or manual) → `transition()`
 
 Image selection:
 
@@ -178,36 +320,96 @@ Image selection:
 - Within the chosen pool the order is fully randomized; we don't repeat an
   image within a single session.
 
-## 5. Action bar
+## 5. Action bar (final, after deep eagle research 2026-05-14)
 
 > *"There will be an action bar at the bottom that will let you move backward
 > one image, forward one image, or pause. You will also be able to move
 > backwards, forward, and pause with left, right, and space. Action bar
 > will be hidden unless you move your mouse."*
 
-Auto-hide on mousemove idle (eagle pattern: ~2s timer). Reveals on cursor
-movement.
+Auto-hide after **2000 ms** of `mousemove`-idle (eagle confirmed value, only
+`mousemove` triggers reveal, no keydown). Cursor → `none` while hidden.
+Force-show condition: chrome stays visible when the report modal is open
+(equivalent to eagle's "manage panel open" guard).
 
-Keyboard shortcuts (defined explicitly):
-- **←** — previous image
-- **→** — next image
-- **Space** — pause / resume
+### Layout
+- **Edge-positioned Prev (left) and Next (right)** buttons — absolute, large
+  click targets, eagle-style. Tablet/touch-friendly.
+- **Centered bottom bar** with 8 actions in this order: Pause • Timer
+  dropdown • B&W • Magnifier • Zoom reset • Report • Open source • Counter (X/Y)
+- Plus **Exit** as an Esc-only keyboard shortcut (or top-right corner if we want a visible button).
 
-Buttons (in order — additions tracked below):
-1. **Prev** image
-2. **Play / Pause**
-3. **Next** image
-4. **Report** (see §6)
-5. **Open source in new tab** — *added later*:
-   > *"Action bar should also have a fifth action that's an external link
-   > button that opens the image in a new tab (go to source)"*
-   - Opens `source_page_url` (e.g. the iNaturalist observation page) in a
-     new tab.
-6. ~~**Search on Sketchfab**~~ — *deferred per user (2026-05-14): "Sketchfab
-   button, out of scope for right now, we'll come back to this after we
-   have the basic app working."* Notes moved to
-   [`docs/sketchfab-notes.md`](./sketchfab-notes.md). API key already in
-   `.env.local`.
+### Keyboard shortcuts (final, after eagle research)
+
+| Key | Action |
+|-----|--------|
+| `←` | Previous image |
+| `→` | Next image |
+| `Space` | Pause / resume |
+| `B` | Toggle B&W filter |
+| `Z` | Cycle magnifier size off → S → M → L → XL → off |
+| `+` / `=` | Whole-image zoom in (step 0.25, max 4×) |
+| `-` / `_` | Whole-image zoom out (min 0.25×) |
+| `0` | Reset whole-image zoom |
+| `R` | Open report modal |
+| `Esc` | Close modal if open, else exit session |
+
+All shortcuts are gated: ignored when an `<input>` / `<textarea>` /
+`contenteditable` has focus (e.g., the report-modal textarea).
+
+### Drawing-reference tools (ported from eagle)
+
+These came up in the deep code review — they're not Eagle-specific plumbing,
+they're genuinely useful drawing-study features that students will want.
+All confirmed in scope 2026-05-14.
+
+- **B&W toggle**: `filter: grayscale(1) contrast(1.05)` on the `<img>`.
+  Values-only study without color distraction. Toggle via button or `B`.
+- **Magnifier (loupe)**: cursor-following rectangular zoom @ 3×. Sizes
+  S/M/L/XL = area fractions 1/8, 1/4, 1/3, 1/2 of viewport. Aspect mirrors
+  the underlying image. Click action-bar button to cycle, right-click for
+  size picker; `Z` key cycles.
+- **Whole-image zoom**: `transform: scale(imgZoom)` on the `<img>`, range
+  0.25-4× in 0.25 steps. Drag-to-pan when `imgZoom > 1`. Resets on advance.
+  Keys `+`/`-`/`0`.
+- **No cross-fade between slides**: hard-cut on advance (eagle matches —
+  the `<img>` src just changes; React `key={image_id}` to force remount and
+  clean state).
+
+### Image transitions
+
+- **Hard cut**, no cross-fade — confirmed 2026-05-14.
+- Per-slide state reset: zoom → 1, pan → (0,0), magnifier stays at chosen size,
+  B&W stays on if toggled.
+
+### Out of scope / dropped from eagle
+
+- Manage panel, Delete dialog, Swap (class mode), Eagle-open button — all
+  Eagle library plumbing.
+- Custom class presets — would be a separate future feature.
+
+### Bonus: external-source link
+- **Open source in new tab** action — opens `source_page_url` (the
+  observation/specimen page on iNat/Bugwood/Smithsonian/etc., not the CDN
+  image URL).
+
+### Bonus: end-of-session overlay (our addition)
+
+When the queue runs out (`idx + 1 >= items.length`):
+- Brief "Session complete — N images drawn" overlay on top of last image
+  (fade in over 0.3 s)
+- Two buttons: **Back to home** / **Start new session (same settings)**
+- Auto-redirect to `/` after 15 s if no interaction
+- Audio: final `transition` ding plays as usual (treat last advance the
+  same as any other)
+
+### ~~Sketchfab button~~ — *deferred per user (2026-05-14)*
+
+> *"Sketchfab button, out of scope for right now, we'll come back to this
+> after we have the basic app working."*
+
+Notes moved to [`docs/sketchfab-notes.md`](./sketchfab-notes.md). API key
+already in `.env.local`.
 
 ## 6. Source-info box (lower-right when action bar reveals)
 
@@ -364,6 +566,103 @@ Gallery page:
 - Performance: preload the next 1-2 images during a session so the next
   advance is instant.
 
+## 12a. Next.js 16 conventions to use (verified 2026-05-14)
+
+Updated from earlier draft after the user pushed back on a too-fast
+architecture pass — the current docs are 16.2.x and several patterns I
+remembered from 15.x are deprecated.
+
+**Renamed: `middleware.ts` → `proxy.ts`** at project root.
+
+> *"The middleware file convention is deprecated and has been renamed to
+> proxy."* — https://nextjs.org/docs/app/api-reference/file-conventions/proxy
+
+```typescript
+// proxy.ts — HTTP Basic Auth (zero login UI; browser handles prompt)
+import bcrypt from 'bcryptjs';
+
+export const config = { matcher: ['/admin/:path*', '/api/admin/:path*'] };
+
+export function proxy(req: Request) {
+  const auth = req.headers.get('authorization');
+  if (!auth?.startsWith('Basic ')) return unauthorized();
+  const [user, pass] = atob(auth.slice(6)).split(':');
+  if (user !== 'admin' || !bcrypt.compareSync(pass, process.env.ADMIN_PASSWORD_HASH!)) {
+    return unauthorized();
+  }
+}
+
+function unauthorized() {
+  return new Response('auth required', {
+    status: 401,
+    headers: { 'WWW-Authenticate': 'Basic realm="line-of-bugs admin"' },
+  });
+}
+```
+
+The docs stress: **proxy alone is not sufficient.** Each admin Server
+Function re-verifies the `Authorization` header before mutating — defense
+in depth.
+
+Also: `public/robots.txt` includes `Disallow: /admin/` so the page isn't
+indexed. Admin page has no inbound links from regular user UI — discoverable
+only by knowing the URL.
+
+**Caching: `cacheComponents: true` + `'use cache'`.** For Drizzle queries:
+
+```typescript
+import { cacheLife, cacheTag } from 'next/cache';
+
+export async function getSpeciesAutocomplete(prefix: string) {
+  'use cache';
+  cacheLife('hours');
+  cacheTag('species');
+  return db.select(...).from(images).where(...);
+}
+// In a Server Function that resolves a report:
+import { updateTag } from 'next/cache';
+updateTag('species');  // invalidates the cache
+```
+
+For request-scoped dedup (one render pass, multiple components using the
+same query), use React's `cache()`. Combine: `cache()` for per-render
+dedup, `'use cache'` for cross-request caching.
+
+**Modal pattern: parallel routes + intercepting routes.** For the "report
+this image" modal that overlays the session/gallery view, the docs'
+canonical recipe:
+
+```
+app/
+├── @modal/
+│   ├── default.tsx                 # returns null when slot is inactive
+│   └── (.)report/[id]/page.tsx     # intercepting: shows modal over current view
+├── report/[id]/page.tsx            # full page for direct-URL hit + refresh
+└── layout.tsx                      # renders {children} + {modal}
+```
+
+Why this over plain React state: the modal becomes URL-shareable, refresh-
+persistent, closes on browser back, reopens on forward. Source:
+https://nextjs.org/docs/app/api-reference/file-conventions/parallel-routes
+
+**Streaming the gallery grid.** Wrap the grid in `<Suspense>` and use a
+`loading.tsx` for the route shell. First paint = filters + search bar
+visible; grid streams in once Drizzle query resolves. Source:
+https://nextjs.org/docs/app/api-reference/file-conventions/loading
+
+**Fonts via `next/font/google`** — self-hosts automatically (no Google CDN
+runtime path). All three of our fonts (Zen_Maru_Gothic, JetBrains_Mono,
+Fraunces) confirmed available.
+
+**Server Functions vs Route Handlers** — chosen split:
+- Server Functions (mutations): `submitReport`, `adminLogin`, `adminLogout`,
+  `resolveReport`. Form-driven, POST, integrate with `revalidatePath` /
+  `updateTag`.
+- Route Handlers (streams + non-POST): `/api/img/*`, `/api/thumb/*`,
+  `/api/species/search?q=...` (GET for autocomplete), `/api/session/start`
+  (POST returning the randomized queue; could be a Server Function but a
+  route handler is cleaner for the client-fetch pattern).
+
 ## 12b. SQLite ingestion (manifest → database)
 
 Per user direction 2026-05-14: *"We just have to get things in sqlite +
@@ -465,10 +764,19 @@ reports.resolved_at IS NULL` and filters where `reports.id IS NULL`.
 
 ### Migrations / seeding
 
-- `db/migrations/` holds Drizzle migration files.
-- A `scripts/seed.ts` (Bun or `tsx`) reads `data/manifest/manifest.csv`,
-  upserts rows into `images`. Run on first deploy + on any rebuild of
-  the manifest. The download scripts themselves don't touch SQLite.
+Current setup (built 2026-05-14):
+- `drizzle/0000_grey_starbolt.sql` (single canonical migration).
+- `npm run db:generate` → `drizzle-kit generate`
+- `npm run db:migrate` → `drizzle-kit migrate`
+- `npm run db:push` → `drizzle-kit push` (skips migration files; sync schema directly)
+- `npm run db:seed` → `tsx db/seed.ts` (reads per-source CSVs, upserts via `onConflictDoUpdate`)
+- `npm run db:studio` → web UI on localhost
+
+Drizzle docs for solo-dev + local SQLite explicitly recommend `push` over
+`generate + migrate` because it's "the best approach for rapid prototyping"
+(https://orm.drizzle.team/docs/drizzle-kit-push). We have generate+migrate
+working today; flip to push later if we want lower-friction iteration. Keep
+the generated migration files as the production-deploy baseline regardless.
 
 ## 13. Data scope
 
@@ -548,17 +856,85 @@ Per user direction "Yes on multi-photo":
 
 ## Open UI questions for brainstorming (not yet decided)
 
-- Admin auth: env-var password hash vs full auth lib (NextAuth.js).
-- Image-serving: place `data/images/` and `data/thumbnails/` under
-  `public/` for direct static-file serving, or stream via an API route
-  (cleaner separation, allows access-checks for unreleased reports).
-- Per session view: does the **next-slide cue** (currently
-  `transition` sound from eagle audio-cues) also play, or is that
-  noise-pollution we should skip?
-- Visual treatment of the species-autocomplete "category" chip in the
-  gallery — we'll repurpose Danbooru's category-color trick to color by
-  insect order (Coleoptera / Lepidoptera / Odonata / etc.). Pick a small
-  palette.
+- ~~FTS5 full-text search~~ → **locked in scope**. Used for the gallery
+  species autocomplete + search. Reverses my earlier "wait until measured
+  slow" — at 10K-50K scale FTS5 is the right tool and the friction is one
+  migration + ~60 LOC.
+- ~~Insect-order color palette~~ → **locked: "Pastel Goth Kawaii"** after
+  deep cute-color research. Reference palette from Kuromi/Cinnamoroll
+  pastel-goth lineage — built for dark theme, pink-anchored, with deliberate
+  "dusty plum / taupe" off-spectrum shades to avoid generic-pastel pitfall.
+  Stored in `lib/order-colors.ts`. Preview: `previews/palette.html`. If
+  rejected at implementation time, fallbacks in priority order are
+  **C (NewJeans Soft Era)**, then **A (Strawberry Milk)**, then **D (Y2K)**,
+  then **E (Senshi Constellation)**.
+
+  ```typescript
+  // lib/order-colors.ts
+  export const orderColors: Record<string, string> = {
+    Coleoptera:    '#FF6EC7',  // neon pop pink — beetles get the loudest anchor
+    Lepidoptera:   '#F8B4D9',  // bubblegum     — butterflies, signature pink
+    Hymenoptera:   '#FFD166',  // neon butter   — bees, naturally
+    Hemiptera:     '#E16AAA',  // Malibu rose   — true bugs
+    Diptera:       '#A78BFA',  // laser lilac   — soft fly purple
+    Odonata:       '#67D4E6',  // Cinnamon cyan — water / dragonflies
+    Orthoptera:    '#A8E6A1',  // neon mint     — grass leap
+    Mantodea:      '#7FD89A',  // sage pop      — mantis predator
+    Neuroptera:    '#D4C5F9',  // moonbeam lav  — delicate lacewings
+    Blattodea:     '#9C8AAC',  // dusty plum    — the deliberate weird one
+    Dermaptera:    '#C9A8D4',  // pastel orchid — earwig love
+    Phasmatodea:   '#B8D898',  // chartreuse    — stick insects
+    Trichoptera:   '#E8A8D4',  // petal pink    — caddisfly water
+    Ephemeroptera: '#F0D796',  // chamomile     — soft ephemeral
+    Plecoptera:    '#88B8D4',  // frost blue    — stonefly water
+    Isoptera:      '#A89684',  // taupe         — termites recede
+    Other:         '#B8B0C4',  // lavender-gray — fallback
+  };
+  ```
+- Should `drizzle-kit push` replace `generate + migrate` in our dev
+  workflow? (Drizzle docs recommend `push` for solo-dev local SQLite;
+  we have generate+migrate working today.)
+
+## FTS5 full-text search (added 2026-05-14)
+
+Confirmed in scope after user pushback on lazy "wait until measured slow"
+stance. **FTS5 is the right tool** for the autocomplete and gallery
+species-search at our target 10K-50K image scale.
+
+### What we get
+- Word-aware tokenization (search "fire" matches "Red Fire Ant" as a word,
+  not as a substring of "wildfire")
+- Prefix queries via `term*` syntax (e.g. `lady*` matches "Lady Beetle")
+- BM25 relevance ranking — shorter/tighter matches rank higher
+- Unicode + diacritic-folded matching (`Pieris ibérica` ↔ `Pieris iberica`)
+- ~10-30× faster than `LIKE %foo%` at 50K rows (~2-3 ms vs ~30-50 ms)
+
+### Schema (raw-SQL migration since Drizzle doesn't natively support FTS5)
+
+```sql
+CREATE VIRTUAL TABLE images_fts USING fts5(
+  image_id UNINDEXED,
+  common_name,
+  taxon_species,
+  tokenize = 'unicode61 remove_diacritics 2'
+);
+
+-- Sync triggers (INSERT, UPDATE, DELETE on images)
+-- Backfill from existing images at migration time
+```
+
+### Query (raw SQL via drizzle-orm `sql` template)
+
+Last-token prefix matching for autocomplete: `searchSpecies(q)` tokenizes
+the input, applies `*` suffix only to the last token, joins back to
+`images` for full metadata, orders by `bm25(images_fts) ASC` then count
+desc. Excludes `hidden=true` rows.
+
+### Cache strategy unchanged
+
+FTS5 doesn't change our `'use cache'` + `cacheTag('species-index')`
+pattern. Invalidation happens via `revalidateTag('species-index')` from
+`deleteImage` (the only mutation that changes the species universe).
 
 Resolved (was open):
 - ~~Styling approach~~ → lift from eagle (CSS custom properties + design
@@ -568,5 +944,34 @@ Resolved (was open):
   "Allow same animal from different angles" toggle. Default off.
 - ~~SQLite library~~ → **Drizzle ORM**.
 - ~~Sketchfab gating~~ → deferred entirely, out of MVP scope.
+- ~~Admin auth~~ → **HTTP Basic Auth** via `proxy.ts` (env-var bcrypt
+  hash). Native browser credential prompt; no login UI to build. Re-verified
+  in admin Server Functions (defense in depth).
+- ~~Admin discoverability~~ → unlinked / `robots.txt` Disallow / URL-only.
+- ~~Image serving~~ → Three Route Handlers (`/api/img/*`, `/api/medium/*`,
+  `/api/thumb/*`) streaming from `data/`. `data/` stays out of the build.
+  Medium tier (1024px) added for EU-latency. See §4b.
+- ~~Next.js version~~ → **16.x**. Several patterns changed since 15:
+  `middleware.ts` → `proxy.ts`; Cache Components opt-in with `'use cache'`;
+  Server Functions term replaces Server Actions in docs (functionality
+  unchanged, stable since 14).
+- ~~Drawing-reference tools (B&W, magnifier, zoom)~~ → **all in scope**,
+  ported from eagle. Genuine drawing-reference UX, not Eagle plumbing.
+- ~~Timer-duration dropdown in session~~ → **yes**, ported from eagle.
+  Users can change interval mid-session.
+- ~~Image transition~~ → **hard cut**, no cross-fade (matches eagle; per
+  user 2026-05-14).
+- ~~End-of-session UX~~ → **brief "Session complete" overlay** with
+  Back-to-home / New-session buttons, 15 s auto-redirect.
+- ~~Source-info chip position~~ → **lower-right** (our adaptation of
+  eagle's top-left chip).
+- ~~Advance ding (transition cue)~~ → **plays on every advance** including
+  end of session. Confirmed via eagle pattern + user vote 2026-05-14.
+- ~~Initial routes~~ → `/`, `/session`, `/gallery`, `/report/[id]`,
+  `/admin/reports`. No `/admin/login` (Basic Auth is browser-native).
+- ~~Preload pattern~~ → port eagle's PreloadManager module (LRU cache,
+  `setQueue` / `onIndexChange` / `markUsed`).
+- ~~Keyboard shortcuts~~ → 10 keys (←/→/space/B/Z/+/-/0/R/Esc), all gated
+  by input-focus check.
 
 End of capture.

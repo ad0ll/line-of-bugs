@@ -19,7 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (
-    session, ManifestWriter, IMG_DIR, THUMB_DIR,
+    session, ManifestWriter, IMG_DIR, THUMB_DIR, MEDIUM_DIR,
     parallel_download, ConsecutiveFailureGuard,
     setup_logging, build_filename, slugify,
 )
@@ -178,18 +178,23 @@ def main() -> int:
             ids_suffix = slugify(ids_id.replace("ark:/65665/", ""))[:10] or slugify(view) or "v0"
             image_id = f"smithsonian-{slugify(usnm_clean)}-{ids_suffix}"
             if mw.has(image_id): continue
+            # Include ids_suffix in the filename hint so multi-media specimens
+            # don't collide on disk when view labels are empty/identical
+            # (bug seen 2026-05-14: 75 files overwrote each other before).
+            view_hint = "-".join(p for p in (view, ids_suffix) if p)
             filename = build_filename(
                 source="smithsonian",
                 source_id=usnm_clean,
                 subject_type="specimen",
                 common_name="",
                 scientific=sci,
-                suffix_hint=view,
+                suffix_hint=view_hint,
             )
             rec_jobs.append({
                 "url": url,
                 "out_path": IMG_DIR / filename,
                 "thumb_path": THUMB_DIR / filename,
+                "medium_path": MEDIUM_DIR / filename,
                 "min_edge": 1000,
                 "max_bytes": 12_000_000,  # tighter cap; Screen Images are <1MB
                 "_meta": {
@@ -213,6 +218,7 @@ def main() -> int:
                 "image_url": m["url"],
                 "filename": f"images/{m['filename']}",
                 "thumbnail_filename": f"thumbnails/{m['filename']}",
+                "medium_filename": f"medium/{m['filename']}",
                 "file_size_bytes": dl["file_size_bytes"],
                 "file_sha256": dl["file_sha256"],
                 "width": dl["width"],
