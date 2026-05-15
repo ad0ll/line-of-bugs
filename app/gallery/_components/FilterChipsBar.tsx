@@ -1,32 +1,46 @@
-import {
-  listInstitutions,
-  listSubjectTypeCounts,
-  listViewCounts,
-  listLifeStageCounts,
-  listSexCounts,
-  listTaxonGroupCounts,
-} from '@/lib/queries/gallery';
-import { FilterChipsControls } from './FilterChipsControls';
+import { listInstitutions } from '@/lib/queries/gallery';
+import { getFacetCounts, getUnfilteredFacets, type FacetCount } from '@/lib/queries/facets';
+import type { FilterState } from '@/lib/queries/filter-clauses';
+import { FilterChipsControls, type SubjectCountPair } from './FilterChipsControls';
+import type { FilterOption } from '@/app/components/filters/FilterPopover';
 
-export async function FilterChipsBar() {
-  const [subjectCounts, institutions, views, lifeStages, sexes, taxonGroups] = await Promise.all([
-    listSubjectTypeCounts(),
+/**
+ * Server component — receives the parsed filter state from the URL
+ * via the gallery page, fetches the facet snapshot for it (with
+ * own-axis exclusion), and the unfiltered "totals" snapshot, then
+ * passes both shapes to the client controls.
+ */
+export async function FilterChipsBar({ filters }: { filters: FilterState }) {
+  const [filtered, totals, institutions] = await Promise.all([
+    getFacetCounts(filters),
+    getUnfilteredFacets(),
     listInstitutions(),
-    listViewCounts(),
-    listLifeStageCounts(),
-    listSexCounts(),
-    listTaxonGroupCounts(),
   ]);
+
+  const subject: SubjectCountPair = {
+    filtered: filtered.subject,
+    totals: totals.subject,
+  };
+
   return (
     <div className="filter-chips-bar">
       <FilterChipsControls
-        subjectCounts={subjectCounts}
+        subject={subject}
         institutions={institutions}
-        viewCounts={views}
-        lifeStageCounts={lifeStages}
-        sexCounts={sexes}
-        taxonGroupCounts={taxonGroups}
+        viewCounts={mergeFacet(filtered.views, totals.views)}
+        lifeStageCounts={mergeFacet(filtered.lifeStages, totals.lifeStages)}
+        sexCounts={mergeFacet(filtered.sexes, totals.sexes)}
+        taxonGroupCounts={mergeFacet(filtered.taxonGroups, totals.taxonGroups)}
       />
     </div>
   );
+}
+
+function mergeFacet(filtered: FacetCount[], totals: FacetCount[]): FilterOption[] {
+  const byName = new Map(filtered.map((f) => [f.name, f.count]));
+  return totals.map((t) => ({
+    name: t.name,
+    count: byName.get(t.name) ?? 0,
+    total: t.count,
+  }));
 }

@@ -15,14 +15,28 @@ export type SubjectCounts = {
 };
 
 const ORDER: SubjectType[] = ['wild', 'captive', 'specimen', 'all'];
+const LABELS: Record<SubjectType, string> = {
+  wild: 'wild',
+  captive: 'captive',
+  specimen: 'specimen',
+  all: 'all',
+};
 
 export interface SubjectTypeChipsProps {
   value: SubjectType;
-  counts: SubjectCounts;
+  /** Filtered counts (other-axis applied, subject ignored). */
+  filtered: SubjectCounts;
+  /** Absolute unfiltered counts — the "total" half of "filtered/total". */
+  totals: SubjectCounts;
   onChange: (v: SubjectType) => void;
 }
 
-export function SubjectTypeChips({ value, counts, onChange }: SubjectTypeChipsProps) {
+export function SubjectTypeChips({
+  value,
+  filtered,
+  totals,
+  onChange,
+}: SubjectTypeChipsProps) {
   function onKey(e: KeyboardEvent, v: SubjectType) {
     const idx = ORDER.indexOf(v);
     if (e.key === 'ArrowRight') {
@@ -42,9 +56,11 @@ export function SubjectTypeChips({ value, counts, onChange }: SubjectTypeChipsPr
       {ORDER.map((v) => (
         <Chip
           key={v}
-          label={v}
-          count={counts[v]}
+          label={LABELS[v]}
+          count={filtered[v]}
+          total={totals[v]}
           active={value === v}
+          disabled={filtered[v] === 0}
           tooltip={null}
           onClick={() => onChange(v)}
           onKeyDown={(e) => onKey(e, v)}

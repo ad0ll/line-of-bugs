@@ -4,6 +4,13 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useCallback } from 'react';
 import { SubjectTypeChips, type SubjectCounts } from './SubjectTypeChips';
 import { parseSubject, type SubjectType } from '@/lib/subject';
+
+export interface SubjectCountPair {
+  /** Filtered counts — other-axis applied, subject ignored. */
+  filtered: { wild: number; captive: number; specimen: number };
+  /** Unfiltered totals. */
+  totals: { wild: number; captive: number; specimen: number };
+}
 import { InstitutionPicker } from './InstitutionPicker';
 import { FilterPopover, type FilterOption } from '@/app/components/filters/FilterPopover';
 import { TaxonGroupChips } from '@/app/components/filters/TaxonGroupChips';
@@ -12,7 +19,7 @@ import { Tooltip } from '@/app/components/ui/Tooltip';
 import { TOOLTIPS } from '@/lib/tooltips';
 
 export interface FilterChipsControlsProps {
-  subjectCounts: SubjectCounts;
+  subject: SubjectCountPair;
   institutions: { name: string; count: number }[];
   viewCounts: FilterOption[];
   lifeStageCounts: FilterOption[];
@@ -20,18 +27,31 @@ export interface FilterChipsControlsProps {
   taxonGroupCounts: FilterOption[];
 }
 
+function toSubjectCounts(
+  pair: { wild: number; captive: number; specimen: number },
+): SubjectCounts {
+  return {
+    wild: pair.wild,
+    captive: pair.captive,
+    specimen: pair.specimen,
+    all: pair.wild + pair.captive + pair.specimen,
+  };
+}
+
 function parseList(v: string | null): string[] {
   return v ? v.split(',').filter(Boolean) : [];
 }
 
 export function FilterChipsControls({
-  subjectCounts,
+  subject: subjectPair,
   institutions,
   viewCounts,
   lifeStageCounts,
   sexCounts,
   taxonGroupCounts,
 }: FilterChipsControlsProps) {
+  const filteredSubject = toSubjectCounts(subjectPair.filtered);
+  const totalsSubject = toSubjectCounts(subjectPair.totals);
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -78,7 +98,12 @@ export function FilterChipsControls({
   return (
     <>
       {/* Subject chips stay always-visible (most-used, recognized term). */}
-      <SubjectTypeChips value={subject} counts={subjectCounts} onChange={setSubject} />
+      <SubjectTypeChips
+        value={subject}
+        filtered={filteredSubject}
+        totals={totalsSubject}
+        onChange={setSubject}
+      />
 
       <CollapsibleSection title="what kind of bug?" badge={typeBadge}>
         <Tooltip content={TOOLTIPS.taxonGroup.content} showIcon={false}>

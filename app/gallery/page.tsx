@@ -31,13 +31,21 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
   const pageRaw = readArg(sp.page, '1') as string;
   const page = Math.max(1, parseInt(pageRaw, 10) || 1);
 
+  const filterState = {
+    subjectType: subject,
+    views,
+    lifeStages,
+    sexes,
+    groups,
+  };
+
   return (
     <main className="gallery-page">
       <header className="gallery-header">
         <h1>gallery</h1>
         <SearchBar />
         <Suspense fallback={<div className="gallery-filters-skeleton" />}>
-          <FilterChipsBar />
+          <FilterChipsBar filters={filterState} />
         </Suspense>
       </header>
 
