@@ -84,7 +84,7 @@ export function InfiniteScroller({
         </div>
       )}
       {!hasMore && rows.length > initial.pageSize && (
-        <p className="gallery-end-marker">✿ that&apos;s every bug ✿</p>
+        <p className="gallery-end-marker">✿ that&apos;s every bug</p>
       )}
     </>
   );

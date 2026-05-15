@@ -91,7 +91,7 @@ export function FilterPopover({
                     onChange={() => toggle(o.name)}
                   />
                   <span className="filter-popover-name">{o.name}</span>
-                  <span className="filter-popover-count">{o.count}</span>
+                  <span className="filter-popover-count">{o.count.toLocaleString()}</span>
                 </label>
               </li>
             ))}

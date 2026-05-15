@@ -20,10 +20,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (
-    session, ManifestWriter, IMG_DIR, THUMB_DIR, MEDIUM_DIR,
+    session, IMG_DIR, THUMB_DIR, MEDIUM_DIR,
     parallel_download, ConsecutiveFailureGuard,
-    manifest_count_by, setup_logging, build_filename, slugify,
+    setup_logging, build_filename, slugify,
 )
+from db import DbWriter
 
 log = setup_logging("bugwood")
 S = session()
@@ -162,7 +163,7 @@ def view_to_label(view: str) -> str:
     return slugify(view)
 
 
-def run_pass(mw: ManifestWriter, existing_in_bucket: int,
+def run_pass(mw: DbWriter, existing_in_bucket: int,
              subject_state: str, license_list: str,
              lic_code: str, lic_url: str, target: int, label: str,
              api_guard: ConsecutiveFailureGuard) -> int:
@@ -333,10 +334,15 @@ def run_pass(mw: ManifestWriter, existing_in_bucket: int,
 
 
 def main() -> int:
-    mw = ManifestWriter("bugwood")
-    log.info("Bugwood: resuming with %d already in manifest", mw.count())
+    mw = DbWriter("bugwood")
+    log.info("Bugwood: resuming with %d already in DB", mw.count())
 
-    bucket_counts = manifest_count_by(mw.path, "license", "subject_state")
+    bucket_counts: dict[tuple[str, str], int] = {}
+    for lic, state, n in mw.conn.execute(
+        "SELECT license, subject_state, COUNT(*) FROM images "
+        "WHERE source = 'bugwood' GROUP BY license, subject_state"
+    ):
+        bucket_counts[(lic, state)] = n
     api_guard = ConsecutiveFailureGuard(threshold=5, name="bugwood-listing")
 
     summary: list[tuple[str, int, int, int]] = []

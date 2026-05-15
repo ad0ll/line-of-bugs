@@ -25,7 +25,7 @@ export function ProgressBar({ percent, playing }: Props) {
         style={{
           height: "100%",
           width: "100%",
-          background: "#FF6EC7",
+          background: T.accentPink,
           transformOrigin: "left center",
           transform: `scaleX(${clamped})`,
           transition: playing ? "transform 0.1s linear" : "",

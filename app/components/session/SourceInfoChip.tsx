@@ -13,7 +13,7 @@ export function SourceInfoChip({ image, visible }: Props) {
     <div
       style={{
         position: "fixed",
-        bottom: 90,
+        bottom: "var(--chrome-bottom-offset)",
         right: T.s8,
         maxWidth: 320,
         background: T.surfaceChipStrong,

@@ -132,7 +132,7 @@ export function SpeciesAutocomplete({ value, onSelect }: SpeciesAutocompleteProp
                 {r.common_name ?? '(no common name)'}
               </span>
               <span className="species-sci">{r.taxon_species}</span>
-              <span className="species-count">{r.count}</span>
+              <span className="species-count">{r.count.toLocaleString()}</span>
             </li>
           ))}
         </ul>

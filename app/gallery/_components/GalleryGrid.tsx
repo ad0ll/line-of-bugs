@@ -29,7 +29,7 @@ export async function GalleryGrid({
           try a broader search or fewer filters
         </p>
         <a href="/gallery" className="gallery-load-more" style={{ margin: 0 }}>
-          ✿ clear filters
+          clear filters
         </a>
       </div>
     );

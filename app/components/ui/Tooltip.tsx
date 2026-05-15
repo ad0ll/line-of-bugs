@@ -26,6 +26,11 @@ export interface TooltipProps {
 export function Tooltip({ content, children, showIcon = true }: TooltipProps) {
   const id = useId();
   const [open, setOpen] = useState(false);
+  // Once a descendant has been clicked (e.g. opening a filter popover),
+  // suppress the hover-tooltip until the pointer/focus leaves the wrap.
+  // Prevents the tooltip-bubble and popover-panel from stacking below
+  // the same trigger.
+  const [suppressed, setSuppressed] = useState(false);
   const wrapRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -37,14 +42,25 @@ export function Tooltip({ content, children, showIcon = true }: TooltipProps) {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
+  function onEnter() { if (!suppressed) setOpen(true); }
+  function onLeave() { setOpen(false); setSuppressed(false); }
+  function onClickWithin(e: React.MouseEvent) {
+    // Don't suppress when the click is on our own ⓘ icon — that button
+    // explicitly toggles the tooltip and handles its own preventDefault.
+    if ((e.target as HTMLElement).closest('.tooltip-icon')) return;
+    setOpen(false);
+    setSuppressed(true);
+  }
+
   return (
     <span
       ref={wrapRef}
       className="tooltip-wrap"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-      onFocus={() => setOpen(true)}
-      onBlur={() => setOpen(false)}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      onFocus={onEnter}
+      onBlur={onLeave}
+      onClick={onClickWithin}
     >
       <span aria-describedby={open ? id : undefined}>{children}</span>
       {showIcon && (

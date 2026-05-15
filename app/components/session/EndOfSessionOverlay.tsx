@@ -25,7 +25,7 @@ export function EndOfSessionOverlay({ visible, count, onNewSession }: Props) {
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(13,12,16,0.65)",
+        background: T.surfaceBackdrop,
         backdropFilter: T.blurMd,
         display: "flex",
         alignItems: "center",

@@ -19,10 +19,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (
-    session, ManifestWriter, IMG_DIR, THUMB_DIR, MEDIUM_DIR,
+    session, IMG_DIR, THUMB_DIR, MEDIUM_DIR,
     parallel_download, ConsecutiveFailureGuard,
     setup_logging, build_filename, slugify,
 )
+from db import DbWriter
 
 log = setup_logging("smithsonian")
 S = session()
@@ -102,7 +103,7 @@ def pick_url(media: dict) -> str | None:
 
 
 def main() -> int:
-    mw = ManifestWriter("smithsonian")
+    mw = DbWriter("smithsonian")
     log.info("Smithsonian: resuming with %d already", mw.count())
 
     # Parallel shard load

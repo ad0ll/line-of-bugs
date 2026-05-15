@@ -19,7 +19,7 @@ export function GridTile({ row }: { row: GalleryRow }) {
       <div className="grid-item-image">
         <img
           src={`/api/thumb/${thumbName}`}
-          alt={row.common_name ?? row.taxon_species ?? row.image_id}
+          alt=""
           loading="lazy"
         />
         {row.collection_size > 1 && (

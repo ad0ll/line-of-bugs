@@ -22,10 +22,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 # Useful to expand the dataset without editing the per-order table.
 SCALE = float(os.environ.get("INAT_SCALE", "1"))
 from common import (
-    session, ManifestWriter, IMG_DIR, THUMB_DIR, MEDIUM_DIR, MIN_LONG_EDGE_DEFAULT,
-    parallel_download, ConsecutiveFailureGuard, read_existing_rows,
+    session, IMG_DIR, THUMB_DIR, MEDIUM_DIR, MIN_LONG_EDGE_DEFAULT,
+    parallel_download, ConsecutiveFailureGuard,
     setup_logging, build_filename, slugify,
 )
+from db import DbWriter
 
 log = setup_logging("inat")
 S = session()
@@ -141,7 +142,7 @@ def keep(obs: dict, photo: dict) -> bool:
     return True
 
 
-def fetch_order(mw: ManifestWriter, existing_by_label: Counter,
+def fetch_order(mw: DbWriter, existing_by_label: Counter,
                 taxon_id: int, label: str, target: int, life_value: int,
                 api_guard: ConsecutiveFailureGuard) -> tuple[int, int]:
     """Returns (final_count_for_label, new_downloads_this_run)."""
@@ -282,13 +283,16 @@ def fetch_order(mw: ManifestWriter, existing_by_label: Counter,
 
 
 def main() -> int:
-    mw = ManifestWriter("inaturalist")
-    log.info("iNat: resuming with %d already in manifest", mw.count())
+    mw = DbWriter("inaturalist")
+    log.info("iNat: resuming with %d already in DB", mw.count())
 
-    # One-shot startup pre-flight: per-label counts
+    # One-shot startup pre-flight: per-label counts straight from SQLite.
     existing_by_label = Counter()
-    for row in read_existing_rows(mw.path):
-        existing_by_label[row.get("taxon_order", "")] += 1
+    for label, n in mw.conn.execute(
+        "SELECT taxon_order, COUNT(*) FROM images "
+        "WHERE source = 'inaturalist' GROUP BY taxon_order"
+    ):
+        existing_by_label[label or ""] = n
 
     api_guard = ConsecutiveFailureGuard(threshold=6, name="inat-api")
     summary: dict[str, tuple[int, int, int]] = {}

@@ -59,7 +59,7 @@ export function InstitutionPicker({ institutions, selected, onChange }: Institut
                     onChange={() => toggle(i.name)}
                   />
                   <span>{i.name}</span>
-                  <span className="institution-count">{i.count}</span>
+                  <span className="institution-count">{i.count.toLocaleString()}</span>
                 </label>
               </li>
             ))}

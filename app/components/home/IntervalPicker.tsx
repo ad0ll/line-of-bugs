@@ -46,16 +46,7 @@ export function IntervalPicker({ value, onChange }: Props) {
           max={3600}
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          style={{
-            background: "var(--surface-1)",
-            border: "1.5px solid var(--accent-pink-border)",
-            borderRadius: "var(--r-pill)",
-            padding: "8px 16px",
-            color: "var(--text-primary)",
-            fontFamily: "var(--font-mono), monospace",
-            width: 140,
-            outline: "none",
-          }}
+          className="home-custom-seconds"
           aria-label="custom seconds"
         />
       ) : null}

@@ -15,6 +15,9 @@ export const T = {
   surfaceChipStrong: "rgba(10, 10, 11, 0.78)",
   surfaceArrow: "rgba(16, 15, 18, 0.6)",
   surfaceScrim: "rgba(0, 0, 0, 0.4)",
+  // Full-bleed page-tinted overlay (matches .modal-backdrop). Use for
+  // top-level overlays where the page color should still tint through.
+  surfaceBackdrop: "rgba(13, 12, 16, 0.65)",
   surfaceInk: "#0a0a0b",
   surfaceWhisper: "rgba(255, 255, 255, 0.015)",
   surfaceProgressTrack: "rgba(0, 0, 0, 0.55)",
@@ -29,14 +32,12 @@ export const T = {
   textTertiary: "rgba(255, 255, 255, 0.55)",
   textMuted: "rgba(255, 255, 255, 0.55)",
   textDisabled: "rgba(255, 255, 255, 0.3)",
-  textWarning: "rgba(255, 210, 120, 0.95)",
   textDanger: "#ef4444",
 
   // ── Borders ──
   borderSubtle: "rgba(255, 255, 255, 0.07)",
   borderMedium: "rgba(255, 255, 255, 0.1)",
   borderEmphasis: "rgba(255, 255, 255, 0.2)",
-  borderWarning: "rgba(255, 170, 0, 0.3)",
   borderDanger: "rgba(239, 68, 68, 0.5)",
 
   // ── Accents — Pastel Goth Kawaii primary trio + danger ──

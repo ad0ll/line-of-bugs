@@ -24,8 +24,11 @@
   --border-subtle: rgba(255, 255, 255, 0.07);
   --border-medium: rgba(255, 255, 255, 0.1);
   --border-emphasis: rgba(255, 255, 255, 0.2);
-  --border-warning: rgba(255, 170, 0, 0.3);
   --border-danger: rgba(239, 68, 68, 0.5);
+
+  /* Full-bleed page-tinted overlay; shared by .modal-backdrop and the
+     end-of-session full overlay. Mirrors T.surfaceBackdrop. */
+  --surface-backdrop: rgba(13, 12, 16, 0.65);
 
   /* ── Pastel Goth Kawaii accents ── */
   --accent-pink: #FF6EC7;
@@ -67,8 +70,7 @@ html, body {
 body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 
 :focus-visible {
-  outline: 1.5px solid var(--surface-0);
-  outline-offset: 1px;
+  outline: none;
   box-shadow: 0 0 0 2px var(--accent-pink-border);
 }
 
@@ -211,7 +213,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   color: var(--text-on-accent);
   border-color: var(--accent-pink);
   font-weight: 600;
-  box-shadow: 0 4px 14px var(--accent-pink-glow);
+  box-shadow: var(--shadow-pink-soft);
 }
 .chip-active .chip-count { color: var(--text-on-accent); opacity: 0.75; }
 .chip-count { font-family: var(--font-mono), monospace; margin-left: var(--s2); opacity: 0.6; }
@@ -420,7 +422,12 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   transform: translateY(-3px);
   box-shadow: var(--shadow-pink-soft);
 }
-.grid-item-image { position: relative; aspect-ratio: 1 / 1; overflow: hidden; }
+.grid-item-image {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--surface-2);
+}
 .grid-item-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* Collection X/N badge — uses SKY accent (metadata, not action) */
 .grid-item-badge {
@@ -452,7 +459,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   border: 1px solid currentColor;
   border-radius: var(--r-pill);
   font-family: var(--font-mono), monospace;
-  font-size: 0.65rem;
+  font-size: 0.7rem;
   text-transform: lowercase;
   letter-spacing: 0.04em;
   line-height: 1.5;
@@ -514,9 +521,13 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   animation: float-slow 4s ease-in-out infinite;
 }
 
-/* Touch-target floor on coarse pointers */
+/* Touch-target floor on coarse pointers — applies to both pill systems
+   (.chip is the gallery dense pill; .home-pill is the touch-friendly
+   home pill; .modal-close is the dialog close affordance). */
 @media (pointer: coarse) {
   .chip { min-height: 44px; padding: var(--s4) var(--s8); }
+  .home-pill { min-height: 44px; padding: var(--s4) var(--s8); }
+  .modal-close { width: 44px; height: 44px; }
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -524,7 +535,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
    ════════════════════════════════════════════════════════════ */
 .modal-backdrop {
   position: fixed; inset: 0;
-  background: rgba(13,12,16,0.65);
+  background: var(--surface-backdrop);
   backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
   z-index: 1000;
@@ -826,13 +837,11 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   align-items: center;
   gap: var(--s3);
 }
-.home-section-title::before {
-  content: "❀";
-  color: var(--accent-pink);
-  font-size: 0.85em;
-}
 
-/* Home form chips (interval, subject) — pill-shaped, gradient-active */
+/* Home form chips (interval, subject) — touch-friendly variant of .chip.
+   Kept as a separate class because the home page wants larger, friendlier
+   pills (min-height 40px+, larger padding, mono numerals); both classes
+   share the active state (var(--shadow-pink-soft)) so they stay in step. */
 .home-pill {
   background: var(--surface-1);
   border: 1.5px solid var(--border-medium);
@@ -852,6 +861,17 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   border-color: var(--accent-pink);
   font-weight: 600;
   box-shadow: var(--shadow-pink-soft);
+}
+
+.home-custom-seconds {
+  background: var(--surface-1);
+  border: 1.5px solid var(--accent-pink-border);
+  border-radius: var(--r-pill);
+  padding: var(--s4) var(--s8);
+  color: var(--text-primary);
+  font-family: var(--font-mono), monospace;
+  width: 140px;
+  outline: none;
 }
 
 /* Repeat mode list — radio cards */
@@ -931,14 +951,28 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   border-left: 3px solid var(--accent-pink);
   border-radius: var(--r-2xl);
   padding: var(--s2) var(--s5);
+  color: var(--text-primary);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.session-title-primary {
   font-family: var(--font-display), serif;
   font-style: italic;
   font-size: 1.1rem;
-  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  z-index: 25;
+}
+.session-title-secondary {
+  font-family: var(--font-display), serif;
+  font-style: italic;
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ════════════════════════════════════════════════════════════

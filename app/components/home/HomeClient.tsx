@@ -185,7 +185,7 @@ export function HomeClient({
         />
 
         <a href="/gallery" className="home-gallery-link">
-          ✿ browse the gallery →
+          browse the gallery →
         </a>
       </main>
     </div>

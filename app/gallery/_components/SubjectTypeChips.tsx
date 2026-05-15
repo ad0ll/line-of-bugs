@@ -45,7 +45,7 @@ export function SubjectTypeChips({ value, counts, onChange }: SubjectTypeChipsPr
           onKeyDown={(e) => onKey(e, v)}
         >
           <span className="chip-label">{LABELS[v]}</span>
-          <span className="chip-count">{counts[v]}</span>
+          <span className="chip-count">{counts[v].toLocaleString()}</span>
         </button>
       ))}
     </div>

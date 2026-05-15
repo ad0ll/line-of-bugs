@@ -19,10 +19,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (
-    session, ManifestWriter, IMG_DIR, THUMB_DIR, MEDIUM_DIR,
+    session, IMG_DIR, THUMB_DIR, MEDIUM_DIR,
     parallel_download, ConsecutiveFailureGuard,
     setup_logging, build_filename, slugify,
 )
+from db import DbWriter
 
 log = setup_logging("usda-ars")
 S = session()
@@ -168,7 +169,10 @@ def fetch_detail_html(url: str) -> str | None:
 
 
 def main() -> int:
-    mw = ManifestWriter("usda_ars")
+    # Source string in DB uses the hyphenated 'usda-ars' (matches Drizzle
+    # enum + manifest's `source` column value). The CSV filename had an
+    # underscore historically; doesn't matter now that we're DB-direct.
+    mw = DbWriter("usda-ars")
     log.info("USDA-ARS: resuming with %d already", mw.count())
     candidates, ok = collect_candidates()
     log.info("USDA-ARS: %d candidate detail URLs (ok=%s)", len(candidates), ok)
