@@ -11,6 +11,7 @@ from pathlib import Path
 import polars as pl
 
 from scripts.detect_subjects.config import (
+    CACHE_DIR,
     DATA_DIR,
     PARQUET_PATH,
     VALIDATOR_DIR,
@@ -19,6 +20,7 @@ from scripts.detect_subjects.config import (
 
 TEMPLATE_PATH = Path(__file__).parent / "templates" / "index.html.j2"
 DB_PATH = DATA_DIR / "db" / "line-of-bugs.db"
+SECONDARY_BBOXES_PATH = CACHE_DIR / "secondary_bboxes.json"
 
 
 def _load_db_index() -> dict[str, dict]:
@@ -52,6 +54,12 @@ def build_html_for_variant(
         raise RuntimeError(f"no rows in parquet for variant={variant}")
 
     db_index = _load_db_index()
+    secondary_bboxes: dict[str, list[list[float]]] = {}
+    if SECONDARY_BBOXES_PATH.exists():
+        try:
+            secondary_bboxes = json.loads(SECONDARY_BBOXES_PATH.read_text())
+        except Exception:
+            secondary_bboxes = {}
 
     records = []
     sources = set()
@@ -66,6 +74,7 @@ def build_html_for_variant(
             "source": row["source"],
             "framing_quality": row["framing_quality"],
             "suggested_labels": list(row.get("suggested_labels") or []),
+            "secondary_bboxes": secondary_bboxes.get(img_id, []),
             "bbox_x": row["bbox_x"], "bbox_y": row["bbox_y"],
             "bbox_w": row["bbox_w"], "bbox_h": row["bbox_h"],
             "bbox_area_ratio": row["bbox_area_ratio"],

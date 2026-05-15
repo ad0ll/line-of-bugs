@@ -27,6 +27,13 @@
   .imgs img { width: 100%; height: auto; background: #0d0c10; border-radius: 4px; display: block; }
   .bbox-overlay { position: relative; display: block; line-height: 0; }
   .bbox-overlay .box { position: absolute; border: 0.2vw solid #FF6EC7; pointer-events: none; box-sizing: border-box; }
+  /* Secondary detections — other distinct subjects the system clustered.
+     Cyan so they contrast against both pink primary and any photo background. */
+  .bbox-overlay .box-secondary {
+    position: absolute; border: 0.25vw solid #67D4E6;
+    pointer-events: none; box-sizing: border-box;
+    box-shadow: 0 0 0 0.05vw rgba(0, 0, 0, 0.8);
+  }
   .nocrop { width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; background: #0d0c10; color: #666; font-size: 12px; border-radius: 4px; }
 
   .name { font-size: 14px; margin: 4px 0; color: #f5f5f5; }
@@ -113,6 +120,13 @@
     box-sizing: border-box;
     pointer-events: none;
     display: none;
+  }
+  #zoomPopup .zoom-bbox-secondary {
+    position: absolute;
+    border: 0.25vw solid #67D4E6;
+    box-shadow: 0 0 0 0.05vw rgba(0, 0, 0, 0.8);
+    box-sizing: border-box;
+    pointer-events: none;
   }
 </style>
 </head>
@@ -494,9 +508,13 @@ function render() {
     const div = document.createElement("div");
     div.className = "card" + (reviewed ? " reviewed" : "") + (flagged ? " flagged" : "");
 
-    const boxHTML = r.bbox_x !== null
+    const primaryBoxHTML = r.bbox_x !== null
       ? '<div class="box" style="left:' + (r.bbox_x*100) + '%;top:' + (r.bbox_y*100) + '%;width:' + (r.bbox_w*100) + '%;height:' + (r.bbox_h*100) + '%"></div>'
       : '';
+    const secondaryBoxHTML = (r.secondary_bboxes || []).map(b =>
+      '<div class="box-secondary" style="left:' + (b[0]*100) + '%;top:' + (b[1]*100) + '%;width:' + (b[2]*100) + '%;height:' + (b[3]*100) + '%"></div>'
+    ).join('');
+    const boxHTML = primaryBoxHTML + secondaryBoxHTML;
     const cropHTML = r.crop_path
       ? '<img src="' + r.crop_path + '" alt="">'
       : '<div class="nocrop">no crop · ' + r.framing_quality + '</div>';
@@ -524,7 +542,9 @@ function render() {
       '<div class="imgs">' +
         '<figure>' +
           '<div class="bbox-overlay"><img src="' + r.original_path + '" alt="">' + boxHTML + '</div>' +
-          '<figcaption>original · bbox pink</figcaption>' +
+          '<figcaption>original · primary <span style="color:#FF6EC7">pink</span>' +
+            ((r.secondary_bboxes && r.secondary_bboxes.length) ? ' · <span style="color:#67D4E6">cyan</span> = ' + r.secondary_bboxes.length + ' other detection' + (r.secondary_bboxes.length === 1 ? '' : 's') : '') +
+          '</figcaption>' +
         '</figure>' +
         '<figure>' + cropHTML + '<figcaption>proposed crop · what users see</figcaption></figure>' +
       '</div>' +
@@ -577,12 +597,23 @@ document.addEventListener("mouseover", (e) => {
   if (!isZoomTarget(e.target)) return;
   zoomImg.src = e.target.src;
   const overlay = e.target.closest(".bbox-overlay");
+  // Wipe any previously-mirrored secondary boxes; we'll re-create them below.
+  [...zoomPopup.querySelectorAll(".zoom-bbox-secondary")].forEach(n => n.remove());
   const box = overlay ? overlay.querySelector(".box") : null;
   if (box) {
     zoomBox.style.cssText = "position:absolute;box-sizing:border-box;display:block;" + box.style.cssText;
     zoomBox.style.border = "0.25vw solid #FF6EC7";
   } else {
     zoomBox.style.display = "none";
+  }
+  // Mirror every secondary bbox into the zoomed overlay so they scale with it.
+  if (overlay) {
+    for (const sb of overlay.querySelectorAll(".box-secondary")) {
+      const mirror = document.createElement("div");
+      mirror.className = "zoom-bbox-secondary";
+      mirror.style.cssText = sb.style.cssText;
+      zoomPopup.appendChild(mirror);
+    }
   }
   zoomPopup.style.display = "block";
 });

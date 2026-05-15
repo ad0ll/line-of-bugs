@@ -50,6 +50,13 @@ class DetectionResult:
     n_raw_detections: int
     n_distinct_detections: int
     detection_ms: int
+    # Every distinct subject instance after center-clustering, sorted by
+    # confidence desc. Same coordinate system as `bbox_xywh_normalized`
+    # (normalized xywh). The first element is the chosen primary; downstream
+    # consumers that want SECONDARY detections should skip index 0 (or filter
+    # for boxes whose xywh != primary's xywh, since the "bark-beetle fix" may
+    # pick a non-top-conf box as primary).
+    distinct_subjects: list[tuple[float, float, float, float, float]] = None
 
 
 class GroundingDinoDetector:
@@ -110,6 +117,7 @@ class GroundingDinoDetector:
                 bbox_xywh_normalized=None, confidence=None,
                 n_raw_detections=0, n_distinct_detections=0,
                 detection_ms=elapsed_ms,
+                distinct_subjects=[],
             )
 
         normalized = []
@@ -175,4 +183,5 @@ class GroundingDinoDetector:
             n_raw_detections=n_raw,
             n_distinct_detections=n_distinct,
             detection_ms=elapsed_ms,
+            distinct_subjects=distinct_subjects,
         )
