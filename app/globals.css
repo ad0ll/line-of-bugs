@@ -59,6 +59,7 @@
   --timing-fast: 0.12s;
   --timing-base: 0.15s;
   --timing-slow: 0.2s;
+  --timing-layout: 0.3s;  /* expand/collapse, modal slides */
   --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
 
   /* ── Shadows ── */
@@ -565,14 +566,36 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 /* ════════════════════════════════════════════════════════════
    MODAL + REPORT + TOAST + ADMIN
    ════════════════════════════════════════════════════════════ */
-.modal-backdrop {
-  position: fixed; inset: 0;
+/* Native <dialog> wrapper. The dialog itself spans the viewport as a
+   transparent fixed container so backdrop clicks register on the dialog
+   element (the UA default `position:absolute; margin:auto` sizes it to
+   content, which breaks click-outside-to-close). ::backdrop draws the
+   blurred tint that used to live on .modal-backdrop. */
+.modal-dialog {
+  position: fixed;
+  inset: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  max-width: none;
+  max-height: none;
+  width: 100vw;
+  height: 100vh;
+  overflow: visible;
+}
+.modal-dialog[open] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-dialog::backdrop {
   background: var(--surface-backdrop);
   backdrop-filter: blur(4px);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 1000;
+  -webkit-backdrop-filter: blur(4px);
 }
-.modal-dialog {
+.modal-dialog-inner {
+  position: relative;
   background: var(--surface-2);
   border: 1px solid var(--accent-pink-border);
   border-radius: var(--r-3xl);
@@ -581,7 +604,6 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: var(--shadow-modal);
-  position: relative;
 }
 .modal-close {
   position: absolute;
@@ -1062,4 +1084,120 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   .u-icon-btn span:nth-child(3) {
     display: none; /* hide text label + hint, keep glyph */
   }
+}
+
+/* ════════════════════════════════════════════════════════════
+   COLLAPSIBLE SECTION (R6) — disclosure widget for hiding
+   advanced filters behind a chevron.
+   ════════════════════════════════════════════════════════════ */
+.collapsible-section {
+  display: flex;
+  flex-direction: column;
+}
+.collapsible-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: var(--s2) 0;
+  font-family: var(--font-display), serif;
+  font-style: italic;
+  font-size: 1.15rem;
+  color: var(--accent-lilac);
+  text-align: left;
+  transition: color var(--timing-base) var(--ease-out);
+}
+.collapsible-trigger:hover { color: var(--text-primary); }
+.collapsible-chevron {
+  display: inline-block;
+  color: var(--accent-pink);
+  font-size: 0.8em;
+  transition: transform var(--timing-slow) var(--ease-out);
+}
+.collapsible-trigger[aria-expanded="true"] .collapsible-chevron {
+  transform: rotate(90deg);
+}
+.collapsible-badge {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
+  color: var(--accent-sky);
+  background: var(--surface-1);
+  padding: 2px var(--s3);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-pill);
+  letter-spacing: 0.02em;
+}
+/* CSS-only auto-height transition: grid-template-rows 0fr → 1fr
+   carries the body smoothly to its natural height without JS. */
+.collapsible-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden;
+  transition: grid-template-rows var(--timing-layout) var(--ease-out);
+}
+.collapsible-body[data-open="true"] { grid-template-rows: 1fr; }
+.collapsible-body-inner {
+  min-height: 0;  /* enables the grid-row transition for nested overflowing content */
+  opacity: 0;
+  transition: opacity var(--timing-slow) var(--ease-out) 100ms;
+}
+.collapsible-body[data-open="true"] .collapsible-body-inner {
+  opacity: 1;
+}
+
+/* ════════════════════════════════════════════════════════════
+   TAXON GROUP CHIPS (R6) — chip wall for "what kind of bug?"
+   ════════════════════════════════════════════════════════════ */
+.taxon-group-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  padding: var(--s3) 0;
+}
+.taxon-group-chip {
+  /* inherits .chip from gallery section; counter override below */
+}
+.taxon-group-chip .chip-count {
+  margin-left: var(--s2);
+  opacity: 0.6;
+  font-family: var(--font-mono), monospace;
+}
+.taxon-group-chip.chip-active .chip-count { opacity: 0.85; }
+.taxon-group-clear {
+  background: transparent;
+  border: 1.5px dashed var(--accent-pink-border);
+  color: var(--accent-pink);
+  border-radius: var(--r-pill);
+  padding: var(--s3) var(--s7);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  min-height: 36px;
+}
+.taxon-group-clear:hover {
+  background: var(--accent-pink-soft);
+  color: var(--text-primary);
+}
+
+/* Gallery's existing inline filter row, repurposed inside the
+   "more filters" collapse. */
+.advanced-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+
+/* Staggered fade-in for chips when the parent CollapsibleSection opens.
+   --i is set inline on each chip (its index in TAXON_GROUPS). The
+   prefers-reduced-motion media query at the top of the file already
+   zeroes animation durations — no extra branch needed here. */
+.collapsible-body[data-open="true"] .taxon-group-chip {
+  animation: chip-pop var(--timing-layout) var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 20ms);
+}
+@keyframes chip-pop {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

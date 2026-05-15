@@ -25,6 +25,7 @@ from common import (
     setup_logging, build_filename, slugify,
 )
 from db import DbWriter
+from backfill_taxon_subgroup import classify as classify_subgroup
 
 log = setup_logging("bugwood")
 S = session()
@@ -313,6 +314,9 @@ def run_pass(mw: DbWriter, existing_in_bucket: int,
                 "photographer": img.get("photographer") or "",
                 "institution": img.get("organization") or "",
                 "taxon_order": detect_order(img),
+                # Bugwood doesn't expose iNat-style ancestor_ids; fall back
+                # to the order-level default in classify().
+                "taxon_subgroup": classify_subgroup(detect_order(img), []),
                 "taxon_species": m["scientific"],
                 "common_name": m["subj_name"],
                 "subject_state": subject_state,

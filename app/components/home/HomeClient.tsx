@@ -7,6 +7,8 @@ import { SubjectFilter, type SubjectChoice } from "@/app/components/home/Subject
 import { RepeatModeToggle } from "@/app/components/home/RepeatModeToggle";
 import { StartSessionButton } from "@/app/components/home/StartSessionButton";
 import { FilterPopover, type FilterOption } from "@/app/components/filters/FilterPopover";
+import { TaxonGroupChips } from "@/app/components/filters/TaxonGroupChips";
+import { CollapsibleSection } from "@/app/components/ui/CollapsibleSection";
 import { Tooltip } from "@/app/components/ui/Tooltip";
 import { TOOLTIPS } from "@/lib/tooltips";
 import type { RepeatMode } from "@/lib/repeat-mode";
@@ -18,6 +20,7 @@ interface Props {
   viewCounts: FilterOption[];
   lifeStageCounts: FilterOption[];
   sexCounts: FilterOption[];
+  taxonGroupCounts: FilterOption[];
 }
 
 function parseList(v: string | null): string[] {
@@ -25,10 +28,16 @@ function parseList(v: string | null): string[] {
 }
 
 /**
- * URL-driven home page: every filter setting is reflected in the query
- * string so a refresh preserves the user's selection and so links can
- * be shared. The live count is fetched from /api/session/count
- * whenever the filters change.
+ * URL-driven home page. Every filter setting reflects in the query
+ * string so a refresh preserves selection and links are shareable.
+ *
+ * Layout intent (R6):
+ *   - interval / subject / start-session stay visible — the core flow.
+ *   - "what kind of bug?" chip wall + the existing view/life/sex
+ *     popovers are concealed behind two CollapsibleSections. Default
+ *     closed; badge shows "(3 selected)" if a filter is active while
+ *     hidden so users notice the impact.
+ *   - Live pool count is always visible regardless of collapse state.
  */
 export function HomeClient({
   initialInterval,
@@ -37,6 +46,7 @@ export function HomeClient({
   viewCounts,
   lifeStageCounts,
   sexCounts,
+  taxonGroupCounts,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -49,9 +59,9 @@ export function HomeClient({
   const [views, setViews] = useState<string[]>(parseList(params.get("view")));
   const [life, setLife] = useState<string[]>(parseList(params.get("life")));
   const [sexes, setSexes] = useState<string[]>(parseList(params.get("sex")));
+  const [groups, setGroups] = useState<string[]>(parseList(params.get("type")));
 
-  // Push the current state into the URL whenever it changes — but only
-  // wrap in a transition so the live-count fetch doesn't pause the UI.
+  // Push state → URL.
   useEffect(() => {
     const next = new URLSearchParams();
     if (intervalSec !== 60) next.set("interval", String(intervalSec));
@@ -60,15 +70,15 @@ export function HomeClient({
     if (views.length) next.set("view", views.join(","));
     if (life.length) next.set("life", life.join(","));
     if (sexes.length) next.set("sex", sexes.join(","));
+    if (groups.length) next.set("type", groups.join(","));
     const qs = next.toString();
     const target = qs ? `${pathname}?${qs}` : pathname;
     startTransition(() => {
       router.replace(target, { scroll: false });
     });
-  }, [intervalSec, subject, repeat, views, life, sexes, pathname, router]);
+  }, [intervalSec, subject, repeat, views, life, sexes, groups, pathname, router]);
 
-  // Live count — AbortController so rapid filter changes cancel the in-flight
-  // request on the network rather than just discarding the result.
+  // Live count.
   const [poolCount, setPoolCount] = useState<number | null>(null);
   const [countLoading, setCountLoading] = useState(false);
   useEffect(() => {
@@ -79,6 +89,7 @@ export function HomeClient({
     if (views.length) q.set("view", views.join(","));
     if (life.length) q.set("life", life.join(","));
     if (sexes.length) q.set("sex", sexes.join(","));
+    if (groups.length) q.set("type", groups.join(","));
     fetch(`/api/session/count?${q.toString()}`, { signal: controller.signal })
       .then((r) => r.json())
       .then((d: { count: number }) => setPoolCount(d.count))
@@ -89,7 +100,11 @@ export function HomeClient({
         if (!controller.signal.aborted) setCountLoading(false);
       });
     return () => controller.abort();
-  }, [subject, views, life, sexes]);
+  }, [subject, views, life, sexes, groups]);
+
+  const typeBadge = groups.length > 0 ? `${groups.length} selected` : null;
+  const advancedActive = views.length + life.length + sexes.length;
+  const advancedBadge = advancedActive > 0 ? `${advancedActive} selected` : null;
 
   return (
     <div className="home-wrap">
@@ -121,47 +136,61 @@ export function HomeClient({
         </section>
 
         <section className="home-section">
-          <h2 className="home-section-title">narrow the pool</h2>
-          <div className="home-filter-row">
-            <Tooltip content={TOOLTIPS.view.content} showIcon={false}>
-              <FilterPopover
-                idleLabel="view: all"
-                selectedLabel={(n) => `view: ${n} selected`}
-                ariaLabel="view filter"
-                options={viewCounts}
-                selected={views}
-                onChange={setViews}
+          <CollapsibleSection title="what kind of bug?" badge={typeBadge}>
+            <Tooltip content={TOOLTIPS.taxonGroup.content} showIcon={false}>
+              <TaxonGroupChips
+                counts={taxonGroupCounts}
+                selected={groups}
+                onChange={setGroups}
               />
             </Tooltip>
-            <Tooltip content={TOOLTIPS.lifeStage.content} showIcon={false}>
-              <FilterPopover
-                idleLabel="life stage: all"
-                selectedLabel={(n) => `life: ${n} selected`}
-                ariaLabel="life stage filter"
-                options={lifeStageCounts}
-                selected={life}
-                onChange={setLife}
-              />
-            </Tooltip>
-            <Tooltip content={TOOLTIPS.sex.content} showIcon={false}>
-              <FilterPopover
-                idleLabel="sex: all"
-                selectedLabel={(n) => `sex: ${n} selected`}
-                ariaLabel="sex filter"
-                options={sexCounts}
-                selected={sexes}
-                onChange={setSexes}
-              />
-            </Tooltip>
-          </div>
-          <p className="home-pool-count" aria-live="polite">
-            {poolCount === null
-              ? (countLoading ? "counting…" : "")
-              : poolCount === 0
-              ? "no images match — broaden the filters"
-              : `${poolCount.toLocaleString()} bugs in your session pool`}
-          </p>
+          </CollapsibleSection>
         </section>
+
+        <section className="home-section">
+          <CollapsibleSection title="more filters" badge={advancedBadge}>
+            <div className="home-filter-row">
+              <Tooltip content={TOOLTIPS.view.content} showIcon={false}>
+                <FilterPopover
+                  idleLabel="view: all"
+                  selectedLabel={(n) => `view: ${n} selected`}
+                  ariaLabel="view filter"
+                  options={viewCounts}
+                  selected={views}
+                  onChange={setViews}
+                />
+              </Tooltip>
+              <Tooltip content={TOOLTIPS.lifeStage.content} showIcon={false}>
+                <FilterPopover
+                  idleLabel="life stage: all"
+                  selectedLabel={(n) => `life: ${n} selected`}
+                  ariaLabel="life stage filter"
+                  options={lifeStageCounts}
+                  selected={life}
+                  onChange={setLife}
+                />
+              </Tooltip>
+              <Tooltip content={TOOLTIPS.sex.content} showIcon={false}>
+                <FilterPopover
+                  idleLabel="sex: all"
+                  selectedLabel={(n) => `sex: ${n} selected`}
+                  ariaLabel="sex filter"
+                  options={sexCounts}
+                  selected={sexes}
+                  onChange={setSexes}
+                />
+              </Tooltip>
+            </div>
+          </CollapsibleSection>
+        </section>
+
+        <p className="home-pool-count" aria-live="polite">
+          {poolCount === null
+            ? (countLoading ? "counting…" : "")
+            : poolCount === 0
+            ? "no images match — broaden the filters"
+            : `${poolCount.toLocaleString()} bugs in your session pool`}
+        </p>
 
         <section className="home-section">
           <h2 className="home-section-title">
@@ -179,6 +208,7 @@ export function HomeClient({
           views={views}
           lifeStages={life}
           sexes={sexes}
+          groups={groups}
         />
 
         <a href="/gallery" className="home-gallery-link">

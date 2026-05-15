@@ -18,9 +18,10 @@ export async function GET(req: Request, { params }: Params): Promise<Response> {
   const views = readList(url.searchParams.get("view"));
   const lifeStages = readList(url.searchParams.get("life"));
   const sexes = readList(url.searchParams.get("sex"));
+  const groups = readList(url.searchParams.get("type"));
 
   const result = await searchGallery({
-    q, subject, institutions, views, lifeStages, sexes, page,
+    q, subject, institutions, views, lifeStages, sexes, groups, page,
   });
   return Response.json(result);
 }

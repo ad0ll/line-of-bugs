@@ -12,10 +12,11 @@ interface Props {
   views: string[];
   lifeStages: string[];
   sexes: string[];
+  groups: string[];
 }
 
 export function InfiniteScroller({
-  initial, q, subject, institutions, views, lifeStages, sexes,
+  initial, q, subject, institutions, views, lifeStages, sexes, groups,
 }: Props) {
   const [rows, setRows] = useState<GalleryRow[]>(initial.rows);
   const [page, setPage] = useState(initial.page);
@@ -42,6 +43,7 @@ export function InfiniteScroller({
       if (views.length > 0) params.set("view", views.join(","));
       if (lifeStages.length > 0) params.set("life", lifeStages.join(","));
       if (sexes.length > 0) params.set("sex", sexes.join(","));
+      if (groups.length > 0) params.set("type", groups.join(","));
       const url = `/api/gallery/page/${next}?${params}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`page ${next} failed: ${res.status}`);
@@ -54,7 +56,7 @@ export function InfiniteScroller({
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, page, q, subject, institutions, views, lifeStages, sexes]);
+  }, [loading, hasMore, page, q, subject, institutions, views, lifeStages, sexes, groups]);
 
   useEffect(() => {
     const el = sentinelRef.current;

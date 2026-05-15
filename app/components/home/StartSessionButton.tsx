@@ -10,10 +10,11 @@ interface Props {
   views: string[];
   lifeStages: string[];
   sexes: string[];
+  groups: string[];
 }
 
 export function StartSessionButton({
-  intervalSec, subjectType, repeatMode, views, lifeStages, sexes,
+  intervalSec, subjectType, repeatMode, views, lifeStages, sexes, groups,
 }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -33,7 +34,7 @@ export function StartSessionButton({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           intervalSec, subjectType, repeatMode,
-          views, lifeStages, sexes,
+          views, lifeStages, sexes, groups,
         }),
       });
       if (!res.ok) {

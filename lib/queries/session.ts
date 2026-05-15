@@ -3,6 +3,7 @@ import { and, eq, sql, type SQL } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { applyRepeatMode, type RepeatMode } from "@/lib/repeat-mode";
 import type { Image } from "@/db/schema";
+import { buildTaxonGroupSQL } from "@/lib/taxonomy";
 
 export interface SessionFilters {
   subjectType: "nature" | "specimen" | "both";
@@ -11,6 +12,8 @@ export interface SessionFilters {
   views: string[];
   lifeStages: string[];
   sexes: string[];
+  /** R6 layperson taxonomy chip keys. */
+  groups: string[];
 }
 
 export interface BuildSessionPoolOpts extends SessionFilters {
@@ -55,6 +58,13 @@ function buildSessionFilterClauses(opts: SessionFilters): SQL[] {
   }
   if (opts.sexes.length > 0) {
     conditions.push(sql`(${inOrUnknownArr(sql`${schema.images.sex}`, opts.sexes)})`);
+  }
+  if (opts.groups.length > 0) {
+    const groupClause = buildTaxonGroupSQL(
+      opts.groups,
+      sql`${schema.images.taxonSubgroup}`,
+    );
+    if (groupClause) conditions.push(groupClause);
   }
   return conditions;
 }

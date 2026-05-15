@@ -62,6 +62,17 @@ export const TOOLTIPS = {
     label: "institution",
     content: "Where the photo came from — iNaturalist (citizen-science snapshots), Bugwood (university + USDA collections), Smithsonian (museum specimens).",
   },
+  taxonGroup: {
+    label: "what kind of bug?",
+    content: <>
+      Filter by familiar bug categories. <strong>butterflies</strong> and{" "}
+      <strong>moths</strong> are split apart; <strong>ladybugs</strong> are their{" "}
+      own thing separately from other <strong>beetles</strong>.{" "}
+      <strong>weird stuff</strong> covers the small orders (lacewings, mayflies,
+      caddisflies, stoneflies, fleas, silverfish, termites, hoppers) most people
+      don't have a word for.
+    </>,
+  },
 } as const satisfies Record<string, TooltipDef>;
 
 export type TooltipKey = keyof typeof TOOLTIPS;

@@ -22,7 +22,8 @@ export async function GET(req: Request): Promise<Response> {
   const views = readList(url.searchParams.get("view"));
   const lifeStages = readList(url.searchParams.get("life"));
   const sexes = readList(url.searchParams.get("sex"));
+  const groups = readList(url.searchParams.get("type"));
 
-  const count = await countSessionPool({ subjectType, views, lifeStages, sexes });
+  const count = await countSessionPool({ subjectType, views, lifeStages, sexes, groups });
   return Response.json({ count });
 }

@@ -27,6 +27,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
   const views = readList(sp.view);
   const lifeStages = readList(sp.life);
   const sexes = readList(sp.sex);
+  const groups = readList(sp.type);
   const pageRaw = readArg(sp.page, '1') as string;
   const page = Math.max(1, parseInt(pageRaw, 10) || 1);
 
@@ -48,6 +49,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
           views={views}
           lifeStages={lifeStages}
           sexes={sexes}
+          groups={groups}
           page={page}
         />
       </Suspense>

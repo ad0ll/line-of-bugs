@@ -24,6 +24,7 @@ from common import (
     setup_logging, build_filename, slugify,
 )
 from db import DbWriter
+from backfill_taxon_subgroup import classify as classify_subgroup
 
 log = setup_logging("smithsonian")
 S = session()
@@ -230,6 +231,7 @@ def main() -> int:
                 "photographer": "",
                 "institution": "Smithsonian NMNH — Department of Entomology",
                 "taxon_order": order,
+                "taxon_subgroup": classify_subgroup(order, []),
                 "taxon_species": sci,
                 "common_name": "",
                 "subject_state": "specimen",

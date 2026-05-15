@@ -39,6 +39,7 @@ export async function POST(req: Request) {
     views: readList(b.views),
     lifeStages: readList(b.lifeStages),
     sexes: readList(b.sexes),
+    groups: readList(b.groups),
   });
 
   if (items.length === 0) {

@@ -5,6 +5,7 @@ import {
   listViewCounts,
   listLifeStageCounts,
   listSexCounts,
+  listTaxonGroupCounts,
 } from "@/lib/queries/gallery";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -26,10 +27,11 @@ async function HomeShell({ searchParams }: { searchParams: SearchParams }) {
     repeatRaw === "never-repeat-animals" || repeatRaw === "allow-different-angles"
       ? repeatRaw
       : "default";
-  const [views, lifeStages, sexes] = await Promise.all([
+  const [views, lifeStages, sexes, taxonGroups] = await Promise.all([
     listViewCounts(),
     listLifeStageCounts(),
     listSexCounts(),
+    listTaxonGroupCounts(),
   ]);
   return (
     <HomeClient
@@ -39,6 +41,7 @@ async function HomeShell({ searchParams }: { searchParams: SearchParams }) {
       viewCounts={views}
       lifeStageCounts={lifeStages}
       sexCounts={sexes}
+      taxonGroupCounts={taxonGroups}
     />
   );
 }

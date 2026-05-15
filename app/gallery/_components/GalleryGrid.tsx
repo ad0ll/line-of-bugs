@@ -8,14 +8,15 @@ export interface GalleryGridProps {
   views: string[];
   lifeStages: string[];
   sexes: string[];
+  groups: string[];
   page: number;
 }
 
 export async function GalleryGrid({
-  q, subject, institutions, views, lifeStages, sexes, page,
+  q, subject, institutions, views, lifeStages, sexes, groups, page,
 }: GalleryGridProps) {
   const initial = await searchGallery({
-    q, subject, institutions, views, lifeStages, sexes, page,
+    q, subject, institutions, views, lifeStages, sexes, groups, page,
   });
 
   if (initial.totalCount === 0) {
@@ -48,6 +49,7 @@ export async function GalleryGrid({
         views={views}
         lifeStages={lifeStages}
         sexes={sexes}
+        groups={groups}
       />
     </>
   );

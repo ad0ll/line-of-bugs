@@ -1,6 +1,7 @@
 import { sql, type SQL } from "drizzle-orm";
 import { cacheTag, cacheLife } from "next/cache";
 import { db } from "@/db";
+import { TAXON_GROUPS, buildTaxonGroupSQL } from "@/lib/taxonomy";
 
 export type GalleryRow = {
   image_id: string;
@@ -32,6 +33,8 @@ export type SearchGalleryArgs = {
   views: string[];
   lifeStages: string[];
   sexes: string[];
+  /** R6 layperson taxonomy filter — chip keys from lib/taxonomy.ts. */
+  groups: string[];
   page: number;
 };
 
@@ -103,6 +106,10 @@ export async function searchGallery(args: SearchGalleryArgs): Promise<SearchGall
   }
   if (args.sexes.length > 0) {
     filters.push(sql`(${inOrUnknown(sql`i.sex`, args.sexes)})`);
+  }
+  if (args.groups.length > 0) {
+    const groupClause = buildTaxonGroupSQL(args.groups, sql`i.taxon_subgroup`);
+    if (groupClause) filters.push(groupClause);
   }
 
   if (args.q.trim() && !ftsQuery) {
@@ -226,6 +233,42 @@ function listFacet(column: string, cacheKey: string) {
 export const listViewCounts = listFacet("view_label", "view-counts");
 export const listLifeStageCounts = listFacet("life_stage", "life-stage-counts");
 export const listSexCounts = listFacet("sex", "sex-counts");
+
+/**
+ * Counts per taxon-group chip (R6). Folds NULL taxon_subgroup rows into
+ * the chip(s) flagged `catchesNull` (currently just "weird stuff").
+ * Returns the chips in TAXON_GROUPS display order so the UI can render
+ * them as-is, dropping any chip whose count is zero.
+ */
+export async function listTaxonGroupCounts(): Promise<FacetRow[]> {
+  "use cache";
+  cacheTag("taxon-group-counts");
+  cacheLife("days");
+
+  const rows = db.all<{ subgroup: string | null; c: number }>(sql`
+    SELECT taxon_subgroup AS subgroup, COUNT(*) AS c
+    FROM images i
+    WHERE i.hidden = 0
+      AND NOT EXISTS (
+        SELECT 1 FROM reports r
+        WHERE r.image_id = i.image_id AND r.resolved_at IS NULL
+      )
+    GROUP BY taxon_subgroup
+  `);
+
+  const byDbValue = new Map<string | null, number>();
+  for (const r of rows) byDbValue.set(r.subgroup, r.c);
+  const nullCount = byDbValue.get(null) ?? 0;
+
+  const out: FacetRow[] = [];
+  for (const g of TAXON_GROUPS) {
+    let count = 0;
+    for (const v of g.dbValues) count += byDbValue.get(v) ?? 0;
+    if (g.catchesNull) count += nullCount;
+    if (count > 0) out.push({ name: g.key, count });
+  }
+  return out;
+}
 
 export type SpeciesRow = {
   common_name: string | null;
