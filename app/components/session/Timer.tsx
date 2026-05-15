@@ -12,18 +12,30 @@ function fmt(ms: number): string {
   return `${mm}:${ss}`;
 }
 
+// SR announcement thresholds mirror SessionPlayer's audio-cue thresholds
+// (30s ding, 10s ding, 3-2-1 countdown) so screen-reader users hear the
+// same warning cadence without per-second chatter.
+const ANNOUNCE_AT = new Set([30, 10, 3, 2, 1]);
+
+function announce(seconds: number): string {
+  if (seconds === 0) return "time's up";
+  if (ANNOUNCE_AT.has(seconds)) return `${seconds} seconds remaining`;
+  return "";
+}
+
 export function Timer({ remainingMs, paused }: Props) {
-  // Why polite not assertive: assertive would interrupt screen-reader narration
-  // of the image alt text on every tick.
+  const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
   return (
-    <div
-      className="session-timer"
-      style={{ opacity: paused ? 0.55 : 1 }}
-      aria-live="polite"
-      aria-atomic="true"
-      aria-label="time remaining"
-    >
-      {fmt(remainingMs)}
-    </div>
+    <>
+      <div
+        className="session-timer"
+        style={{ opacity: paused ? 0.55 : 1 }}
+      >
+        {fmt(remainingMs)}
+      </div>
+      <span className="u-sr-only" role="status" aria-live="polite" aria-atomic="true">
+        {announce(seconds)}
+      </span>
+    </>
   );
 }

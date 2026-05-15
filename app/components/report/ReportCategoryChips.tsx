@@ -19,7 +19,7 @@ export function ReportCategoryChips({ value, onChange, ariaLabelledBy, required 
   return (
     <div
       className="report-category-chips"
-      role="radiogroup"
+      role="group"
       aria-label={ariaLabelledBy ? undefined : "report category"}
       aria-labelledby={ariaLabelledBy}
       aria-required={required ? true : undefined}
