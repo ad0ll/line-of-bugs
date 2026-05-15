@@ -16,6 +16,7 @@ Key design points:
 from __future__ import annotations
 import hashlib
 import logging
+import os
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -34,7 +35,8 @@ LOG_DIR = ROOT / "data" / "logs"
 for d in (IMG_DIR, THUMB_DIR, MEDIUM_DIR, LOG_DIR):
     d.mkdir(parents=True, exist_ok=True)
 
-USER_AGENT = "line-of-bugs/0.1 (spew_footrest858@simplelogin.com)"
+_DEFAULT_CONTACT = "line-of-bugs@example.invalid"
+USER_AGENT = f"line-of-bugs/0.1 ({os.environ.get('LOB_CONTACT', _DEFAULT_CONTACT)})"
 MIN_LONG_EDGE_DEFAULT = 1500
 THUMB_MAX_EDGE = 512
 THUMB_QUALITY = 85

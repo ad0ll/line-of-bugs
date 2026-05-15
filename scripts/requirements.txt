@@ -1,4 +1,5 @@
 # scripts/requirements.txt — server-side venv deps
+# Set LOB_CONTACT env var to an email upstream APIs can use to reach you.
 requests>=2.32
 Pillow>=10.4
 
