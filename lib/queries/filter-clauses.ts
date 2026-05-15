@@ -16,21 +16,26 @@ export interface FilterState {
 }
 
 /**
- * Build the WHERE clauses for the `images i` row predicate. Callers
- * concatenate these with `sql.join(clauses, sql\` AND \`)` and inject
- * into their own SELECT.
+ * Build the WHERE clauses for the row predicate. Callers concatenate
+ * with `sql.join(clauses, sql\` AND \`)` and inject into their SELECT.
  *
- * Both raw `db.all(sql\`...\`)` callers (gallery) and drizzle query-
- * builder callers (session) work — drizzle resolves the `i.column`
- * references against whichever table is in the FROM clause as long
- * as `images` is the only table aliased `i` in scope.
+ * `alias` is the FROM-clause alias for the `images` table — needed
+ * for the NOT EXISTS reports correlation, which would otherwise bind
+ * to the inner `reports.image_id` if left bare. Gallery + facet
+ * callers use `"i"` (their CTEs read `FROM images i`); the session
+ * helper passes `"images"` because drizzle's query builder leaves
+ * the table un-aliased and references it by name.
  */
-export function buildFilterClauses(filters: FilterState): SQL[] {
+export function buildFilterClauses(
+  filters: FilterState,
+  alias: string = "i",
+): SQL[] {
+  const outerImageId = sql.raw(`${alias}.image_id`);
   const clauses: SQL[] = [
     sql`hidden = 0`,
     sql`NOT EXISTS (
       SELECT 1 FROM reports r
-      WHERE r.image_id = images.image_id AND r.resolved_at IS NULL
+      WHERE r.image_id = ${outerImageId} AND r.resolved_at IS NULL
     )`,
   ];
 

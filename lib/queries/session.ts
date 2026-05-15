@@ -20,7 +20,7 @@ export interface BuildSessionPoolOpts extends SessionFilters {
 export async function buildSessionPool(
   opts: BuildSessionPoolOpts,
 ): Promise<Image[]> {
-  const conditions = buildFilterClauses(opts);
+  const conditions = buildFilterClauses(opts, "images");
   const all = await db
     .select()
     .from(schema.images)
@@ -37,7 +37,7 @@ export async function buildSessionPool(
  * "X images in your session pool" indicator before the user starts.
  */
 export async function countSessionPool(opts: SessionFilters): Promise<number> {
-  const conditions = buildFilterClauses(opts);
+  const conditions = buildFilterClauses(opts, "images");
   const result = await db
     .select({ c: sql<number>`COUNT(*)` })
     .from(schema.images)
