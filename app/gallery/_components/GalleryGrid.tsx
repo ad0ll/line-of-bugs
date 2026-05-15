@@ -1,5 +1,5 @@
 import { searchGallery } from '@/lib/queries/gallery';
-import { GridTile } from './GridTile';
+import { InfiniteScroller } from './InfiniteScroller';
 
 export interface GalleryGridProps {
   q: string;
@@ -9,9 +9,9 @@ export interface GalleryGridProps {
 }
 
 export async function GalleryGrid({ q, subject, institutions, page }: GalleryGridProps) {
-  const { rows, totalCount, hasMore } = await searchGallery({ q, subject, institutions, page });
+  const initial = await searchGallery({ q, subject, institutions, page });
 
-  if (totalCount === 0) {
+  if (initial.totalCount === 0) {
     return (
       <div className="gallery-empty">
         <div className="gallery-empty-icon" aria-hidden>✿</div>
@@ -31,28 +31,14 @@ export async function GalleryGrid({ q, subject, institutions, page }: GalleryGri
   return (
     <>
       <p className="gallery-result-count">
-        {rows.length} of {totalCount} images
+        {initial.totalCount.toLocaleString()} bugs
       </p>
-      <div className="gallery-grid" id="gallery-grid">
-        {rows.map((row) => (
-          <GridTile key={row.image_id} row={row} />
-        ))}
-      </div>
-      {hasMore && (
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <a
-            className="gallery-load-more"
-            href={`/gallery?${new URLSearchParams({
-              q,
-              subject,
-              inst: institutions.join(','),
-              page: String(page + 1),
-            })}`}
-          >
-            load more ✿
-          </a>
-        </div>
-      )}
+      <InfiniteScroller
+        initial={initial}
+        q={q}
+        subject={subject}
+        institutions={institutions}
+      />
     </>
   );
 }

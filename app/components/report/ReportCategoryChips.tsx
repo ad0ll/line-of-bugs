@@ -1,14 +1,11 @@
 "use client";
 
-import type { ReportCategory } from "@/lib/report-categories";
+import { REPORT_CATEGORIES, REPORT_CATEGORY_LABELS, type ReportCategory } from "@/lib/report-categories";
 
-const CATEGORIES: { value: ReportCategory; label: string }[] = [
-  { value: "low-resolution", label: "low-resolution" },
-  { value: "spooky", label: "spooky" },
-  { value: "cropped", label: "cropped" },
-  { value: "ai-generated", label: "ai-generated" },
-  { value: "other", label: "other" },
-];
+const CATEGORIES: { value: ReportCategory; label: string }[] = REPORT_CATEGORIES.map((v) => ({
+  value: v,
+  label: REPORT_CATEGORY_LABELS[v],
+}));
 
 export interface ReportCategoryChipsProps {
   value: ReportCategory | null;

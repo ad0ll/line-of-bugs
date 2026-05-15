@@ -8,6 +8,7 @@ Production refactor (2026-05-14):
   * Per-order summary at end.
 """
 from __future__ import annotations
+import os
 import re
 import sys
 import time
@@ -15,6 +16,10 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+# SCALE multiplier — set INAT_SCALE=10 to roughly 10× every per-order target.
+# Useful to expand the dataset without editing the per-order table.
+SCALE = float(os.environ.get("INAT_SCALE", "1"))
 from common import (
     session, ManifestWriter, IMG_DIR, THUMB_DIR, MEDIUM_DIR, MIN_LONG_EDGE_DEFAULT,
     parallel_download, ConsecutiveFailureGuard, read_existing_rows,
@@ -257,7 +262,8 @@ def main() -> int:
     api_guard = ConsecutiveFailureGuard(threshold=6, name="inat-api")
     summary: dict[str, tuple[int, int, int]] = {}
     total_added = 0
-    for taxon_id, label, target, life_value in ORDERS:
+    for taxon_id, label, base_target, life_value in ORDERS:
+        target = int(round(base_target * SCALE))
         if api_guard.tripped:
             log.error("api guard already tripped — skipping %s", label)
             summary[label] = (target, existing_by_label[label], 0)

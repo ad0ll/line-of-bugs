@@ -98,6 +98,8 @@ export const reportCategories = [
   "spooky",
   "cropped",
   "ai-generated",
+  "zoomed-out",
+  "wheres-the-bug",
   "other",
 ] as const;
 export type ReportCategory = (typeof reportCategories)[number];

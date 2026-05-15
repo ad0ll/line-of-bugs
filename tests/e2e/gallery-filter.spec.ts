@@ -21,14 +21,18 @@ test("institution picker opens and toggles selection", async ({ page }) => {
   expect(decodeURIComponent(page.url())).toContain(`inst=${name}`);
 });
 
-test("Load more increments page param", async ({ page }) => {
+test("infinite scroll appends a second page of tiles", async ({ page }) => {
   await page.goto("/gallery");
-  await page.waitForSelector("#gallery-grid");
-  const link = page.getByRole("link", { name: /load more/i });
-  const count = await link.count();
-  if (count === 0) {
-    test.skip(true, "fewer than 200 results — no load-more link");
-  }
-  await link.click();
-  await page.waitForURL(/page=2/);
+  await page.waitForSelector("#gallery-grid .grid-item");
+  const before = await page.locator(".grid-item").count();
+  // Scroll to the sentinel — InfiniteScroller fires fetch + appends
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  // Allow time for IntersectionObserver + fetch + render
+  await page.waitForFunction(
+    (n) => document.querySelectorAll(".grid-item").length > n,
+    before,
+    { timeout: 5000 },
+  );
+  const after = await page.locator(".grid-item").count();
+  expect(after).toBeGreaterThan(before);
 });

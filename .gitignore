@@ -373,5 +373,8 @@ next-env.d.ts
 playwright-report/
 test-results/
 
+# Local-only visual audit artifacts
+audit/
+
 # Vitest
 coverage/

@@ -143,9 +143,10 @@ export function SessionActionBar(props: Props) {
             padding: `${T.s2}px ${T.s4}px`,
             fontFamily: "var(--font-mono), monospace",
             fontSize: T.textXs,
-            color: T.textTertiary,
-            minWidth: 56,
+            color: "var(--accent-sky)",
+            minWidth: 64,
             textAlign: "center",
+            fontVariantNumeric: "tabular-nums",
           }}
         >
           {props.currentIdx + 1} / {props.total}

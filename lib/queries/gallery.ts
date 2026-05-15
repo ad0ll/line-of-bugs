@@ -37,7 +37,7 @@ export type SearchGalleryResult = {
   pageSize: number;
 };
 
-const PAGE_SIZE = 200;
+const PAGE_SIZE = 50;
 
 function buildFtsQuery(raw: string): string | null {
   const cleaned = raw.replace(/[^\p{L}\p{N}\s]/gu, " ").trim();
