@@ -14,6 +14,7 @@ from scripts.detect_subjects.caches import load_completed_pairs
 from scripts.detect_subjects.classify import classify_framing, suggest_labels
 from scripts.detect_subjects.config import (
     BBOX_EDGE_TOLERANCE_NORMALIZED,
+    CLASSIFY_BUG_TOO_SMALL_EDGE_PX,
     CROPS_DIR,
     DATA_DIR,
     DINO_MODEL_ID,
@@ -164,7 +165,16 @@ def run_v1_on_sample(
                     crop_x, crop_y, crop_w, crop_h = (
                         cd.crop_x, cd.crop_y, cd.crop_w, cd.crop_h)
                     post_area = cd.post_crop_subject_area
-                    if not cd.skip:
+                    # Skip saving the crop file when the bug fails the
+                    # long-edge gate that classify uses for bug-too-small.
+                    # The crop bbox is still stored in the row (informational)
+                    # but no preview is written — a 200px-wide crop would just
+                    # blur on a fullscreen draw view anyway.
+                    long_edge_ok = (
+                        bbox_long_edge_px is None
+                        or bbox_long_edge_px >= CLASSIFY_BUG_TOO_SMALL_EDGE_PX
+                    )
+                    if not cd.skip and long_edge_ok:
                         save_medium_and_thumb(
                             im,
                             (crop_x, crop_y, crop_w, crop_h),
