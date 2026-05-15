@@ -551,10 +551,10 @@ Gallery page:
   the first two words of the scientific name if no common name; if both
   empty, drop the trailing segment.
 - Examples:
-  - `20362_inaturalist_nature_large-skipper.jpg`
+  - `20362_inaturalist_wild_large-skipper.jpg`
   - `usnment01732150_smithsonian_specimen_bombus-sylvicola.jpg`
   - `5544659_bugwood_specimen_bean-weevil.jpg`
-  - `k5388-1_usda-ars_nature_red-fire-ants.jpg`
+  - (Subject-state slug was `nature` pre-R4; renamed to `wild` / `captive` / `specimen` to match DwC `basisOfRecord`.)
 
 ## 12. Performance + animation tone
 
@@ -663,14 +663,16 @@ Fraunces) confirmed available.
   (POST returning the randomized queue; could be a Server Function but a
   route handler is cleaner for the client-fetch pattern).
 
-## 12b. SQLite ingestion (manifest → database)
+## 12b. SQLite ingestion (fetcher → database)
 
 Per user direction 2026-05-14: *"We just have to get things in sqlite +
 drizzle I think."*
 
-The download scripts produce CSV manifests (`data/manifest/<source>.csv` per
-source, plus a unioned `manifest.csv` from `merge_manifests.py`). The app
-reads these into a SQLite database at startup or via a "seed" command.
+**R5 update (2026-05-15):** the CSV intermediate was removed. The four
+Python fetchers now write directly to SQLite via `scripts/db.py:DbWriter`
+— same `.has()` / `.write()` / `.count()` interface as the legacy
+ManifestWriter, backed by `sqlite3.connect()` + `INSERT … ON CONFLICT
+DO UPDATE`. No CSV files, no seed step.
 
 ### Drizzle schema (proposed)
 
@@ -681,7 +683,7 @@ import { sqliteTable, text, integer, index, primaryKey } from 'drizzle-orm/sqlit
 export const images = sqliteTable('images', {
   imageId:        text('image_id').primaryKey(),
   collectionId:   text('collection_id').notNull(),
-  source:         text('source').notNull(),     // inaturalist | bugwood | smithsonian | usda-ars
+  source:         text('source').notNull(),     // inaturalist | bugwood | smithsonian
   sourceId:       text('source_id').notNull(),
   sourcePageUrl:  text('source_page_url').notNull(),
   imageUrl:       text('image_url').notNull(),
@@ -764,13 +766,13 @@ reports.resolved_at IS NULL` and filters where `reports.id IS NULL`.
 
 ### Migrations / seeding
 
-Current setup (built 2026-05-14):
-- `drizzle/0000_grey_starbolt.sql` (single canonical migration).
+Current setup (R6 / 2026-05-15):
+- Migrations: `drizzle/0000` (initial) through `drizzle/0004_taxon_subgroup.sql`
 - `npm run db:generate` → `drizzle-kit generate`
 - `npm run db:migrate` → `drizzle-kit migrate`
-- `npm run db:push` → `drizzle-kit push` (skips migration files; sync schema directly)
-- `npm run db:seed` → `tsx db/seed.ts` (reads per-source CSVs, upserts via `onConflictDoUpdate`)
+- `npm run db:push` → `drizzle-kit push` (sync schema directly, dev only)
 - `npm run db:studio` → web UI on localhost
+- *No db:seed* — fetchers UPSERT directly via `scripts/db.py:DbWriter` (R5).
 
 Drizzle docs for solo-dev + local SQLite explicitly recommend `push` over
 `generate + migrate` because it's "the best approach for rapid prototyping"

@@ -61,15 +61,12 @@ ssh bawler@195.201.8.147 '
 ## Run a fetcher manually
 
 ```bash
-ssh bawler@195.201.8.147 '
-    cd /srv/line-of-bugs/current
-    INAT_SCALE=2 /srv/line-of-bugs/shared/venv/bin/python scripts/fetch_inaturalist.py
-'
-# After it finishes:
+# Fetchers write directly to SQLite via scripts/db.py:DbWriter (R5+).
+# No separate seed step — DATABASE_URL points the writer at the shared DB.
 ssh bawler@195.201.8.147 '
     cd /srv/line-of-bugs/current
     DATABASE_URL=/srv/line-of-bugs/shared/data/db/line-of-bugs.db \
-        npm run db:seed inaturalist
+        INAT_SCALE=2 /srv/line-of-bugs/shared/venv/bin/python scripts/fetch_inaturalist.py
 '
 ```
 

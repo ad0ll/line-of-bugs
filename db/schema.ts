@@ -2,8 +2,9 @@
  * Drizzle schema — single source of truth for the SQLite database.
  *
  * Tables:
- *   • images   — one row per fetched image (5K+ now, target 10K+).
- *                Populated from data/manifest/<source>.csv by db/seed.ts.
+ *   • images   — one row per fetched image (~40k as of R6 / 2026-05-15).
+ *                Populated directly by the Python fetchers via
+ *                scripts/db.py:DbWriter (R5 dropped the CSV intermediate).
  *   • reports  — user-submitted "this image shouldn't be here" reports.
  *                An image is hidden from the session pool iff it has at
  *                least one unresolved report. Admin reviews and resolves.
