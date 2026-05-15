@@ -5,6 +5,8 @@ import { useCallback } from 'react';
 import { SubjectTypeChips, type SubjectValue, type SubjectCounts } from './SubjectTypeChips';
 import { InstitutionPicker } from './InstitutionPicker';
 import { FilterPopover, type FilterOption } from '@/app/components/filters/FilterPopover';
+import { Tooltip } from '@/app/components/ui/Tooltip';
+import { TOOLTIPS } from '@/lib/tooltips';
 
 export interface FilterChipsControlsProps {
   subjectCounts: SubjectCounts;
@@ -63,35 +65,43 @@ export function FilterChipsControls({
   return (
     <>
       <SubjectTypeChips value={subject} counts={subjectCounts} onChange={setSubject} />
-      <InstitutionPicker
-        institutions={institutions}
-        selected={selectedInst}
-        onChange={makeSetList('inst')}
-      />
-      <FilterPopover
-        idleLabel="view: all"
-        selectedLabel={(n) => `view: ${n} selected`}
-        ariaLabel="view filter"
-        options={viewCounts}
-        selected={selectedViews}
-        onChange={makeSetList('view')}
-      />
-      <FilterPopover
-        idleLabel="life stage: all"
-        selectedLabel={(n) => `life: ${n} selected`}
-        ariaLabel="life stage filter"
-        options={lifeStageCounts}
-        selected={selectedLife}
-        onChange={makeSetList('life')}
-      />
-      <FilterPopover
-        idleLabel="sex: all"
-        selectedLabel={(n) => `sex: ${n} selected`}
-        ariaLabel="sex filter"
-        options={sexCounts}
-        selected={selectedSex}
-        onChange={makeSetList('sex')}
-      />
+      <Tooltip content={TOOLTIPS.institution.content} showIcon={false}>
+        <InstitutionPicker
+          institutions={institutions}
+          selected={selectedInst}
+          onChange={makeSetList('inst')}
+        />
+      </Tooltip>
+      <Tooltip content={TOOLTIPS.view.content} showIcon={false}>
+        <FilterPopover
+          idleLabel="view: all"
+          selectedLabel={(n) => `view: ${n} selected`}
+          ariaLabel="view filter"
+          options={viewCounts}
+          selected={selectedViews}
+          onChange={makeSetList('view')}
+        />
+      </Tooltip>
+      <Tooltip content={TOOLTIPS.lifeStage.content} showIcon={false}>
+        <FilterPopover
+          idleLabel="life stage: all"
+          selectedLabel={(n) => `life: ${n} selected`}
+          ariaLabel="life stage filter"
+          options={lifeStageCounts}
+          selected={selectedLife}
+          onChange={makeSetList('life')}
+        />
+      </Tooltip>
+      <Tooltip content={TOOLTIPS.sex.content} showIcon={false}>
+        <FilterPopover
+          idleLabel="sex: all"
+          selectedLabel={(n) => `sex: ${n} selected`}
+          ariaLabel="sex filter"
+          options={sexCounts}
+          selected={selectedSex}
+          onChange={makeSetList('sex')}
+        />
+      </Tooltip>
     </>
   );
 }

@@ -7,6 +7,8 @@ import { SubjectFilter, type SubjectChoice } from "@/app/components/home/Subject
 import { RepeatModeToggle } from "@/app/components/home/RepeatModeToggle";
 import { StartSessionButton } from "@/app/components/home/StartSessionButton";
 import { FilterPopover, type FilterOption } from "@/app/components/filters/FilterPopover";
+import { Tooltip } from "@/app/components/ui/Tooltip";
+import { TOOLTIPS } from "@/lib/tooltips";
 import type { RepeatMode } from "@/lib/repeat-mode";
 
 interface Props {
@@ -104,42 +106,56 @@ export function HomeClient({
         </header>
 
         <section className="home-section">
-          <h2 className="home-section-title">interval per slide</h2>
+          <h2 className="home-section-title">
+            <Tooltip content={TOOLTIPS.interval.content}>
+              <span>interval per slide</span>
+            </Tooltip>
+          </h2>
           <IntervalPicker value={intervalSec} onChange={setIntervalSec} />
         </section>
 
         <section className="home-section">
-          <h2 className="home-section-title">subject type</h2>
+          <h2 className="home-section-title">
+            <Tooltip content={TOOLTIPS.subject.content}>
+              <span>subject type</span>
+            </Tooltip>
+          </h2>
           <SubjectFilter value={subject} onChange={setSubject} />
         </section>
 
         <section className="home-section">
           <h2 className="home-section-title">narrow the pool</h2>
           <div className="home-filter-row">
-            <FilterPopover
-              idleLabel="view: all"
-              selectedLabel={(n) => `view: ${n} selected`}
-              ariaLabel="view filter"
-              options={viewCounts}
-              selected={views}
-              onChange={setViews}
-            />
-            <FilterPopover
-              idleLabel="life stage: all"
-              selectedLabel={(n) => `life: ${n} selected`}
-              ariaLabel="life stage filter"
-              options={lifeStageCounts}
-              selected={life}
-              onChange={setLife}
-            />
-            <FilterPopover
-              idleLabel="sex: all"
-              selectedLabel={(n) => `sex: ${n} selected`}
-              ariaLabel="sex filter"
-              options={sexCounts}
-              selected={sexes}
-              onChange={setSexes}
-            />
+            <Tooltip content={TOOLTIPS.view.content}>
+              <FilterPopover
+                idleLabel="view: all"
+                selectedLabel={(n) => `view: ${n} selected`}
+                ariaLabel="view filter"
+                options={viewCounts}
+                selected={views}
+                onChange={setViews}
+              />
+            </Tooltip>
+            <Tooltip content={TOOLTIPS.lifeStage.content}>
+              <FilterPopover
+                idleLabel="life stage: all"
+                selectedLabel={(n) => `life: ${n} selected`}
+                ariaLabel="life stage filter"
+                options={lifeStageCounts}
+                selected={life}
+                onChange={setLife}
+              />
+            </Tooltip>
+            <Tooltip content={TOOLTIPS.sex.content}>
+              <FilterPopover
+                idleLabel="sex: all"
+                selectedLabel={(n) => `sex: ${n} selected`}
+                ariaLabel="sex filter"
+                options={sexCounts}
+                selected={sexes}
+                onChange={setSexes}
+              />
+            </Tooltip>
           </div>
           <p className="home-pool-count" aria-live="polite">
             {poolCount === null
@@ -151,7 +167,11 @@ export function HomeClient({
         </section>
 
         <section className="home-section">
-          <h2 className="home-section-title">repeat behavior</h2>
+          <h2 className="home-section-title">
+            <Tooltip content={TOOLTIPS.repeatMode.content}>
+              <span>repeat behavior</span>
+            </Tooltip>
+          </h2>
           <RepeatModeToggle value={repeat} onChange={setRepeat} />
         </section>
 

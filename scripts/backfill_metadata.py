@@ -55,53 +55,76 @@ def inat_obs_id_from_collection(collection_id: str) -> str | None:
     return collection_id[len("inat-obs-"):]
 
 
+INAT_BATCH = 200  # iNat /observations supports up to 200 ids in one query
+
+
 def backfill_inat(rows: list[dict], limit: int | None) -> int:
-    """Re-query iNat /observations/{id} per row. Rate-limited 1 req/sec."""
-    guard = ConsecutiveFailureGuard(threshold=8, name="inat-backfill")
-    updated = 0
+    """Re-query iNat /observations?id=... in batches of 200. The 1 req/sec
+    rate limit applies per request, not per observation — so backfilling
+    27k rows takes ~140 requests = ~3 min vs ~7h doing it one-by-one."""
+    guard = ConsecutiveFailureGuard(threshold=5, name="inat-backfill")
     target = [r for r in rows if not r.get("raw_metadata")]
     if limit is not None:
         target = target[:limit]
-    log.info("[inat] %d rows to backfill", len(target))
-    for i, r in enumerate(target):
+    log.info("[inat] %d rows to backfill (batch=%d)", len(target), INAT_BATCH)
+
+    # Build obs_id → row mapping so we can match responses back to rows
+    by_obs: dict[str, dict] = {}
+    no_obs_id = 0
+    for r in target:
         obs_id = inat_obs_id_from_collection(r.get("collection_id", ""))
         if not obs_id:
+            no_obs_id += 1
             continue
+        by_obs[obs_id] = r
+    log.info("[inat] %d unique obs ids (%d rows missing collection_id)",
+             len(by_obs), no_obs_id)
+
+    updated = 0
+    obs_ids = list(by_obs.keys())
+    for i in range(0, len(obs_ids), INAT_BATCH):
+        chunk = obs_ids[i:i + INAT_BATCH]
         try:
-            resp = S.get(f"https://api.inaturalist.org/v1/observations/{obs_id}",
-                         timeout=30)
+            resp = S.get(
+                "https://api.inaturalist.org/v1/observations",
+                params={"id": ",".join(chunk), "per_page": INAT_BATCH},
+                timeout=60,
+            )
         except Exception as e:
-            log.warning("[inat %s] %s", obs_id, type(e).__name__)
+            log.warning("[inat batch %d] %s", i, type(e).__name__)
             if guard.failure(): break
-            time.sleep(2); continue
-        if resp.status_code == 404:
-            # Observation was deleted on iNat — keep our row, mark with empty
-            r["raw_metadata"] = "{}"
-            updated += 1
-            continue
+            time.sleep(3); continue
         if resp.status_code != 200:
-            log.warning("[inat %s] http %d", obs_id, resp.status_code)
+            log.warning("[inat batch %d] http %d", i, resp.status_code)
             if guard.failure(): break
-            time.sleep(2); continue
+            time.sleep(3); continue
         guard.success()
         results = (resp.json() or {}).get("results") or []
-        if not results:
-            r["raw_metadata"] = "{}"
+        returned_ids: set[str] = set()
+        for obs in results:
+            obs_id = str(obs.get("id"))
+            returned_ids.add(obs_id)
+            r = by_obs.get(obs_id)
+            if r is None:
+                continue
+            life_stage, sex = extract_inat_metadata(obs)
+            r["life_stage"] = life_stage or ""
+            r["sex"] = sex or ""
+            full_desc = obs.get("description") or ""
+            if full_desc and len(full_desc) > len(r.get("description", "")):
+                r["description"] = full_desc
+            r["raw_metadata"] = json.dumps(obs, separators=(",", ":"))
             updated += 1
-            continue
-        obs = results[0]
-        life_stage, sex = extract_inat_metadata(obs)
-        r["life_stage"] = life_stage or ""
-        r["sex"] = sex or ""
-        full_desc = obs.get("description") or ""
-        if full_desc and len(full_desc) > len(r.get("description", "")):
-            r["description"] = full_desc
-        r["raw_metadata"] = json.dumps(obs, separators=(",", ":"))
-        updated += 1
-        if (updated % 100) == 0:
-            log.info("[inat] %d/%d  (life_stage=%r sex=%r)",
-                     updated, len(target), life_stage, sex)
-        time.sleep(1.0)  # iNat 1 req/sec
+        # Mark any obs that didn't come back (deleted on iNat) so we don't
+        # re-query them next run.
+        for missing in (set(chunk) - returned_ids):
+            r = by_obs.get(missing)
+            if r is not None and not r.get("raw_metadata"):
+                r["raw_metadata"] = "{}"
+                updated += 1
+        log.info("[inat] batch %d-%d  updated=%d  returned=%d/%d",
+                 i, i + len(chunk), updated, len(returned_ids), len(chunk))
+        time.sleep(1.1)  # iNat docs: ≤1 req/sec
     return updated
 
 

@@ -231,6 +231,66 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   animation: pulse 1.4s ease-in-out infinite;
 }
 
+/* Tooltip — explains filter labels that depend on biology jargon.
+   Always positions above the trigger; max-width keeps it readable. */
+.tooltip-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s1);
+}
+.tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  color: var(--accent-sky);
+  font-size: 12px;
+  cursor: help;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity var(--timing-base) var(--ease-out);
+}
+.tooltip-icon:hover, .tooltip-icon:focus-visible { opacity: 1; outline: none; }
+.tooltip-bubble {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 280px;
+  min-width: 200px;
+  width: max-content;
+  padding: var(--s3) var(--s4);
+  background: var(--surface-2);
+  border: 1px solid var(--accent-lilac);
+  border-radius: var(--r-2xl);
+  box-shadow: var(--shadow-panel);
+  font-family: var(--font-sans), sans-serif;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-primary);
+  z-index: 200;
+  pointer-events: none;
+  text-transform: none;  /* override parent lowercasing */
+}
+.tooltip-bubble::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--accent-lilac);
+}
+.tooltip-bubble strong {
+  color: var(--accent-pink);
+  font-weight: 600;
+}
+
 /* Generic multi-select popover — used by view / life stage / sex filters.
    Same visual treatment as InstitutionPicker; kept as a separate class so
    either can evolve independently. */

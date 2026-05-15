@@ -17,6 +17,7 @@ import csv
 import hashlib
 import logging
 import re
+import sys
 import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -25,6 +26,11 @@ from pathlib import Path
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+# Bump csv field-size cap so raw_metadata JSON (sometimes 200KB+ for iNat
+# observations with many identifications/comments) doesn't trip the default
+# 128KB limit. Applied globally for any script that imports common.
+csv.field_size_limit(sys.maxsize)
 
 # ───────────────────────── paths + constants ────────────────────
 

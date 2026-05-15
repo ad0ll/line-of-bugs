@@ -30,14 +30,15 @@ S = session()
 BASE = "https://api.bugwoodcloud.org/v2"
 MAX_WORKERS = 6
 
-# Order IDs split into 2 batches of 12 because Bugwood's API Gateway / Lambda
-# backend reliably 504s when the order= filter has all 24 IDs (29 s timeout,
-# 3/3 trials). Batches of ≤22 work; 22 sits at the edge so we use 12 for safety
-# margin (each request returns in ~5-7 s, ~0.6 s after Lambda warm-up).
-# Verified empirically 2026-05-14.
+# Order IDs split into 4 batches of 6. Originally 2 batches of 12 worked,
+# but in May 2026 the Bugwood API Gateway started timing out (HTTP 504)
+# more aggressively on the CC-BY-NC variant of the same query. Halving
+# the batch size keeps each request well under the gateway timeout.
 INSECT_ORDER_BATCHES = [
-    "39,131,98,92,58,159,121,155,238,369,152,139",   # 12 IDs: big orders + Mantodea/Neuroptera
-    "52,220,169,341,189,137,340,142,347,343,40,346", # 12 IDs: smaller orders + Collembola/Microcoryphia
+    "39,131,98,92,58,159",   # Coleoptera + Lepidoptera + Hymenoptera + Hemiptera + Diptera + Odonata
+    "121,155,238,369,152,139", # Orthoptera + Mantodea + Phasmatodea + Neuroptera + Blattodea + Dermaptera
+    "52,220,169,341,189,137", # Trichoptera + Ephemeroptera + Plecoptera + smaller orders
+    "340,142,347,343,40,346", # remaining smaller orders
 ]
 GOOD_DESCRIPTORS = "7,9,57,47,8,77"
 
