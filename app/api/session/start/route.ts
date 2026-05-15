@@ -5,6 +5,12 @@ import { setPool } from "@/lib/session-pools";
 const SUBJECT_TYPES = new Set(["nature", "specimen", "both"]);
 const REPEAT_MODES = new Set(["default", "never-repeat-animals", "allow-different-angles"]);
 
+function readList(v: unknown): string[] {
+  if (Array.isArray(v)) return v.filter((x): x is string => typeof x === "string");
+  if (typeof v === "string" && v) return v.split(",").filter(Boolean);
+  return [];
+}
+
 export async function POST(req: Request) {
   let body: unknown;
   try {
@@ -30,6 +36,9 @@ export async function POST(req: Request) {
   const items = await buildSessionPool({
     subjectType: subjectType as "nature" | "specimen" | "both",
     repeatMode: repeatMode as "default" | "never-repeat-animals" | "allow-different-angles",
+    views: readList(b.views),
+    lifeStages: readList(b.lifeStages),
+    sexes: readList(b.sexes),
   });
 
   if (items.length === 0) {

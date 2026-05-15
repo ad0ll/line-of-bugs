@@ -10,6 +10,7 @@ Production refactor (2026-05-14):
     not necessarily same subject).
 """
 from __future__ import annotations
+import json
 import re
 import sys
 import time
@@ -152,7 +153,7 @@ def parse_detail(html: str) -> dict | None:
     elif inline_match:
         derived = re.sub(r"i\.jpg$", ".jpg", inline_match.group(1))
         medium = SITE + derived
-    return {"imgnum": imgnum, "caption": caption[:500], "photographer": photog,
+    return {"imgnum": imgnum, "caption": caption, "photographer": photog,
             "hires": hires, "medium": medium}
 
 
@@ -212,7 +213,7 @@ def main() -> int:
         filename = build_filename(
             source="usda-ars",
             source_id=imgnum,
-            subject_type="nature",
+            subject_state="wild",
             common_name=alt,
             scientific="",
         )
@@ -270,10 +271,15 @@ def main() -> int:
             "taxon_order": "",
             "taxon_species": "",
             "common_name": m["alt"],
-            "subject_type": "nature",
+            "subject_state": "wild",
             "view_label": "",
+            "life_stage": "",
+            "sex": "",
+            "host_organism": "",
+            "specimen_condition": "",
             "description": info["caption"],
             "captured_date": "",
+            "raw_metadata": json.dumps(info, separators=(",", ":")),
         })
         kept += 1
         if (kept % 10) == 0:

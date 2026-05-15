@@ -9,9 +9,14 @@ interface Props {
   q: string;
   subject: "nature" | "specimen" | "both";
   institutions: string[];
+  views: string[];
+  lifeStages: string[];
+  sexes: string[];
 }
 
-export function InfiniteScroller({ initial, q, subject, institutions }: Props) {
+export function InfiniteScroller({
+  initial, q, subject, institutions, views, lifeStages, sexes,
+}: Props) {
   const [rows, setRows] = useState<GalleryRow[]>(initial.rows);
   const [page, setPage] = useState(initial.page);
   const [hasMore, setHasMore] = useState(initial.hasMore);
@@ -34,6 +39,9 @@ export function InfiniteScroller({ initial, q, subject, institutions }: Props) {
       if (q) params.set("q", q);
       if (subject !== "both") params.set("subject", subject);
       if (institutions.length > 0) params.set("inst", institutions.join(","));
+      if (views.length > 0) params.set("view", views.join(","));
+      if (lifeStages.length > 0) params.set("life", lifeStages.join(","));
+      if (sexes.length > 0) params.set("sex", sexes.join(","));
       const url = `/api/gallery/page/${next}?${params}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`page ${next} failed: ${res.status}`);
@@ -46,7 +54,7 @@ export function InfiniteScroller({ initial, q, subject, institutions }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, page, q, subject, institutions]);
+  }, [loading, hasMore, page, q, subject, institutions, views, lifeStages, sexes]);
 
   useEffect(() => {
     const el = sentinelRef.current;

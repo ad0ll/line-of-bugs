@@ -1,14 +1,29 @@
-import { listInstitutions, listSubjectTypeCounts } from '@/lib/queries/gallery';
+import {
+  listInstitutions,
+  listSubjectTypeCounts,
+  listViewCounts,
+  listLifeStageCounts,
+  listSexCounts,
+} from '@/lib/queries/gallery';
 import { FilterChipsControls } from './FilterChipsControls';
 
 export async function FilterChipsBar() {
-  const [subjectCounts, institutions] = await Promise.all([
+  const [subjectCounts, institutions, views, lifeStages, sexes] = await Promise.all([
     listSubjectTypeCounts(),
     listInstitutions(),
+    listViewCounts(),
+    listLifeStageCounts(),
+    listSexCounts(),
   ]);
   return (
     <div className="filter-chips-bar">
-      <FilterChipsControls subjectCounts={subjectCounts} institutions={institutions} />
+      <FilterChipsControls
+        subjectCounts={subjectCounts}
+        institutions={institutions}
+        viewCounts={views}
+        lifeStageCounts={lifeStages}
+        sexCounts={sexes}
+      />
     </div>
   );
 }

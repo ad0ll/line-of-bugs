@@ -11,6 +11,7 @@ Production refactor (2026-05-14):
   * Per-pass summary + non-zero exit on no progress.
 """
 from __future__ import annotations
+import json
 import re
 import sys
 import time
@@ -40,11 +41,32 @@ INSECT_ORDER_BATCHES = [
 ]
 GOOD_DESCRIPTORS = "7,9,57,47,8,77"
 
+# Bugwood descriptorname → normalized life_stage enum.
+# `Multiple Life Stages` is excluded by GOOD_DESCRIPTORS, so we don't map it.
+BUGWOOD_DESCRIPTOR_TO_LIFE_STAGE = {
+    "Adult(s)": "adult",
+    "Larva(e)": "larva",
+    "Nymph(s)": "nymph",
+    "Pupa(e)": "pupa",
+    "Egg(s)": "egg",
+    "Cocoon(s)": "cocoon",
+    "Immature(s)": "juvenile",
+}
+BUGWOOD_GENDER_TO_SEX = {
+    "Male": "male", "Female": "female", "Worker": "worker",
+    "male": "male", "female": "female", "worker": "worker",
+}
+
 PASSES = [
-    ("nature",   "2,3", "cc-by-3.0",    "https://creativecommons.org/licenses/by/3.0/us/", 420),
-    ("nature",   "1,4", "cc-by-nc-3.0", "https://creativecommons.org/licenses/by-nc/3.0/us/", 280),
-    ("specimen", "2,3", "cc-by-3.0",    "https://creativecommons.org/licenses/by/3.0/us/", 180),
-    ("specimen", "1,4", "cc-by-nc-3.0", "https://creativecommons.org/licenses/by-nc/3.0/us/", 120),
+    # Round 4 (2026-05-15): bumped targets ~11x to grow Bugwood by ~10k.
+    # division=1 + the curated ORDER_BATCHES below should keep us strictly
+    # in Insecta — the `detect_order` guard rejects records that don't
+    # match any known insect-order keyword (belt + suspenders against
+    # arachnids slipping in).
+    ("wild",     "2,3", "cc-by-3.0",    "https://creativecommons.org/licenses/by/3.0/us/", 5000),
+    ("wild",     "1,4", "cc-by-nc-3.0", "https://creativecommons.org/licenses/by-nc/3.0/us/", 3500),
+    ("specimen", "2,3", "cc-by-3.0",    "https://creativecommons.org/licenses/by/3.0/us/", 1800),
+    ("specimen", "1,4", "cc-by-nc-3.0", "https://creativecommons.org/licenses/by-nc/3.0/us/", 1300),
 ]
 
 MATING_PATTERNS = re.compile(
@@ -140,7 +162,7 @@ def view_to_label(view: str) -> str:
 
 
 def run_pass(mw: ManifestWriter, existing_in_bucket: int,
-             subject_type: str, license_list: str,
+             subject_state: str, license_list: str,
              lic_code: str, lic_url: str, target: int, label: str,
              api_guard: ConsecutiveFailureGuard) -> int:
     """Returns number added in this pass.
@@ -152,9 +174,9 @@ def run_pass(mw: ManifestWriter, existing_in_bucket: int,
                  label, existing_in_bucket, target)
         return 0
     log.info("=== bugwood %s (%s)  need %d / target %d ===",
-             subject_type, lic_code, needed, target)
+             subject_state, lic_code, needed, target)
 
-    voucher_value = 1 if subject_type == "specimen" else 0
+    voucher_value = 1 if subject_state == "specimen" else 0
     kept = 0
     pages_per_batch = [1] * len(INSECT_ORDER_BATCHES)
     exhausted = [False] * len(INSECT_ORDER_BATCHES)
@@ -202,6 +224,12 @@ def run_pass(mw: ManifestWriter, existing_in_bucket: int,
             if mw.has(image_id): continue
             desc_clean = html_strip(img.get("description") or "")
             if MATING_PATTERNS.search(desc_clean): continue
+            # Spider/arachnid guard: skip records that don't map to a known
+            # insect order. detect_order() only matches insect-order keywords;
+            # anything else (including any arachnids that may have slipped
+            # through division=1) returns "" and gets rejected here.
+            if not detect_order(img):
+                continue
             detail = fetch_detail(imgnum)
             collection_id = build_collection_id(detail, img)
             res_str = img.get("maxresolutionpath") or "3072x2048"
@@ -217,7 +245,7 @@ def run_pass(mw: ManifestWriter, existing_in_bucket: int,
             filename = build_filename(
                 source="bugwood",
                 source_id=imgnum,
-                subject_type=subject_type,
+                subject_state=subject_state,
                 common_name=subj_name,
                 scientific=scientific,
                 suffix_hint=view_label,
@@ -253,12 +281,16 @@ def run_pass(mw: ManifestWriter, existing_in_bucket: int,
                 job["url"] = url2
 
             m = job["_meta"]; img = m["img"]; detail = m["detail"]
-            descriptor_name = (img.get("descriptorname") or "").strip()
+            descriptor_name = (img.get("descriptorname") or detail.get("descriptorname") or "").strip()
             ctx_bits = [b for b in (descriptor_name, m["image_view"]) if b]
             ctx_prefix = " · ".join(ctx_bits)
             description = (f"{ctx_prefix}. {m['desc_clean']}" if ctx_prefix and m["desc_clean"]
                            else (ctx_prefix or m["desc_clean"]))
             citation = (img.get("citation") or "").strip().rstrip(",")
+            spec = detail.get("specimen") or {}
+            host_organism = (img.get("hostname") or detail.get("hostname") or "").strip()
+            gendercaste = (img.get("gendercaste") or detail.get("gendercaste") or
+                           detail.get("gender") or "").strip()
             mw.write({
                 "image_id": m["image_id"],
                 "collection_id": m["collection_id"],
@@ -281,10 +313,15 @@ def run_pass(mw: ManifestWriter, existing_in_bucket: int,
                 "taxon_order": detect_order(img),
                 "taxon_species": m["scientific"],
                 "common_name": m["subj_name"],
-                "subject_type": subject_type,
+                "subject_state": subject_state,
                 "view_label": m["view_label"],
-                "description": description[:500],
+                "life_stage": BUGWOOD_DESCRIPTOR_TO_LIFE_STAGE.get(descriptor_name, ""),
+                "sex": BUGWOOD_GENDER_TO_SEX.get(gendercaste, ""),
+                "host_organism": host_organism,
+                "specimen_condition": (spec.get("specimencondition") or "").strip(),
+                "description": description,
                 "captured_date": (detail.get("dateacquired") or "")[:10],
+                "raw_metadata": json.dumps({"listing": img, "detail": detail}, separators=(",", ":")),
             })
             kept += 1
             if (kept % 25) == 0:
@@ -298,19 +335,19 @@ def main() -> int:
     mw = ManifestWriter("bugwood")
     log.info("Bugwood: resuming with %d already in manifest", mw.count())
 
-    bucket_counts = manifest_count_by(mw.path, "license", "subject_type")
+    bucket_counts = manifest_count_by(mw.path, "license", "subject_state")
     api_guard = ConsecutiveFailureGuard(threshold=5, name="bugwood-listing")
 
     summary: list[tuple[str, int, int, int]] = []
     total_added = 0
-    for subject_type, lic_ids, lic_code, lic_url, target in PASSES:
-        label = f"{subject_type[:3]}-{lic_code}"
-        existing = bucket_counts.get((lic_code, subject_type), 0)
+    for subject_state, lic_ids, lic_code, lic_url, target in PASSES:
+        label = f"{subject_state[:3]}-{lic_code}"
+        existing = bucket_counts.get((lic_code, subject_state), 0)
         if api_guard.tripped:
             log.error("api guard tripped; skipping %s", label)
             summary.append((label, target, existing, 0))
             continue
-        added = run_pass(mw, existing, subject_type, lic_ids, lic_code, lic_url, target, label, api_guard)
+        added = run_pass(mw, existing, subject_state, lic_ids, lic_code, lic_url, target, label, api_guard)
         summary.append((label, target, existing + added, added))
         total_added += added
         log.info("[%s] FINAL +%d (now %d / target %d)", label, added, existing + added, target)

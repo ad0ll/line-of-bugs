@@ -8,6 +8,7 @@ Production refactor (2026-05-14):
   * Per-order summary at end.
 """
 from __future__ import annotations
+import json
 import os
 import re
 import sys
@@ -50,6 +51,30 @@ ORDERS = [
 ]
 
 EVIDENCE_DROP = {23, 25, 26, 27, 28, 29, 31, 32, 35}
+
+# iNat controlled-term mappings into our normalized enums.
+# attr_id=1 (Life Stage). Subimago + Teneral both map to adult (immature
+# flying forms of mayflies / newly-emerged adults respectively).
+INAT_LIFE_STAGE_VALUE_TO_ENUM = {
+    2: "adult", 3: "adult", 4: "pupa", 5: "nymph",
+    6: "larva", 7: "egg", 8: "juvenile", 16: "adult",
+}
+# attr_id=9 (Sex)
+INAT_SEX_VALUE_TO_ENUM = {10: "female", 11: "male", 20: "unknown"}
+
+
+def extract_inat_metadata(obs: dict) -> tuple[str | None, str | None]:
+    """Extract (life_stage, sex) from an observation's annotations array."""
+    life_stage: str | None = None
+    sex: str | None = None
+    for ann in (obs.get("annotations") or []):
+        attr = ann.get("controlled_attribute_id")
+        val = ann.get("controlled_value_id")
+        if attr == 1 and val in INAT_LIFE_STAGE_VALUE_TO_ENUM and life_stage is None:
+            life_stage = INAT_LIFE_STAGE_VALUE_TO_ENUM[val]
+        elif attr == 9 and val in INAT_SEX_VALUE_TO_ENUM and sex is None:
+            sex = INAT_SEX_VALUE_TO_ENUM[val]
+    return life_stage, sex
 
 MATING_PATTERNS = re.compile(
     r"\b(mating|copul|in cop|in tandem|tandem|courtship|swarm|aggregation|"
@@ -191,7 +216,7 @@ def fetch_order(mw: ManifestWriter, existing_by_label: Counter,
             filename = build_filename(
                 source="inaturalist",
                 source_id=str(photo_id),
-                subject_type="nature",
+                subject_state="wild",
                 common_name=common_name,
                 scientific=scientific,
             )
@@ -215,6 +240,7 @@ def fetch_order(mw: ManifestWriter, existing_by_label: Counter,
             obs = meta["obs"]; ph = meta["photo"]; taxon = meta["taxon"]
             lic_code, lic_url = LICENSE_MAP[ph["license_code"]]
             user = obs.get("user") or {}
+            life_stage, sex = extract_inat_metadata(obs)
             mw.write({
                 "image_id": meta["image_id"],
                 "collection_id": f"inat-obs-{obs['id']}",
@@ -237,10 +263,15 @@ def fetch_order(mw: ManifestWriter, existing_by_label: Counter,
                 "taxon_order": label,
                 "taxon_species": meta["scientific"],
                 "common_name": meta["common_name"],
-                "subject_type": "nature",
+                "subject_state": "wild",
                 "view_label": "",
-                "description": (obs.get("description") or "")[:500],
+                "life_stage": life_stage or "",
+                "sex": sex or "",
+                "host_organism": "",
+                "specimen_condition": "",
+                "description": (obs.get("description") or ""),
                 "captured_date": (obs.get("observed_on") or "")[:10],
+                "raw_metadata": json.dumps(obs, separators=(",", ":")),
             })
             kept_run += 1
             if (kept_run % 25) == 0:

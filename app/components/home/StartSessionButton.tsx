@@ -7,9 +7,14 @@ interface Props {
   intervalSec: number;
   subjectType: "nature" | "specimen" | "both";
   repeatMode: RepeatMode;
+  views: string[];
+  lifeStages: string[];
+  sexes: string[];
 }
 
-export function StartSessionButton({ intervalSec, subjectType, repeatMode }: Props) {
+export function StartSessionButton({
+  intervalSec, subjectType, repeatMode, views, lifeStages, sexes,
+}: Props) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +31,10 @@ export function StartSessionButton({ intervalSec, subjectType, repeatMode }: Pro
       const res = await fetch("/api/session/start", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ intervalSec, subjectType, repeatMode }),
+        body: JSON.stringify({
+          intervalSec, subjectType, repeatMode,
+          views, lifeStages, sexes,
+        }),
       });
       if (!res.ok) {
         setError(await res.text());

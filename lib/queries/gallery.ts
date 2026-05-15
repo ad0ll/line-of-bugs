@@ -26,8 +26,30 @@ export type SearchGalleryArgs = {
   q: string;
   subject: "nature" | "specimen" | "both";
   institutions: string[];
+  // Multi-select arrays. Empty array = no filter on that axis.
+  // The literal string "unknown" matches NULL or empty-string DB values
+  // (since most older iNat rows lack annotation-derived metadata).
+  views: string[];
+  lifeStages: string[];
+  sexes: string[];
   page: number;
 };
+
+function inOrUnknown(column: SQL, values: string[]): SQL {
+  // Helper: build `column IN (...)` clause that also handles the synthetic
+  // "unknown" sentinel mapping to NULL OR ''.
+  const real = values.filter((v) => v !== "unknown");
+  const includeUnknown = values.includes("unknown");
+  const parts: SQL[] = [];
+  if (real.length > 0) {
+    parts.push(sql`${column} IN (${sql.join(real.map((v) => sql`${v}`), sql`, `)})`);
+  }
+  if (includeUnknown) {
+    parts.push(sql`(${column} IS NULL OR ${column} = '')`);
+  }
+  if (parts.length === 0) return sql`1=1`;
+  return sql.join(parts, sql` OR `);
+}
 
 export type SearchGalleryResult = {
   rows: GalleryRow[];
@@ -71,6 +93,16 @@ export async function searchGallery(args: SearchGalleryArgs): Promise<SearchGall
   if (args.institutions.length > 0) {
     const list = sql.join(args.institutions.map((x) => sql`${x}`), sql`, `);
     filters.push(sql`i.institution IN (${list})`);
+  }
+
+  if (args.views.length > 0) {
+    filters.push(sql`(${inOrUnknown(sql`i.view_label`, args.views)})`);
+  }
+  if (args.lifeStages.length > 0) {
+    filters.push(sql`(${inOrUnknown(sql`i.life_stage`, args.lifeStages)})`);
+  }
+  if (args.sexes.length > 0) {
+    filters.push(sql`(${inOrUnknown(sql`i.sex`, args.sexes)})`);
   }
 
   if (args.q.trim() && !ftsQuery) {
@@ -158,6 +190,42 @@ export async function listSubjectTypeCounts(): Promise<SubjectTypeCounts> {
   const nature = wild + captive;
   return { nature, specimen, both: nature + specimen };
 }
+
+export type FacetRow = { name: string; count: number };
+
+/**
+ * Generic facet count for view_label / life_stage / sex.
+ * NULL or empty-string values are bucketed under "unknown" so the UI
+ * can show a literal chip rather than something cryptic.
+ */
+function listFacet(column: string, cacheKey: string) {
+  return async function (): Promise<FacetRow[]> {
+    "use cache";
+    cacheTag(cacheKey);
+    cacheLife("days");
+    const rows = db.all<FacetRow>(sql`
+      SELECT
+        CASE
+          WHEN ${sql.raw(`i.${column}`)} IS NULL OR ${sql.raw(`i.${column}`)} = '' THEN 'unknown'
+          ELSE ${sql.raw(`i.${column}`)}
+        END AS name,
+        COUNT(*) AS count
+      FROM images i
+      WHERE i.hidden = 0
+        AND NOT EXISTS (
+          SELECT 1 FROM reports r
+          WHERE r.image_id = i.image_id AND r.resolved_at IS NULL
+        )
+      GROUP BY name
+      ORDER BY (CASE WHEN name = 'unknown' THEN 1 ELSE 0 END), count DESC, name ASC
+    `);
+    return rows;
+  };
+}
+
+export const listViewCounts = listFacet("view_label", "view-counts");
+export const listLifeStageCounts = listFacet("life_stage", "life-stage-counts");
+export const listSexCounts = listFacet("sex", "sex-counts");
 
 export type SpeciesRow = {
   common_name: string | null;

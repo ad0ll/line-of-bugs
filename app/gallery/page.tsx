@@ -11,14 +11,22 @@ function readArg<T extends string>(v: string | string[] | undefined, fallback: T
   return v ?? fallback;
 }
 
+function readList(v: string | string[] | undefined): string[] {
+  const raw = Array.isArray(v) ? v[0] : v;
+  if (!raw) return [];
+  return raw.split(',').filter(Boolean);
+}
+
 export default async function GalleryPage({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;
   const q = readArg(sp.q, '') as string;
   const subjectRaw = readArg(sp.subject, 'both');
   const subject: 'nature' | 'specimen' | 'both' =
     subjectRaw === 'nature' || subjectRaw === 'specimen' ? subjectRaw : 'both';
-  const instStr = readArg(sp.inst, '') as string;
-  const institutions = instStr ? instStr.split(',').filter(Boolean) : [];
+  const institutions = readList(sp.inst);
+  const views = readList(sp.view);
+  const lifeStages = readList(sp.life);
+  const sexes = readList(sp.sex);
   const pageRaw = readArg(sp.page, '1') as string;
   const page = Math.max(1, parseInt(pageRaw, 10) || 1);
 
@@ -33,7 +41,15 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
       </header>
 
       <Suspense fallback={<GallerySkeleton />}>
-        <GalleryGrid q={q} subject={subject} institutions={institutions} page={page} />
+        <GalleryGrid
+          q={q}
+          subject={subject}
+          institutions={institutions}
+          views={views}
+          lifeStages={lifeStages}
+          sexes={sexes}
+          page={page}
+        />
       </Suspense>
 
       <HoverZoomMount />

@@ -231,6 +231,65 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   animation: pulse 1.4s ease-in-out infinite;
 }
 
+/* Generic multi-select popover — used by view / life stage / sex filters.
+   Same visual treatment as InstitutionPicker; kept as a separate class so
+   either can evolve independently. */
+.filter-popover { position: relative; display: inline-block; }
+.filter-popover-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: var(--surface-1);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-3xl);
+  padding: var(--s4);
+  z-index: 100;
+  min-width: 220px;
+  max-height: 360px;
+  overflow-y: auto;
+  box-shadow: var(--shadow-panel);
+}
+.filter-popover-list { list-style: none; padding: 0; margin: 0; }
+.filter-popover-list li label {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--s4);
+  align-items: center;
+  padding: var(--s2) var(--s4);
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+.filter-popover-list li label:hover { background: var(--accent-pink-soft); }
+.filter-popover-name { text-transform: lowercase; }
+.filter-popover-count {
+  font-family: var(--font-mono), monospace;
+  color: var(--text-tertiary);
+  font-size: 0.8rem;
+}
+.filter-popover-clear {
+  background: transparent;
+  border: none;
+  color: var(--accent-pink);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: var(--s2) var(--s4);
+  margin-top: var(--s4);
+}
+
+/* Home-page filter row + live count */
+.home-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+.home-pool-count {
+  margin: var(--s3) 0 0 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
 .institution-picker { position: relative; }
 .institution-popover {
   position: absolute;
@@ -622,15 +681,40 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   animation: float-slow 9s ease-in-out infinite reverse;
 }
 
+/* Fluid layout: single column on mobile; sticky-header + form column at ≥960px.
+   Form column caps at 580px so radio cards stay legible; header flexes with the viewport. */
 .home-main {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: var(--s20) var(--s10) var(--s12);
-  display: flex;
-  flex-direction: column;
-  gap: var(--s12);
+  min-height: 100dvh;
+  padding: clamp(var(--s8), 4vw, var(--s20));
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: start;
+  gap: clamp(var(--s8), 3vw, var(--s12));
   position: relative;
   z-index: 1;
+}
+@media (min-width: 960px) {
+  .home-main {
+    grid-template-columns: minmax(320px, 1fr) minmax(440px, 580px);
+    column-gap: clamp(var(--s12), 6vw, var(--s24));
+    row-gap: var(--s8);
+    align-items: start;
+  }
+  .home-main > header {
+    grid-column: 1;
+    grid-row: 1;
+    position: sticky;
+    top: clamp(var(--s10), 6vw, var(--s24));
+    align-self: start;
+  }
+  .home-main > .home-section,
+  .home-main > .home-start,
+  .home-main > .home-start-error,
+  .home-main > .home-gallery-link {
+    grid-column: 2;
+  }
+  .home-main > .home-start { align-self: start; margin-top: var(--s4); }
+  .home-main > .home-gallery-link { text-align: left; padding-top: var(--s2); }
 }
 
 .home-title {

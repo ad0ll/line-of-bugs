@@ -5,11 +5,18 @@ export interface GalleryGridProps {
   q: string;
   subject: 'nature' | 'specimen' | 'both';
   institutions: string[];
+  views: string[];
+  lifeStages: string[];
+  sexes: string[];
   page: number;
 }
 
-export async function GalleryGrid({ q, subject, institutions, page }: GalleryGridProps) {
-  const initial = await searchGallery({ q, subject, institutions, page });
+export async function GalleryGrid({
+  q, subject, institutions, views, lifeStages, sexes, page,
+}: GalleryGridProps) {
+  const initial = await searchGallery({
+    q, subject, institutions, views, lifeStages, sexes, page,
+  });
 
   if (initial.totalCount === 0) {
     return (
@@ -38,6 +45,9 @@ export async function GalleryGrid({ q, subject, institutions, page }: GalleryGri
         q={q}
         subject={subject}
         institutions={institutions}
+        views={views}
+        lifeStages={lifeStages}
+        sexes={sexes}
       />
     </>
   );

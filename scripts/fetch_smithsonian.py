@@ -185,7 +185,7 @@ def main() -> int:
             filename = build_filename(
                 source="smithsonian",
                 source_id=usnm_clean,
-                subject_type="specimen",
+                subject_state="specimen",
                 common_name="",
                 scientific=sci,
                 suffix_hint=view_hint,
@@ -231,10 +231,15 @@ def main() -> int:
                 "taxon_order": order,
                 "taxon_species": sci,
                 "common_name": "",
-                "subject_type": "specimen",
+                "subject_state": "specimen",
                 "view_label": m["view"],
+                "life_stage": "adult",
+                "sex": "",
+                "host_organism": "",
+                "specimen_condition": "Preserved (museum specimen)",
                 "description": "",
                 "captured_date": date_str,
+                "raw_metadata": json.dumps(rec, separators=(",", ":")),
             })
             kept_media += 1
             any_kept_this_record = True
