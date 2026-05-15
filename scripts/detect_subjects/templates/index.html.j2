@@ -43,21 +43,41 @@
   /* Mouse-follow zoom popup. A single global #zoomPopup is created in JS
      and positioned next to the cursor on mouseover. Capped at 560×560
      with natural aspect ratio preserved. */
+  /* Zoom popup is a wrapper so we can render a bbox overlay alongside the enlarged image. */
   #zoomPopup {
-    position: fixed;
+    position: fixed; z-index: 1000;
+    pointer-events: none; display: none;
+    line-height: 0;
+  }
+  #zoomPopup img {
+    display: block;
     width: auto; height: auto;
-    max-width: 38vw; max-height: 70vh;
+    max-width: 50vw; max-height: 90vh;
     object-fit: contain;
-    z-index: 1000;
-    background: #0d0c10; border: 2px solid #FF6EC7; border-radius: 4px;
+    background: #0d0c10;
+    border: 0.2vw solid #FF6EC7; border-radius: 0.3vw;
     box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.7);
+  }
+  #zoomPopup .zoom-bbox {
+    position: absolute;
+    border: 0.25vw solid #FF6EC7;
+    box-sizing: border-box;
     pointer-events: none;
     display: none;
   }
-  /* "Should be" override row */
-  .should-be { display: flex; gap: 4px; margin-top: 6px; align-items: center; font-size: 11px; color: #888; }
-  .should-be select { flex: 1; background: #1a1820; color: #f5f5f5; border: 1px solid #444; border-radius: 4px; padding: 4px 6px; font-size: 11px; cursor: pointer; }
-  .should-be select.set { border-color: #f59e0b; color: #f59e0b; }
+  /* "Should be" override row — buttons instead of a dropdown for fast clicking */
+  .should-be { display: grid; grid-template-columns: auto repeat(6, 1fr) auto; gap: 0.3vw; margin-top: 0.5vw; align-items: stretch; font-size: 0.8vw; color: #888; }
+  @media (max-width: 1400px) { .should-be { font-size: 11px; gap: 4px; margin-top: 6px; } }
+  .should-be > .label { display: flex; align-items: center; padding: 0 0.3vw; }
+  .should-be button {
+    padding: 0.35vw 0.2vw; border: 1px solid #444; background: #1a1820;
+    color: #aaa; border-radius: 4px; cursor: pointer;
+    font-size: inherit; font-weight: 400; white-space: nowrap;
+  }
+  @media (max-width: 1400px) { .should-be button { padding: 4px 2px; } }
+  .should-be button:hover { color: #f5f5f5; border-color: #666; }
+  .should-be button.active { background: #f59e0b; color: #0d0c10; border-color: #f59e0b; font-weight: 600; }
+  .should-be .clear { color: #666; font-weight: 700; }
   /* Help blurb */
   .help { font-size: 12px; color: #aaa; padding: 8px 24px; background: #1a1820; border-bottom: 1px solid #28252e; }
   .help code { background: #0d0c10; padding: 1px 5px; border-radius: 3px; color: #FF6EC7; font-family: 'JetBrains Mono', monospace; }
@@ -138,6 +158,24 @@ function exportLabels() {
 function fmtPct(n) { return n === null || n === undefined ? "—" : (n * 100).toFixed(1) + "%"; }
 function fmtNum(n, d) { return n === null || n === undefined ? "—" : n.toFixed(d); }
 
+const CLASS_DESC = {
+  good:        "bbox covers 20-50% of frame; bug visible with context (use as-is)",
+  tight:       "bbox covers >50% of frame; bug already fills the frame (use as-is)",
+  wide:        "bbox covers 2-20% of frame; bug small (auto-crop to 30% nature / 60% specimen)",
+  hidden:      "no detection, or conf<0.20, or bbox<2% (don't show; flag for review)",
+  multi_bug:   "2+ distinct detections after NMS (don't crop; flag for review)",
+  camouflaged: "subject and background nearly the same color (LAB ΔE<12)",
+};
+function classTitle(c) { return CLASS_DESC[c] || c; }
+
+const STATUS_DESC = {
+  ok:           "Everything looks correct: bbox + class + crop are all right",
+  "wrong-bbox": "Bbox missed the bug, captured the wrong part, or wrong subject",
+  "wrong-class":"Bbox is fine but the framing class (good/wide/hidden/...) is wrong",
+  "wrong-crop": "Bbox + class are fine but the crop aesthetic is bad (too tight/loose/off-center)",
+  unsure:       "Ambiguous — not sure how to label this one",
+};
+
 function render() {
   const sf = document.getElementById("source").value;
   const qf = document.getElementById("quality").value;
@@ -181,19 +219,18 @@ function render() {
         (r.gt_iou !== null ? ' · gt_iou: ' + r.gt_iou.toFixed(2) : '') +
       '</div>' +
       '<div class="labels">' +
-        '<button class="' + (status === 'ok' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'ok\')">✓ correct</button>' +
-        '<button class="wrong-bbox ' + (status === 'wrong-bbox' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-bbox\')">✗ bbox</button>' +
-        '<button class="wrong-class ' + (status === 'wrong-class' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-class\')">✗ class</button>' +
-        '<button class="wrong-crop ' + (status === 'wrong-crop' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-crop\')">✗ crop</button>' +
-        '<button class="' + (status === 'unsure' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'unsure\')">? unsure</button>' +
+        '<button title="' + STATUS_DESC.ok + '" class="' + (status === 'ok' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'ok\')">✓ correct</button>' +
+        '<button title="' + STATUS_DESC['wrong-bbox'] + '" class="wrong-bbox ' + (status === 'wrong-bbox' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-bbox\')">✗ bbox</button>' +
+        '<button title="' + STATUS_DESC['wrong-class'] + '" class="wrong-class ' + (status === 'wrong-class' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-class\')">✗ class</button>' +
+        '<button title="' + STATUS_DESC['wrong-crop'] + '" class="wrong-crop ' + (status === 'wrong-crop' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-crop\')">✗ crop</button>' +
+        '<button title="' + STATUS_DESC.unsure + '" class="' + (status === 'unsure' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'unsure\')">? unsure</button>' +
       '</div>' +
       '<div class="should-be">' +
-        '<span>should be:</span>' +
-        '<select class="' + (shouldBe ? 'set' : '') + '" onchange="setShouldBe(\'' + r.image_id + '\', this.value)">' +
-          ['', 'good', 'tight', 'wide', 'hidden', 'multi_bug', 'camouflaged']
-            .map(v => '<option value="' + v + '"' + (v === (shouldBe || '') ? ' selected' : '') + '>' + (v || '— (no override)') + '</option>')
-            .join('') +
-        '</select>' +
+        '<span class="label">should be:</span>' +
+        ['good', 'tight', 'wide', 'hidden', 'multi_bug', 'camouflaged'].map(v =>
+          '<button class="' + (shouldBe === v ? 'active' : '') + '" title="' + classTitle(v) + '" onclick="setShouldBe(\'' + r.image_id + '\',\'' + v + '\')">' + v + '</button>'
+        ).join('') +
+        '<button class="clear" title="clear the override" onclick="setShouldBe(\'' + r.image_id + '\',null)">×</button>' +
       '</div>';
     grid.appendChild(div);
   }
@@ -204,17 +241,33 @@ document.getElementById("quality").addEventListener("change", render);
 document.getElementById("sort").addEventListener("change", render);
 render();
 
-// ─── Mouse-follow zoom ────────────────────────────────────────────
-const zoomPopup = document.createElement("img");
+// ─── Mouse-follow zoom (with bbox preserved on originals) ─────────
+const zoomPopup = document.createElement("div");
 zoomPopup.id = "zoomPopup";
+const zoomImg = document.createElement("img");
+const zoomBox = document.createElement("div");
+zoomBox.className = "zoom-bbox";
+zoomPopup.appendChild(zoomImg);
+zoomPopup.appendChild(zoomBox);
 document.body.appendChild(zoomPopup);
-const ZOOM_MARGIN = 16;
+const ZOOM_MARGIN_VW = 1;  // ~1vw margin from cursor
+function vwToPx(v) { return v * window.innerWidth / 100; }
 function isZoomTarget(el) {
-  return el && el.tagName === "IMG" && el.closest(".imgs figure") && !el.classList.contains("zoom-popup");
+  return el && el.tagName === "IMG" && el.closest(".imgs figure");
 }
 document.addEventListener("mouseover", (e) => {
   if (!isZoomTarget(e.target)) return;
-  zoomPopup.src = e.target.src;
+  zoomImg.src = e.target.src;
+  // If the hovered image is the original (inside .bbox-overlay with a .box sibling),
+  // mirror that bbox into the zoom popup. Otherwise hide the bbox.
+  const overlay = e.target.closest(".bbox-overlay");
+  const box = overlay ? overlay.querySelector(".box") : null;
+  if (box) {
+    zoomBox.style.cssText = "position:absolute;box-sizing:border-box;display:block;" + box.style.cssText;
+    zoomBox.style.border = "0.25vw solid #FF6EC7";
+  } else {
+    zoomBox.style.display = "none";
+  }
   zoomPopup.style.display = "block";
 });
 document.addEventListener("mouseout", (e) => {
@@ -223,14 +276,16 @@ document.addEventListener("mouseout", (e) => {
 });
 document.addEventListener("mousemove", (e) => {
   if (zoomPopup.style.display !== "block") return;
-  const zw = zoomPopup.offsetWidth || 560;
-  const zh = zoomPopup.offsetHeight || 560;
-  let x = e.clientX + ZOOM_MARGIN;
-  let y = e.clientY + ZOOM_MARGIN;
-  if (x + zw > window.innerWidth - ZOOM_MARGIN) x = e.clientX - zw - ZOOM_MARGIN;
-  if (y + zh > window.innerHeight - ZOOM_MARGIN) y = window.innerHeight - zh - ZOOM_MARGIN;
-  if (x < ZOOM_MARGIN) x = ZOOM_MARGIN;
-  if (y < ZOOM_MARGIN) y = ZOOM_MARGIN;
+  const r = zoomPopup.getBoundingClientRect();
+  const zw = r.width || vwToPx(50);
+  const zh = r.height || vwToPx(50);
+  const m = vwToPx(ZOOM_MARGIN_VW);
+  let x = e.clientX + m;
+  let y = e.clientY + m;
+  if (x + zw > window.innerWidth - m) x = e.clientX - zw - m;
+  if (y + zh > window.innerHeight - m) y = window.innerHeight - zh - m;
+  if (x < m) x = m;
+  if (y < m) y = m;
   zoomPopup.style.left = x + "px";
   zoomPopup.style.top = y + "px";
 });
