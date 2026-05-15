@@ -126,7 +126,7 @@ export function HomeClient({
         <section className="home-section">
           <h2 className="home-section-title">narrow the pool</h2>
           <div className="home-filter-row">
-            <Tooltip content={TOOLTIPS.view.content}>
+            <Tooltip content={TOOLTIPS.view.content} showIcon={false}>
               <FilterPopover
                 idleLabel="view: all"
                 selectedLabel={(n) => `view: ${n} selected`}
@@ -136,7 +136,7 @@ export function HomeClient({
                 onChange={setViews}
               />
             </Tooltip>
-            <Tooltip content={TOOLTIPS.lifeStage.content}>
+            <Tooltip content={TOOLTIPS.lifeStage.content} showIcon={false}>
               <FilterPopover
                 idleLabel="life stage: all"
                 selectedLabel={(n) => `life: ${n} selected`}
@@ -146,7 +146,7 @@ export function HomeClient({
                 onChange={setLife}
               />
             </Tooltip>
-            <Tooltip content={TOOLTIPS.sex.content}>
+            <Tooltip content={TOOLTIPS.sex.content} showIcon={false}>
               <FilterPopover
                 idleLabel="sex: all"
                 selectedLabel={(n) => `sex: ${n} selected`}

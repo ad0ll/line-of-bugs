@@ -1,6 +1,11 @@
 import { test, expect } from "@playwright/test";
 
-test.use({ httpCredentials: { username: "admin", password: "dev-pass" } });
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+if (!ADMIN_PASSWORD) {
+  throw new Error("ADMIN_PASSWORD env var is required for admin-resolve e2e (no default — security smell)");
+}
+
+test.use({ httpCredentials: { username: "admin", password: ADMIN_PASSWORD } });
 
 // Serial because each test reports + resolves its own image; running parallel
 // produces tile-pick collisions and shared gallery state.

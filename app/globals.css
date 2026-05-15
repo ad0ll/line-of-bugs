@@ -307,7 +307,9 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   border: 1px solid var(--border-medium);
   border-radius: var(--r-3xl);
   padding: var(--s4);
-  z-index: 100;
+  /* Above the tooltip bubble (200) — when both could appear, the
+     popover is the interactive surface and must win. */
+  z-index: 300;
   min-width: 220px;
   max-height: 360px;
   overflow-y: auto;

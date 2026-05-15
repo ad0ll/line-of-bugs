@@ -100,12 +100,12 @@ function render() {
       ? '<div class="box" style="left:' + (r.bbox_x*100) + '%;top:' + (r.bbox_y*100) + '%;width:' + (r.bbox_w*100) + '%;height:' + (r.bbox_h*100) + '%"></div>'
       : '';
     const cropHTML = r.crop_path
-      ? '<img src="' + ROOT + '/' + r.crop_path + '" alt="">'
+      ? '<img src="' + r.crop_path + '" alt="">'
       : '<div class="nocrop">no crop (' + r.framing_quality + ')</div>';
     div.innerHTML =
       '<div class="imgs">' +
         '<figure>' +
-          '<div class="bbox-overlay"><img src="' + ROOT + '/' + r.original_path + '" alt="">' + boxHTML + '</div>' +
+          '<div class="bbox-overlay"><img src="' + r.original_path + '" alt="">' + boxHTML + '</div>' +
           '<figcaption>original · bbox shown in pink</figcaption>' +
         '</figure>' +
         '<figure>' + cropHTML + '<figcaption>proposed crop · what users see</figcaption></figure>' +

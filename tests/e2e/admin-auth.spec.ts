@@ -9,7 +9,7 @@ test("GET /admin/reports without auth returns 401", async () => {
 
 test("GET /admin/reports with wrong credentials returns 401", async () => {
   const api = await pwRequest.newContext({
-    baseURL: "http://localhost:3000",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
     httpCredentials: { username: "admin", password: "wrong" },
   });
   const res = await api.get("/admin/reports");
@@ -17,9 +17,13 @@ test("GET /admin/reports with wrong credentials returns 401", async () => {
 });
 
 test("GET /admin/reports with valid credentials returns 200", async () => {
+  const password = process.env.ADMIN_PASSWORD;
+  if (!password) {
+    throw new Error("ADMIN_PASSWORD env var is required for this test (no default — that would be a security smell)");
+  }
   const api = await pwRequest.newContext({
-    baseURL: "http://localhost:3000",
-    httpCredentials: { username: "admin", password: "dev-pass" },
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
+    httpCredentials: { username: "admin", password },
   });
   const res = await api.get("/admin/reports");
   expect(res.status()).toBe(200);
