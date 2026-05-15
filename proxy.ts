@@ -19,9 +19,24 @@ function unauthorized() {
 
 export function proxy(req: NextRequest): NextResponse {
   const hash = process.env.ADMIN_PASSWORD_HASH;
-  if (!hash) return unauthorized();
-  const creds = parseBasicAuth(req.headers.get("authorization"));
-  if (!creds || creds.user !== ADMIN_USER) return unauthorized();
-  if (!bcrypt.compareSync(creds.password, hash)) return unauthorized();
+  const auth = req.headers.get("authorization");
+  console.log("[proxy] path=", req.nextUrl.pathname, "hash.len=", hash?.length, "auth.present=", !!auth);
+  if (!hash) {
+    console.log("[proxy] no hash in env");
+    return unauthorized();
+  }
+  const creds = parseBasicAuth(auth);
+  if (!creds || creds.user !== ADMIN_USER) {
+    console.log("[proxy] no creds or user mismatch", { user: creds?.user });
+    return unauthorized();
+  }
+  let ok = false;
+  try {
+    ok = bcrypt.compareSync(creds.password, hash);
+  } catch (e) {
+    console.log("[proxy] bcrypt threw", String(e));
+  }
+  console.log("[proxy] bcrypt ok=", ok);
+  if (!ok) return unauthorized();
   return NextResponse.next();
 }
