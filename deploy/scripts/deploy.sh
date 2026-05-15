@@ -46,22 +46,32 @@ else
     cd "$REL"
 fi
 
-# 2. Link shared paths into the release
-ln -sfn "$APP/shared/data" "$REL/data"
+# 2. Link only .env into the release (NOT data — Turbopack rejects symlinks
+#    pointing outside the project root during build). Data symlink is created
+#    in step 5 after build, inside .next/standalone/ where the runtime cwd is.
 ln -sfn "$APP/shared/.env" "$REL/.env"
+rm -rf "$REL/data"  # in case a prior failed build created it as a real dir
 
-# 3. Install + build
+# 3. Install
 npm ci --prefer-offline --no-audit --no-fund
-npm run build
 
-# 4. Run migrations (drizzle-kit migrate is idempotent, no-op if nothing pending)
+# 4. Build with DATABASE_URL set so prerendered routes (e.g. /admin/reports)
+#    can query the real shared DB. Without this, db/index.ts falls back to
+#    path.resolve("data/db/line-of-bugs.db") which creates an empty fallback DB.
+DATABASE_URL="$APP/shared/data/db/line-of-bugs.db" npm run build
+
+# 5. Link runtime data path INSIDE .next/standalone/ — server.js runs with
+#    cwd at that directory, and the app code uses process.cwd() + 'data/...'.
+ln -sfn "$APP/shared/data" "$REL/.next/standalone/data"
+
+# 6. Run migrations (drizzle-kit migrate is idempotent, no-op if nothing pending)
 DATABASE_URL="$APP/shared/data/db/line-of-bugs.db" npm run db:migrate
 
-# 5. Atomic promote + restart
+# 7. Atomic promote + restart
 ln -sfn "$REL" "$APP/current"
 sudo systemctl restart line-of-bugs
 
-# 6. Keep the last 5 releases for fast rollback (excluding scaffold + current)
+# 8. Keep the last 5 releases for fast rollback (excluding scaffold + current)
 ls -1dt "$APP/releases"/*/ \
     | grep -v 'scaffold' \
     | tail -n +6 \
