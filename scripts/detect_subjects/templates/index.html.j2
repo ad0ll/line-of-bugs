@@ -141,10 +141,7 @@
         <option value="pref-cropped">marked cropped-good</option></select></label>
   <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="random">random</option></select></label>
   <span class="totals" id="totals">{{ total }} images</span>
-  <button onclick="exportLabels()" title="Download all labels as labels.json">Export labels</button>
-  <button onclick="document.getElementById('importLabels').click()" title="Load a previously-exported labels.json (merges)">Import labels</button>
-  <input type="file" id="importLabels" accept=".json" style="display:none">
-  <span id="saveStatus"></span>
+  <span id="saveStatus" title="Each click is saved to data/cache/labels.json on the server"></span>
 </header>
 
 <div class="help">
@@ -166,16 +163,13 @@
   <code>★ original-good</code> bug fills enough of the original frame to draw at full size ·
   <code>★ cropped-good</code> bug is small in the original but the crop rescues it.
   <br><b>Skip:</b> <code>? unsure</code> can't decide — comes back later.
-  <br><span style="color:#666">Hover any image to zoom. Labels persist via localStorage; auto-export every 25 changes.</span>
+  <br><span style="color:#666">Hover any image to zoom. Every click writes to <code>data/cache/labels.json</code> on the server — refresh-safe, port-change-safe.</span>
 </div>
 
 <div class="grid" id="grid"></div>
 
 <script>
 const DATA = {{ data_json }};
-const LABEL_KEY = "framing_labels";
-const SAVE_META_KEY = "framing_labels_meta";
-
 // Flag buttons (multi-select). original-good / cropped-good live in their own
 // mutually-exclusive row and aren't in this list.
 const FLAGS = [
@@ -201,124 +195,75 @@ const FLAG_TITLES = {
 // Suggested-label → preference key for the mutually-exclusive pref row.
 const PREF_LABELS = { "original-good": "original", "cropped-good": "cropped" };
 
-// Migration: map old {status, should_be, looks_good} fields onto the new
-// {flags, preference, reviewed_at} shape. Lossy where the old vocabulary
-// doesn't have a clean equivalent — we tag the entry with `migrated_from`.
-const STATUS_TO_FLAGS = {
-  "ok":          { reviewed: true },
-  "unsure":      { unsure: true },
-  "wrong-bbox":  { flags: ["bbox-wrong"] },
-  "wrong-crop":  { flags: ["crop-too-loose"] },
-  "wrong-class": { flags: [] },
-  "wrong":       { flags: ["other-bad"] },
-};
-const SHOULD_BE_TO_FLAG = {
-  "multi_bug":     "multi-bug",
-  "camouflaged":   "poor-contrast",
-  "poor_contrast": "poor-contrast",
-  "blurred":       "subject-blurred",
-  "hidden":        "no-bug",
-  "no_bug":        "no-bug",
-  "bug_too_small": "bug-too-small",
-};
-const FRAMING_OK = new Set(["good", "tight", "wide"]);
+// Source of truth: server-owned `data/cache/labels.json`. We mirror it
+// in-memory here; every mutation POSTs the full dict back. localStorage
+// is no longer used — origin / port changes don't lose work anymore.
+let LABELS = {};
+let savePending = 0;
 
 function _emptyLabel() {
   return { flags: [], preference: null, unsure: false, reviewed_at: null };
 }
 
-function _upgradeOldLabel(v) {
-  if (typeof v === "string") {
-    const mapped = STATUS_TO_FLAGS[v];
-    const base = _emptyLabel();
-    base.reviewed_at = Date.now();
-    base.migrated_from = "string:" + v;
-    if (mapped) {
-      if (mapped.flags) base.flags = [...mapped.flags];
-      if (mapped.unsure) base.unsure = true;
-    } else {
-      base.flags = ["other-bad"];
-    }
-    return base;
-  }
-  if (v && typeof v === "object") {
-    // New shape (already has `flags` array and no `looks_good`): leave alone.
-    if (Array.isArray(v.flags) && !("looks_good" in v)) return v;
-    // Object with old shape — migrate.
-    const out = _emptyLabel();
-    out.preference = v.preference || null;
-    out.reviewed_at = v.reviewed_at || Date.now();
-    out.migrated_from = "obj:status=" + (v.status || "—") + "/should_be=" + (v.should_be || "—") + (v.looks_good ? "/looks_good" : "");
-    const statusMap = v.status ? STATUS_TO_FLAGS[v.status] : null;
-    if (statusMap) {
-      if (statusMap.flags) out.flags.push(...statusMap.flags);
-      if (statusMap.unsure) out.unsure = true;
-    }
-    if (Array.isArray(v.flags)) {
-      for (const f of v.flags) if (!out.flags.includes(f)) out.flags.push(f);
-    }
-    if (v.should_be) {
-      if (!FRAMING_OK.has(v.should_be)) {
-        const flag = SHOULD_BE_TO_FLAG[v.should_be];
-        if (flag && !out.flags.includes(flag)) out.flags.push(flag);
-      }
-    }
-    return out;
-  }
-  return _emptyLabel();
-}
-
-function getLabels() {
-  const raw = JSON.parse(localStorage.getItem(LABEL_KEY) || "{}");
-  let upgraded = false;
-  for (const k of Object.keys(raw)) {
-    const v = raw[k];
-    if (v && typeof v === "object" && Array.isArray(v.flags) && !("looks_good" in v)) continue;
-    raw[k] = _upgradeOldLabel(v);
-    upgraded = true;
-  }
-  if (upgraded) {
-    try { localStorage.setItem(LABEL_KEY, JSON.stringify(raw)); }
-    catch (e) { /* tolerate */ }
-  }
-  return raw;
-}
-function setLabels(o) {
-  try { localStorage.setItem(LABEL_KEY, JSON.stringify(o)); }
-  catch (e) { notifySaveError(e.message); }
-}
-function getSaveMeta() { return JSON.parse(localStorage.getItem(SAVE_META_KEY) || '{"changes_since_export":0,"last_change":null}'); }
-function setSaveMeta(m) { try { localStorage.setItem(SAVE_META_KEY, JSON.stringify(m)); } catch (e) {} }
 function notifySaveError(msg) {
   const el = document.getElementById("saveStatus");
   if (el) { el.textContent = "save failed: " + msg; el.style.color = "#ef4444"; }
 }
+
 function updateSaveStatus() {
   const el = document.getElementById("saveStatus");
   if (!el) return;
+  if (savePending > 0) {
+    el.style.color = "#f59e0b";
+    el.textContent = "saving" + (savePending > 1 ? " (" + savePending + " queued)" : "") + "…";
+    return;
+  }
   el.style.color = "#666";
-  const m = getSaveMeta();
-  const labels = getLabels();
-  const n = Object.keys(labels).length;
-  const reviewed = Object.values(labels).filter(v => !!v.reviewed_at).length;
-  const t = m.last_change ? new Date(m.last_change).toLocaleTimeString() : "—";
-  el.textContent = `${reviewed} reviewed · ${n} total · last save ${t}${m.changes_since_export ? " · " + m.changes_since_export + " since export" : ""}`;
+  const n = Object.keys(LABELS).length;
+  const reviewed = Object.values(LABELS).filter(v => !!v.reviewed_at).length;
+  el.textContent = reviewed + " reviewed · " + n + " labelled · data/cache/labels.json";
 }
 
-function bumpSaveMeta() {
-  const m = getSaveMeta();
-  m.changes_since_export = (m.changes_since_export || 0) + 1;
-  m.last_change = Date.now();
-  setSaveMeta(m);
-  updateSaveStatus();
-  if (m.changes_since_export >= 25 && m.changes_since_export % 25 === 0) {
-    try { exportLabels(true); } catch (e) { notifySaveError("auto-export: " + e.message); }
+async function loadLabelsFromServer() {
+  try {
+    const res = await fetch("/api/labels", { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (data && typeof data === "object") LABELS = data;
+  } catch (e) {
+    notifySaveError("load: " + e.message);
   }
 }
 
-// Has the user actually started editing this image? Used to decide whether the
-// rendered card shows the system suggestion (sky-blue) or the user's choices
-// (amber).
+// Coalesce concurrent saves: while one POST is in flight, new mutations
+// just queue a re-send when it returns. This keeps the file write rate
+// at one-per-click max even with very fast typing.
+let saveQueued = false;
+async function saveLabelsToServer() {
+  if (savePending > 0) { saveQueued = true; return; }
+  savePending++;
+  updateSaveStatus();
+  while (true) {
+    saveQueued = false;
+    try {
+      const res = await fetch("/api/labels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(LABELS),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status + " " + await res.text());
+    } catch (e) {
+      notifySaveError("save: " + e.message);
+      break;
+    }
+    if (!saveQueued) break;  // nothing new while we were saving — done
+  }
+  savePending--;
+  updateSaveStatus();
+}
+
+// Has the user actually started editing this image? Decides whether the
+// card shows the system suggestion (sky-blue) or the user's choices (amber).
 function isUserEdited(lbl) {
   return !!(lbl && (lbl.user_edited || (lbl.flags && lbl.flags.length > 0) || lbl.preference || lbl.unsure));
 }
@@ -328,127 +273,70 @@ function isUserEdited(lbl) {
 // in sky-blue; the user is editing their own copy.
 function _ensureMaterialized(cur, suggested) {
   if (cur.user_edited) return;
-  // Already has flags or preference from migration: don't overwrite.
   if ((cur.flags && cur.flags.length > 0) || cur.preference || cur.unsure) {
     cur.user_edited = true;
     return;
   }
-  // Suggestion → fill flags + preference.
   for (const s of (suggested || [])) {
-    if (s in PREF_LABELS) {
-      cur.preference = PREF_LABELS[s];
-    } else if (!cur.flags.includes(s)) {
-      cur.flags.push(s);
-    }
+    if (s in PREF_LABELS) cur.preference = PREF_LABELS[s];
+    else if (!cur.flags.includes(s)) cur.flags.push(s);
   }
   cur.user_edited = true;
 }
 
-function _persist(id, cur, all) {
+function _persist(id, cur) {
   cur.reviewed_at = Date.now();
-  // Drop entries that are fully empty AND not user-edited.
   if (!cur.user_edited && cur.flags.length === 0 && !cur.preference && !cur.unsure) {
-    delete all[id];
+    delete LABELS[id];
   } else {
-    all[id] = cur;
+    LABELS[id] = cur;
   }
-  setLabels(all);
-  bumpSaveMeta();
   render();
+  saveLabelsToServer();
 }
 
 function _suggestedFor(id) {
-  // Look up the suggested-labels list from the in-page DATA.
-  // (DATA is small enough that a linear scan per-click is fine.)
   for (const r of DATA) if (r.image_id === id) return r.suggested_labels || [];
   return [];
 }
 
 function toggleFlag(id, flag) {
-  const all = getLabels();
-  const cur = all[id] || _emptyLabel();
+  const cur = LABELS[id] || _emptyLabel();
   _ensureMaterialized(cur, _suggestedFor(id));
   const i = cur.flags.indexOf(flag);
   if (i >= 0) cur.flags.splice(i, 1);
   else cur.flags.push(flag);
   cur.unsure = false;
-  _persist(id, cur, all);
+  _persist(id, cur);
 }
 
 function togglePreference(id, kind) {
-  // kind is 'original' | 'cropped'. Mutually exclusive — picking one clears the other.
-  const all = getLabels();
-  const cur = all[id] || _emptyLabel();
+  const cur = LABELS[id] || _emptyLabel();
   _ensureMaterialized(cur, _suggestedFor(id));
   cur.preference = (cur.preference === kind) ? null : kind;
   cur.unsure = false;
-  _persist(id, cur, all);
+  _persist(id, cur);
 }
 
 function setUnsure(id) {
-  const all = getLabels();
-  const cur = all[id] || _emptyLabel();
-  // Unsure clears flags and pref, and marks user_edited so we don't pre-fill again.
+  const cur = LABELS[id] || _emptyLabel();
   cur.user_edited = true;
   cur.unsure = !cur.unsure;
   if (cur.unsure) { cur.flags = []; cur.preference = null; }
-  _persist(id, cur, all);
+  _persist(id, cur);
 }
 
 function markReviewed(id) {
-  // Confirms the current shown state. If the user hasn't edited, this accepts
-  // the system suggestion verbatim (materializes it).
-  const all = getLabels();
-  const cur = all[id] || _emptyLabel();
+  const cur = LABELS[id] || _emptyLabel();
   if (cur.reviewed_at && cur.user_edited) {
-    // Toggle off — back to unreviewed.
-    delete all[id];
-    setLabels(all);
-    bumpSaveMeta();
+    delete LABELS[id];
     render();
+    saveLabelsToServer();
     return;
   }
   _ensureMaterialized(cur, _suggestedFor(id));
-  _persist(id, cur, all);
+  _persist(id, cur);
 }
-
-function exportLabels(auto) {
-  const data = JSON.stringify(getLabels(), null, 2);
-  const blob = new Blob([data], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  a.download = auto ? ("labels-autosave-" + ts + ".json") : "labels.json";
-  a.click();
-  const m = getSaveMeta();
-  m.changes_since_export = 0;
-  setSaveMeta(m);
-  updateSaveStatus();
-}
-
-document.getElementById("importLabels").addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    try {
-      const imported = JSON.parse(ev.target.result);
-      const cur = getLabels();
-      let added = 0;
-      for (const [k, v] of Object.entries(imported)) {
-        cur[k] = (typeof v === "string" || (v && !Array.isArray(v.flags))) ? _upgradeOldLabel(v) : v;
-        added++;
-      }
-      setLabels(cur);
-      updateSaveStatus();
-      render();
-      const el = document.getElementById("saveStatus");
-      if (el) { el.textContent = "imported " + added + " labels"; el.style.color = "#a8e6a8"; setTimeout(updateSaveStatus, 2000); }
-    } catch (err) { notifySaveError("import: " + err.message); }
-  };
-  reader.readAsText(file);
-  e.target.value = "";
-});
 
 function fmtPct(n) { return n === null || n === undefined ? "—" : (n * 100).toFixed(1) + "%"; }
 function fmtNum(n, d) { return n === null || n === undefined ? "—" : n.toFixed(d); }
@@ -473,7 +361,7 @@ function render() {
   const qf = document.getElementById("quality").value;
   const rf = document.getElementById("reviewStatus").value;
   const sortBy = document.getElementById("sort").value;
-  const labels = getLabels();
+  const labels = LABELS;
   let rows = DATA.filter(r => sf === "all" || r.source === sf);
   rows = rows.filter(r => qf === "all" || r.framing_quality === qf);
   if (rf !== "all") {
@@ -576,8 +464,13 @@ document.getElementById("source").addEventListener("change", render);
 document.getElementById("quality").addEventListener("change", render);
 document.getElementById("reviewStatus").addEventListener("change", render);
 document.getElementById("sort").addEventListener("change", render);
+
+// Initial paint with empty LABELS so the grid is up immediately; then fetch
+// from server and re-render. The fetch is fast (single file read) and keeps
+// the first paint feeling instant on cold loads of the 360-image grid.
 render();
 updateSaveStatus();
+loadLabelsFromServer().then(() => { render(); updateSaveStatus(); });
 
 // Mouse-follow zoom popup with bbox-on-original preservation.
 const zoomPopup = document.createElement("div");
