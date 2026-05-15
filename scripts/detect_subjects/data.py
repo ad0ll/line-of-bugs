@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import random
 import re
+import sys
 from pathlib import Path
 
 from scripts.detect_subjects.config import (
@@ -15,6 +16,10 @@ from scripts.detect_subjects.config import (
     SAMPLE_PER_HARD_TAXON,
     SAMPLE_SMITHSONIAN,
 )
+
+# Some manifest rows (notably iNaturalist descriptions) exceed the default
+# 131072-byte CSV field limit. Lift it so the reader doesn't crash.
+csv.field_size_limit(sys.maxsize)
 
 
 MANIFEST_SOURCES = ["inaturalist", "bugwood", "smithsonian", "usda_ars"]
