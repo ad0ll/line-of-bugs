@@ -2,6 +2,7 @@ import { sql, type SQL } from "drizzle-orm";
 import { cacheTag, cacheLife } from "next/cache";
 import { db } from "@/db";
 import { TAXON_GROUPS, buildTaxonGroupSQL } from "@/lib/taxonomy";
+import type { SubjectType } from "@/lib/subject";
 
 export type GalleryRow = {
   image_id: string;
@@ -25,7 +26,7 @@ export type GalleryRow = {
 
 export type SearchGalleryArgs = {
   q: string;
-  subject: "nature" | "specimen" | "both";
+  subject: SubjectType;
   institutions: string[];
   // Multi-select arrays. Empty array = no filter on that axis.
   // The literal string "unknown" matches NULL or empty-string DB values
@@ -85,12 +86,10 @@ export async function searchGallery(args: SearchGalleryArgs): Promise<SearchGall
   const filters: SQL[] = [sql`i.hidden = 0`];
   filters.push(sql`NOT EXISTS (SELECT 1 FROM reports r WHERE r.image_id = i.image_id AND r.resolved_at IS NULL)`);
 
-  // UI labels "nature"/"specimen" map to DB enum {wild, captive, specimen}.
-  // Nature = alive in any setting (wild OR captive); specimen = preserved.
-  if (args.subject === "nature") {
-    filters.push(sql`i.subject_state IN ('wild', 'captive')`);
-  } else if (args.subject === "specimen") {
-    filters.push(sql`i.subject_state = 'specimen'`);
+  // Subject-type chip values map 1:1 to subject_state DB enum; "all"
+  // skips the clause entirely.
+  if (args.subject !== "all") {
+    filters.push(sql`i.subject_state = ${args.subject}`);
   }
 
   if (args.institutions.length > 0) {
@@ -172,7 +171,12 @@ export async function listInstitutions(): Promise<InstitutionRow[]> {
   `);
 }
 
-export type SubjectTypeCounts = { nature: number; specimen: number; both: number };
+export type SubjectTypeCounts = {
+  wild: number;
+  captive: number;
+  specimen: number;
+  all: number;
+};
 
 export async function listSubjectTypeCounts(): Promise<SubjectTypeCounts> {
   "use cache";
@@ -193,9 +197,7 @@ export async function listSubjectTypeCounts(): Promise<SubjectTypeCounts> {
   const wild = rows.find((r) => r.subject_state === "wild")?.c ?? 0;
   const captive = rows.find((r) => r.subject_state === "captive")?.c ?? 0;
   const specimen = rows.find((r) => r.subject_state === "specimen")?.c ?? 0;
-  // UI groups "wild + captive" under the "nature" label
-  const nature = wild + captive;
-  return { nature, specimen, both: nature + specimen };
+  return { wild, captive, specimen, all: wild + captive + specimen };
 }
 
 export type FacetRow = { name: string; count: number };

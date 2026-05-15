@@ -4,9 +4,10 @@ import { db, schema } from "@/db";
 import { applyRepeatMode, type RepeatMode } from "@/lib/repeat-mode";
 import type { Image } from "@/db/schema";
 import { buildTaxonGroupSQL } from "@/lib/taxonomy";
+import type { SubjectType } from "@/lib/subject";
 
 export interface SessionFilters {
-  subjectType: "nature" | "specimen" | "both";
+  subjectType: SubjectType;
   /** Multi-select arrays. Empty = no filter on that axis.
    *  "unknown" sentinel matches NULL or empty-string. */
   views: string[];
@@ -44,11 +45,10 @@ function buildSessionFilterClauses(opts: SessionFilters): SQL[] {
         AND ${schema.reports.resolvedAt} IS NULL
     )`,
   ];
-  // UI labels "nature"/"specimen" map to DB enum {wild, captive, specimen}.
-  if (opts.subjectType === "nature") {
-    conditions.push(sql`${schema.images.subjectState} IN ('wild', 'captive')`);
-  } else if (opts.subjectType === "specimen") {
-    conditions.push(eq(schema.images.subjectState, "specimen"));
+  // Subject-type chip values map 1:1 to subject_state DB enum, except
+  // "all" → no clause (the user picked everything).
+  if (opts.subjectType !== "all") {
+    conditions.push(eq(schema.images.subjectState, opts.subjectType));
   }
   if (opts.views.length > 0) {
     conditions.push(sql`(${inOrUnknownArr(sql`${schema.images.viewLabel}`, opts.views)})`);

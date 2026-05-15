@@ -2,25 +2,28 @@
 
 import type { KeyboardEvent } from 'react';
 import { Chip } from '@/app/components/ui/Chip';
+import type { SubjectType } from '@/lib/subject';
 
-export type SubjectValue = 'both' | 'nature' | 'specimen';
-export type SubjectCounts = { nature: number; specimen: number; both: number };
+/** @deprecated kept as a transitional alias — use SubjectType directly. */
+export type SubjectValue = SubjectType;
 
-const ORDER: SubjectValue[] = ['both', 'nature', 'specimen'];
-const LABELS: Record<SubjectValue, string> = {
-  both: 'all',
-  nature: 'nature',
-  specimen: 'specimen',
+export type SubjectCounts = {
+  wild: number;
+  captive: number;
+  specimen: number;
+  all: number;
 };
 
+const ORDER: SubjectType[] = ['wild', 'captive', 'specimen', 'all'];
+
 export interface SubjectTypeChipsProps {
-  value: SubjectValue;
+  value: SubjectType;
   counts: SubjectCounts;
-  onChange: (v: SubjectValue) => void;
+  onChange: (v: SubjectType) => void;
 }
 
 export function SubjectTypeChips({ value, counts, onChange }: SubjectTypeChipsProps) {
-  function onKey(e: KeyboardEvent, v: SubjectValue) {
+  function onKey(e: KeyboardEvent, v: SubjectType) {
     const idx = ORDER.indexOf(v);
     if (e.key === 'ArrowRight') {
       e.preventDefault();
@@ -39,7 +42,7 @@ export function SubjectTypeChips({ value, counts, onChange }: SubjectTypeChipsPr
       {ORDER.map((v) => (
         <Chip
           key={v}
-          label={LABELS[v]}
+          label={v}
           count={counts[v]}
           active={value === v}
           tooltip={null}

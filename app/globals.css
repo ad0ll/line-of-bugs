@@ -906,6 +906,12 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
    Kept as a separate class because the home page wants larger, friendlier
    pills (min-height 40px+, larger padding, mono numerals); both classes
    share the active state (var(--shadow-pink-soft)) so they stay in step. */
+.subject-filter {
+  display: flex;
+  gap: var(--s2);
+  flex-wrap: wrap;
+}
+
 .home-pill {
   background: var(--surface-1);
   border: 1.5px solid var(--border-medium);
@@ -914,6 +920,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   padding: var(--s3) var(--s8);
   font-family: var(--font-mono), monospace;
   font-size: 0.95rem;
+  text-transform: lowercase;
   cursor: pointer;
   min-height: 40px;
   transition: all var(--timing-base) var(--ease-out);

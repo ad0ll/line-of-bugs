@@ -3,6 +3,7 @@ import { SearchBar } from './_components/SearchBar';
 import { FilterChipsBar } from './_components/FilterChipsBar';
 import { GalleryGrid } from './_components/GalleryGrid';
 import { HoverZoomMount } from './_components/HoverZoomMount';
+import { parseSubject } from '@/lib/subject';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -20,9 +21,8 @@ function readList(v: string | string[] | undefined): string[] {
 export default async function GalleryPage({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;
   const q = readArg(sp.q, '') as string;
-  const subjectRaw = readArg(sp.subject, 'both');
-  const subject: 'nature' | 'specimen' | 'both' =
-    subjectRaw === 'nature' || subjectRaw === 'specimen' ? subjectRaw : 'both';
+  const subjectRaw = Array.isArray(sp.subject) ? sp.subject[0] : sp.subject;
+  const subject = parseSubject(subjectRaw);
   const institutions = readList(sp.inst);
   const views = readList(sp.view);
   const lifeStages = readList(sp.life);

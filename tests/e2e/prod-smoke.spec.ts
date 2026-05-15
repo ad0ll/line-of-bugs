@@ -33,7 +33,7 @@ test("gallery thumbnail returns image bytes", async ({ page }) => {
 
 test("session start API returns sessionId", async ({ request }) => {
   const res = await request.post("/api/session/start", {
-    data: { intervalSec: 60, subjectType: "both", repeatMode: "default" },
+    data: { intervalSec: 60, subjectType: "all", repeatMode: "default" },
   });
   expect(res.status()).toBe(200);
   const body = await res.json();

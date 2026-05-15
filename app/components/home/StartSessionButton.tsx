@@ -2,10 +2,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { RepeatMode } from "@/lib/repeat-mode";
+import type { SubjectType } from "@/lib/subject";
 
 interface Props {
   intervalSec: number;
-  subjectType: "nature" | "specimen" | "both";
+  subjectType: SubjectType;
   repeatMode: RepeatMode;
   views: string[];
   lifeStages: string[];

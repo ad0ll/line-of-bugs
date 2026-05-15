@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { buildSessionPool } from "@/lib/queries/session";
 import { setPool } from "@/lib/session-pools";
+import { parseSubjectStrict } from "@/lib/subject";
 
-const SUBJECT_TYPES = new Set(["nature", "specimen", "both"]);
 const REPEAT_MODES = new Set(["default", "never-repeat-animals", "allow-different-angles"]);
 
 function readList(v: unknown): string[] {
@@ -20,13 +20,16 @@ export async function POST(req: Request) {
   }
   const b = body as Record<string, unknown>;
   const intervalSec = Number(b.intervalSec);
-  const subjectType = String(b.subjectType ?? "");
+  const subjectRaw = String(b.subjectType ?? "");
   const repeatMode = String(b.repeatMode ?? "");
 
   if (!Number.isFinite(intervalSec) || intervalSec < 10 || intervalSec > 3600) {
     return new Response("invalid intervalSec", { status: 400 });
   }
-  if (!SUBJECT_TYPES.has(subjectType)) {
+  // parseSubjectStrict accepts wild/captive/specimen/all + the two
+  // legacy aliases (nature→wild, both→all); anything else 400s.
+  const subjectType = parseSubjectStrict(subjectRaw);
+  if (subjectType === null) {
     return new Response("invalid subjectType", { status: 400 });
   }
   if (!REPEAT_MODES.has(repeatMode)) {
@@ -34,7 +37,7 @@ export async function POST(req: Request) {
   }
 
   const items = await buildSessionPool({
-    subjectType: subjectType as "nature" | "specimen" | "both",
+    subjectType,
     repeatMode: repeatMode as "default" | "never-repeat-animals" | "allow-different-angles",
     views: readList(b.views),
     lifeStages: readList(b.lifeStages),

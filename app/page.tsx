@@ -7,6 +7,7 @@ import {
   listSexCounts,
   listTaxonGroupCounts,
 } from "@/lib/queries/gallery";
+import { parseSubject } from "@/lib/subject";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -18,9 +19,7 @@ function readArg(v: string | string[] | undefined, fallback: string): string {
 async function HomeShell({ searchParams }: { searchParams: SearchParams }) {
   await connection();
   const sp = await searchParams;
-  const subjectRaw = readArg(sp.subject, "both");
-  const subject: "nature" | "specimen" | "both" =
-    subjectRaw === "nature" || subjectRaw === "specimen" ? subjectRaw : "both";
+  const subject = parseSubject(readArg(sp.subject, "all"));
   const interval = Math.max(10, Math.min(3600, parseInt(readArg(sp.interval, "60"), 10) || 60));
   const repeatRaw = readArg(sp.repeat, "default");
   const repeat: "default" | "never-repeat-animals" | "allow-different-angles" =

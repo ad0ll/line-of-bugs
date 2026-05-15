@@ -1,9 +1,10 @@
 import { searchGallery } from '@/lib/queries/gallery';
 import { InfiniteScroller } from './InfiniteScroller';
+import type { SubjectType } from '@/lib/subject';
 
 export interface GalleryGridProps {
   q: string;
-  subject: 'nature' | 'specimen' | 'both';
+  subject: SubjectType;
   institutions: string[];
   views: string[];
   lifeStages: string[];

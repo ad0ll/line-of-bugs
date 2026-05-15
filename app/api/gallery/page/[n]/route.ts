@@ -1,4 +1,5 @@
 import { searchGallery } from "@/lib/queries/gallery";
+import { parseSubject } from "@/lib/subject";
 
 interface Params { params: Promise<{ n: string }> }
 
@@ -11,9 +12,7 @@ export async function GET(req: Request, { params }: Params): Promise<Response> {
   const page = Math.max(1, parseInt(n, 10) || 1);
   const url = new URL(req.url);
   const q = url.searchParams.get("q") ?? "";
-  const subjectRaw = url.searchParams.get("subject") ?? "both";
-  const subject: "nature" | "specimen" | "both" =
-    subjectRaw === "nature" || subjectRaw === "specimen" ? subjectRaw : "both";
+  const subject = parseSubject(url.searchParams.get("subject"));
   const institutions = readList(url.searchParams.get("inst"));
   const views = readList(url.searchParams.get("view"));
   const lifeStages = readList(url.searchParams.get("life"));

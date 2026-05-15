@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { GalleryRow, SearchGalleryResult } from "@/lib/queries/gallery";
+import type { SubjectType } from "@/lib/subject";
 import { GridTile } from "./GridTile";
 
 interface Props {
   initial: SearchGalleryResult;
   q: string;
-  subject: "nature" | "specimen" | "both";
+  subject: SubjectType;
   institutions: string[];
   views: string[];
   lifeStages: string[];
@@ -38,7 +39,7 @@ export function InfiniteScroller({
       const next = page + 1;
       const params = new URLSearchParams();
       if (q) params.set("q", q);
-      if (subject !== "both") params.set("subject", subject);
+      if (subject !== "all") params.set("subject", subject);
       if (institutions.length > 0) params.set("inst", institutions.join(","));
       if (views.length > 0) params.set("view", views.join(","));
       if (lifeStages.length > 0) params.set("life", lifeStages.join(","));

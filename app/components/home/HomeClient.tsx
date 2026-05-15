@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { IntervalPicker } from "@/app/components/home/IntervalPicker";
-import { SubjectFilter, type SubjectChoice } from "@/app/components/home/SubjectFilter";
+import { SubjectFilter } from "@/app/components/home/SubjectFilter";
 import { RepeatModeToggle } from "@/app/components/home/RepeatModeToggle";
 import { StartSessionButton } from "@/app/components/home/StartSessionButton";
 import { FilterPopover, type FilterOption } from "@/app/components/filters/FilterPopover";
@@ -12,10 +12,11 @@ import { CollapsibleSection } from "@/app/components/ui/CollapsibleSection";
 import { Tooltip } from "@/app/components/ui/Tooltip";
 import { TOOLTIPS } from "@/lib/tooltips";
 import type { RepeatMode } from "@/lib/repeat-mode";
+import type { SubjectType } from "@/lib/subject";
 
 interface Props {
   initialInterval: number;
-  initialSubject: SubjectChoice;
+  initialSubject: SubjectType;
   initialRepeat: RepeatMode;
   viewCounts: FilterOption[];
   lifeStageCounts: FilterOption[];
@@ -54,7 +55,7 @@ export function HomeClient({
   const [, startTransition] = useTransition();
 
   const [intervalSec, setIntervalSec] = useState(initialInterval);
-  const [subject, setSubject] = useState<SubjectChoice>(initialSubject);
+  const [subject, setSubject] = useState<SubjectType>(initialSubject);
   const [repeat, setRepeat] = useState<RepeatMode>(initialRepeat);
   const [views, setViews] = useState<string[]>(parseList(params.get("view")));
   const [life, setLife] = useState<string[]>(parseList(params.get("life")));
@@ -65,7 +66,7 @@ export function HomeClient({
   useEffect(() => {
     const next = new URLSearchParams();
     if (intervalSec !== 60) next.set("interval", String(intervalSec));
-    if (subject !== "both") next.set("subject", subject);
+    if (subject !== "all") next.set("subject", subject);
     if (repeat !== "default") next.set("repeat", repeat);
     if (views.length) next.set("view", views.join(","));
     if (life.length) next.set("life", life.join(","));

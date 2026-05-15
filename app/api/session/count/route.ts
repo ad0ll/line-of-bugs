@@ -1,6 +1,5 @@
 import { countSessionPool } from "@/lib/queries/session";
-
-const SUBJECT_TYPES = new Set(["nature", "specimen", "both"]);
+import { parseSubject } from "@/lib/subject";
 
 function readList(v: string | null): string[] {
   return v ? v.split(",").filter(Boolean) : [];
@@ -15,10 +14,7 @@ function readList(v: string | null): string[] {
  */
 export async function GET(req: Request): Promise<Response> {
   const url = new URL(req.url);
-  const subjectRaw = url.searchParams.get("subject") ?? "both";
-  const subjectType = SUBJECT_TYPES.has(subjectRaw)
-    ? (subjectRaw as "nature" | "specimen" | "both")
-    : "both";
+  const subjectType = parseSubject(url.searchParams.get("subject"));
   const views = readList(url.searchParams.get("view"));
   const lifeStages = readList(url.searchParams.get("life"));
   const sexes = readList(url.searchParams.get("sex"));

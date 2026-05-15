@@ -2,7 +2,8 @@
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useCallback } from 'react';
-import { SubjectTypeChips, type SubjectValue, type SubjectCounts } from './SubjectTypeChips';
+import { SubjectTypeChips, type SubjectCounts } from './SubjectTypeChips';
+import { parseSubject, type SubjectType } from '@/lib/subject';
 import { InstitutionPicker } from './InstitutionPicker';
 import { FilterPopover, type FilterOption } from '@/app/components/filters/FilterPopover';
 import { TaxonGroupChips } from '@/app/components/filters/TaxonGroupChips';
@@ -35,7 +36,7 @@ export function FilterChipsControls({
   const pathname = usePathname();
   const params = useSearchParams();
 
-  const subject = (params.get('subject') as SubjectValue) ?? 'both';
+  const subject = parseSubject(params.get('subject'));
   const selectedInst = parseList(params.get('inst'));
   const selectedViews = parseList(params.get('view'));
   const selectedLife = parseList(params.get('life'));
@@ -60,9 +61,9 @@ export function FilterChipsControls({
       });
   }
 
-  function setSubject(v: SubjectValue) {
+  function setSubject(v: SubjectType) {
     pushNext((next) => {
-      if (v === 'both') next.delete('subject');
+      if (v === 'all') next.delete('subject');
       else next.set('subject', v);
     });
   }

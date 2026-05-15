@@ -1,20 +1,24 @@
 "use client";
 
-const OPTIONS = [
-  { value: "nature", label: "nature" },
-  { value: "specimen", label: "specimen" },
-  { value: "both", label: "both" },
-] as const;
+import type { SubjectType } from "@/lib/subject";
 
-export type SubjectChoice = (typeof OPTIONS)[number]["value"];
+const OPTIONS: { value: SubjectType; label: string }[] = [
+  { value: "wild", label: "wild" },
+  { value: "captive", label: "captive" },
+  { value: "specimen", label: "specimen" },
+  { value: "all", label: "all" },
+];
+
+/** @deprecated kept as a transitional alias — use SubjectType directly. */
+export type SubjectChoice = SubjectType;
 
 interface Props {
-  value: SubjectChoice;
-  onChange: (v: SubjectChoice) => void;
+  value: SubjectType;
+  onChange: (v: SubjectType) => void;
 }
 
 export function SubjectFilter({ value, onChange }: Props) {
-  function onKey(e: React.KeyboardEvent, current: SubjectChoice) {
+  function onKey(e: React.KeyboardEvent, current: SubjectType) {
     const idx = OPTIONS.findIndex((o) => o.value === current);
     if (e.key === "ArrowRight" || e.key === "ArrowDown") {
       e.preventDefault();
@@ -26,7 +30,7 @@ export function SubjectFilter({ value, onChange }: Props) {
   }
 
   return (
-    <div style={{ display: "flex", gap: 8 }} role="radiogroup" aria-label="subject type">
+    <div className="subject-filter" role="radiogroup" aria-label="subject type">
       {OPTIONS.map((opt) => {
         const active = value === opt.value;
         return (
@@ -39,7 +43,6 @@ export function SubjectFilter({ value, onChange }: Props) {
             onClick={() => onChange(opt.value)}
             onKeyDown={(e) => onKey(e, opt.value)}
             className={`home-pill${active ? " is-active" : ""}`}
-            style={{ textTransform: "lowercase" }}
           >
             {opt.label}
           </button>

@@ -3,8 +3,8 @@ import { test, expect } from "@playwright/test";
 test("subject chip toggle is URL-synced and pagination resets", async ({ page }) => {
   await page.goto("/gallery?page=3");
   await page.waitForSelector("#gallery-grid");
-  await page.getByRole("button", { name: /nature/i, exact: false }).first().click();
-  await page.waitForURL(/subject=nature/);
+  await page.getByRole("button", { name: /^wild$/i }).first().click();
+  await page.waitForURL(/subject=wild/);
   expect(page.url()).not.toMatch(/page=3/);
 });
 
