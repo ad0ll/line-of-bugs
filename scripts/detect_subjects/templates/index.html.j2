@@ -150,7 +150,6 @@
 <div class="help">
   <b>What to do:</b> the system pre-selects the labels it thinks apply (outlined in <span style="color:#67D4E6">sky blue</span>). If they look right, click <code>✓ mark reviewed</code>. If not, toggle labels to correct — any edit auto-marks the image reviewed. Labels describe <em>properties</em>, not actions; they're multi-select.
   <br><b>Detection issues:</b>
-  <code>bbox-wrong</code> generic catch-all (or use the more specific ones below) ·
   <code>bbox-wrong_correct-subject</code> right bug, wrong box position ·
   <code>bbox-wrong_better-subject-other-bbox</code> one of the cyan secondaries is a better choice ·
   <code>no-bug</code> no insect in the image at all ·
@@ -178,7 +177,7 @@ const DATA = {{ data_json }};
 // Flag buttons (multi-select). original-good / cropped-good live in their own
 // mutually-exclusive row and aren't in this list.
 const FLAGS = [
-  "bbox-wrong", "bbox-wrong_correct-subject", "bbox-wrong_better-subject-other-bbox",
+  "bbox-wrong_correct-subject", "bbox-wrong_better-subject-other-bbox",
   "no-bug", "bug-too-small",
   "subject-blurred", "poor-contrast", "multi-bug",
   "subject-clipped", "other-bad",
@@ -186,7 +185,6 @@ const FLAGS = [
 ];
 
 const FLAG_TITLES = {
-  "bbox-wrong":       "Generic: bbox missed the bug or is on a wrong subject. Use the more specific bbox-wrong_* flags below when applicable.",
   "bbox-wrong_correct-subject":          "Pink primary bbox is on the right bug but positioned wrong (clipped, off-center, too tight/loose around the body)",
   "bbox-wrong_better-subject-other-bbox": "One of the CYAN secondary boxes is on a better subject than the pink primary — system picked the wrong detection",
   "no-bug":           "There's no insect in this image at all",
