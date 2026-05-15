@@ -60,8 +60,14 @@ npm ci --prefer-offline --no-audit --no-fund
 #    path.resolve("data/db/line-of-bugs.db") which creates an empty fallback DB.
 DATABASE_URL="$APP/shared/data/db/line-of-bugs.db" npm run build
 
-# 5. Link runtime data path INSIDE .next/standalone/ — server.js runs with
-#    cwd at that directory, and the app code uses process.cwd() + 'data/...'.
+# 5a. The standalone build does NOT include .next/static or public/ — Next.js
+#     expects those to be deployed via a CDN. We're serving them through
+#     the same Node process, so copy them into the standalone tree.
+cp -r "$REL/.next/static" "$REL/.next/standalone/.next/static"
+[ -d "$REL/public" ] && cp -r "$REL/public" "$REL/.next/standalone/public" || true
+
+# 5b. Link runtime data path INSIDE .next/standalone/ — server.js runs with
+#     cwd at that directory, and the app code uses process.cwd() + 'data/...'.
 ln -sfn "$APP/shared/data" "$REL/.next/standalone/data"
 
 # 6. Run migrations (drizzle-kit migrate is idempotent, no-op if nothing pending)
