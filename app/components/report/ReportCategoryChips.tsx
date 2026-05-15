@@ -1,6 +1,7 @@
 "use client";
 
 import { REPORT_CATEGORIES, REPORT_CATEGORY_LABELS, type ReportCategory } from "@/lib/report-categories";
+import { Chip } from "@/app/components/ui/Chip";
 
 const CATEGORIES: { value: ReportCategory; label: string }[] = REPORT_CATEGORIES.map((v) => ({
   value: v,
@@ -16,15 +17,13 @@ export function ReportCategoryChips({ value, onChange }: ReportCategoryChipsProp
   return (
     <div className="report-category-chips" role="group" aria-label="report category">
       {CATEGORIES.map((c) => (
-        <button
+        <Chip
           key={c.value}
-          type="button"
-          className={`chip ${value === c.value ? "chip-active" : ""}`}
-          aria-pressed={value === c.value}
+          label={c.label}
+          active={value === c.value}
+          tooltip={null}
           onClick={() => onChange(c.value)}
-        >
-          {c.label}
-        </button>
+        />
       ))}
     </div>
   );

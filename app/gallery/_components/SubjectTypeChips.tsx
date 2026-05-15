@@ -1,6 +1,7 @@
 'use client';
 
 import type { KeyboardEvent } from 'react';
+import { Chip } from '@/app/components/ui/Chip';
 
 export type SubjectValue = 'both' | 'nature' | 'specimen';
 export type SubjectCounts = { nature: number; specimen: number; both: number };
@@ -36,17 +37,15 @@ export function SubjectTypeChips({ value, counts, onChange }: SubjectTypeChipsPr
   return (
     <div className="subject-type-chips" role="group" aria-label="subject filter">
       {ORDER.map((v) => (
-        <button
+        <Chip
           key={v}
-          type="button"
-          className={`chip ${value === v ? 'chip-active' : ''}`}
-          aria-pressed={value === v}
+          label={LABELS[v]}
+          count={counts[v]}
+          active={value === v}
+          tooltip={null}
           onClick={() => onChange(v)}
           onKeyDown={(e) => onKey(e, v)}
-        >
-          <span className="chip-label">{LABELS[v]}</span>
-          <span className="chip-count">{counts[v].toLocaleString()}</span>
-        </button>
+        />
       ))}
     </div>
   );

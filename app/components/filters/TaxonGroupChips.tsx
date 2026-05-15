@@ -6,14 +6,13 @@
  * filter applied). Optional staggered fade-in handled in CSS via
  * --i custom property when the parent is data-open=true.
  *
- * The few chips that have a `tooltip` (e.g., aphids, stick insects)
- * get wrapped in the <Tooltip> component so the explanation surfaces
- * on keyboard focus, not just on desktop hover. The visible chip
- * label remains the accessible name; the tooltip is descriptive.
+ * Chips with a `tooltip` field in TAXON_GROUPS (e.g., aphids, stick
+ * insects) pass it through to the shared <Chip>; the rest pass
+ * `tooltip={null}` — both paths are forced at the type level.
  */
 import { TAXON_GROUPS } from '@/lib/taxonomy';
 import type { FilterOption } from '@/app/components/filters/FilterPopover';
-import { Tooltip } from '@/app/components/ui/Tooltip';
+import { Chip } from '@/app/components/ui/Chip';
 
 export interface TaxonGroupChipsProps {
   /** Per-chip counts keyed by chip `name` (matches the chip key). Comes
@@ -38,25 +37,17 @@ export function TaxonGroupChips({ counts, selected, onChange }: TaxonGroupChipsP
       {TAXON_GROUPS.map((g, i) => {
         const count = countByKey.get(g.key);
         if (count === undefined || count === 0) return null;
-        const active = selected.includes(g.key);
-        const button = (
-          <button
-            type="button"
-            className={`chip taxon-group-chip ${active ? 'chip-active' : ''}`}
-            aria-pressed={active}
+        return (
+          <Chip
+            key={g.key}
+            label={g.label}
+            count={count}
+            active={selected.includes(g.key)}
+            tooltip={g.tooltip ?? null}
             onClick={() => toggle(g.key)}
+            className="taxon-group-chip"
             style={{ ['--i' as string]: i }}
-          >
-            <span className="chip-label">{g.label}</span>
-            <span className="chip-count">{count.toLocaleString()}</span>
-          </button>
-        );
-        return g.tooltip ? (
-          <Tooltip key={g.key} content={g.tooltip} showIcon={false}>
-            {button}
-          </Tooltip>
-        ) : (
-          <span key={g.key}>{button}</span>
+          />
         );
       })}
       {selected.length > 0 && (
