@@ -15,7 +15,9 @@ test.describe('Gallery', () => {
 
     const input = page.getByRole('combobox');
     await input.fill('bee');
-    await page.waitForTimeout(400);
+    // Wait for the species-search XHR rather than guessing the debounce
+    // (200 ms in SpeciesAutocomplete + ~10 ms FTS query).
+    await page.waitForResponse((r) => r.url().includes('/api/species/search') && r.ok());
     await input.press('Enter');
 
     await page.waitForURL(/q=bee/);
@@ -28,7 +30,7 @@ test.describe('Gallery', () => {
     await page.waitForSelector('.gallery-result-count');
     const before = await page.locator('.gallery-result-count').innerText();
 
-    await page.getByRole('button', { name: /specimen/i }).click();
+    await page.locator('.subject-type-chips .chip').filter({ hasText: 'specimen' }).first().click();
     await page.waitForURL(/subject=specimen/);
     const after = await page.locator('.gallery-result-count').innerText();
     expect(after).not.toBe(before);
