@@ -65,6 +65,7 @@ def build_html_for_variant(
             "image_id": img_id,
             "source": row["source"],
             "framing_quality": row["framing_quality"],
+            "suggested_labels": list(row.get("suggested_labels") or []),
             "bbox_x": row["bbox_x"], "bbox_y": row["bbox_y"],
             "bbox_w": row["bbox_w"], "bbox_h": row["bbox_h"],
             "bbox_area_ratio": row["bbox_area_ratio"],

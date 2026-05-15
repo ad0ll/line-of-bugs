@@ -67,31 +67,28 @@ export function HomeClient({
     });
   }, [intervalSec, subject, repeat, views, life, sexes, pathname, router]);
 
-  // Live count
+  // Live count — AbortController so rapid filter changes cancel the in-flight
+  // request on the network rather than just discarding the result.
   const [poolCount, setPoolCount] = useState<number | null>(null);
   const [countLoading, setCountLoading] = useState(false);
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
     setCountLoading(true);
     const q = new URLSearchParams();
     q.set("subject", subject);
     if (views.length) q.set("view", views.join(","));
     if (life.length) q.set("life", life.join(","));
     if (sexes.length) q.set("sex", sexes.join(","));
-    fetch(`/api/session/count?${q.toString()}`)
+    fetch(`/api/session/count?${q.toString()}`, { signal: controller.signal })
       .then((r) => r.json())
-      .then((d: { count: number }) => {
-        if (!cancelled) setPoolCount(d.count);
-      })
-      .catch(() => {
-        if (!cancelled) setPoolCount(null);
+      .then((d: { count: number }) => setPoolCount(d.count))
+      .catch((err) => {
+        if (err?.name !== "AbortError") setPoolCount(null);
       })
       .finally(() => {
-        if (!cancelled) setCountLoading(false);
+        if (!controller.signal.aborted) setCountLoading(false);
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [subject, views, life, sexes]);
 
   return (

@@ -11,6 +11,7 @@ type Params = Promise<{ id: string }>;
 export default function ReportPage({ params }: { params: Params }) {
   return (
     <main className="report-page">
+      <h1 className="u-sr-only">report image</h1>
       <header className="report-page-header">
         <a href="/" className="report-page-back">← back</a>
       </header>
@@ -32,6 +33,8 @@ async function ReportLoader({ params }: { params: Params }) {
     <ReportPageClient
       imageId={id}
       thumbnail={img.thumbnailFilename}
+      width={img.width ?? 1}
+      height={img.height ?? 1}
       commonName={img.commonName}
       speciesName={img.taxonSpecies}
     />

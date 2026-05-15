@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ReportForm } from "@/app/components/report/ReportForm";
 import { submitReport } from "@/actions/submitReport";
@@ -11,16 +12,31 @@ function basename(p: string): string {
 interface ReportPageClientProps {
   imageId: string;
   thumbnail: string;
+  width: number;
+  height: number;
   commonName: string | null;
   speciesName: string | null;
 }
 
-export function ReportPageClient({ imageId, thumbnail, commonName, speciesName }: ReportPageClientProps) {
+export function ReportPageClient({
+  imageId,
+  thumbnail,
+  width,
+  height,
+  commonName,
+  speciesName,
+}: ReportPageClientProps) {
   const router = useRouter();
   return (
     <div className="report-page-content">
       <div className="report-page-preview">
-        <img src={`/api/thumb/${basename(thumbnail)}`} alt="" />
+        <Image
+          src={`/api/thumb/${basename(thumbnail)}`}
+          alt=""
+          width={width}
+          height={height}
+          style={{ width: "100%", height: "auto", maxWidth: 320, borderRadius: "var(--r-3xl)" }}
+        />
         <p className="preview-name">{commonName ?? speciesName ?? imageId}</p>
       </div>
       <ReportForm

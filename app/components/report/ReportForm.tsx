@@ -53,6 +53,7 @@ export function ReportForm({ imageId, onSubmit, onClose }: ReportFormProps) {
           maxLength={250}
           rows={4}
           placeholder="tell us a bit more (optional, 250 chars)"
+          aria-label="additional details"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />

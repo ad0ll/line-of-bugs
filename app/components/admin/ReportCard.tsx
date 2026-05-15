@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { PendingReport } from "@/lib/queries/reports";
 import { ConfirmDeleteButton } from "./ConfirmDeleteButton";
 import { RelativeAge } from "./RelativeAge";
@@ -20,7 +21,12 @@ export function ReportCard({ report, onDismiss, onHide, onDelete }: ReportCardPr
   return (
     <article className="report-card">
       <div className="report-card-thumb">
-        <img src={`/api/thumb/${basename(report.thumbnail_filename)}`} alt="" />
+        <Image
+          src={`/api/thumb/${basename(report.thumbnail_filename)}`}
+          alt=""
+          width={120}
+          height={120}
+        />
       </div>
       <div className="report-card-body">
         <header className="report-card-header">

@@ -17,8 +17,9 @@
   --text-secondary: rgba(255, 255, 255, 0.7);
   --text-tertiary: rgba(255, 255, 255, 0.55);
   --text-muted: rgba(255, 255, 255, 0.55);
-  --text-disabled: rgba(255, 255, 255, 0.3);
+  --text-disabled: rgba(255, 255, 255, 0.42);
   --text-on-accent: #0d0c10;
+  --text-on-danger: #ffffff;
 
   /* ── Borders ── */
   --border-subtle: rgba(255, 255, 255, 0.07);
@@ -29,6 +30,15 @@
   /* Full-bleed page-tinted overlay; shared by .modal-backdrop and the
      end-of-session full overlay. Mirrors T.surfaceBackdrop. */
   --surface-backdrop: rgba(13, 12, 16, 0.65);
+  /* Tinted-dark scrims used to keep chips and badges legible when stacked
+     over photographs. The 75 variant goes on metadata pills over images;
+     the 80 variant is the inner halo on Magnifier so the pink ring reads
+     against any background. */
+  --surface-0-scrim-75: rgba(13, 12, 16, 0.75);
+  --surface-0-scrim-80: rgba(13, 12, 16, 0.8);
+  --shadow-magnifier: 0 0 0 2px var(--surface-0-scrim-80),
+                      0 0 0 6px var(--accent-pink-soft),
+                      0 12px 28px rgba(0, 0, 0, 0.55);
 
   /* ── Pastel Goth Kawaii accents ── */
   --accent-pink: #FF6EC7;
@@ -69,9 +79,28 @@ html, body {
 }
 body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 
+/* Focus ring uses outline so it stacks ON TOP of element box-shadows
+   (e.g., .home-pill.is-active and .home-start both ship their own pink-glow
+   shadow as state signal — a box-shadow ring would replace and erase it). */
 :focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 2px var(--accent-pink-border);
+  outline: 2px solid var(--accent-pink);
+  outline-offset: 2px;
+}
+:focus:not(:focus-visible) { outline: none; }
+
+/* Screen-reader-only — visible to ATs but visually hidden. Used for
+   landmark headings that the design intentionally omits (session player,
+   report standalone page) so the page still has a heading anchor. */
+.u-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .u-icon-btn {
@@ -245,9 +274,11 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  /* 24x24 hit area satisfies WCAG 2.5.8 (AA, ≥24); the glyph stays visually 12px. */
+  width: 24px;
+  height: 24px;
   border: none;
+  border-radius: 50%;
   background: transparent;
   color: var(--accent-sky);
   font-size: 12px;
@@ -257,7 +288,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   opacity: 0.7;
   transition: opacity var(--timing-base) var(--ease-out);
 }
-.tooltip-icon:hover, .tooltip-icon:focus-visible { opacity: 1; outline: none; }
+.tooltip-icon:hover, .tooltip-icon:focus-visible { opacity: 1; }
 /* Default: position below the trigger. Section titles + filter chips
    both have plenty of room below them in the page flow, and "below"
    never overlaps the previous section (which "above" sometimes does
@@ -433,7 +464,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 .grid-item-badge {
   position: absolute;
   top: var(--s2); right: var(--s2);
-  background: rgba(13,12,16,0.75);
+  background: var(--surface-0-scrim-75);
   color: var(--accent-sky);
   font-family: var(--font-mono), monospace;
   font-size: 0.75rem;
@@ -528,6 +559,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   .chip { min-height: 44px; padding: var(--s4) var(--s8); }
   .home-pill { min-height: 44px; padding: var(--s4) var(--s8); }
   .modal-close { width: 44px; height: 44px; }
+  .tooltip-icon { width: 44px; height: 44px; font-size: 16px; }
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -611,8 +643,17 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 .report-form-actions button:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
 
 .report-modal-content { display: flex; gap: var(--s8); padding: var(--s8); }
-.report-modal-preview img { width: 160px; height: 160px; object-fit: cover; border-radius: var(--r-2xl); }
+.report-modal-preview img { width: 160px; height: 160px; object-fit: cover; border-radius: var(--r-2xl); display: block; }
 .report-modal-preview .preview-name { margin: var(--s2) 0 0 0; font-size: 0.85rem; color: var(--text-secondary); }
+/* Stack on narrow viewports — at 360–640px the side-by-side 160px thumb +
+   form column gets crushed; switch to a compact stacked layout with a
+   smaller 80px preview tile inline beside the title. */
+@media (max-width: 640px) {
+  .report-modal-content { flex-direction: column; gap: var(--s4); padding: var(--s6); }
+  .report-modal-preview { display: flex; align-items: center; gap: var(--s4); }
+  .report-modal-preview img { width: 64px; height: 64px; border-radius: var(--r-xl); flex-shrink: 0; }
+  .report-modal-preview .preview-name { margin: 0; font-size: 0.95rem; }
+}
 
 .report-page { max-width: 720px; margin: 0 auto; padding: var(--s8); }
 .report-page-header { margin-bottom: var(--s6); }
@@ -710,7 +751,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 .btn-destructive {
   background: var(--accent-danger);
   border: 1px solid var(--accent-danger);
-  color: white;
+  color: var(--text-on-danger);
   padding: var(--s3) var(--s6);
   border-radius: var(--r-pill);
   font-size: 0.9rem;
@@ -871,7 +912,6 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   color: var(--text-primary);
   font-family: var(--font-mono), monospace;
   width: 140px;
-  outline: none;
 }
 
 /* Repeat mode list — radio cards */

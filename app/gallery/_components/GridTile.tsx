@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import type { GalleryRow } from '@/lib/queries/gallery';
 import { OrderBadge } from '@/app/components/ui/OrderBadge';
 
@@ -17,10 +18,12 @@ export function GridTile({ row }: { row: GalleryRow }) {
       data-image-path={row.medium_filename}
     >
       <div className="grid-item-image">
-        <img
+        <Image
           src={`/api/thumb/${thumbName}`}
           alt=""
-          loading="lazy"
+          fill
+          sizes="(min-width: 1024px) 240px, (min-width: 600px) 200px, 50vw"
+          style={{ objectFit: 'cover' }}
         />
         {row.collection_size > 1 && (
           <span className="grid-item-badge">

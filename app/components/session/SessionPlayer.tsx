@@ -260,15 +260,18 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
   };
 
   const current = items[idx]!;
+  const currentName = current.commonName || current.taxonSpecies || current.imageId;
 
   return (
-    <div
+    <main
+      aria-label="drawing session"
       style={{ position: "fixed", inset: 0, background: T.surface0 }}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseUp}
     >
+      <h1 className="u-sr-only">{currentName}</h1>
       <ProgressBar percent={elapsedMs / durationMs} playing={!paused && !done} />
       <SessionTitle image={current} />
       <Timer remainingMs={durationMs - elapsedMs} paused={paused} />
@@ -316,6 +319,6 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
         count={items.length}
         onNewSession={() => router.push("/")}
       />
-    </div>
+    </main>
   );
 }

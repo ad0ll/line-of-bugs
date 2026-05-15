@@ -37,6 +37,7 @@ class DetectionRow:
     crop_h: Optional[float]
     post_crop_subject_area: Optional[float]
     framing_quality: str
+    suggested_labels: list[str]
     gt_bbox_x: Optional[float]
     gt_bbox_y: Optional[float]
     gt_bbox_w: Optional[float]
@@ -80,6 +81,7 @@ SCHEMA = pa.schema([
     ("crop_h", pa.float32()),
     ("post_crop_subject_area", pa.float32()),
     ("framing_quality", pa.string()),
+    ("suggested_labels", pa.list_(pa.string())),
     ("gt_bbox_x", pa.float32()),
     ("gt_bbox_y", pa.float32()),
     ("gt_bbox_w", pa.float32()),

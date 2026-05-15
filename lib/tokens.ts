@@ -18,6 +18,8 @@ export const T = {
   // Full-bleed page-tinted overlay (matches .modal-backdrop). Use for
   // top-level overlays where the page color should still tint through.
   surfaceBackdrop: "rgba(13, 12, 16, 0.65)",
+  surface0Scrim75: "rgba(13, 12, 16, 0.75)",
+  surface0Scrim80: "rgba(13, 12, 16, 0.8)",
   surfaceInk: "#0a0a0b",
   surfaceWhisper: "rgba(255, 255, 255, 0.015)",
   surfaceProgressTrack: "rgba(0, 0, 0, 0.55)",
@@ -31,8 +33,9 @@ export const T = {
   textSecondary: "rgba(255, 255, 255, 0.7)",
   textTertiary: "rgba(255, 255, 255, 0.55)",
   textMuted: "rgba(255, 255, 255, 0.55)",
-  textDisabled: "rgba(255, 255, 255, 0.3)",
+  textDisabled: "rgba(255, 255, 255, 0.42)",
   textDanger: "#ef4444",
+  textOnDanger: "#ffffff",
 
   // ── Borders ──
   borderSubtle: "rgba(255, 255, 255, 0.07)",
@@ -83,6 +86,8 @@ export const T = {
   shadowPanel: "0 8px 24px rgba(0, 0, 0, 0.45)",
   shadowModal: "0 16px 48px rgba(0, 0, 0, 0.55)",
   shadowLarge: "0 20px 60px rgba(0, 0, 0, 0.6)",
+  shadowMagnifier:
+    "0 0 0 2px rgba(13, 12, 16, 0.8), 0 0 0 6px rgba(255, 110, 199, 0.18), 0 12px 28px rgba(0, 0, 0, 0.55)",
 } as const;
 
 export type Tokens = typeof T;

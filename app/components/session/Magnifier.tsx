@@ -24,15 +24,18 @@ export function Magnifier({ image, size, bw }: Props) {
       setPos(null);
       return;
     }
-    const onMove = (e: MouseEvent) => {
+    // pointermove covers both mouse (hover) and touch (drag). For touch the
+    // loupe tracks the finger while it's down and freezes at last position
+    // when it lifts — workable UX on tablets.
+    const onMove = (e: PointerEvent) => {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       rafRef.current = requestAnimationFrame(() => {
         setPos({ x: e.clientX, y: e.clientY });
       });
     };
-    window.addEventListener("mousemove", onMove);
+    window.addEventListener("pointermove", onMove);
     return () => {
-      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("pointermove", onMove);
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     };
   }, [size]);
@@ -81,8 +84,7 @@ export function Magnifier({ image, size, bw }: Props) {
         height: Math.max(loupeW, loupeH),
         borderRadius: "50%",
         border: `3px solid ${T.accentPink}`,
-        boxShadow:
-          "0 0 0 2px rgba(13,12,16,0.8), 0 0 0 6px var(--accent-pink-soft), 0 12px 28px rgba(0,0,0,0.55)",
+        boxShadow: T.shadowMagnifier,
         overflow: "hidden",
         pointerEvents: "none",
         zIndex: 40,

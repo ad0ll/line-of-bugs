@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { T } from "@/lib/tokens";
 
@@ -9,19 +9,37 @@ interface Props {
   onNewSession: () => void;
 }
 
+const AUTO_REDIRECT_MS = 15_000;
+
 export function EndOfSessionOverlay({ visible, count, onNewSession }: Props) {
   const router = useRouter();
+  const titleId = useId();
+  const primaryRef = useRef<HTMLButtonElement>(null);
+  // Once the user has interacted (focus or click within the overlay), we
+  // suspend the 15s auto-redirect — they're clearly making a choice and a
+  // surprise navigation would disorient screen-reader users mid-announcement.
+  const [interacted, setInteracted] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
-    const t = setTimeout(() => router.push("/"), 15_000);
+    primaryRef.current?.focus();
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible || interacted) return;
+    const t = setTimeout(() => router.push("/"), AUTO_REDIRECT_MS);
     return () => clearTimeout(t);
-  }, [visible, router]);
+  }, [visible, interacted, router]);
 
   if (!visible) return null;
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+      onFocus={() => setInteracted(true)}
+      onPointerDown={() => setInteracted(true)}
       style={{
         position: "fixed",
         inset: 0,
@@ -36,8 +54,15 @@ export function EndOfSessionOverlay({ visible, count, onNewSession }: Props) {
         animation: "fade-in 0.3s ease forwards",
       }}
     >
-      <style>{`@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }`}</style>
-      <h2 style={{ fontFamily: "var(--font-display), serif", fontWeight: 500, fontSize: 36, margin: 0 }}>
+      <h2
+        id={titleId}
+        style={{
+          fontFamily: "var(--font-display), serif",
+          fontWeight: 500,
+          fontSize: 36,
+          margin: 0,
+        }}
+      >
         session complete
       </h2>
       <p style={{ color: T.textSecondary, fontSize: T.textLg, margin: 0 }}>
@@ -60,6 +85,7 @@ export function EndOfSessionOverlay({ visible, count, onNewSession }: Props) {
           back to home
         </button>
         <button
+          ref={primaryRef}
           type="button"
           onClick={onNewSession}
           style={{
@@ -76,8 +102,11 @@ export function EndOfSessionOverlay({ visible, count, onNewSession }: Props) {
           start new session
         </button>
       </div>
-      <p style={{ color: T.textTertiary, fontSize: T.textXs, margin: 0 }}>
-        auto-redirecting in 15s
+      <p
+        aria-live="polite"
+        style={{ color: T.textTertiary, fontSize: T.textXs, margin: 0 }}
+      >
+        {interacted ? "auto-redirect paused" : "auto-redirecting in 15s"}
       </p>
     </div>
   );

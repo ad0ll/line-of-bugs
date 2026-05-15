@@ -40,10 +40,9 @@
   .badge.bug_too_small { background: #4a2d2d; color: #e6a8a8; }
   .badge.multi_bug     { background: #4a2d4a; color: #e6a8e6; }
   .badge.poor_contrast { background: #2d3a4a; color: #a8c8e6; }
-  .action { font-size: 11px; color: #888; font-family: 'JetBrains Mono', monospace; margin-left: 4px; }
   .metrics { font-size: 11px; color: #888; font-family: 'JetBrains Mono', monospace; margin: 4px 0; line-height: 1.5; }
 
-  /* Multi-select flag buttons */
+  /* Flag buttons — multi-select. Each describes a property of the image. */
   .flags { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 8px; }
   .flags button {
     padding: 6px 4px; border: 1px solid #444; background: #1a1820;
@@ -52,18 +51,19 @@
     transition: background 0.08s, border-color 0.08s, color 0.08s;
   }
   .flags button:hover { color: #f5f5f5; border-color: #666; }
-  .flags button.active { background: #f59e0b; color: #0d0c10; border-color: #f59e0b; font-weight: 600; }
-  .flags button.good-button.active { background: #2d4a2d; color: #a8e6a8; border-color: #4a7a4a; }
-  .flags button.unsure-button.active { background: #28252e; color: #aaa; border-color: #666; }
-  /* System-suggested: the badge predicted this reason. Outlined in sky-blue
-     so user sees what the system thinks. Click → becomes amber-active (confirmed). */
-  .flags button.system-suggested:not(.active) {
+  /* System-suggested (pre-selected, unconfirmed): sky-blue. */
+  .flags button.suggested {
     border-color: #67D4E6;
     color: #67D4E6;
-    background: rgba(103, 212, 230, 0.08);
+    background: rgba(103, 212, 230, 0.10);
+    font-weight: 600;
   }
-  /* "good only ..." preference row — mutually exclusive, sky-blue accent so it
-     reads as distinct from the looks-good (approve overall) button. */
+  /* User-confirmed / user-toggled-on: amber. */
+  .flags button.active { background: #f59e0b; color: #0d0c10; border-color: #f59e0b; font-weight: 600; }
+  .flags button.unsure-button.active { background: #28252e; color: #aaa; border-color: #666; }
+
+  /* Mutually-exclusive original-good / cropped-good row.
+     Each can be system-suggested (sky-blue) or user-confirmed (amber). */
   .prefs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px; }
   .prefs button {
     padding: 5px 4px; border: 1px solid #444; background: #1a1820;
@@ -72,9 +72,25 @@
     transition: background 0.08s, border-color 0.08s, color 0.08s;
   }
   .prefs button:hover { color: #f5f5f5; border-color: #666; }
-  .prefs button.active { background: #67D4E6; color: #0d0c10; border-color: #67D4E6; font-weight: 600; }
-  /* "looks-good" takes the whole first row */
-  .flags button.looks-good { grid-column: 1 / -1; padding: 8px; font-weight: 600; }
+  .prefs button.suggested {
+    border-color: #67D4E6;
+    color: #67D4E6;
+    background: rgba(103, 212, 230, 0.10);
+    font-weight: 600;
+  }
+  .prefs button.active { background: #f59e0b; color: #0d0c10; border-color: #f59e0b; font-weight: 600; }
+
+  /* Review-row: mark-reviewed + unsure. Mark-reviewed gets full width. */
+  .review-row { display: grid; grid-template-columns: 3fr 1fr; gap: 4px; margin-top: 8px; }
+  .review-row button {
+    padding: 8px 4px; border: 1px solid #444; background: #1a1820;
+    color: #aaa; border-radius: 4px; cursor: pointer;
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+    transition: background 0.08s, border-color 0.08s, color 0.08s;
+  }
+  .review-row button:hover { color: #f5f5f5; border-color: #666; }
+  .review-row button.mark-reviewed.active { background: #2d4a2d; color: #a8e6a8; border-color: #4a7a4a; }
+  .review-row button.unsure-button.active { background: #28252e; color: #aaa; border-color: #666; }
 
   /* Zoom popup */
   #zoomPopup {
@@ -106,7 +122,7 @@
   <label>Variant <select id="variant"><option>{{ variant }}</option></select></label>
   <label>Source <select id="source"><option value="all">all</option>{% for s in sources %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></label>
   <label>Predicted <select id="quality"><option value="all">all</option><option value="good">good</option><option value="tight">tight</option><option value="wide">wide</option><option value="no_bug">no_bug</option><option value="bug_too_small">bug_too_small</option><option value="multi_bug">multi_bug</option><option value="poor_contrast">poor_contrast</option></select></label>
-  <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="looks-good">looks-good</option><option value="flagged">any flag</option>
+  <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="agreed">agreed with system</option><option value="edited">user edited labels</option><option value="flagged">any flag</option>
         <option value="pref-original">marked original-good</option>
         <option value="pref-cropped">marked cropped-good</option></select></label>
   <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="random">random</option></select></label>
@@ -118,25 +134,24 @@
 </header>
 
 <div class="help">
-  <b>What to do:</b> click <code>✓ looks-good</code> when the system's predicted action looks right. Otherwise click ALL flags that apply — these are <em>multi-select</em>, not exclusive. Default state (no click) = unreviewed.
+  <b>What to do:</b> the system pre-selects the labels it thinks apply (outlined in <span style="color:#67D4E6">sky blue</span>). If they look right, click <code>✓ mark reviewed</code>. If not, toggle labels to correct — any edit auto-marks the image reviewed. Labels describe <em>properties</em>, not actions; they're multi-select.
   <br><b>Detection issues:</b>
   <code>bbox-wrong</code> bbox missed the bug / on wrong subject / clipped the body ·
-  <code>no-bug</code> there's no insect in the image at all ·
+  <code>no-bug</code> no insect in the image at all ·
   <code>bug-too-small</code> bug is correctly boxed but too tiny for drawing
-  <br><b>Image properties (training data):</b>
+  <br><b>Image properties:</b>
   <code>subject-blurred</code> the bug is out of focus (blurred background is fine) ·
   <code>poor-contrast</code> bug nearly indistinguishable from background ·
   <code>multi-bug</code> more than one insect ·
   <code>subject-clipped</code> body runs off the frame edge ·
   <code>other-bad</code> some other reason this image is unusable
-  <br><b>Auto-crop:</b>
+  <br><b>Crop quality:</b>
   <code>crop-too-tight</code> proposed crop clips the bug ·
   <code>crop-too-loose</code> too much background in proposed crop
-  <br><b>Skip:</b> <code>? unsure</code> can't decide.
-  <br><b>System suggestion:</b> the flag button matching the system's predicted badge is outlined in <span style="color:#67D4E6">sky blue</span>. Click it to explicitly confirm that reason, or just hit <code>✓ looks-good</code> for "system got it right overall."
-  <br><b>Optional preference</b> (separate row, mutually exclusive, doesn't affect classification, <em>don't click on every image</em>):
-  <code>★ original-good</code> only when the system would crop but you think the original is fine as-is ·
-  <code>★ cropped-good</code> only when the system would hide but you think the cropped version rescues it.
+  <br><b>Positive labels</b> (mutually exclusive, applies when nothing else does):
+  <code>★ original-good</code> bug fills enough of the original frame to draw at full size ·
+  <code>★ cropped-good</code> bug is small in the original but the crop rescues it.
+  <br><b>Skip:</b> <code>? unsure</code> can't decide — comes back later.
   <br><span style="color:#666">Hover any image to zoom. Labels persist via localStorage; auto-export every 25 changes.</span>
 </div>
 
@@ -147,23 +162,14 @@ const DATA = {{ data_json }};
 const LABEL_KEY = "framing_labels";
 const SAVE_META_KEY = "framing_labels_meta";
 
+// Flag buttons (multi-select). original-good / cropped-good live in their own
+// mutually-exclusive row and aren't in this list.
 const FLAGS = [
   "bbox-wrong", "no-bug", "bug-too-small",
   "subject-blurred", "poor-contrast", "multi-bug",
   "subject-clipped", "other-bad",
   "crop-too-tight", "crop-too-loose",
 ];
-
-// When the system predicts one of these badges, the matching FLAG button gets
-// a sky-blue outline so the user can see what the system thinks. Clicking it
-// confirms (becomes amber). Flags without a system-equivalent (bbox-wrong,
-// subject-blurred, subject-clipped, other-bad, crop-too-*) are user-only.
-const BADGE_TO_FLAG = {
-  "bug_too_small": "bug-too-small",
-  "multi_bug":     "multi-bug",
-  "no_bug":        "no-bug",
-  "poor_contrast": "poor-contrast",
-};
 
 const FLAG_TITLES = {
   "bbox-wrong":       "Bbox missed the bug, captured wrong part, or wrong subject",
@@ -178,16 +184,19 @@ const FLAG_TITLES = {
   "crop-too-loose":   "Proposed crop has too much background",
 };
 
-// Map old {status, should_be} fields to flags in the new multi-select model.
-// Lossy where the old vocabulary doesn't have a clean new equivalent — we make
-// the best guess and tag the entry with `migrated_from` so the user can re-check.
+// Suggested-label → preference key for the mutually-exclusive pref row.
+const PREF_LABELS = { "original-good": "original", "cropped-good": "cropped" };
+
+// Migration: map old {status, should_be, looks_good} fields onto the new
+// {flags, preference, reviewed_at} shape. Lossy where the old vocabulary
+// doesn't have a clean equivalent — we tag the entry with `migrated_from`.
 const STATUS_TO_FLAGS = {
-  "ok":          { looks_good: true },
+  "ok":          { reviewed: true },
   "unsure":      { unsure: true },
   "wrong-bbox":  { flags: ["bbox-wrong"] },
-  "wrong-crop":  { flags: ["crop-too-loose"] },  // lossy: was either too-tight or too-loose
-  "wrong-class": { flags: [] },                   // lossy: should_be (below) carries the real signal
-  "wrong":       { flags: ["other-bad"] },        // very-old single-button-✗ shape
+  "wrong-crop":  { flags: ["crop-too-loose"] },
+  "wrong-class": { flags: [] },
+  "wrong":       { flags: ["other-bad"] },
 };
 const SHOULD_BE_TO_FLAG = {
   "multi_bug":     "multi-bug",
@@ -197,50 +206,52 @@ const SHOULD_BE_TO_FLAG = {
   "hidden":        "no-bug",
   "no_bug":        "no-bug",
   "bug_too_small": "bug-too-small",
-  // good / tight / wide on the old should_be axis meant "this is fine" → looks_good
 };
 const FRAMING_OK = new Set(["good", "tight", "wide"]);
 
+function _emptyLabel() {
+  return { flags: [], preference: null, unsure: false, reviewed_at: null };
+}
+
 function _upgradeOldLabel(v) {
-  // String-only shape (oldest): treat as wrong-*
   if (typeof v === "string") {
     const mapped = STATUS_TO_FLAGS[v];
-    if (mapped) return Object.assign({
-      flags: [], looks_good: false, unsure: false,
-      reviewed_at: Date.now(), migrated_from: "string:" + v,
-    }, mapped);
-    return { flags: ["other-bad"], looks_good: false, unsure: false,
-             preference: null,
-             reviewed_at: Date.now(), migrated_from: "string:" + v };
+    const base = _emptyLabel();
+    base.reviewed_at = Date.now();
+    base.migrated_from = "string:" + v;
+    if (mapped) {
+      if (mapped.flags) base.flags = [...mapped.flags];
+      if (mapped.unsure) base.unsure = true;
+    } else {
+      base.flags = ["other-bad"];
+    }
+    return base;
   }
-  // Object with new shape — leave alone.
-  if (v && Array.isArray(v.flags)) return v;
-  // Object with old {status, should_be} shape — migrate.
   if (v && typeof v === "object") {
-    const out = { flags: [], looks_good: false, unsure: false,
-                  preference: v.preference || null,
-                  reviewed_at: v.reviewed_at || Date.now(),
-                  migrated_from: "status:" + (v.status || "—") + "/should_be:" + (v.should_be || "—") };
+    // New shape (already has `flags` array and no `looks_good`): leave alone.
+    if (Array.isArray(v.flags) && !("looks_good" in v)) return v;
+    // Object with old shape — migrate.
+    const out = _emptyLabel();
+    out.preference = v.preference || null;
+    out.reviewed_at = v.reviewed_at || Date.now();
+    out.migrated_from = "obj:status=" + (v.status || "—") + "/should_be=" + (v.should_be || "—") + (v.looks_good ? "/looks_good" : "");
     const statusMap = v.status ? STATUS_TO_FLAGS[v.status] : null;
     if (statusMap) {
-      if (statusMap.looks_good) out.looks_good = true;
-      if (statusMap.unsure) out.unsure = true;
       if (statusMap.flags) out.flags.push(...statusMap.flags);
+      if (statusMap.unsure) out.unsure = true;
+    }
+    if (Array.isArray(v.flags)) {
+      for (const f of v.flags) if (!out.flags.includes(f)) out.flags.push(f);
     }
     if (v.should_be) {
-      if (FRAMING_OK.has(v.should_be)) {
-        // user said "this should be in a fine bucket" — interpret as approval
-        out.looks_good = true;
-        out.unsure = false;
-      } else {
+      if (!FRAMING_OK.has(v.should_be)) {
         const flag = SHOULD_BE_TO_FLAG[v.should_be];
         if (flag && !out.flags.includes(flag)) out.flags.push(flag);
-        out.looks_good = false;
       }
     }
     return out;
   }
-  return { flags: [], looks_good: false, unsure: false, preference: null, reviewed_at: Date.now() };
+  return _emptyLabel();
 }
 
 function getLabels() {
@@ -248,14 +259,13 @@ function getLabels() {
   let upgraded = false;
   for (const k of Object.keys(raw)) {
     const v = raw[k];
-    if (!v || (typeof v === "object" && Array.isArray(v.flags))) continue;
+    if (v && typeof v === "object" && Array.isArray(v.flags) && !("looks_good" in v)) continue;
     raw[k] = _upgradeOldLabel(v);
     upgraded = true;
   }
-  // Persist the upgrade once so subsequent reads are clean.
   if (upgraded) {
     try { localStorage.setItem(LABEL_KEY, JSON.stringify(raw)); }
-    catch (e) { /* tolerate — render still works in-memory */ }
+    catch (e) { /* tolerate */ }
   }
   return raw;
 }
@@ -276,7 +286,7 @@ function updateSaveStatus() {
   const m = getSaveMeta();
   const labels = getLabels();
   const n = Object.keys(labels).length;
-  const reviewed = Object.values(labels).filter(v => v.looks_good || (v.flags && v.flags.length > 0) || v.unsure).length;
+  const reviewed = Object.values(labels).filter(v => !!v.reviewed_at).length;
   const t = m.last_change ? new Date(m.last_change).toLocaleTimeString() : "—";
   el.textContent = `${reviewed} reviewed · ${n} total · last save ${t}${m.changes_since_export ? " · " + m.changes_since_export + " since export" : ""}`;
 }
@@ -292,62 +302,100 @@ function bumpSaveMeta() {
   }
 }
 
+// Has the user actually started editing this image? Used to decide whether the
+// rendered card shows the system suggestion (sky-blue) or the user's choices
+// (amber).
+function isUserEdited(lbl) {
+  return !!(lbl && (lbl.user_edited || (lbl.flags && lbl.flags.length > 0) || lbl.preference || lbl.unsure));
+}
+
+// On first user interaction, "materialize" the system suggestion into the
+// user's flags / preference. After this, the suggestion is no longer shown
+// in sky-blue; the user is editing their own copy.
+function _ensureMaterialized(cur, suggested) {
+  if (cur.user_edited) return;
+  // Already has flags or preference from migration: don't overwrite.
+  if ((cur.flags && cur.flags.length > 0) || cur.preference || cur.unsure) {
+    cur.user_edited = true;
+    return;
+  }
+  // Suggestion → fill flags + preference.
+  for (const s of (suggested || [])) {
+    if (s in PREF_LABELS) {
+      cur.preference = PREF_LABELS[s];
+    } else if (!cur.flags.includes(s)) {
+      cur.flags.push(s);
+    }
+  }
+  cur.user_edited = true;
+}
+
+function _persist(id, cur, all) {
+  cur.reviewed_at = Date.now();
+  // Drop entries that are fully empty AND not user-edited.
+  if (!cur.user_edited && cur.flags.length === 0 && !cur.preference && !cur.unsure) {
+    delete all[id];
+  } else {
+    all[id] = cur;
+  }
+  setLabels(all);
+  bumpSaveMeta();
+  render();
+}
+
+function _suggestedFor(id) {
+  // Look up the suggested-labels list from the in-page DATA.
+  // (DATA is small enough that a linear scan per-click is fine.)
+  for (const r of DATA) if (r.image_id === id) return r.suggested_labels || [];
+  return [];
+}
+
 function toggleFlag(id, flag) {
   const all = getLabels();
-  const cur = all[id] || { flags: [], unsure: false, looks_good: false, preference: null, reviewed_at: null };
-  // Toggling a flag clears looks_good and unsure (they're mutually exclusive states).
+  const cur = all[id] || _emptyLabel();
+  _ensureMaterialized(cur, _suggestedFor(id));
   const i = cur.flags.indexOf(flag);
   if (i >= 0) cur.flags.splice(i, 1);
   else cur.flags.push(flag);
-  if (cur.flags.length > 0) { cur.looks_good = false; cur.unsure = false; }
-  cur.reviewed_at = Date.now();
-  if (cur.flags.length === 0 && !cur.looks_good && !cur.unsure && !cur.preference) delete all[id];
-  else all[id] = cur;
-  setLabels(all);
-  bumpSaveMeta();
-  render();
+  cur.unsure = false;
+  _persist(id, cur, all);
 }
 
-function setLooksGood(id) {
+function togglePreference(id, kind) {
+  // kind is 'original' | 'cropped'. Mutually exclusive — picking one clears the other.
   const all = getLabels();
-  const cur = all[id] || { flags: [], unsure: false, looks_good: false, preference: null, reviewed_at: null };
-  // Toggle looks_good; clears flags and unsure.
-  const was = cur.looks_good;
-  cur.looks_good = !was;
-  if (cur.looks_good) { cur.flags = []; cur.unsure = false; }
-  cur.reviewed_at = Date.now();
-  if (cur.flags.length === 0 && !cur.looks_good && !cur.unsure && !cur.preference) delete all[id];
-  else all[id] = cur;
-  setLabels(all);
-  bumpSaveMeta();
-  render();
-}
-
-function setPreference(id, kind) {
-  // kind is 'original' | 'cropped' | null. Mutually exclusive.
-  const all = getLabels();
-  const cur = all[id] || { flags: [], unsure: false, looks_good: false, preference: null, reviewed_at: null };
+  const cur = all[id] || _emptyLabel();
+  _ensureMaterialized(cur, _suggestedFor(id));
   cur.preference = (cur.preference === kind) ? null : kind;
-  cur.reviewed_at = Date.now();
-  if (cur.flags.length === 0 && !cur.looks_good && !cur.unsure && !cur.preference) delete all[id];
-  else all[id] = cur;
-  setLabels(all);
-  bumpSaveMeta();
-  render();
+  cur.unsure = false;
+  _persist(id, cur, all);
 }
 
 function setUnsure(id) {
   const all = getLabels();
-  const cur = all[id] || { flags: [], unsure: false, looks_good: false, preference: null, reviewed_at: null };
-  const was = cur.unsure;
-  cur.unsure = !was;
-  if (cur.unsure) { cur.flags = []; cur.looks_good = false; }
-  cur.reviewed_at = Date.now();
-  if (cur.flags.length === 0 && !cur.looks_good && !cur.unsure && !cur.preference) delete all[id];
-  else all[id] = cur;
-  setLabels(all);
-  bumpSaveMeta();
-  render();
+  const cur = all[id] || _emptyLabel();
+  // Unsure clears flags and pref, and marks user_edited so we don't pre-fill again.
+  cur.user_edited = true;
+  cur.unsure = !cur.unsure;
+  if (cur.unsure) { cur.flags = []; cur.preference = null; }
+  _persist(id, cur, all);
+}
+
+function markReviewed(id) {
+  // Confirms the current shown state. If the user hasn't edited, this accepts
+  // the system suggestion verbatim (materializes it).
+  const all = getLabels();
+  const cur = all[id] || _emptyLabel();
+  if (cur.reviewed_at && cur.user_edited) {
+    // Toggle off — back to unreviewed.
+    delete all[id];
+    setLabels(all);
+    bumpSaveMeta();
+    render();
+    return;
+  }
+  _ensureMaterialized(cur, _suggestedFor(id));
+  _persist(id, cur, all);
 }
 
 function exportLabels(auto) {
@@ -374,8 +422,7 @@ document.getElementById("importLabels").addEventListener("change", (e) => {
       const cur = getLabels();
       let added = 0;
       for (const [k, v] of Object.entries(imported)) {
-        if (typeof v === "string") cur[k] = { flags: [], unsure: false, looks_good: false, reviewed_at: Date.now() };
-        else cur[k] = v;
+        cur[k] = (typeof v === "string" || (v && !Array.isArray(v.flags))) ? _upgradeOldLabel(v) : v;
         added++;
       }
       setLabels(cur);
@@ -392,12 +439,19 @@ document.getElementById("importLabels").addEventListener("change", (e) => {
 function fmtPct(n) { return n === null || n === undefined ? "—" : (n * 100).toFixed(1) + "%"; }
 function fmtNum(n, d) { return n === null || n === undefined ? "—" : n.toFixed(d); }
 
-// Predicted action a card's framing_quality implies (purely informational).
-function predictedAction(q) {
-  if (q === "no_bug" || q === "bug_too_small" || q === "multi_bug" || q === "poor_contrast") return "hide";
-  if (q === "wide") return "serve cropped";
-  if (q === "good" || q === "tight") return "serve as-is";
-  return "(unknown)";
+// Effective view for rendering: if user edited, use their data; else use the
+// system suggestion. Returned object has {flags, preference, fromSuggestion}.
+function effectiveLabels(r, lbl) {
+  if (isUserEdited(lbl)) {
+    return { flags: lbl.flags || [], preference: lbl.preference || null, fromSuggestion: false };
+  }
+  const flags = [];
+  let preference = null;
+  for (const s of (r.suggested_labels || [])) {
+    if (s in PREF_LABELS) preference = PREF_LABELS[s];
+    else flags.push(s);
+  }
+  return { flags, preference, fromSuggestion: true };
 }
 
 function render() {
@@ -411,9 +465,10 @@ function render() {
   if (rf !== "all") {
     rows = rows.filter(r => {
       const lbl = labels[r.image_id];
-      if (rf === "unreviewed") return !lbl;
-      if (rf === "reviewed")   return !!lbl;
-      if (rf === "looks-good") return lbl && lbl.looks_good;
+      if (rf === "unreviewed") return !lbl || !lbl.reviewed_at;
+      if (rf === "reviewed")   return lbl && lbl.reviewed_at;
+      if (rf === "agreed")     return lbl && lbl.reviewed_at && !lbl.user_edited;
+      if (rf === "edited")     return lbl && lbl.user_edited;
       if (rf === "flagged")    return lbl && lbl.flags && lbl.flags.length > 0;
       if (rf === "pref-original") return lbl && lbl.preference === "original";
       if (rf === "pref-cropped")  return lbl && lbl.preference === "cropped";
@@ -432,9 +487,10 @@ function render() {
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
   for (const r of rows) {
-    const lbl = labels[r.image_id] || { flags: [], unsure: false, looks_good: false };
-    const flagged = (lbl.flags && lbl.flags.length > 0);
-    const reviewed = lbl.looks_good || flagged || lbl.unsure;
+    const lbl = labels[r.image_id] || _emptyLabel();
+    const eff = effectiveLabels(r, lbl);
+    const reviewed = !!lbl.reviewed_at;
+    const flagged = eff.flags.length > 0;
     const div = document.createElement("div");
     div.className = "card" + (reviewed ? " reviewed" : "") + (flagged ? " flagged" : "");
 
@@ -445,16 +501,24 @@ function render() {
       ? '<img src="' + r.crop_path + '" alt="">'
       : '<div class="nocrop">no crop · ' + r.framing_quality + '</div>';
 
-    const suggestedFlag = BADGE_TO_FLAG[r.framing_quality];
+    // Flag buttons. Pre-selected (system) → sky-blue. User-confirmed → amber.
     const flagButtons = FLAGS.map(f => {
-      const active = lbl.flags && lbl.flags.indexOf(f) >= 0;
-      const suggested = (f === suggestedFlag);
-      const classes = [];
-      if (active) classes.push("active");
-      if (suggested) classes.push("system-suggested");
-      const title = FLAG_TITLES[f] + (suggested ? " · system predicts this — click to confirm" : "");
-      return '<button title="' + title + '" class="' + classes.join(' ') + '" onclick="toggleFlag(\'' + r.image_id + '\',\'' + f + '\')">' + f + '</button>';
+      const isOn = eff.flags.indexOf(f) >= 0;
+      const cls = !isOn ? "" : (eff.fromSuggestion ? "suggested" : "active");
+      const title = FLAG_TITLES[f] + (cls === "suggested" ? " · system suggests this — already selected, click to remove" : "");
+      return '<button title="' + title + '" class="' + cls + '" onclick="toggleFlag(\'' + r.image_id + '\',\'' + f + '\')">' + f + '</button>';
     }).join('');
+
+    // Preference row — mutually exclusive original-good / cropped-good.
+    const prefBtn = (kind, label, tip) => {
+      const on = eff.preference === kind;
+      const cls = !on ? "" : (eff.fromSuggestion ? "suggested" : "active");
+      const fullTip = tip + (cls === "suggested" ? " · system suggests this — already selected" : "");
+      return '<button title="' + fullTip + '" class="' + cls + '" onclick="togglePreference(\'' + r.image_id + '\', \'' + kind + '\')">★ ' + label + '</button>';
+    };
+    const prefHTML =
+      prefBtn("original", "original-good", "Bug fills enough of the original frame to draw at full size. Mutually exclusive with cropped-good.") +
+      prefBtn("cropped",  "cropped-good",  "Bug is small in original but the crop rescues it. Mutually exclusive with original-good.");
 
     div.innerHTML =
       '<div class="imgs">' +
@@ -466,7 +530,6 @@ function render() {
       '</div>' +
       '<div class="name">' + (r.common_name || r.taxon_species || "?") + ' <code>· ' + r.image_id + '</code></div>' +
       '<span class="badge ' + r.framing_quality + '">' + r.framing_quality + '</span>' +
-      '<span class="action">→ ' + predictedAction(r.framing_quality) + '</span>' +
       '<div class="metrics">' +
         'bbox: ' + fmtPct(r.bbox_area_ratio) + ' (' +
           (r.bbox_long_edge_px !== null && r.bbox_long_edge_px !== undefined ? r.bbox_long_edge_px.toFixed(0) + 'px long' : '—') + ' / ' +
@@ -477,14 +540,13 @@ function render() {
         (r.bbox_touches_edge ? ' · ⚠ bbox touches frame edge' : '') +
         (r.gt_iou !== null ? ' · gt_iou: ' + r.gt_iou.toFixed(2) : '') +
       '</div>' +
-      '<div class="flags">' +
-        '<button title="Everything looks correct — system prediction is right" class="looks-good good-button ' + (lbl.looks_good ? 'active' : '') + '" onclick="setLooksGood(\'' + r.image_id + '\')">✓ looks-good</button>' +
-        flagButtons +
-        '<button title="Ambiguous, come back later" class="unsure-button ' + (lbl.unsure ? 'active' : '') + '" onclick="setUnsure(\'' + r.image_id + '\')">? unsure</button>' +
-      '</div>' +
-      '<div class="prefs">' +
-        '<button title="The original is good for drawing (ignore the crop). Mutually exclusive with cropped-good." class="' + (lbl.preference === "original" ? 'active' : '') + '" onclick="setPreference(\'' + r.image_id + '\', \'original\')">★ original-good</button>' +
-        '<button title="The cropped version is good for drawing (the original isn\'t). Mutually exclusive with original-good." class="' + (lbl.preference === "cropped" ? 'active' : '') + '" onclick="setPreference(\'' + r.image_id + '\', \'cropped\')">★ cropped-good</button>' +
+      '<div class="flags">' + flagButtons + '</div>' +
+      '<div class="prefs">' + prefHTML + '</div>' +
+      '<div class="review-row">' +
+        '<button class="mark-reviewed ' + (reviewed ? 'active' : '') + '" onclick="markReviewed(\'' + r.image_id + '\')" title="Confirms the current labels (accepts the system suggestion if you haven\'t changed anything). Any label edit auto-marks reviewed.">' +
+          (reviewed ? '✓ reviewed' : '✓ mark reviewed') +
+        '</button>' +
+        '<button class="unsure-button ' + (lbl.unsure ? 'active' : '') + '" onclick="setUnsure(\'' + r.image_id + '\')" title="Ambiguous — come back later">? unsure</button>' +
       '</div>';
     grid.appendChild(div);
   }

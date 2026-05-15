@@ -11,7 +11,7 @@ import torch
 from PIL import Image
 
 from scripts.detect_subjects.caches import load_completed_pairs
-from scripts.detect_subjects.classify import classify_framing
+from scripts.detect_subjects.classify import classify_framing, suggest_labels
 from scripts.detect_subjects.config import (
     BBOX_EDGE_TOLERANCE_NORMALIZED,
     CROPS_DIR,
@@ -172,6 +172,15 @@ def run_v1_on_sample(
                             CROPS_DIR / V1_NAME / f"{image_id}_thumb.jpg",
                         )
 
+                suggested_labels = suggest_labels(
+                    confidence=det.confidence,
+                    bbox_area_ratio=bbox_area,
+                    bbox_long_edge_px=bbox_long_edge_px,
+                    n_distinct_detections=det.n_distinct_detections,
+                    mask_area_ratio=mask_area,
+                    lab_delta_e=d_e,
+                    bbox_touches_edge=bbox_touches_edge,
+                )
                 quality = classify_framing(
                     confidence=det.confidence,
                     bbox_area_ratio=bbox_area,
@@ -179,6 +188,7 @@ def run_v1_on_sample(
                     n_distinct_detections=det.n_distinct_detections,
                     mask_area_ratio=mask_area,
                     lab_delta_e=d_e,
+                    bbox_touches_edge=bbox_touches_edge,
                 )
 
                 gt_bbox = lookup_gt_bbox(gt_index, image_id)
@@ -206,6 +216,7 @@ def run_v1_on_sample(
                     crop_x=crop_x, crop_y=crop_y, crop_w=crop_w, crop_h=crop_h,
                     post_crop_subject_area=post_area,
                     framing_quality=quality,
+                    suggested_labels=suggested_labels,
                     gt_bbox_x=gt_bbox[0] if gt_bbox else None,
                     gt_bbox_y=gt_bbox[1] if gt_bbox else None,
                     gt_bbox_w=gt_bbox[2] if gt_bbox else None,

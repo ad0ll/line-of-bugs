@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Modal } from "@/app/components/modal/Modal";
 import { ReportForm } from "@/app/components/report/ReportForm";
@@ -23,7 +24,7 @@ export function ReportModalClient({ imageId, thumbnail, commonName, speciesName 
     <Modal onClose={close} ariaLabel="report image">
       <div className="report-modal-content">
         <div className="report-modal-preview">
-          <img src={`/api/thumb/${basename(thumbnail)}`} alt="" />
+          <Image src={`/api/thumb/${basename(thumbnail)}`} alt="" width={160} height={160} />
           <p className="preview-name">{commonName ?? speciesName ?? imageId}</p>
         </div>
         <ReportForm

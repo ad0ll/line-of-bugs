@@ -21,6 +21,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 # SCALE multiplier — set INAT_SCALE=10 to roughly 10× every per-order target.
 # Useful to expand the dataset without editing the per-order table.
 SCALE = float(os.environ.get("INAT_SCALE", "1"))
+
+# Mode toggle: "wild" (default — what we've always done) vs "captive" (zoos,
+# butterfly conservatories, lab insectariums, hand-held macro shots). When
+# captive: send captive=true to the API + write subject_state="captive" so
+# the gallery can filter them as a separate axis. By default we shrink the
+# per-order targets to 30% of wild because the captive pool is smaller and
+# we don't need parity in volume — user overrides via INAT_SCALE.
+INAT_MODE = os.environ.get("INAT_MODE", "wild")
+assert INAT_MODE in ("wild", "captive"), f"INAT_MODE must be wild|captive, got {INAT_MODE!r}"
+SUBJECT_STATE = "captive" if INAT_MODE == "captive" else "wild"
+if INAT_MODE == "captive":
+    SCALE = SCALE * 0.3
 from common import (
     session, IMG_DIR, THUMB_DIR, MEDIUM_DIR, MIN_LONG_EDGE_DEFAULT,
     parallel_download, ConsecutiveFailureGuard,
@@ -159,10 +171,14 @@ def fetch_order(mw: DbWriter, existing_by_label: Counter,
         params = {
             "taxon_id": taxon_id,
             "photo_license": "cc0,cc-by,cc-by-sa,cc-by-nc",
-            "quality_grade": "research",
+            # iNat tags captive observations as quality_grade=casual by
+            # definition, so the captive pass can't filter on grade. We
+            # rely on min-image-size + life-stage + license filters
+            # already in `keep()` to gate quality.
+            **({} if INAT_MODE == "captive" else {"quality_grade": "research"}),
             "term_id": 1,
             "term_value_id": life_value,
-            "captive": "false",
+            "captive": "true" if INAT_MODE == "captive" else "false",
             "per_page": 200,
             "order": "asc",
             "order_by": "id",
@@ -217,7 +233,7 @@ def fetch_order(mw: DbWriter, existing_by_label: Counter,
             filename = build_filename(
                 source="inaturalist",
                 source_id=str(photo_id),
-                subject_state="wild",
+                subject_state=SUBJECT_STATE,
                 common_name=common_name,
                 scientific=scientific,
             )
@@ -264,7 +280,7 @@ def fetch_order(mw: DbWriter, existing_by_label: Counter,
                 "taxon_order": label,
                 "taxon_species": meta["scientific"],
                 "common_name": meta["common_name"],
-                "subject_state": "wild",
+                "subject_state": SUBJECT_STATE,
                 "view_label": "",
                 "life_stage": life_stage or "",
                 "sex": sex or "",
@@ -284,13 +300,18 @@ def fetch_order(mw: DbWriter, existing_by_label: Counter,
 
 def main() -> int:
     mw = DbWriter("inaturalist")
-    log.info("iNat: resuming with %d already in DB", mw.count())
+    log.info("iNat: mode=%s, resuming with %d already in DB (across all states)",
+             INAT_MODE, mw.count())
 
-    # One-shot startup pre-flight: per-label counts straight from SQLite.
+    # One-shot startup pre-flight: per-label counts for THIS mode's subject_state.
+    # Wild and captive are independent pools; we mustn't let wild rows count
+    # against the captive target.
     existing_by_label = Counter()
     for label, n in mw.conn.execute(
         "SELECT taxon_order, COUNT(*) FROM images "
-        "WHERE source = 'inaturalist' GROUP BY taxon_order"
+        "WHERE source = 'inaturalist' AND subject_state = ? "
+        "GROUP BY taxon_order",
+        (SUBJECT_STATE,),
     ):
         existing_by_label[label or ""] = n
 
