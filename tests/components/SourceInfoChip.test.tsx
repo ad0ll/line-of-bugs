@@ -11,7 +11,8 @@ const img: Image = {
   photographerAttribution: "(c) Marie Cerda, CC BY 4.0", photographer: "Marie Cerda",
   institution: "iNaturalist", taxonOrder: "Coleoptera",
   taxonSpecies: "Harmonia axyridis", commonName: "Asian Lady Beetle",
-  subjectType: "nature", viewLabel: null, description: null, capturedDate: null,
+  subjectState: "wild", viewLabel: null, description: null, capturedDate: null,
+  lifeStage: null, sex: null, hostOrganism: null, specimenCondition: null, rawMetadata: null,
   hidden: false, addedAt: new Date(),
 };
 

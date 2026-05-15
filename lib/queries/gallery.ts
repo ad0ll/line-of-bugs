@@ -16,7 +16,7 @@ export type GalleryRow = {
   taxon_order: string | null;
   taxon_species: string | null;
   common_name: string | null;
-  subject_type: string;
+  subject_state: string;
   institution: string | null;
   collection_index: number;
   collection_size: number;
@@ -60,8 +60,12 @@ export async function searchGallery(args: SearchGalleryArgs): Promise<SearchGall
   const filters: SQL[] = [sql`i.hidden = 0`];
   filters.push(sql`NOT EXISTS (SELECT 1 FROM reports r WHERE r.image_id = i.image_id AND r.resolved_at IS NULL)`);
 
-  if (args.subject === "nature" || args.subject === "specimen") {
-    filters.push(sql`i.subject_type = ${args.subject}`);
+  // UI labels "nature"/"specimen" map to DB enum {wild, captive, specimen}.
+  // Nature = alive in any setting (wild OR captive); specimen = preserved.
+  if (args.subject === "nature") {
+    filters.push(sql`i.subject_state IN ('wild', 'captive')`);
+  } else if (args.subject === "specimen") {
+    filters.push(sql`i.subject_state = 'specimen'`);
   }
 
   if (args.institutions.length > 0) {
@@ -87,7 +91,7 @@ export async function searchGallery(args: SearchGalleryArgs): Promise<SearchGall
       image_id, collection_id, source, source_page_url, image_url,
       thumbnail_filename, medium_filename, filename,
       width, height, taxon_order, taxon_species, common_name,
-      subject_type, institution,
+      subject_state, institution,
       ROW_NUMBER() OVER (PARTITION BY collection_id ORDER BY image_id) AS collection_index,
       COUNT(*) OVER (PARTITION BY collection_id) AS collection_size
     FROM visible
@@ -136,19 +140,22 @@ export async function listSubjectTypeCounts(): Promise<SubjectTypeCounts> {
   cacheTag("images-stats");
   cacheLife("days");
 
-  const rows = db.all<{ subject_type: string; c: number }>(sql`
-    SELECT subject_type, COUNT(*) AS c
+  const rows = db.all<{ subject_state: string; c: number }>(sql`
+    SELECT subject_state, COUNT(*) AS c
     FROM images i
     WHERE i.hidden = 0
       AND NOT EXISTS (
         SELECT 1 FROM reports r
         WHERE r.image_id = i.image_id AND r.resolved_at IS NULL
       )
-    GROUP BY subject_type
+    GROUP BY subject_state
   `);
 
-  const nature = rows.find((r) => r.subject_type === "nature")?.c ?? 0;
-  const specimen = rows.find((r) => r.subject_type === "specimen")?.c ?? 0;
+  const wild = rows.find((r) => r.subject_state === "wild")?.c ?? 0;
+  const captive = rows.find((r) => r.subject_state === "captive")?.c ?? 0;
+  const specimen = rows.find((r) => r.subject_state === "specimen")?.c ?? 0;
+  // UI groups "wild + captive" under the "nature" label
+  const nature = wild + captive;
   return { nature, specimen, both: nature + specimen };
 }
 

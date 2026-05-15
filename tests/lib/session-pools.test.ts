@@ -8,8 +8,9 @@ const fakeImg = (id: string): Image => ({
   mediumFilename: "", fileSizeBytes: 0, fileSha256: "", width: 100, height: 100,
   license: "cc-by-4.0", licenseUrl: null, photographerAttribution: null,
   photographer: null, institution: null, taxonOrder: null, taxonSpecies: null,
-  commonName: null, subjectType: "nature", viewLabel: null, description: null,
+  commonName: null, subjectState: "wild", viewLabel: null, description: null,
   capturedDate: null, hidden: false, addedAt: new Date(),
+  lifeStage: null, sex: null, hostOrganism: null, specimenCondition: null, rawMetadata: null,
 });
 
 describe("session-pools", () => {

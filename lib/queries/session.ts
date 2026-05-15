@@ -26,8 +26,11 @@ export async function buildSessionPool(
         AND ${schema.reports.resolvedAt} IS NULL
     )`,
   ];
-  if (opts.subjectType !== "both") {
-    conditions.push(eq(schema.images.subjectType, opts.subjectType));
+  // UI labels "nature"/"specimen" map to DB enum {wild, captive, specimen}.
+  if (opts.subjectType === "nature") {
+    conditions.push(sql`${schema.images.subjectState} IN ('wild', 'captive')`);
+  } else if (opts.subjectType === "specimen") {
+    conditions.push(eq(schema.images.subjectState, "specimen"));
   }
   const all = await db
     .select()

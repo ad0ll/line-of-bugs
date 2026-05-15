@@ -8,8 +8,9 @@ const mk = (id: string, species: string, collection: string): Image => ({
   mediumFilename: "", fileSizeBytes: 0, fileSha256: "", width: 0, height: 0,
   license: "cc-by-4.0", licenseUrl: null, photographerAttribution: null,
   photographer: null, institution: null, taxonOrder: null, taxonSpecies: species,
-  commonName: species, subjectType: "nature", viewLabel: null, description: null,
+  commonName: species, subjectState: "wild", viewLabel: null, description: null,
   capturedDate: null, hidden: false, addedAt: new Date(),
+  lifeStage: null, sex: null, hostOrganism: null, specimenCondition: null, rawMetadata: null,
 });
 
 describe("applyRepeatMode", () => {
