@@ -1,0 +1,106 @@
+:root {
+  /* Surfaces */
+  --surface-0: #0d0c10;
+  --surface-1: #16141a;
+  --surface-2: #201e24;
+  --surface-raised: rgba(16, 15, 18, 0.78);
+  --surface-panel: rgba(16, 15, 18, 0.94);
+  --surface-modal: rgba(22, 20, 26, 0.75);
+  --surface-chip: rgba(10, 10, 11, 0.55);
+  --surface-chip-strong: rgba(10, 10, 11, 0.78);
+  --surface-arrow: rgba(16, 15, 18, 0.6);
+  --surface-scrim: rgba(0, 0, 0, 0.4);
+  --surface-ink: #0a0a0b;
+  --surface-progress-track: rgba(0, 0, 0, 0.55);
+  --surface-hover: rgba(255, 255, 255, 0.08);
+  --surface-active: rgba(255, 255, 255, 0.14);
+
+  /* Text */
+  --text-primary: rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-tertiary: rgba(255, 255, 255, 0.55);
+  --text-muted: rgba(255, 255, 255, 0.55);
+  --text-disabled: rgba(255, 255, 255, 0.3);
+  --text-warning: rgba(255, 210, 120, 0.95);
+  --text-danger: #ef4444;
+
+  /* Borders */
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-medium: rgba(255, 255, 255, 0.1);
+  --border-emphasis: rgba(255, 255, 255, 0.2);
+  --border-warning: rgba(255, 170, 0, 0.3);
+  --border-danger: rgba(239, 68, 68, 0.5);
+
+  /* Spacing */
+  --s1: 2px;  --s2: 4px;  --s3: 6px;  --s4: 8px;
+  --s5: 10px; --s6: 12px; --s7: 14px; --s8: 16px;
+  --s10: 20px; --s12: 24px;
+
+  /* Radii */
+  --r-xs: 3px;  --r-sm: 4px;  --r-md: 5px;
+  --r-lg: 6px;  --r-xl: 7px;  --r-2xl: 8px;
+  --r-3xl: 10px; --r-4xl: 12px; --r-5xl: 14px;
+
+  /* Timing */
+  --timing-fast: 0.12s;
+  --timing-base: 0.15s;
+  --timing-slow: 0.2s;
+
+  /* Shadows */
+  --shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-modal: 0 16px 48px rgba(0, 0, 0, 0.55);
+  --shadow-large: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* ── Base ── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+body {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-weight: 500;
+}
+
+/* ── Focus ring (dual-ring) ── */
+:focus-visible {
+  outline: 1.5px solid var(--surface-0);
+  outline-offset: 1px;
+  box-shadow: 0 0 0 2px rgba(255, 200, 230, 0.6);
+}
+
+/* ── Utility: icon button hover state ── */
+.u-icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background var(--timing-fast), color var(--timing-fast);
+}
+.u-icon-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
+.u-icon-btn.is-active { background: var(--surface-active); color: var(--text-primary); }
+.u-icon-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Utility: backdrop blur w/ opaque fallback ── */
+@supports (backdrop-filter: blur(8px)) {
+  .u-backdrop-blur-sm  { backdrop-filter: blur(8px); }
+  .u-backdrop-blur-md  { backdrop-filter: blur(12px); }
+  .u-backdrop-blur-lg  { backdrop-filter: blur(16px); }
+}
+@supports not (backdrop-filter: blur(8px)) {
+  .u-backdrop-blur-sm, .u-backdrop-blur-md, .u-backdrop-blur-lg {
+    background: var(--surface-panel);
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
