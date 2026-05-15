@@ -64,7 +64,7 @@ def run_v1_on_sample(
     gt_index: GroundTruthIndex | None = None,
     parquet_path: Path = PARQUET_PATH,
     device: str = "mps",
-    dtype: torch.dtype = torch.float16,
+    dtype: torch.dtype = torch.float32,
 ) -> dict:
     """Run V1 (DINO + InsectSAM) over every row in sample_rows."""
     completed = load_completed_pairs(parquet_path)

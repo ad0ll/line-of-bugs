@@ -36,7 +36,7 @@ class DetectionResult:
 
 
 class GroundingDinoDetector:
-    def __init__(self, device: str = "mps", dtype: torch.dtype = torch.float16) -> None:
+    def __init__(self, device: str = "mps", dtype: torch.dtype = torch.float32) -> None:
         self.device = device
         self.dtype = dtype
         self.processor = AutoProcessor.from_pretrained(DINO_MODEL_ID)
@@ -49,9 +49,10 @@ class GroundingDinoDetector:
     @torch.no_grad()
     def detect(self, image: Image.Image) -> DetectionResult:
         start = time.perf_counter()
-        text_labels = [[self.prompt]]
+        # transformers 5.x expects text as a flat string (or list[str]) for single-image inference.
+        # The prompt itself is period-separated; GroundingDINO tokenizes it into class queries.
         inputs = self.processor(
-            images=image, text=text_labels, return_tensors="pt"
+            images=image, text=self.prompt, return_tensors="pt"
         ).to(self.device)
         if "pixel_values" in inputs:
             inputs["pixel_values"] = inputs["pixel_values"].to(self.dtype)

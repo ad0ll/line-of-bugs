@@ -50,8 +50,8 @@ INSECT_PROMPT = (
 )
 
 # ─── Detector thresholds ───────────────────────────────────────────
-BOX_THRESHOLD = 0.25
-TEXT_THRESHOLD = 0.25
+BOX_THRESHOLD = 0.15  # lowered so we capture bbox data on low-conf cases (still classify as 'hidden')
+TEXT_THRESHOLD = 0.20
 NMS_IOU_THRESHOLD = 0.5
 HIGH_CONF_THRESHOLD = 0.4
 

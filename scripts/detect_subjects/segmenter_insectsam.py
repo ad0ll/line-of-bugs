@@ -26,7 +26,7 @@ class SegmentationResult:
 
 
 class InsectSAMSegmenter:
-    def __init__(self, device: str = "mps", dtype: torch.dtype = torch.float16) -> None:
+    def __init__(self, device: str = "mps", dtype: torch.dtype = torch.float32) -> None:
         self.device = device
         self.dtype = dtype
         self.processor = SamProcessor.from_pretrained(INSECTSAM_MODEL_ID)
@@ -40,7 +40,11 @@ class InsectSAMSegmenter:
     def _get_image_embedding(self, image_id: str, image: Image.Image) -> torch.Tensor:
         if image_id in self._embedding_cache:
             return self._embedding_cache[image_id]
-        inputs = self.processor(images=image, return_tensors="pt").to(self.device)
+        inputs = self.processor(images=image, return_tensors="pt")
+        for k, v in list(inputs.items()):
+            if isinstance(v, torch.Tensor) and v.dtype == torch.float64:
+                inputs[k] = v.to(torch.float32)
+        inputs = inputs.to(self.device)
         if "pixel_values" in inputs:
             inputs["pixel_values"] = inputs["pixel_values"].to(self.dtype)
         embed = self.model.get_image_embeddings(inputs["pixel_values"])
@@ -67,7 +71,13 @@ class InsectSAMSegmenter:
 
         inputs = self.processor(
             images=image, input_boxes=input_boxes, return_tensors="pt"
-        ).to(self.device)
+        )
+        # MPS doesn't support float64. The SAM processor returns input_boxes
+        # as float64 by default; cast all float tensors to F32 before .to(mps).
+        for k, v in list(inputs.items()):
+            if isinstance(v, torch.Tensor) and v.dtype == torch.float64:
+                inputs[k] = v.to(torch.float32)
+        inputs = inputs.to(self.device)
         if "pixel_values" in inputs:
             inputs["pixel_values"] = inputs["pixel_values"].to(self.dtype)
 
