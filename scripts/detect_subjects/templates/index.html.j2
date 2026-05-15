@@ -13,10 +13,13 @@
   .totals { margin-left: auto; font-size: 13px; color: #aaa; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 16px; padding: 24px; }
   .card { background: #1a1820; border: 1px solid #28252e; border-radius: 8px; padding: 12px; }
-  .imgs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .imgs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; align-items: start; }
   .imgs figure { margin: 0; }
   .imgs figcaption { font-size: 11px; color: #888; margin-top: 2px; }
-  .imgs img { width: 100%; height: 200px; object-fit: contain; background: #0d0c10; border-radius: 4px; display: block; }
+  /* Image fills its container WIDTH and its own natural aspect ratio drives the height.
+     bbox-overlay wraps the image so the bbox div positions against the image bounds,
+     not a fixed-height letterboxed container. */
+  .imgs img { width: 100%; height: auto; background: #0d0c10; border-radius: 4px; display: block; }
   .name { font-size: 14px; margin: 4px 0; color: #f5f5f5; }
   .name code { color: #67D4E6; font-size: 11px; }
   .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 4px 0; }
@@ -27,12 +30,31 @@
   .badge.multi_bug { background: #4a2d4a; color: #e6a8e6; }
   .badge.camouflaged { background: #2d3a4a; color: #a8c8e6; }
   .metrics { font-size: 12px; color: #aaa; font-family: 'JetBrains Mono', monospace; margin: 4px 0; line-height: 1.5; }
-  .labels { display: flex; gap: 4px; margin-top: 8px; }
-  .labels button { flex: 1; padding: 6px; border: 1px solid #444; background: #1a1820; color: #aaa; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 400; }
+  .labels { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 4px; margin-top: 8px; }
+  .labels button { padding: 6px 4px; border: 1px solid #444; background: #1a1820; color: #aaa; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 400; }
+  .labels button:hover { color: #f5f5f5; border-color: #666; }
   .labels button.active { background: #FF6EC7; color: #0d0c10; border-color: #FF6EC7; font-weight: 600; }
-  .bbox-overlay { position: relative; }
+  .labels button.wrong-bbox.active { background: #ef4444; color: #fff; border-color: #ef4444; }
+  .labels button.wrong-class.active { background: #f59e0b; color: #0d0c10; border-color: #f59e0b; }
+  .labels button.wrong-crop.active { background: #A78BFA; color: #0d0c10; border-color: #A78BFA; }
+  .bbox-overlay { position: relative; display: block; line-height: 0; }
   .bbox-overlay .box { position: absolute; border: 2px solid #FF6EC7; pointer-events: none; box-sizing: border-box; }
-  .nocrop { width: 100%; height: 200px; display: flex; align-items: center; justify-content: center; background: #0d0c10; color: #666; font-size: 12px; border-radius: 4px; }
+  .nocrop { width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; background: #0d0c10; color: #666; font-size: 12px; border-radius: 4px; }
+  /* Hover-zoom: large preview fixed at top-center while hovering an image */
+  .imgs figure .zoom {
+    position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
+    max-width: 92vw; max-height: 86vh;
+    z-index: 1000;
+    background: #0d0c10; border: 2px solid #FF6EC7; border-radius: 4px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85);
+    pointer-events: none;
+    visibility: hidden; opacity: 0;
+  }
+  .imgs figure:hover .zoom { visibility: visible; opacity: 1; }
+  /* Help blurb */
+  .help { font-size: 12px; color: #aaa; padding: 8px 24px; background: #1a1820; border-bottom: 1px solid #28252e; }
+  .help code { background: #0d0c10; padding: 1px 5px; border-radius: 3px; color: #FF6EC7; font-family: 'JetBrains Mono', monospace; }
+  .help b { color: #f5f5f5; }
 </style>
 </head>
 <body>
@@ -45,6 +67,15 @@
   <span class="totals" id="totals">{{ total }} images</span>
   <button onclick="exportLabels()">Export labels</button>
 </header>
+
+<div class="help">
+  <b>Labels:</b>
+  <code>✓ correct</code> bbox + class + crop all look right ·
+  <code>✗ bbox</code> bbox missed the bug, captured wrong part, or wrong subject ·
+  <code>✗ class</code> bbox is fine but the <code>good/wide/hidden/...</code> label is wrong ·
+  <code>✗ crop</code> bbox + class fine but crop aesthetic is wrong (too tight, too loose, off-center) ·
+  <code>? unsure</code> ambiguous · Hover any image to zoom.
+</div>
 
 <div class="grid" id="grid"></div>
 
@@ -120,7 +151,9 @@ function render() {
       '</div>' +
       '<div class="labels">' +
         '<button class="' + (lbl === 'ok' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'ok\')">✓ correct</button>' +
-        '<button class="' + (lbl === 'wrong' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong\')">✗ wrong</button>' +
+        '<button class="wrong-bbox ' + (lbl === 'wrong-bbox' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-bbox\')">✗ bbox</button>' +
+        '<button class="wrong-class ' + (lbl === 'wrong-class' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-class\')">✗ class</button>' +
+        '<button class="wrong-crop ' + (lbl === 'wrong-crop' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-crop\')">✗ crop</button>' +
         '<button class="' + (lbl === 'unsure' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'unsure\')">? unsure</button>' +
       '</div>';
     grid.appendChild(div);
