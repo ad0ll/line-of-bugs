@@ -68,8 +68,8 @@ else
 fi
 
 # 7. Session start API
-check "/api/session/start returns >= 1 image" \
-    bash -c "curl -fsS -X POST '$BASE/api/session/start' -H 'content-type: application/json' -d '{\"intervalSec\":60,\"subjectType\":\"both\",\"repeatMode\":\"default\"}' | grep -Eq '\"images\":\\[[^]]'"
+check "/api/session/start returns sessionId" \
+    bash -c "curl -fsS -X POST '$BASE/api/session/start' -H 'content-type: application/json' -d '{\"intervalSec\":60,\"subjectType\":\"both\",\"repeatMode\":\"default\"}' | grep -Eq '\"sessionId\":\"[a-f0-9-]+\"'"
 
 # 8. Security headers present
 for h in strict-transport-security content-security-policy x-content-type-options referrer-policy; do
