@@ -40,17 +40,24 @@
   .bbox-overlay { position: relative; display: block; line-height: 0; }
   .bbox-overlay .box { position: absolute; border: 2px solid #FF6EC7; pointer-events: none; box-sizing: border-box; }
   .nocrop { width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; background: #0d0c10; color: #666; font-size: 12px; border-radius: 4px; }
-  /* Hover-zoom: large preview fixed at top-center while hovering an image */
-  .imgs figure .zoom {
-    position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
-    max-width: 92vw; max-height: 86vh;
+  /* Mouse-follow zoom popup. A single global #zoomPopup is created in JS
+     and positioned next to the cursor on mouseover. Capped at 560×560
+     with natural aspect ratio preserved. */
+  #zoomPopup {
+    position: fixed;
+    width: auto; height: auto;
+    max-width: 38vw; max-height: 70vh;
+    object-fit: contain;
     z-index: 1000;
     background: #0d0c10; border: 2px solid #FF6EC7; border-radius: 4px;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85);
+    box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.7);
     pointer-events: none;
-    visibility: hidden; opacity: 0;
+    display: none;
   }
-  .imgs figure:hover .zoom { visibility: visible; opacity: 1; }
+  /* "Should be" override row */
+  .should-be { display: flex; gap: 4px; margin-top: 6px; align-items: center; font-size: 11px; color: #888; }
+  .should-be select { flex: 1; background: #1a1820; color: #f5f5f5; border: 1px solid #444; border-radius: 4px; padding: 4px 6px; font-size: 11px; cursor: pointer; }
+  .should-be select.set { border-color: #f59e0b; color: #f59e0b; }
   /* Help blurb */
   .help { font-size: 12px; color: #aaa; padding: 8px 24px; background: #1a1820; border-bottom: 1px solid #28252e; }
   .help code { background: #0d0c10; padding: 1px 5px; border-radius: 3px; color: #FF6EC7; font-family: 'JetBrains Mono', monospace; }
@@ -85,15 +92,37 @@ const ROOT = "{{ root }}";
 const LABEL_KEY = "framing_labels";
 
 function getLabels() {
-  return JSON.parse(localStorage.getItem(LABEL_KEY) || "{}");
+  const raw = JSON.parse(localStorage.getItem(LABEL_KEY) || "{}");
+  // Upgrade old string-only entries into the {status, should_be} shape.
+  for (const k of Object.keys(raw)) {
+    if (typeof raw[k] === "string") raw[k] = { status: raw[k], should_be: null };
+  }
+  return raw;
 }
 function setLabels(o) {
   localStorage.setItem(LABEL_KEY, JSON.stringify(o));
 }
 
+// Toggle the status (✓ correct / ✗ bbox / ✗ class / ✗ crop / ? unsure).
 function label(id, kind) {
   const all = getLabels();
-  if (all[id] === kind) { delete all[id]; } else { all[id] = kind; }
+  const cur = all[id] || { status: null, should_be: null };
+  cur.status = cur.status === kind ? null : kind;
+  if (cur.status === null && cur.should_be === null) delete all[id];
+  else all[id] = cur;
+  setLabels(all);
+  render();
+}
+
+// Set the "should be" override (or clear it if "" is selected).
+function setShouldBe(id, value) {
+  const all = getLabels();
+  const cur = all[id] || { status: null, should_be: null };
+  cur.should_be = value || null;
+  // Setting should_be implies wrong-class unless already flagged.
+  if (cur.should_be && !cur.status) cur.status = "wrong-class";
+  if (cur.status === null && cur.should_be === null) delete all[id];
+  else all[id] = cur;
   setLabels(all);
   render();
 }
@@ -124,23 +153,21 @@ function render() {
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
   for (const r of rows) {
-    const lbl = labels[r.image_id];
+    const lblObj = labels[r.image_id] || { status: null, should_be: null };
+    const status = lblObj.status;
+    const shouldBe = lblObj.should_be;
     const div = document.createElement("div");
     div.className = "card";
     const boxHTML = r.bbox_x !== null
       ? '<div class="box" style="left:' + (r.bbox_x*100) + '%;top:' + (r.bbox_y*100) + '%;width:' + (r.bbox_w*100) + '%;height:' + (r.bbox_h*100) + '%"></div>'
       : '';
-    // .zoom siblings are hidden full-size copies that become visible on figure:hover.
-    // The browser reuses the same cached image bytes — no extra fetch.
     const cropHTML = r.crop_path
-      ? '<img src="' + r.crop_path + '" alt="">' +
-        '<img class="zoom" src="' + r.crop_path + '" alt="">'
+      ? '<img src="' + r.crop_path + '" alt="">'
       : '<div class="nocrop">no crop (' + r.framing_quality + ')</div>';
     div.innerHTML =
       '<div class="imgs">' +
         '<figure>' +
           '<div class="bbox-overlay"><img src="' + r.original_path + '" alt="">' + boxHTML + '</div>' +
-          '<img class="zoom" src="' + r.original_path + '" alt="">' +
           '<figcaption>original · bbox shown in pink</figcaption>' +
         '</figure>' +
         '<figure>' + cropHTML + '<figcaption>proposed crop · what users see</figcaption></figure>' +
@@ -154,11 +181,19 @@ function render() {
         (r.gt_iou !== null ? ' · gt_iou: ' + r.gt_iou.toFixed(2) : '') +
       '</div>' +
       '<div class="labels">' +
-        '<button class="' + (lbl === 'ok' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'ok\')">✓ correct</button>' +
-        '<button class="wrong-bbox ' + (lbl === 'wrong-bbox' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-bbox\')">✗ bbox</button>' +
-        '<button class="wrong-class ' + (lbl === 'wrong-class' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-class\')">✗ class</button>' +
-        '<button class="wrong-crop ' + (lbl === 'wrong-crop' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-crop\')">✗ crop</button>' +
-        '<button class="' + (lbl === 'unsure' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'unsure\')">? unsure</button>' +
+        '<button class="' + (status === 'ok' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'ok\')">✓ correct</button>' +
+        '<button class="wrong-bbox ' + (status === 'wrong-bbox' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-bbox\')">✗ bbox</button>' +
+        '<button class="wrong-class ' + (status === 'wrong-class' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-class\')">✗ class</button>' +
+        '<button class="wrong-crop ' + (status === 'wrong-crop' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-crop\')">✗ crop</button>' +
+        '<button class="' + (status === 'unsure' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'unsure\')">? unsure</button>' +
+      '</div>' +
+      '<div class="should-be">' +
+        '<span>should be:</span>' +
+        '<select class="' + (shouldBe ? 'set' : '') + '" onchange="setShouldBe(\'' + r.image_id + '\', this.value)">' +
+          ['', 'good', 'tight', 'wide', 'hidden', 'multi_bug', 'camouflaged']
+            .map(v => '<option value="' + v + '"' + (v === (shouldBe || '') ? ' selected' : '') + '>' + (v || '— (no override)') + '</option>')
+            .join('') +
+        '</select>' +
       '</div>';
     grid.appendChild(div);
   }
@@ -168,6 +203,37 @@ document.getElementById("source").addEventListener("change", render);
 document.getElementById("quality").addEventListener("change", render);
 document.getElementById("sort").addEventListener("change", render);
 render();
+
+// ─── Mouse-follow zoom ────────────────────────────────────────────
+const zoomPopup = document.createElement("img");
+zoomPopup.id = "zoomPopup";
+document.body.appendChild(zoomPopup);
+const ZOOM_MARGIN = 16;
+function isZoomTarget(el) {
+  return el && el.tagName === "IMG" && el.closest(".imgs figure") && !el.classList.contains("zoom-popup");
+}
+document.addEventListener("mouseover", (e) => {
+  if (!isZoomTarget(e.target)) return;
+  zoomPopup.src = e.target.src;
+  zoomPopup.style.display = "block";
+});
+document.addEventListener("mouseout", (e) => {
+  if (!isZoomTarget(e.target)) return;
+  zoomPopup.style.display = "none";
+});
+document.addEventListener("mousemove", (e) => {
+  if (zoomPopup.style.display !== "block") return;
+  const zw = zoomPopup.offsetWidth || 560;
+  const zh = zoomPopup.offsetHeight || 560;
+  let x = e.clientX + ZOOM_MARGIN;
+  let y = e.clientY + ZOOM_MARGIN;
+  if (x + zw > window.innerWidth - ZOOM_MARGIN) x = e.clientX - zw - ZOOM_MARGIN;
+  if (y + zh > window.innerHeight - ZOOM_MARGIN) y = window.innerHeight - zh - ZOOM_MARGIN;
+  if (x < ZOOM_MARGIN) x = ZOOM_MARGIN;
+  if (y < ZOOM_MARGIN) y = ZOOM_MARGIN;
+  zoomPopup.style.left = x + "px";
+  zoomPopup.style.top = y + "px";
+});
 </script>
 </body>
 </html>
