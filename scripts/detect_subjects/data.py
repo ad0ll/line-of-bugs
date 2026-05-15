@@ -14,7 +14,6 @@ from scripts.detect_subjects.config import (
     SAMPLE_INAT_HARD,
     SAMPLE_INAT_RANDOM,
     SAMPLE_PER_HARD_TAXON,
-    SAMPLE_SMITHSONIAN,
 )
 
 # Some manifest rows (notably iNaturalist descriptions) exceed the default
@@ -22,7 +21,7 @@ from scripts.detect_subjects.config import (
 csv.field_size_limit(sys.maxsize)
 
 
-MANIFEST_SOURCES = ["inaturalist", "bugwood", "smithsonian", "usda_ars"]
+MANIFEST_SOURCES = ["inaturalist", "bugwood"]
 
 
 def load_manifest_rows(manifest_dir: Path = MANIFEST_DIR) -> list[dict]:
@@ -93,7 +92,6 @@ def pick_stratified_sample(all_rows: list[dict], seed: int = 42) -> list[dict]:
     picked.extend(take(inat, inat_random_needed))
 
     picked.extend(take(_filter_by_source(all_rows, "bugwood"), SAMPLE_BUGWOOD))
-    picked.extend(take(_filter_by_source(all_rows, "smithsonian"), SAMPLE_SMITHSONIAN))
 
     for taxon in HARD_TAXA:
         if any(r.get("taxon_order") == taxon for r in picked):

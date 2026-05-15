@@ -23,15 +23,13 @@ TUNED_THRESHOLDS_PATH = CACHE_DIR / "tuned_thresholds.yaml"
 # ─── Random seed ───────────────────────────────────────────────────
 RANDOM_SEED = 42
 
-# ─── Sample composition (totals to 400) ────────────────────────────
+# ─── Sample composition (totals to 360) ────────────────────────────
 SAMPLE_INAT_RANDOM = 160
 SAMPLE_INAT_HARD   = 80
 SAMPLE_BUGWOOD     = 80
-SAMPLE_SMITHSONIAN = 40
 SAMPLE_HARD_TAXA   = 40
 SAMPLE_TOTAL       = (
-    SAMPLE_INAT_RANDOM + SAMPLE_INAT_HARD + SAMPLE_BUGWOOD
-    + SAMPLE_SMITHSONIAN + SAMPLE_HARD_TAXA
+    SAMPLE_INAT_RANDOM + SAMPLE_INAT_HARD + SAMPLE_BUGWOOD + SAMPLE_HARD_TAXA
 )
 HARD_TAXA = ["Mantodea", "Phasmatodea", "Lepidoptera_larva", "Orthoptera"]
 SAMPLE_PER_HARD_TAXON = SAMPLE_HARD_TAXA // len(HARD_TAXA)  # 10

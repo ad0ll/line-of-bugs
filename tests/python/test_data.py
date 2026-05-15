@@ -43,21 +43,12 @@ def fake_manifests(tmp_path):
          "filename": f"images/bw-{i}.jpg"}
         for i in range(200)
     ])
-    write("smithsonian", [
-        {"image_id": f"sm-{i}", "source": "smithsonian",
-         "taxon_order": "Coleoptera",
-         "subject_state": "specimen",
-         "description": "specimen",
-         "width": "2000", "height": "1500",
-         "filename": f"images/sm-{i}.jpg"}
-        for i in range(60)
-    ])
     return manifest_dir
 
 
 def test_load_manifest_rows_returns_all(fake_manifests):
     rows = load_manifest_rows(manifest_dir=fake_manifests)
-    assert len(rows) == 760
+    assert len(rows) == 700
 
 
 def test_pick_stratified_sample_correct_counts(fake_manifests):
@@ -68,7 +59,6 @@ def test_pick_stratified_sample_correct_counts(fake_manifests):
         by_source.setdefault(r["source"], 0)
         by_source[r["source"]] += 1
     assert by_source.get("bugwood", 0) == 80
-    assert by_source.get("smithsonian", 0) == 40
     assert by_source.get("inaturalist", 0) == 240
 
 

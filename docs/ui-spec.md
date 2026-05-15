@@ -575,7 +575,6 @@ Gallery page:
   empty, drop the trailing segment.
 - Examples:
   - `20362_inaturalist_wild_large-skipper.jpg`
-  - `usnment01732150_smithsonian_specimen_bombus-sylvicola.jpg`
   - `5544659_bugwood_specimen_bean-weevil.jpg`
   - (Subject-state slug was `nature` pre-R4; renamed to `wild` / `captive` / `specimen` to match DwC `basisOfRecord`.)
 
@@ -714,7 +713,7 @@ import { sqliteTable, text, integer, index, primaryKey } from 'drizzle-orm/sqlit
 export const images = sqliteTable('images', {
   imageId:        text('image_id').primaryKey(),
   collectionId:   text('collection_id').notNull(),
-  source:         text('source').notNull(),     // inaturalist | bugwood | smithsonian
+  source:         text('source').notNull(),     // inaturalist | bugwood
   sourceId:       text('source_id').notNull(),
   sourcePageUrl:  text('source_page_url').notNull(),
   imageUrl:       text('image_url').notNull(),
@@ -855,17 +854,8 @@ Each `collection_id` was verified against live API responses, not inferred:
    empty `specimen` — fall back to the photographer+subject+descriptor+day
    composite. `dateacquired` truncate-to-day absorbs the ~minute drift
    observed within a real specimen set.
-3. **Smithsonian NMNH** — `collection_id = smithsonian-spec-<USNM_barcode>`.
-   Confirmed: in a 9000-record S3 sample, USNM barcodes were never shared
-   across `record_ID`s. 18.5% of image-bearing records have
-   `mediaCount >= 2`; conveyor output (dorsal/lateral/face/head/labels/
-   genitalia) lives in ONE record's `media[]` array, **not** as sibling
-   records. Multi-image: iterate `media[]`, each entry's `idsId` (the ARK)
-   is the per-image stable ID. Prefer `resources[].label == "Screen Image"`
-   (~1200 px, ~200 KB) over the High-resolution JPEG (often 79 MB, way too
-   big for our use case). Filter out media entries whose URL contains
-   `_labels`, `_genitalia`, or `_pin` — those are pin-label scans and
-   anatomical detail, not whole-animal angles.
+3. ~~**Smithsonian NMNH**~~ — removed 2026-05-15 (their bug-labelling style
+   was problematic for the gesture-drawing use case).
 4. **USDA-ARS** — `collection_id = usda-<K-or-D prefix>` (strip trailing
    `-N`). Confirmed across 14 sets that siblings are thematically coherent
    "research story" groupings — BUT photographers, species, dates, and
