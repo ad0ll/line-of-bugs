@@ -15,16 +15,31 @@ import torch
 from PIL import Image
 from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
 
+import hashlib
+import json
+from pathlib import Path
+
 from scripts.detect_subjects.config import (
     BBOX_CONF_TOLERANCE,
     BBOX_MAX_AREA_RATIO,
     BOX_THRESHOLD,
+    CACHE_DIR,
     DINO_MODEL_ID,
     INSECT_PROMPT,
     NMS_IOU_THRESHOLD,
     TEXT_THRESHOLD,
     HIGH_CONF_THRESHOLD,
 )
+
+
+DINO_CACHE_DIR = CACHE_DIR / "raw_dino"
+DINO_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _dino_cache_key(prompt: str, model_id: str) -> str:
+    """Short fingerprint binding the cached result to the (model, prompt) combo."""
+    h = hashlib.sha1((model_id + "|" + prompt).encode()).hexdigest()[:10]
+    return h
 from scripts.detect_subjects.metrics import iou_xywh_normalized
 
 
@@ -49,28 +64,45 @@ class GroundingDinoDetector:
         self.prompt = INSECT_PROMPT
 
     @torch.no_grad()
-    def detect(self, image: Image.Image) -> DetectionResult:
+    def detect(self, image: Image.Image, image_id: str | None = None) -> DetectionResult:
         start = time.perf_counter()
-        # transformers 5.x expects text as a flat string (or list[str]) for single-image inference.
-        # The prompt itself is period-separated; GroundingDINO tokenizes it into class queries.
-        inputs = self.processor(
-            images=image, text=self.prompt, return_tensors="pt"
-        ).to(self.device)
-        if "pixel_values" in inputs:
-            inputs["pixel_values"] = inputs["pixel_values"].to(self.dtype)
 
-        outputs = self.model(**inputs)
+        # Disk cache: if we already have raw DINO output for this (image, model, prompt),
+        # skip inference and reuse it. Cache miss → run the model, then write to disk.
+        cache_key = _dino_cache_key(self.prompt, DINO_MODEL_ID)
+        cache_path = DINO_CACHE_DIR / f"{image_id}__{cache_key}.json" if image_id else None
+        cached = None
+        if cache_path is not None and cache_path.exists():
+            try:
+                cached = json.loads(cache_path.read_text())
+            except Exception:
+                cached = None  # corrupted; re-run
 
-        results = self.processor.post_process_grounded_object_detection(
-            outputs,
-            threshold=BOX_THRESHOLD,
-            text_threshold=TEXT_THRESHOLD,
-            target_sizes=[(image.height, image.width)],
-        )[0]
+        if cached is not None:
+            boxes = cached["boxes"]
+            scores = cached["scores"]
+        else:
+            inputs = self.processor(
+                images=image, text=self.prompt, return_tensors="pt"
+            ).to(self.device)
+            if "pixel_values" in inputs:
+                inputs["pixel_values"] = inputs["pixel_values"].to(self.dtype)
+            outputs = self.model(**inputs)
+            results = self.processor.post_process_grounded_object_detection(
+                outputs,
+                threshold=BOX_THRESHOLD,
+                text_threshold=TEXT_THRESHOLD,
+                target_sizes=[(image.height, image.width)],
+            )[0]
+            boxes = results["boxes"].cpu().tolist()
+            scores = results["scores"].cpu().tolist()
+            if cache_path is not None:
+                try:
+                    cache_path.write_text(json.dumps({"boxes": boxes, "scores": scores}))
+                except Exception:
+                    pass  # best-effort cache; don't fail the run
 
         elapsed_ms = int((time.perf_counter() - start) * 1000)
-        boxes = results["boxes"].cpu().tolist()
-        scores = results["scores"].cpu().tolist()
         n_raw = len(boxes)
 
         if not boxes:

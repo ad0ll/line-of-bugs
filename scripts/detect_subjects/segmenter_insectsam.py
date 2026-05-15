@@ -10,12 +10,18 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 
+from pathlib import Path
+
 import numpy as np
 import torch
 from PIL import Image
 from transformers import SamModel, SamProcessor
 
-from scripts.detect_subjects.config import INSECTSAM_MODEL_ID
+from scripts.detect_subjects.config import CACHE_DIR, INSECTSAM_MODEL_ID
+
+
+SAM_EMBED_DIR = CACHE_DIR / "sam_embed"
+SAM_EMBED_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @dataclass(slots=True)
@@ -38,8 +44,20 @@ class InsectSAMSegmenter:
 
     @torch.no_grad()
     def _get_image_embedding(self, image_id: str, image: Image.Image) -> torch.Tensor:
+        # In-memory cache (intra-run, e.g. multiple prompts per image)
         if image_id in self._embedding_cache:
             return self._embedding_cache[image_id]
+        # Disk cache (cross-run): skip the heavy ViT encoder pass.
+        disk_path = SAM_EMBED_DIR / f"{image_id}.npy"
+        if disk_path.exists():
+            try:
+                arr = np.load(disk_path)
+                embed = torch.from_numpy(arr).to(self.device, dtype=self.dtype)
+                self._embedding_cache[image_id] = embed
+                return embed
+            except Exception:
+                pass  # fall through to recompute
+
         inputs = self.processor(images=image, return_tensors="pt")
         for k, v in list(inputs.items()):
             if isinstance(v, torch.Tensor) and v.dtype == torch.float64:
@@ -49,6 +67,10 @@ class InsectSAMSegmenter:
             inputs["pixel_values"] = inputs["pixel_values"].to(self.dtype)
         embed = self.model.get_image_embeddings(inputs["pixel_values"])
         self._embedding_cache[image_id] = embed
+        try:
+            np.save(disk_path, embed.detach().cpu().float().numpy())
+        except Exception:
+            pass  # best-effort
         return embed
 
     def clear_cache(self) -> None:

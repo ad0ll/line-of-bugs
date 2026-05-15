@@ -55,6 +55,17 @@
   .flags button.active { background: #f59e0b; color: #0d0c10; border-color: #f59e0b; font-weight: 600; }
   .flags button.good-button.active { background: #2d4a2d; color: #a8e6a8; border-color: #4a7a4a; }
   .flags button.unsure-button.active { background: #28252e; color: #aaa; border-color: #666; }
+  /* "good only ..." preference row — mutually exclusive, sky-blue accent so it
+     reads as distinct from the looks-good (approve overall) button. */
+  .prefs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px; }
+  .prefs button {
+    padding: 5px 4px; border: 1px solid #444; background: #1a1820;
+    color: #aaa; border-radius: 4px; cursor: pointer;
+    font-size: 11px; font-weight: 400; white-space: nowrap;
+    transition: background 0.08s, border-color 0.08s, color 0.08s;
+  }
+  .prefs button:hover { color: #f5f5f5; border-color: #666; }
+  .prefs button.active { background: #67D4E6; color: #0d0c10; border-color: #67D4E6; font-weight: 600; }
   /* "looks-good" takes the whole first row */
   .flags button.looks-good { grid-column: 1 / -1; padding: 8px; font-weight: 600; }
 
@@ -88,7 +99,9 @@
   <label>Variant <select id="variant"><option>{{ variant }}</option></select></label>
   <label>Source <select id="source"><option value="all">all</option>{% for s in sources %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></label>
   <label>Predicted <select id="quality"><option value="all">all</option><option value="good">good</option><option value="tight">tight</option><option value="wide">wide</option><option value="no_bug">no_bug</option><option value="bug_too_small">bug_too_small</option><option value="multi_bug">multi_bug</option><option value="poor_contrast">poor_contrast</option></select></label>
-  <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="looks-good">looks-good</option><option value="flagged">any flag</option></select></label>
+  <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="looks-good">looks-good</option><option value="flagged">any flag</option>
+        <option value="pref-original">marked original-good</option>
+        <option value="pref-cropped">marked cropped-good</option></select></label>
   <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="random">random</option></select></label>
   <span class="totals" id="totals">{{ total }} images</span>
   <button onclick="exportLabels()" title="Download all labels as labels.json">Export labels</button>
@@ -113,6 +126,9 @@
   <code>crop-too-tight</code> proposed crop clips the bug ·
   <code>crop-too-loose</code> too much background in proposed crop
   <br><b>Skip:</b> <code>? unsure</code> can't decide.
+  <br><b>Optional preference</b> (separate row, mutually exclusive, doesn't affect classification):
+  <code>★ original-good</code> the original would be fine for drawing ·
+  <code>★ cropped-good</code> only the cropped version is fine. Useful for spotting cases where the system's "hide" call is wrong because the auto-crop rescues the image.
   <br><span style="color:#666">Hover any image to zoom. Labels persist via localStorage; auto-export every 25 changes.</span>
 </div>
 
@@ -175,6 +191,7 @@ function _upgradeOldLabel(v) {
       reviewed_at: Date.now(), migrated_from: "string:" + v,
     }, mapped);
     return { flags: ["other-bad"], looks_good: false, unsure: false,
+             preference: null,
              reviewed_at: Date.now(), migrated_from: "string:" + v };
   }
   // Object with new shape — leave alone.
@@ -182,6 +199,7 @@ function _upgradeOldLabel(v) {
   // Object with old {status, should_be} shape — migrate.
   if (v && typeof v === "object") {
     const out = { flags: [], looks_good: false, unsure: false,
+                  preference: v.preference || null,
                   reviewed_at: v.reviewed_at || Date.now(),
                   migrated_from: "status:" + (v.status || "—") + "/should_be:" + (v.should_be || "—") };
     const statusMap = v.status ? STATUS_TO_FLAGS[v.status] : null;
@@ -203,7 +221,7 @@ function _upgradeOldLabel(v) {
     }
     return out;
   }
-  return { flags: [], looks_good: false, unsure: false, reviewed_at: Date.now() };
+  return { flags: [], looks_good: false, unsure: false, preference: null, reviewed_at: Date.now() };
 }
 
 function getLabels() {
@@ -257,14 +275,14 @@ function bumpSaveMeta() {
 
 function toggleFlag(id, flag) {
   const all = getLabels();
-  const cur = all[id] || { flags: [], unsure: false, looks_good: false, reviewed_at: null };
+  const cur = all[id] || { flags: [], unsure: false, looks_good: false, preference: null, reviewed_at: null };
   // Toggling a flag clears looks_good and unsure (they're mutually exclusive states).
   const i = cur.flags.indexOf(flag);
   if (i >= 0) cur.flags.splice(i, 1);
   else cur.flags.push(flag);
   if (cur.flags.length > 0) { cur.looks_good = false; cur.unsure = false; }
   cur.reviewed_at = Date.now();
-  if (cur.flags.length === 0 && !cur.looks_good && !cur.unsure) delete all[id];
+  if (cur.flags.length === 0 && !cur.looks_good && !cur.unsure && !cur.preference) delete all[id];
   else all[id] = cur;
   setLabels(all);
   bumpSaveMeta();
@@ -273,13 +291,26 @@ function toggleFlag(id, flag) {
 
 function setLooksGood(id) {
   const all = getLabels();
-  const cur = all[id] || { flags: [], unsure: false, looks_good: false, reviewed_at: null };
+  const cur = all[id] || { flags: [], unsure: false, looks_good: false, preference: null, reviewed_at: null };
   // Toggle looks_good; clears flags and unsure.
   const was = cur.looks_good;
   cur.looks_good = !was;
   if (cur.looks_good) { cur.flags = []; cur.unsure = false; }
   cur.reviewed_at = Date.now();
-  if (cur.flags.length === 0 && !cur.looks_good && !cur.unsure) delete all[id];
+  if (cur.flags.length === 0 && !cur.looks_good && !cur.unsure && !cur.preference) delete all[id];
+  else all[id] = cur;
+  setLabels(all);
+  bumpSaveMeta();
+  render();
+}
+
+function setPreference(id, kind) {
+  // kind is 'original' | 'cropped' | null. Mutually exclusive.
+  const all = getLabels();
+  const cur = all[id] || { flags: [], unsure: false, looks_good: false, preference: null, reviewed_at: null };
+  cur.preference = (cur.preference === kind) ? null : kind;
+  cur.reviewed_at = Date.now();
+  if (cur.flags.length === 0 && !cur.looks_good && !cur.unsure && !cur.preference) delete all[id];
   else all[id] = cur;
   setLabels(all);
   bumpSaveMeta();
@@ -288,12 +319,12 @@ function setLooksGood(id) {
 
 function setUnsure(id) {
   const all = getLabels();
-  const cur = all[id] || { flags: [], unsure: false, looks_good: false, reviewed_at: null };
+  const cur = all[id] || { flags: [], unsure: false, looks_good: false, preference: null, reviewed_at: null };
   const was = cur.unsure;
   cur.unsure = !was;
   if (cur.unsure) { cur.flags = []; cur.looks_good = false; }
   cur.reviewed_at = Date.now();
-  if (cur.flags.length === 0 && !cur.looks_good && !cur.unsure) delete all[id];
+  if (cur.flags.length === 0 && !cur.looks_good && !cur.unsure && !cur.preference) delete all[id];
   else all[id] = cur;
   setLabels(all);
   bumpSaveMeta();
@@ -365,6 +396,8 @@ function render() {
       if (rf === "reviewed")   return !!lbl;
       if (rf === "looks-good") return lbl && lbl.looks_good;
       if (rf === "flagged")    return lbl && lbl.flags && lbl.flags.length > 0;
+      if (rf === "pref-original") return lbl && lbl.preference === "original";
+      if (rf === "pref-cropped")  return lbl && lbl.preference === "cropped";
       return true;
     });
   }
@@ -423,6 +456,10 @@ function render() {
         '<button title="Everything looks correct — system prediction is right" class="looks-good good-button ' + (lbl.looks_good ? 'active' : '') + '" onclick="setLooksGood(\'' + r.image_id + '\')">✓ looks-good</button>' +
         flagButtons +
         '<button title="Ambiguous, come back later" class="unsure-button ' + (lbl.unsure ? 'active' : '') + '" onclick="setUnsure(\'' + r.image_id + '\')">? unsure</button>' +
+      '</div>' +
+      '<div class="prefs">' +
+        '<button title="The original is good for drawing (ignore the crop). Mutually exclusive with cropped-good." class="' + (lbl.preference === "original" ? 'active' : '') + '" onclick="setPreference(\'' + r.image_id + '\', \'original\')">★ original-good</button>' +
+        '<button title="The cropped version is good for drawing (the original isn\'t). Mutually exclusive with original-good." class="' + (lbl.preference === "cropped" ? 'active' : '') + '" onclick="setPreference(\'' + r.image_id + '\', \'cropped\')">★ cropped-good</button>' +
       '</div>';
     grid.appendChild(div);
   }

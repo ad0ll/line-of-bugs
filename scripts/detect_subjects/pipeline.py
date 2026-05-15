@@ -98,7 +98,7 @@ def run_v1_on_sample(
                 im = im.convert("RGB")
                 W, H = im.size
 
-                det = detector.detect(im)
+                det = detector.detect(im, image_id=image_id)
 
                 seg = None
                 mask = None
