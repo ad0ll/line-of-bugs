@@ -142,8 +142,28 @@ Style markers (already exhaustively documented in agent report; key points):
   > about whether a photo is specimen or nature or not, and then we'll let
   > the user select to include specimens, nature, or both (like how line of
   > action lets you select male female teenager all) when we get there."*
-  - Subject-type values: `nature` | `specimen` | both.
+  - Subject-type values (R4+): `wild` | `captive` | `specimen` | all.
+    The DB column is `subject_state` (DwC-aligned); the UI label is still
+    "subject type" to match the user's vocabulary.
 - "Proceed" advances to the render window.
+
+### R6 (2026-05-15): "what kind of bug?" + "more filters"
+
+Two collapsible sections sit between subject type and Proceed:
+
+- **what kind of bug?** — 21-chip multi-select keyed to
+  `lib/taxonomy.ts:TAXON_GROUPS` (butterflies / moths / caterpillars /
+  ladybugs / beetles / bees / wasps / ants / flies / mosquitoes /
+  dragonflies / grasshoppers / crickets / mantises / stick insects /
+  cockroaches / stink bugs / cicadas / aphids / earwigs / weird stuff).
+  Empty selection means "all bugs". Chips with ambiguous coverage carry
+  a tooltip surfaced via `<Tooltip>` on hover *and* keyboard focus.
+- **more filters** — view / life-stage / sex pickers (same picker
+  component the gallery uses).
+
+Both sections collapse by default with a "(N selected)" badge on the
+chevron header, and the live total-image count below them updates as
+filters change.
 
 ## 3b. Vocabulary alignment with eagle-gesture-drawing
 
@@ -488,9 +508,12 @@ Gallery page:
   - **Bug type** search bar — autocomplete, hits SQLite (likely via Next.js
     server component or API route).
   - **Institution** — checkbox list.
-  - **Subject type** (we're keeping "subject_type" rather than the
-    misleading "specimen_type" name the user floated) — checkbox list with
-    values `nature` / `specimen`.
+  - **Subject type** (UI label preserved from the user; DB column is
+    `subject_state` per DwC `basisOfRecord` alignment) — checkbox list
+    with values `wild` / `captive` / `specimen`.
+  - **What kind of bug?** (R6) — 21-chip layperson taxonomy filter
+    (`lib/taxonomy.ts:TAXON_GROUPS`), same chip wall used on Home.
+  - **More filters** — view label, life stage, sex (R4 metadata).
 - Inspiration:
   > *"We have a really elegant tag search solution in /booru-tag-lookup
   > that could be an inspiration for design on the filter by type."*
@@ -674,7 +697,15 @@ Python fetchers now write directly to SQLite via `scripts/db.py:DbWriter`
 ManifestWriter, backed by `sqlite3.connect()` + `INSERT … ON CONFLICT
 DO UPDATE`. No CSV files, no seed step.
 
-### Drizzle schema (proposed)
+### Drizzle schema
+
+The proposed schema below is the original brainstorm sketch — the live
+schema in **`db/schema.ts`** is the source of truth and has since added
+`mediumFilename`, `lifeStage`, `sex`, `hostOrganism`, `specimenCondition`,
+`taxonSubgroup`, `rawMetadata`, `hidden`, plus the renamed
+`subject_state` column. Read `db/schema.ts` before writing migrations.
+
+
 
 ```typescript
 // db/schema.ts
@@ -701,7 +732,7 @@ export const images = sqliteTable('images', {
   taxonOrder:     text('taxon_order'),
   taxonSpecies:   text('taxon_species'),
   commonName:     text('common_name'),
-  subjectType:    text('subject_type').notNull(),  // nature | specimen
+  subjectState:   text('subject_state').notNull(),  // wild | captive | specimen (R4+)
   viewLabel:      text('view_label'),
   description:    text('description'),
   capturedDate:   text('captured_date'),
@@ -709,7 +740,7 @@ export const images = sqliteTable('images', {
   bySpecies:      index('by_species').on(t.taxonSpecies, t.commonName),
   byCollection:   index('by_collection').on(t.collectionId),
   bySource:       index('by_source').on(t.source),
-  bySubjectType:  index('by_subject_type').on(t.subjectType),
+  bySubjectState: index('by_subject_state').on(t.subjectState),
   byInstitution:  index('by_institution').on(t.institution),
   byTaxonOrder:   index('by_taxon_order').on(t.taxonOrder),
 }));
