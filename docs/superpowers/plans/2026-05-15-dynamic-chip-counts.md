@@ -8,6 +8,14 @@
 
 **Tech Stack:** Next.js 16 App Router, Drizzle + better-sqlite3, Vitest, Playwright.
 
+## Revision after #1-3 (2026-05-15)
+
+Three prior tasks landed before this plan ran. The plan is adjusted to reflect their state:
+
+- **#1 — captive chip + `SubjectType`:** subject filter is now `"wild" | "captive" | "specimen" | "all"` with 1:1 DB mapping (no more "nature = wild + captive" supercategory). `lib/subject.ts` exists. `listSubjectTypeCounts()` returns `{wild, captive, specimen, all}`. Task 1's shared `FilterState` type below uses `SubjectType` instead of the old union.
+- **#3 — shared `<Chip>` primitive:** `app/components/ui/Chip.tsx` already exists and already supports `count?: number` + `total?: number` with the "filtered / total when they differ, single number otherwise" display rule. `chip-disabled` class is already wired. Three callsites (TaxonGroupChips, gallery SubjectTypeChips, ReportCategoryChips) are migrated. Task 5 below is therefore *much* simpler — primarily wiring callsites to pass the new shape and adding zero-bucket retention.
+- **#2 — mobile audit:** action bar wrapping fix shipped; nothing in this plan depends on it.
+
 ---
 
 ## File Structure
@@ -52,11 +60,10 @@ This task pulls the clause builder out into one shared helper so the facet code 
 
 ```typescript
 import { describe, it, expect } from "vitest";
-import { sql } from "drizzle-orm";
 import { buildFilterClauses, type FilterState } from "@/lib/queries/filter-clauses";
 
 const baseFilters: FilterState = {
-  subjectType: "both",
+  subjectType: "all",
   views: [],
   lifeStages: [],
   sexes: [],
@@ -69,9 +76,10 @@ describe("buildFilterClauses", () => {
     expect(clauses).toHaveLength(2); // hidden=0 + NOT EXISTS unresolved-reports
   });
 
-  it("adds a subject_state clause for nature", () => {
-    const clauses = buildFilterClauses({ ...baseFilters, subjectType: "nature" });
-    expect(clauses).toHaveLength(3);
+  it("adds a subject_state clause for any non-'all' subject", () => {
+    expect(buildFilterClauses({ ...baseFilters, subjectType: "wild" })).toHaveLength(3);
+    expect(buildFilterClauses({ ...baseFilters, subjectType: "captive" })).toHaveLength(3);
+    expect(buildFilterClauses({ ...baseFilters, subjectType: "specimen" })).toHaveLength(3);
   });
 
   it("adds a taxon_subgroup clause when groups are selected", () => {
@@ -102,9 +110,10 @@ Expected: FAIL with "Cannot find module @/lib/queries/filter-clauses".
 ```typescript
 import { sql, type SQL } from "drizzle-orm";
 import { buildTaxonGroupSQL } from "@/lib/taxonomy";
+import type { SubjectType } from "@/lib/subject";
 
 export interface FilterState {
-  subjectType: "nature" | "specimen" | "both";
+  subjectType: SubjectType;
   views: string[];
   lifeStages: string[];
   sexes: string[];
@@ -118,7 +127,7 @@ export interface FilterState {
  * still resolve — `i.column` works in both cases because drizzle
  * preserves alias-free references against the `from` table).
  *
- * Empty arrays / "both" choices skip their clause entirely.
+ * Empty arrays / "all" subject skip their clause entirely.
  */
 export function buildFilterClauses(filters: FilterState): SQL[] {
   const clauses: SQL[] = [
@@ -129,10 +138,8 @@ export function buildFilterClauses(filters: FilterState): SQL[] {
     )`,
   ];
 
-  if (filters.subjectType === "nature") {
-    clauses.push(sql`i.subject_state IN ('wild', 'captive')`);
-  } else if (filters.subjectType === "specimen") {
-    clauses.push(sql`i.subject_state = 'specimen'`);
+  if (filters.subjectType !== "all") {
+    clauses.push(sql`i.subject_state = ${filters.subjectType}`);
   }
 
   if (filters.views.length > 0) {
@@ -239,7 +246,7 @@ import { getFacetCounts } from "@/lib/queries/facets";
 describe("getFacetCounts", () => {
   it("returns total + counts for every axis when no filters applied", async () => {
     const snap = await getFacetCounts({
-      subjectType: "both", views: [], lifeStages: [], sexes: [], groups: [],
+      subjectType: "all", views: [], lifeStages: [], sexes: [], groups: [],
     });
     expect(snap.total).toBeGreaterThan(30000);
     expect(snap.subject.wild).toBeGreaterThan(0);
@@ -249,24 +256,24 @@ describe("getFacetCounts", () => {
     expect(snap.taxonGroups.find((g) => g.name === "butterflies")?.count).toBeGreaterThan(0);
   });
 
-  it("cross-axis: selecting captive subject_state shrinks butterfly bucket", async () => {
+  it("cross-axis: switching subject from wild to specimen changes butterfly count", async () => {
     const wildSnap = await getFacetCounts({
-      subjectType: "nature", views: [], lifeStages: [], sexes: [], groups: [],
+      subjectType: "wild", views: [], lifeStages: [], sexes: [], groups: [],
     });
-    const captiveSnap = await getFacetCounts({
+    const specimenSnap = await getFacetCounts({
       subjectType: "specimen", views: [], lifeStages: [], sexes: [], groups: [],
     });
     const wildButterflies = wildSnap.taxonGroups.find((g) => g.name === "butterflies")?.count ?? 0;
-    const specimenButterflies = captiveSnap.taxonGroups.find((g) => g.name === "butterflies")?.count ?? 0;
+    const specimenButterflies = specimenSnap.taxonGroups.find((g) => g.name === "butterflies")?.count ?? 0;
     expect(wildButterflies).not.toBe(specimenButterflies);
   });
 
   it("within-axis: selecting butterflies leaves cockroach bucket UNCHANGED", async () => {
     const baseline = await getFacetCounts({
-      subjectType: "both", views: [], lifeStages: [], sexes: [], groups: [],
+      subjectType: "all", views: [], lifeStages: [], sexes: [], groups: [],
     });
     const withButterflies = await getFacetCounts({
-      subjectType: "both", views: [], lifeStages: [], sexes: [], groups: ["butterflies"],
+      subjectType: "all", views: [], lifeStages: [], sexes: [], groups: ["butterflies"],
     });
     const baselineRoach = baseline.taxonGroups.find((g) => g.name === "cockroaches")?.count ?? 0;
     const withRoach = withButterflies.taxonGroups.find((g) => g.name === "cockroaches")?.count ?? 0;
@@ -275,10 +282,10 @@ describe("getFacetCounts", () => {
 
   it("within-axis: selecting butterflies leaves butterfly bucket UNCHANGED (own-axis exclusion)", async () => {
     const baseline = await getFacetCounts({
-      subjectType: "both", views: [], lifeStages: [], sexes: [], groups: [],
+      subjectType: "all", views: [], lifeStages: [], sexes: [], groups: [],
     });
     const withButterflies = await getFacetCounts({
-      subjectType: "both", views: [], lifeStages: [], sexes: [], groups: ["butterflies"],
+      subjectType: "all", views: [], lifeStages: [], sexes: [], groups: ["butterflies"],
     });
     const baselineBut = baseline.taxonGroups.find((g) => g.name === "butterflies")?.count ?? 0;
     const withBut = withButterflies.taxonGroups.find((g) => g.name === "butterflies")?.count ?? 0;
@@ -287,9 +294,9 @@ describe("getFacetCounts", () => {
 
   it("total reflects all filters", async () => {
     const snap = await getFacetCounts({
-      subjectType: "specimen", views: [], lifeStages: [], sexes: [], groups: ["butterflies"],
+      subjectType: "captive", views: [], lifeStages: [], sexes: [], groups: ["butterflies"],
     });
-    // Specimen butterflies — a small set in our pool.
+    // Captive butterflies — the small intersection (~1,811 captive total ∩ ~2,855 butterflies).
     expect(snap.total).toBeGreaterThan(0);
     expect(snap.total).toBeLessThan(2000);
   });
@@ -298,7 +305,7 @@ describe("getFacetCounts", () => {
     // life_stage=egg + sex=worker is an impossible combination — bee workers
     // aren't recorded as eggs in this dataset.
     const snap = await getFacetCounts({
-      subjectType: "both", views: [], lifeStages: ["egg"], sexes: ["worker"], groups: [],
+      subjectType: "all", views: [], lifeStages: ["egg"], sexes: ["worker"], groups: [],
     });
     // The taxon facet should still return entries (own-axis is "groups", not lifeStages/sexes).
     // The sex facet should have "worker" with count 0 if filtered → that's the own-axis behavior.
@@ -361,8 +368,8 @@ function runCountByColumn(filters: FilterState, column: string): FacetCount[] {
 }
 
 function runSubjectCounts(filters: FilterState): FacetSnapshot["subject"] {
-  // Subject facet ignores its own selection — pass subjectType="both".
-  const cleared: FilterState = { ...filters, subjectType: "both" };
+  // Subject facet ignores its own selection — pass subjectType="all".
+  const cleared: FilterState = { ...filters, subjectType: "all" };
   const clauses = buildFilterClauses(cleared);
   const whereClause = sql.join(clauses, sql` AND `);
   const rows = db.all<{ subject_state: string; c: number }>(sql`
@@ -448,8 +455,7 @@ git commit --no-gpg-sign -m "feat(facets): getFacetCounts with cross-axis includ
 
 ```typescript
 import { getFacetCounts } from "@/lib/queries/facets";
-
-const SUBJECT_TYPES = new Set(["nature", "specimen", "both"]);
+import { parseSubject } from "@/lib/subject";
 
 function readList(v: string | null): string[] {
   return v ? v.split(",").filter(Boolean) : [];
@@ -466,12 +472,8 @@ function readList(v: string | null): string[] {
  */
 export async function GET(req: Request): Promise<Response> {
   const url = new URL(req.url);
-  const subjectRaw = url.searchParams.get("subject") ?? "both";
-  const subjectType = SUBJECT_TYPES.has(subjectRaw)
-    ? (subjectRaw as "nature" | "specimen" | "both")
-    : "both";
   const snap = await getFacetCounts({
-    subjectType,
+    subjectType: parseSubject(url.searchParams.get("subject")),
     views: readList(url.searchParams.get("view")),
     lifeStages: readList(url.searchParams.get("life")),
     sexes: readList(url.searchParams.get("sex")),
@@ -541,9 +543,7 @@ function readArg(v: string | string[] | undefined, fallback: string): string {
 async function HomeShell({ searchParams }: { searchParams: SearchParams }) {
   await connection();
   const sp = await searchParams;
-  const subjectRaw = readArg(sp.subject, "both");
-  const subject: "nature" | "specimen" | "both" =
-    subjectRaw === "nature" || subjectRaw === "specimen" ? subjectRaw : "both";
+  const subject = parseSubject(readArg(sp.subject, "all"));
   const interval = Math.max(10, Math.min(3600, parseInt(readArg(sp.interval, "60"), 10) || 60));
   const repeatRaw = readArg(sp.repeat, "default");
   const repeat: "default" | "never-repeat-animals" | "allow-different-angles" =
@@ -555,7 +555,7 @@ async function HomeShell({ searchParams }: { searchParams: SearchParams }) {
   // "total". The client will refresh filtered counts as the user
   // changes filters; totals never change.
   const initialFacets = await getFacetCounts({
-    subjectType: "both", views: [], lifeStages: [], sexes: [], groups: [],
+    subjectType: "all", views: [], lifeStages: [], sexes: [], groups: [],
   });
   return (
     <HomeClient
@@ -581,11 +581,14 @@ export default function HomePage({ searchParams }: { searchParams: SearchParams 
 In `app/components/home/HomeClient.tsx`, replace the four count props with one:
 
 ```typescript
+import type { SubjectType } from "@/lib/subject";
+import type { FacetSnapshot } from "@/lib/queries/facets";
+
 interface Props {
   initialInterval: number;
-  initialSubject: SubjectChoice;
+  initialSubject: SubjectType;
   initialRepeat: RepeatMode;
-  initialFacets: FacetSnapshot;  // imported from @/lib/queries/facets
+  initialFacets: FacetSnapshot;
 }
 ```
 
@@ -632,103 +635,120 @@ git commit --no-gpg-sign -m "feat(home): SSR uses one getFacetCounts snapshot in
 
 This is the visible UX change. Chips display `filtered / total` when they differ, single number otherwise, greyed when filtered = 0.
 
-**Files:**
-- Modify: `app/components/filters/TaxonGroupChips.tsx`
-- Modify: `app/components/home/SubjectFilter.tsx`
-- Modify: `app/components/filters/FilterPopover.tsx`
-- Modify: `app/components/home/HomeClient.tsx`
-- Modify: `app/globals.css`
+**Already done in the #3 Chip-primitive task:**
+- `app/components/ui/Chip.tsx` accepts `count?` + `total?` and renders `filtered / total` when they differ.
+- `chip-disabled` class + `chip-count-total` span are already wired in Chip + globals.css.
+- `TaxonGroupChips`, `SubjectTypeChips`, `ReportCategoryChips` all use `<Chip>`.
 
-- [ ] **Step 1: New chip-count shape**
+**Files to modify here:**
+- `app/components/filters/FilterPopover.tsx` — add `total?: number` to `FilterOption`; render `filtered / total` in the popover option rows + grey out zero-filtered options.
+- `app/components/filters/TaxonGroupChips.tsx` — split props into `{ filtered: FacetCount[]; totals: FacetCount[] }`; pass both to each `<Chip>`; **stop dropping zero-filtered chips** (keep the existing "drop zero-total chips" guard).
+- `app/gallery/_components/SubjectTypeChips.tsx` — accept `{ filtered: SubjectCounts; totals: SubjectCounts }`; pass both per chip.
+- `app/components/home/SubjectFilter.tsx` — counts weren't being displayed on home pills; either keep them count-less (simpler) or surface filtered/total in a `<small>` next to each pill. Pick whichever matches the rest of the home pages's polish — likely count-less for compactness.
+- `app/components/home/HomeClient.tsx` — pass `filtered={facets.X}` + `totals={props.initialFacets.X}` to each chip group.
+- `app/globals.css` — `.chip-count-total` is in Chip already, but FilterPopover's option rows need a matching `filter-popover-count-total` separator style (the popover doesn't use `<Chip>` for option rows — it's a `<label>` + `<span>` layout).
 
-Add to `app/components/filters/FilterPopover.tsx` (or a shared types file) — keep `FilterOption` backward-compatible:
+- [ ] **Step 1: Extend `FilterOption`**
 
 ```typescript
+// in app/components/filters/FilterPopover.tsx
 export interface FilterOption {
   name: string;
-  count: number;       // existing — interpreted as `filtered`
-  total?: number;      // new — when present and != count, show "count/total"
+  count: number;       // interpreted as "filtered" — current matching count
+  total?: number;      // when present and != count, render "count/total"
 }
 ```
 
-`total` is optional; callers that don't pass it keep current behavior.
+- [ ] **Step 2: Render filtered/total in FilterPopover option rows**
 
-- [ ] **Step 2: Update TaxonGroupChips**
-
-```typescript
-// Inside the map:
-return TAXON_GROUPS.map((g, i) => {
-  const f = filteredByKey.get(g.key) ?? 0;
-  const t = totalByKey.get(g.key) ?? 0;
-  if (t === 0) return null;  // chip with zero TOTAL is still hidden — it has no data ever
-  const disabled = f === 0;
-  const active = selected.includes(g.key);
-  const button = (
-    <button
-      type="button"
-      className={`chip taxon-group-chip ${active ? "chip-active" : ""} ${disabled ? "chip-disabled" : ""}`}
-      aria-pressed={active}
-      onClick={() => toggle(g.key)}
-      style={{ ["--i" as string]: i }}
-    >
-      <span className="chip-label">{g.label}</span>
-      <span className="chip-count">
-        {f.toLocaleString()}
-        {f !== t && <span className="chip-count-total"> / {t.toLocaleString()}</span>}
-      </span>
-    </button>
-  );
-  // ... rest unchanged
-});
+```tsx
+<span className="filter-popover-name">{o.name}</span>
+<span className="filter-popover-count">
+  {o.count.toLocaleString()}
+  {typeof o.total === "number" && o.count !== o.total && (
+    <span className="filter-popover-count-total"> / {o.total.toLocaleString()}</span>
+  )}
+</span>
 ```
 
-Props become `{ filtered: FacetCount[], totals: FacetCount[], selected, onChange }`.
+Add `aria-disabled` + greyed style on `<li>` when `count === 0`. Don't actually block the toggle — clicking an empty option might still be useful if the user is curious.
 
-- [ ] **Step 3: Update SubjectFilter**
-
-Three pills (wild / captive / specimen — see Task #1 below; if Task #1 has already shipped this is just a count update; otherwise refactor to use the new shape during Task #1). Each pill receives `{ filtered, total }` and renders the same `filtered/total` pattern. Greyed if `filtered === 0`.
-
-- [ ] **Step 4: Update FilterPopover**
-
-Each option line shows `count / total` next to the label when they differ, just like chips. Disabled (greyed) when count = 0.
-
-- [ ] **Step 5: Wire HomeClient**
-
-Pass `totals` and `filtered` to each chip group:
+- [ ] **Step 3: Update TaxonGroupChips to take filtered + totals**
 
 ```typescript
+export interface TaxonGroupChipsProps {
+  filtered: FilterOption[]; // current filter-state counts (own-axis excluded)
+  totals: FilterOption[];   // unfiltered absolute counts
+  selected: string[];
+  onChange: (next: string[]) => void;
+}
+```
+
+Inside the render:
+
+```tsx
+const filteredByKey = new Map(filtered.map((c) => [c.name, c.count]));
+const totalByKey = new Map(totals.map((c) => [c.name, c.count]));
+// ...
+{TAXON_GROUPS.map((g, i) => {
+  const t = totalByKey.get(g.key) ?? 0;
+  if (t === 0) return null; // chip with zero TOTAL never had data — hide
+  const f = filteredByKey.get(g.key) ?? 0;
+  return (
+    <Chip
+      key={g.key}
+      label={g.label}
+      count={f}
+      total={t}
+      active={selected.includes(g.key)}
+      disabled={f === 0}
+      tooltip={g.tooltip ?? null}
+      onClick={() => toggle(g.key)}
+      className="taxon-group-chip"
+      style={{ ["--i" as string]: i }}
+    />
+  );
+})}
+```
+
+The Chip primitive already handles the "filtered / total when different, single number otherwise" display.
+
+- [ ] **Step 4: Update SubjectTypeChips (gallery) similarly**
+
+Take `{ filtered: SubjectCounts; totals: SubjectCounts }`; pass both to `<Chip>` per chip.
+
+- [ ] **Step 5: Wire HomeClient + FilterChipsControls (gallery)**
+
+Home:
+
+```tsx
 <TaxonGroupChips
   filtered={facets.taxonGroups}
   totals={props.initialFacets.taxonGroups}
   selected={groups}
   onChange={setGroups}
 />
+<FilterPopover
+  idleLabel="view: all"
+  options={mergeFilteredTotal(facets.views, props.initialFacets.views)}
+  selected={views}
+  onChange={setViews}
+  ...
+/>
 ```
 
-Same pattern for view / life / sex popovers and SubjectFilter.
+Helper `mergeFilteredTotal(filtered, totals): FilterOption[]` zips by name and decorates each row with both counts.
 
-- [ ] **Step 6: CSS**
+Gallery `FilterChipsControls` gets the same shape from `FilterChipsBar` (Task 6).
 
-In `app/globals.css`, extend the chip rules:
-
-```css
-.chip-disabled { opacity: 0.45; }
-.chip-disabled:hover { opacity: 0.6; }
-.chip-count-total {
-  opacity: 0.55;
-  font-variant-numeric: tabular-nums;
-  margin-left: 1px;
-}
-```
-
-- [ ] **Step 7: Smoke-test in browser**
+- [ ] **Step 6: Smoke-test in browser**
 
 Run dev server, toggle subject=specimen on Home — taxon chips should re-count to specimen-only numbers, with `filtered/total` display. Toggle butterflies — cockroach chip count should stay the same. Toggle life-stage=egg — most chips drop to zero and grey out.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add app/components/filters app/components/home app/globals.css
+git add app/components/filters app/components/home app/gallery app/globals.css
 git commit --no-gpg-sign -m "feat(chips): live filtered/total display with self-axis exclusion"
 ```
 
@@ -784,7 +804,7 @@ export async function getUnfilteredFacets(): Promise<FacetSnapshot> {
   cacheTag("facet-totals");
   cacheLife("days");
   return getFacetCounts({
-    subjectType: "both", views: [], lifeStages: [], sexes: [], groups: [],
+    subjectType: "all", views: [], lifeStages: [], sexes: [], groups: [],
   });
 }
 ```
@@ -838,11 +858,12 @@ test.describe("R7 dynamic chip counts", () => {
     await page.getByRole("button", { name: /what kind of bug/i }).click();
 
     // Pin a baseline count for the butterflies chip.
-    const butterflies = page.locator(".taxon-group-chip", { hasText: "butterflies" });
+    const butterflies = page.locator(".taxon-group-chip").filter({ hasText: "butterflies" });
     const baselineText = await butterflies.locator(".chip-count").innerText();
 
-    // Switch subject filter to specimen.
-    await page.getByRole("radio", { name: /specimen/i }).click();
+    // Switch subject filter to captive.
+    const subjectGroup = page.getByRole("radiogroup", { name: /subject type/i });
+    await subjectGroup.getByRole("radio", { name: "captive" }).click();
 
     // Butterflies chip should now show a filtered/total display.
     await expect(butterflies.locator(".chip-count")).not.toHaveText(baselineText);
@@ -853,20 +874,20 @@ test.describe("R7 dynamic chip counts", () => {
     await page.goto("/");
     await page.getByRole("button", { name: /what kind of bug/i }).click();
 
-    const cockroach = page.locator(".taxon-group-chip", { hasText: "cockroaches" });
+    const cockroach = page.locator(".taxon-group-chip").filter({ hasText: "cockroaches" });
     const beforeText = await cockroach.locator(".chip-count").innerText();
 
     // Click butterflies.
-    await page.locator(".taxon-group-chip", { hasText: "butterflies" }).click();
+    await page.locator(".taxon-group-chip").filter({ hasText: "butterflies" }).click();
 
     // Cockroach count should be unchanged (own-axis exclusion).
     await expect(cockroach.locator(".chip-count")).toHaveText(beforeText);
   });
 
   test("gallery: URL-driven filter narrows chip counts on next page render", async ({ page }) => {
-    await page.goto("/gallery?subject=specimen");
-    const butterflies = page.locator(".taxon-group-chip", { hasText: "butterflies" });
-    // Specimen-only butterflies will be a small number; show filtered/total.
+    await page.goto("/gallery?subject=captive");
+    const butterflies = page.locator(".taxon-group-chip").filter({ hasText: "butterflies" });
+    // Captive butterflies are a small subset; the chip should show filtered/total.
     await expect(butterflies.locator(".chip-count-total")).toBeVisible();
   });
 });
