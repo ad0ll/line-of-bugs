@@ -69,6 +69,14 @@ export function Modal({ onClose, children, ariaLabel }: ModalProps) {
         className="modal-dialog"
         onClick={(e) => e.stopPropagation()}
       >
+        <button
+          type="button"
+          className="modal-close"
+          aria-label="close dialog"
+          onClick={onClose}
+        >
+          ×
+        </button>
         {children}
       </div>
     </div>

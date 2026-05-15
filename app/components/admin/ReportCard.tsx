@@ -2,18 +2,11 @@
 
 import type { PendingReport } from "@/lib/queries/reports";
 import { ConfirmDeleteButton } from "./ConfirmDeleteButton";
-import { orderColor } from "@/lib/order-colors";
+import { RelativeAge } from "./RelativeAge";
+import { OrderBadge } from "@/app/components/ui/OrderBadge";
 
 function basename(p: string): string {
   return p.split("/").pop() ?? p;
-}
-
-function formatAge(unixSeconds: number): string {
-  const elapsed = Date.now() / 1000 - unixSeconds;
-  if (elapsed < 60) return `${Math.floor(elapsed)}s ago`;
-  if (elapsed < 3600) return `${Math.floor(elapsed / 60)}m ago`;
-  if (elapsed < 86400) return `${Math.floor(elapsed / 3600)}h ago`;
-  return `${Math.floor(elapsed / 86400)}d ago`;
 }
 
 export interface ReportCardProps {
@@ -28,15 +21,13 @@ export function ReportCard({ report, onDismiss, onHide, onDelete }: ReportCardPr
     <article className="report-card">
       <div className="report-card-thumb">
         <img src={`/api/thumb/${basename(report.thumbnail_filename)}`} alt="" />
-        <span
-          className="report-card-stripe"
-          style={{ backgroundColor: orderColor(report.taxon_order) }}
-        />
       </div>
       <div className="report-card-body">
         <header className="report-card-header">
           <span className="report-card-category">{report.category}</span>
-          <span className="report-card-age" suppressHydrationWarning>{formatAge(report.created_at)}</span>
+          <span className="report-card-age">
+            <RelativeAge unixSeconds={report.created_at} />
+          </span>
         </header>
         <p className="report-card-name">
           {report.common_name ?? report.taxon_species ?? report.image_id}
@@ -46,9 +37,20 @@ export function ReportCard({ report, onDismiss, onHide, onDelete }: ReportCardPr
           {" · "}
           <span className="report-card-source">{report.source}</span>
           {" · "}
-          <a className="report-card-source-link" href={report.source_page_url} target="_blank" rel="noopener noreferrer">
+          <a
+            className="report-card-source-link"
+            href={report.source_page_url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             source ↗
           </a>
+          {report.taxon_order && (
+            <>
+              {" · "}
+              <OrderBadge order={report.taxon_order} />
+            </>
+          )}
         </p>
         {report.message && <blockquote className="report-card-message">{report.message}</blockquote>}
         {report.hidden === 1 && <p className="report-card-warning">⚠ this image is already hidden</p>}

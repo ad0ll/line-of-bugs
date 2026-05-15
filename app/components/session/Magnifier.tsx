@@ -73,19 +73,23 @@ export function Magnifier({ image, size, bw }: Props) {
     <div
       style={{
         position: "fixed",
-        left: pos.x - loupeW / 2,
-        top: pos.y - loupeH / 2,
-        width: loupeW,
-        height: loupeH,
-        border: "2px solid rgba(255,255,255,0.5)",
-        boxShadow: "0 0 0 1px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.55)",
+        // Lock to a square so the circle isn't an ellipse when aspect != 1
+        left: pos.x - Math.max(loupeW, loupeH) / 2,
+        top: pos.y - Math.max(loupeW, loupeH) / 2,
+        width: Math.max(loupeW, loupeH),
+        height: Math.max(loupeW, loupeH),
+        borderRadius: "50%",
+        border: "3px solid #FF6EC7",
+        boxShadow:
+          "0 0 0 2px rgba(13,12,16,0.8), 0 0 0 6px rgba(255,110,199,0.18), 0 12px 28px rgba(0,0,0,0.55)",
         overflow: "hidden",
         pointerEvents: "none",
         zIndex: 40,
         backgroundImage: `url(/api/img/${filename})`,
         backgroundRepeat: "no-repeat",
+        backgroundColor: "var(--surface-0)",
         backgroundSize: `${renderedW * ZOOM}px ${renderedH * ZOOM}px`,
-        backgroundPosition: `${-(cursorInImageX * ZOOM - loupeW / 2)}px ${-(cursorInImageY * ZOOM - loupeH / 2)}px`,
+        backgroundPosition: `${-(cursorInImageX * ZOOM - Math.max(loupeW, loupeH) / 2)}px ${-(cursorInImageY * ZOOM - Math.max(loupeW, loupeH) / 2)}px`,
         filter: bw ? "grayscale(1) contrast(1.05)" : "none",
       }}
     />

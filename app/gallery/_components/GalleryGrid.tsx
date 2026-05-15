@@ -14,7 +14,16 @@ export async function GalleryGrid({ q, subject, institutions, page }: GalleryGri
   if (totalCount === 0) {
     return (
       <div className="gallery-empty">
-        <p>no results — try a broader search or fewer filters</p>
+        <div className="gallery-empty-icon" aria-hidden>✿</div>
+        <p style={{ margin: 0, fontFamily: "var(--font-display), serif", fontStyle: "italic", fontSize: "1.2rem", color: "var(--text-secondary)" }}>
+          no bugs found here
+        </p>
+        <p style={{ margin: 0, fontSize: "0.9rem" }}>
+          try a broader search or fewer filters
+        </p>
+        <a href="/gallery" className="gallery-load-more" style={{ margin: 0 }}>
+          ✿ clear filters
+        </a>
       </div>
     );
   }
@@ -30,17 +39,19 @@ export async function GalleryGrid({ q, subject, institutions, page }: GalleryGri
         ))}
       </div>
       {hasMore && (
-        <a
-          className="gallery-load-more"
-          href={`/gallery?${new URLSearchParams({
-            q,
-            subject,
-            inst: institutions.join(','),
-            page: String(page + 1),
-          })}`}
-        >
-          load more
-        </a>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <a
+            className="gallery-load-more"
+            href={`/gallery?${new URLSearchParams({
+              q,
+              subject,
+              inst: institutions.join(','),
+              page: String(page + 1),
+            })}`}
+          >
+            load more ✿
+          </a>
+        </div>
       )}
     </>
   );

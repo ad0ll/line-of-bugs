@@ -1,5 +1,4 @@
 "use client";
-import { T } from "@/lib/tokens";
 
 const OPTIONS = [
   { value: "nature", label: "nature" },
@@ -27,7 +26,7 @@ export function SubjectFilter({ value, onChange }: Props) {
   }
 
   return (
-    <div style={{ display: "flex", gap: T.s3 }} role="radiogroup" aria-label="subject type">
+    <div style={{ display: "flex", gap: 8 }} role="radiogroup" aria-label="subject type">
       {OPTIONS.map((opt) => {
         const active = value === opt.value;
         return (
@@ -39,15 +38,8 @@ export function SubjectFilter({ value, onChange }: Props) {
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(opt.value)}
             onKeyDown={(e) => onKey(e, opt.value)}
-            className={`u-icon-btn${active ? " is-active" : ""}`}
-            style={{
-              padding: `${T.s4}px ${T.s8}px`,
-              borderRadius: T.r2xl,
-              fontFamily: "var(--font-sans), system-ui, sans-serif",
-              fontSize: T.textBase,
-              fontWeight: 500,
-              textTransform: "lowercase",
-            }}
+            className={`home-pill${active ? " is-active" : ""}`}
+            style={{ textTransform: "lowercase" }}
           >
             {opt.label}
           </button>

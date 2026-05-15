@@ -16,9 +16,11 @@ const img: Image = {
 };
 
 describe("SourceInfoChip", () => {
-  it("renders species + photographer + institution", () => {
+  it("renders order badge + species + photographer + institution", () => {
     render(<SourceInfoChip image={img} visible />);
-    expect(screen.getByText(/Asian Lady Beetle/i)).toBeInTheDocument();
+    // Common name moved to SessionTitle; chip carries scientific + attribution
+    expect(screen.getByText(/Harmonia axyridis/i)).toBeInTheDocument();
+    expect(screen.getByText(/Coleoptera/i)).toBeInTheDocument();
     expect(screen.getByText(/Marie Cerda/i)).toBeInTheDocument();
     expect(screen.getByText(/iNaturalist/i)).toBeInTheDocument();
   });

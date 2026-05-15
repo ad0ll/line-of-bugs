@@ -14,6 +14,7 @@ import { SessionActionBar, type MagnifierSize } from "./SessionActionBar";
 import { EdgePrevNext } from "./EdgePrevNext";
 import { Magnifier } from "./Magnifier";
 import { EndOfSessionOverlay } from "./EndOfSessionOverlay";
+import { SessionTitle } from "./SessionTitle";
 
 interface Props {
   items: Image[];
@@ -35,6 +36,25 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [done, setDone] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Track fullscreen state — user may exit via Escape (handled by browser, not us)
+  useEffect(() => {
+    const onChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen();
+    } else {
+      void document.documentElement.requestFullscreen().catch(() => {});
+    }
+  }, []);
+
+  const zoomIn = useCallback(() => setZoom((z) => Math.min(4, z + 0.25)), []);
+  const zoomOut = useCallback(() => setZoom((z) => Math.max(0.25, z - 0.25)), []);
 
   const audioRef = useRef<AudioCues | null>(null);
   const preloadRef = useRef<PreloadManager | null>(null);
@@ -196,6 +216,10 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
           setZoom(1);
           setPan({ x: 0, y: 0 });
           break;
+        case "f":
+        case "F":
+          toggleFullscreen();
+          break;
         case "r":
         case "R":
           if (!pathname.startsWith("/report/")) {
@@ -211,7 +235,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [goPrev, goNext, idx, items, router, pathname]);
+  }, [goPrev, goNext, idx, items, router, pathname, toggleFullscreen]);
 
   // Cursor hide when chrome hidden
   useEffect(() => {
@@ -246,6 +270,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
       onMouseLeave={onMouseUp}
     >
       <ProgressBar percent={elapsedMs / durationMs} playing={!paused && !done} />
+      <SessionTitle image={current} />
       <Timer remainingMs={durationMs - elapsedMs} paused={paused} />
       <SessionImage image={current} bw={bw} zoom={zoom} pan={pan} />
       <SourceInfoChip image={current} visible={chromeVisible} />
@@ -262,6 +287,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
         bw={bw}
         magnifier={magnifier}
         zoom={zoom}
+        isFullscreen={isFullscreen}
         currentIdx={idx}
         total={items.length}
         intervalSec={intervalSec}
@@ -274,10 +300,13 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
             return MAG_CYCLE[(i + 1) % MAG_CYCLE.length]!;
           })
         }
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
         onResetZoom={() => {
           setZoom(1);
           setPan({ x: 0, y: 0 });
         }}
+        onToggleFullscreen={toggleFullscreen}
         onReport={() => router.push(`/report/${encodeURIComponent(current.imageId)}`)}
         onIntervalChange={(s) => setIntervalSec(s)}
       />

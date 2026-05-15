@@ -34,12 +34,18 @@ export const T = {
 
   // ── Borders ──
   borderSubtle: "rgba(255, 255, 255, 0.07)",
-  borderFaint: "rgba(255, 255, 255, 0.07)",
   borderMedium: "rgba(255, 255, 255, 0.1)",
   borderEmphasis: "rgba(255, 255, 255, 0.2)",
   borderWarning: "rgba(255, 170, 0, 0.3)",
-  borderWarningStrong: "rgba(255, 170, 0, 0.4)",
   borderDanger: "rgba(239, 68, 68, 0.5)",
+
+  // ── Accents — Pastel Goth Kawaii primary trio + danger ──
+  accentPink: "#FF6EC7",      // Coleoptera color, doubles as primary brand
+  accentLilac: "#A78BFA",     // Diptera color, secondary brand
+  accentSky: "#67D4E6",       // Odonata color, tertiary brand
+  accentDanger: "#ef4444",    // Destructive actions only
+  accentPinkSoft: "rgba(255, 110, 199, 0.18)",
+  accentPinkBorder: "rgba(255, 110, 199, 0.55)",
 
   // ── Spacing (s<N> prefix; N IS the pixel value, with some skips at 9, 11) ──
   s1: 2, s2: 4, s3: 6, s4: 8, s5: 10, s6: 12, s7: 14, s8: 16,

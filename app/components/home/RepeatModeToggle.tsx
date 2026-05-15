@@ -1,5 +1,4 @@
 "use client";
-import { T } from "@/lib/tokens";
 import type { RepeatMode } from "@/lib/repeat-mode";
 
 const OPTIONS: { value: RepeatMode; label: string; hint: string }[] = [
@@ -15,20 +14,11 @@ interface Props {
 
 export function RepeatModeToggle({ value, onChange }: Props) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: T.s3 }} role="radiogroup" aria-label="repeat behavior">
+    <div className="home-radio-list" role="radiogroup" aria-label="repeat behavior">
       {OPTIONS.map((opt) => (
         <label
           key={opt.value}
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            gap: T.s4,
-            cursor: "pointer",
-            padding: T.s3,
-            borderRadius: T.r2xl,
-            background: value === opt.value ? T.surfaceActive : "transparent",
-            transition: `background ${T.timingFast}`,
-          }}
+          className={`home-radio-card${value === opt.value ? " is-selected" : ""}`}
         >
           <input
             type="radio"
@@ -36,11 +26,10 @@ export function RepeatModeToggle({ value, onChange }: Props) {
             value={opt.value}
             checked={value === opt.value}
             onChange={() => onChange(opt.value)}
-            style={{ marginTop: 4, accentColor: T.surface2 }}
           />
           <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ color: T.textPrimary, fontWeight: 500 }}>{opt.label}</span>
-            <span style={{ color: T.textTertiary, fontSize: T.textXs }}>{opt.hint}</span>
+            <span className="home-radio-label">{opt.label}</span>
+            <span className="home-radio-hint">{opt.hint}</span>
           </span>
         </label>
       ))}

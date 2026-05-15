@@ -1,5 +1,5 @@
 import type { GalleryRow } from '@/lib/queries/gallery';
-import { GridTileStripe } from './GridTileStripe';
+import { OrderBadge } from '@/app/components/ui/OrderBadge';
 
 function basename(p: string): string {
   return p.split('/').pop() ?? p;
@@ -16,7 +16,6 @@ export function GridTile({ row }: { row: GalleryRow }) {
       data-id={row.image_id}
       data-image-path={row.medium_filename}
     >
-      <GridTileStripe taxonOrder={row.taxon_order} />
       <div className="grid-item-image">
         <img
           src={`/api/thumb/${thumbName}`}
@@ -32,6 +31,7 @@ export function GridTile({ row }: { row: GalleryRow }) {
       <div className="grid-item-meta">
         {row.common_name && <span className="grid-item-name">{row.common_name}</span>}
         {row.taxon_species && <span className="grid-item-species">{row.taxon_species}</span>}
+        <OrderBadge order={row.taxon_order} />
       </div>
     </a>
   );

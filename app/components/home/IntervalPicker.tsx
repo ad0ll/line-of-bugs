@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { T } from "@/lib/tokens";
 
 const PRESETS = [
   { label: "30s", seconds: 30 },
@@ -20,21 +19,14 @@ export function IntervalPicker({ value, onChange }: Props) {
   const [customOpen, setCustomOpen] = useState(false);
   const isPreset = PRESETS.some((p) => p.seconds === value);
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: T.s4 }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: T.s3 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {PRESETS.map((p) => (
           <button
             key={p.seconds}
             type="button"
             onClick={() => onChange(p.seconds)}
-            className={`u-icon-btn${value === p.seconds ? " is-active" : ""}`}
-            style={{
-              padding: `${T.s4}px ${T.s7}px`,
-              borderRadius: T.r2xl,
-              fontFamily: "var(--font-mono), monospace",
-              fontSize: T.textMd,
-              fontWeight: 500,
-            }}
+            className={`home-pill${value === p.seconds ? " is-active" : ""}`}
           >
             {p.label}
           </button>
@@ -42,14 +34,7 @@ export function IntervalPicker({ value, onChange }: Props) {
         <button
           type="button"
           onClick={() => setCustomOpen((v) => !v)}
-          className={`u-icon-btn${!isPreset || customOpen ? " is-active" : ""}`}
-          style={{
-            padding: `${T.s4}px ${T.s7}px`,
-            borderRadius: T.r2xl,
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: T.textMd,
-            fontWeight: 500,
-          }}
+          className={`home-pill${!isPreset || customOpen ? " is-active" : ""}`}
         >
           custom…
         </button>
@@ -62,13 +47,14 @@ export function IntervalPicker({ value, onChange }: Props) {
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
           style={{
-            background: T.surfaceInput,
-            border: `1px solid ${T.borderMedium}`,
-            borderRadius: T.r2xl,
-            padding: `${T.s4}px ${T.s5}px`,
-            color: T.textPrimary,
+            background: "var(--surface-1)",
+            border: "1.5px solid var(--accent-pink-border)",
+            borderRadius: "var(--r-pill)",
+            padding: "8px 16px",
+            color: "var(--text-primary)",
             fontFamily: "var(--font-mono), monospace",
-            width: 120,
+            width: 140,
+            outline: "none",
           }}
           aria-label="custom seconds"
         />

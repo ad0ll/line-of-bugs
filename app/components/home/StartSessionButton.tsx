@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { T } from "@/lib/tokens";
 import type { RepeatMode } from "@/lib/repeat-mode";
 
 interface Props {
@@ -18,6 +17,11 @@ export function StartSessionButton({ intervalSec, subjectType, repeatMode }: Pro
   async function start() {
     setPending(true);
     setError(null);
+    try {
+      await document.documentElement.requestFullscreen?.();
+    } catch {
+      // ignore — permission denied or unsupported
+    }
     try {
       const res = await fetch("/api/session/start", {
         method: "POST",
@@ -38,31 +42,11 @@ export function StartSessionButton({ intervalSec, subjectType, repeatMode }: Pro
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: T.s3, alignItems: "center" }}>
-      <button
-        type="button"
-        onClick={start}
-        disabled={pending}
-        style={{
-          background: T.surface2,
-          color: T.textPrimary,
-          border: `1px solid ${T.borderEmphasis}`,
-          borderRadius: T.r3xl,
-          padding: `${T.s6}px ${T.s12}px`,
-          fontFamily: "var(--font-display), serif",
-          fontSize: T.text2xl,
-          fontWeight: 500,
-          letterSpacing: 0.5,
-          cursor: pending ? "default" : "pointer",
-          opacity: pending ? 0.6 : 1,
-          transition: `transform ${T.timingBase}, background ${T.timingBase}`,
-        }}
-      >
-        {pending ? "starting…" : "start session"}
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+      <button type="button" onClick={start} disabled={pending} className="home-start">
+        {pending ? "starting…" : "start session ✿"}
       </button>
-      {error ? (
-        <p style={{ color: T.textDanger, fontSize: T.textSm, margin: 0 }}>{error}</p>
-      ) : null}
+      {error ? <p className="home-start-error">{error}</p> : null}
     </div>
   );
 }

@@ -10,6 +10,7 @@ const baseProps = {
   bw: false,
   magnifier: "off" as const,
   zoom: 1,
+  isFullscreen: false,
   currentIdx: 0,
   total: 47,
   intervalSec: 60,
@@ -17,7 +18,10 @@ const baseProps = {
   onPause: noop,
   onToggleBw: noop,
   onMagnifier: noop,
+  onZoomIn: noop,
+  onZoomOut: noop,
   onResetZoom: noop,
+  onToggleFullscreen: noop,
   onReport: noop,
   onIntervalChange: noop,
 };
@@ -28,7 +32,11 @@ describe("SessionActionBar", () => {
     expect(screen.getByText(/pause/i)).toBeInTheDocument();
     expect(screen.getByText(/b\.w/i)).toBeInTheDocument();
     expect(screen.getByText(/magnifier/i)).toBeInTheDocument();
-    expect(screen.getByText(/zoom/i)).toBeInTheDocument();
+    // Zoom cluster: three buttons (− / reset / +) with aria-labels
+    expect(screen.getByLabelText(/zoom in/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/zoom out/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/reset zoom/i)).toBeInTheDocument();
+    expect(screen.getByText(/fullscreen/i)).toBeInTheDocument();
     expect(screen.getByText(/report/i)).toBeInTheDocument();
     expect(screen.getByText(/source/i)).toBeInTheDocument();
     expect(screen.getByText("1 / 47")).toBeInTheDocument();
