@@ -28,11 +28,20 @@
   .bbox-overlay { position: relative; display: block; line-height: 0; }
   .bbox-overlay .box { position: absolute; border: 0.2vw solid #FF6EC7; pointer-events: none; box-sizing: border-box; }
   /* Secondary detections — other distinct subjects the system clustered.
-     Cyan so they contrast against both pink primary and any photo background. */
+     Cyan so they contrast against both pink primary and any photo background.
+     The ::after pseudo-element shows the DINO confidence as a corner badge —
+     low conf (≈0.20) is the noise band where flowers/leaves leak in. */
   .bbox-overlay .box-secondary {
     position: absolute; border: 0.25vw solid #67D4E6;
     pointer-events: none; box-sizing: border-box;
     box-shadow: 0 0 0 0.05vw rgba(0, 0, 0, 0.8);
+  }
+  .bbox-overlay .box-secondary::after {
+    content: attr(data-conf);
+    position: absolute; top: -1px; right: -1px;
+    background: #67D4E6; color: #0d0c10;
+    font: 600 9px/1 'JetBrains Mono', monospace;
+    padding: 2px 3px; border-radius: 0 0 0 3px;
   }
   .nocrop { width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; background: #0d0c10; color: #666; font-size: 12px; border-radius: 4px; }
 
@@ -130,6 +139,13 @@
     box-shadow: 0 0 0 0.05vw rgba(0, 0, 0, 0.8);
     box-sizing: border-box;
     pointer-events: none;
+  }
+  #zoomPopup .zoom-bbox-secondary::after {
+    content: attr(data-conf);
+    position: absolute; top: -1px; right: -1px;
+    background: #67D4E6; color: #0d0c10;
+    font: 600 0.7vw/1 'JetBrains Mono', monospace;
+    padding: 0.15vw 0.25vw; border-radius: 0 0 0 0.25vw;
   }
 </style>
 </head>
@@ -405,9 +421,12 @@ function render() {
     const primaryBoxHTML = r.bbox_x !== null
       ? '<div class="box" style="left:' + (r.bbox_x*100) + '%;top:' + (r.bbox_y*100) + '%;width:' + (r.bbox_w*100) + '%;height:' + (r.bbox_h*100) + '%"></div>'
       : '';
-    const secondaryBoxHTML = (r.secondary_bboxes || []).map(b =>
-      '<div class="box-secondary" style="left:' + (b[0]*100) + '%;top:' + (b[1]*100) + '%;width:' + (b[2]*100) + '%;height:' + (b[3]*100) + '%"></div>'
-    ).join('');
+    // Secondary bbox tuple is [x, y, w, h, conf?]. conf added 2026-05-15;
+    // older sidecars without conf still render (badge just shows empty).
+    const secondaryBoxHTML = (r.secondary_bboxes || []).map(b => {
+      const conf = (b.length >= 5 && b[4] != null) ? b[4].toFixed(2) : '';
+      return '<div class="box-secondary" data-conf="' + conf + '" style="left:' + (b[0]*100) + '%;top:' + (b[1]*100) + '%;width:' + (b[2]*100) + '%;height:' + (b[3]*100) + '%"></div>';
+    }).join('');
     const boxHTML = primaryBoxHTML + secondaryBoxHTML;
     const cropHTML = r.crop_path
       ? '<img src="' + r.crop_path + '" alt="">'
@@ -511,6 +530,7 @@ document.addEventListener("mouseover", (e) => {
       const mirror = document.createElement("div");
       mirror.className = "zoom-bbox-secondary";
       mirror.style.cssText = sb.style.cssText;
+      if (sb.dataset.conf) mirror.dataset.conf = sb.dataset.conf;
       zoomPopup.appendChild(mirror);
     }
   }

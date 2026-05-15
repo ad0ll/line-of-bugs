@@ -8,7 +8,8 @@ extracts every distinct subject bbox via center-clustering, drops the one that
 overlaps the parquet's stored primary, and writes the rest to a sidecar JSON:
 
     data/cache/secondary_bboxes.json
-      → { image_id: [[x, y, w, h], ...] }   (normalized xywh, primary excluded)
+      → { image_id: [[x, y, w, h, conf], ...] }
+      normalized xywh + DINO confidence; primary excluded.
 
 build_html.py reads this sidecar and the template renders dashed gray boxes
 on the original-image overlay. The sidecar approach keeps the parquet schema
@@ -97,7 +98,9 @@ def main(variant: str = "v1_dino_insectsam") -> None:
                 cand = (s[0], s[1], s[2], s[3])
                 if primary is not None and iou_xywh_normalized(cand, primary) >= PRIMARY_IOU_MATCH:
                     continue
-                secondaries.append([float(s[0]), float(s[1]), float(s[2]), float(s[3])])
+                secondaries.append([
+                    float(s[0]), float(s[1]), float(s[2]), float(s[3]), float(s[4]),
+                ])
             out[image_id] = secondaries
 
         n_processed += 1
