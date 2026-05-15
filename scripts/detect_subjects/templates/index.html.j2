@@ -55,6 +55,13 @@
   .flags button.active { background: #f59e0b; color: #0d0c10; border-color: #f59e0b; font-weight: 600; }
   .flags button.good-button.active { background: #2d4a2d; color: #a8e6a8; border-color: #4a7a4a; }
   .flags button.unsure-button.active { background: #28252e; color: #aaa; border-color: #666; }
+  /* System-suggested: the badge predicted this reason. Outlined in sky-blue
+     so user sees what the system thinks. Click → becomes amber-active (confirmed). */
+  .flags button.system-suggested:not(.active) {
+    border-color: #67D4E6;
+    color: #67D4E6;
+    background: rgba(103, 212, 230, 0.08);
+  }
   /* "good only ..." preference row — mutually exclusive, sky-blue accent so it
      reads as distinct from the looks-good (approve overall) button. */
   .prefs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px; }
@@ -126,9 +133,10 @@
   <code>crop-too-tight</code> proposed crop clips the bug ·
   <code>crop-too-loose</code> too much background in proposed crop
   <br><b>Skip:</b> <code>? unsure</code> can't decide.
-  <br><b>Optional preference</b> (separate row, mutually exclusive, doesn't affect classification):
-  <code>★ original-good</code> the original would be fine for drawing ·
-  <code>★ cropped-good</code> only the cropped version is fine. Useful for spotting cases where the system's "hide" call is wrong because the auto-crop rescues the image.
+  <br><b>System suggestion:</b> the flag button matching the system's predicted badge is outlined in <span style="color:#67D4E6">sky blue</span>. Click it to explicitly confirm that reason, or just hit <code>✓ looks-good</code> for "system got it right overall."
+  <br><b>Optional preference</b> (separate row, mutually exclusive, doesn't affect classification, <em>don't click on every image</em>):
+  <code>★ original-good</code> only when the system would crop but you think the original is fine as-is ·
+  <code>★ cropped-good</code> only when the system would hide but you think the cropped version rescues it.
   <br><span style="color:#666">Hover any image to zoom. Labels persist via localStorage; auto-export every 25 changes.</span>
 </div>
 
@@ -145,6 +153,17 @@ const FLAGS = [
   "subject-clipped", "other-bad",
   "crop-too-tight", "crop-too-loose",
 ];
+
+// When the system predicts one of these badges, the matching FLAG button gets
+// a sky-blue outline so the user can see what the system thinks. Clicking it
+// confirms (becomes amber). Flags without a system-equivalent (bbox-wrong,
+// subject-blurred, subject-clipped, other-bad, crop-too-*) are user-only.
+const BADGE_TO_FLAG = {
+  "bug_too_small": "bug-too-small",
+  "multi_bug":     "multi-bug",
+  "no_bug":        "no-bug",
+  "poor_contrast": "poor-contrast",
+};
 
 const FLAG_TITLES = {
   "bbox-wrong":       "Bbox missed the bug, captured wrong part, or wrong subject",
@@ -426,9 +445,15 @@ function render() {
       ? '<img src="' + r.crop_path + '" alt="">'
       : '<div class="nocrop">no crop · ' + r.framing_quality + '</div>';
 
+    const suggestedFlag = BADGE_TO_FLAG[r.framing_quality];
     const flagButtons = FLAGS.map(f => {
       const active = lbl.flags && lbl.flags.indexOf(f) >= 0;
-      return '<button title="' + FLAG_TITLES[f] + '" class="' + (active ? 'active' : '') + '" onclick="toggleFlag(\'' + r.image_id + '\',\'' + f + '\')">' + f + '</button>';
+      const suggested = (f === suggestedFlag);
+      const classes = [];
+      if (active) classes.push("active");
+      if (suggested) classes.push("system-suggested");
+      const title = FLAG_TITLES[f] + (suggested ? " · system predicts this — click to confirm" : "");
+      return '<button title="' + title + '" class="' + classes.join(' ') + '" onclick="toggleFlag(\'' + r.image_id + '\',\'' + f + '\')">' + f + '</button>';
     }).join('');
 
     div.innerHTML =
