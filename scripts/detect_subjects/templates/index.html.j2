@@ -130,13 +130,17 @@ function render() {
     const boxHTML = r.bbox_x !== null
       ? '<div class="box" style="left:' + (r.bbox_x*100) + '%;top:' + (r.bbox_y*100) + '%;width:' + (r.bbox_w*100) + '%;height:' + (r.bbox_h*100) + '%"></div>'
       : '';
+    // .zoom siblings are hidden full-size copies that become visible on figure:hover.
+    // The browser reuses the same cached image bytes — no extra fetch.
     const cropHTML = r.crop_path
-      ? '<img src="' + r.crop_path + '" alt="">'
+      ? '<img src="' + r.crop_path + '" alt="">' +
+        '<img class="zoom" src="' + r.crop_path + '" alt="">'
       : '<div class="nocrop">no crop (' + r.framing_quality + ')</div>';
     div.innerHTML =
       '<div class="imgs">' +
         '<figure>' +
           '<div class="bbox-overlay"><img src="' + r.original_path + '" alt="">' + boxHTML + '</div>' +
+          '<img class="zoom" src="' + r.original_path + '" alt="">' +
           '<figcaption>original · bbox shown in pink</figcaption>' +
         '</figure>' +
         '<figure>' + cropHTML + '<figcaption>proposed crop · what users see</figcaption></figure>' +
