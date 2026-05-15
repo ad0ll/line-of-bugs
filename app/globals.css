@@ -295,3 +295,161 @@ body {
 
 /* Empty state */
 .gallery-empty { padding: var(--s12) 0; text-align: center; color: var(--text-tertiary); }
+
+/* ── Modal + Report + Toast + Admin (P4) ── */
+
+/* Modal */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(13,12,16,0.65);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+.modal-dialog {
+  background: var(--surface-2);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-2xl);
+  max-width: 560px;
+  width: calc(100vw - 32px);
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-modal);
+}
+
+/* Report form */
+.report-form {
+  padding: var(--s8);
+  display: flex; flex-direction: column; gap: var(--s6);
+}
+.report-form h2 { margin: 0; font-family: var(--font-display), serif; }
+.report-form-help { margin: 0; color: var(--text-secondary); font-size: 0.9rem; }
+.report-category-chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.report-form textarea {
+  width: 100%;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-md);
+  padding: var(--s4);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  resize: vertical;
+}
+.report-form-error { color: var(--accent); margin: 0; font-size: 0.9rem; }
+.report-form-actions { display: flex; justify-content: flex-end; gap: var(--s4); }
+.report-form-actions button {
+  border: 1px solid var(--border-medium);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  padding: var(--s4) var(--s8);
+  border-radius: var(--r-2xl);
+  cursor: pointer;
+  transition: all var(--timing-base);
+}
+.report-form-actions button:last-child {
+  background: var(--accent);
+  color: var(--surface-0);
+  border-color: var(--accent);
+}
+.report-form-actions button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Report modal content */
+.report-modal-content { display: flex; gap: var(--s8); padding: var(--s8); }
+.report-modal-preview img { width: 160px; height: 160px; object-fit: cover; border-radius: var(--r-md); }
+.report-modal-preview .preview-name { margin: var(--s2) 0 0 0; font-size: 0.85rem; color: var(--text-secondary); }
+
+/* Full-page report */
+.report-page { max-width: 720px; margin: 0 auto; padding: var(--s8); }
+.report-page-header { margin-bottom: var(--s6); }
+.report-page-back { color: var(--text-secondary); text-decoration: none; }
+.report-page-content { display: flex; flex-direction: column; gap: var(--s8); }
+.report-page-preview img { width: 100%; max-width: 320px; border-radius: var(--r-2xl); }
+
+/* Toast */
+.toast-host {
+  position: fixed;
+  bottom: var(--s8);
+  right: var(--s8);
+  display: flex; flex-direction: column; gap: var(--s4);
+  z-index: 2000;
+  pointer-events: none;
+}
+.toast {
+  background: var(--surface-2);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-2xl);
+  padding: var(--s4) var(--s6);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-panel);
+  animation: toast-in 0.2s ease-out;
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Admin */
+.admin-page { max-width: 1100px; margin: 0 auto; padding: var(--s8); }
+.admin-page-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--s8); }
+.admin-page-header h1 { font-family: var(--font-display), serif; margin: 0; }
+.admin-page-count { font-family: var(--font-mono), monospace; color: var(--text-secondary); }
+.admin-empty { text-align: center; color: var(--text-secondary); padding: var(--s12) 0; }
+
+.report-list { display: flex; flex-direction: column; gap: var(--s6); }
+.report-card {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: var(--s6);
+  background: var(--surface-1);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-2xl);
+  padding: var(--s6);
+}
+.report-card-thumb { position: relative; }
+.report-card-thumb img { width: 120px; height: 120px; object-fit: cover; border-radius: var(--r-md); display: block; }
+.report-card-stripe { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: var(--r-md) 0 0 var(--r-md); }
+.report-card-body { display: flex; flex-direction: column; gap: var(--s2); }
+.report-card-header { display: flex; justify-content: space-between; align-items: baseline; }
+.report-card-category {
+  font-family: var(--font-mono), monospace;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+.report-card-age { font-family: var(--font-mono), monospace; color: var(--text-tertiary); font-size: 0.8rem; }
+.report-card-name { font-family: var(--font-sans), system-ui, sans-serif; font-size: 1.1rem; color: var(--text-primary); margin: 0; }
+.report-card-meta { font-family: var(--font-mono), monospace; font-size: 0.85rem; color: var(--text-secondary); margin: 0; }
+.report-card-id { color: var(--text-tertiary); }
+.report-card-source-link { color: var(--accent); text-decoration: none; }
+.report-card-message {
+  margin: var(--s4) 0;
+  padding: var(--s4) var(--s6);
+  border-left: 3px solid var(--accent);
+  background: var(--surface-0);
+  border-radius: 0 var(--r-md) var(--r-md) 0;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+.report-card-warning { color: var(--accent); font-size: 0.85rem; margin: 0; }
+.report-card-actions { display: flex; gap: var(--s4); margin-top: var(--s4); }
+.report-card-actions button,
+.btn-destructive,
+.btn-destructive-idle {
+  border: 1px solid var(--border-medium);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  padding: var(--s2) var(--s6);
+  border-radius: var(--r-md);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--timing-base);
+}
+.btn-destructive-idle:hover { border-color: var(--accent); color: var(--accent); }
+.btn-destructive { background: var(--accent); border-color: var(--accent); color: var(--surface-0); }
+.btn-armed { animation: armed-pulse 0.6s ease-in-out infinite alternate; }
+@keyframes armed-pulse {
+  from { box-shadow: 0 0 0 0 rgba(255,110,199,0.4); }
+  to { box-shadow: 0 0 0 6px rgba(255,110,199,0); }
+}

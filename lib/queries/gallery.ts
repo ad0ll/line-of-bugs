@@ -175,9 +175,9 @@ export async function searchSpecies(q: string): Promise<SpeciesRow[]> {
   return db.all<SpeciesRow>(sql`
     WITH matches AS (
       SELECT i.common_name, i.taxon_species, i.taxon_order
-      FROM images_fts f
-      JOIN images i ON i.image_id = f.image_id
-      WHERE f MATCH ${ftsQuery}
+      FROM images_fts
+      JOIN images i ON i.image_id = images_fts.image_id
+      WHERE images_fts MATCH ${ftsQuery}
         AND i.hidden = 0
         AND NOT EXISTS (
           SELECT 1 FROM reports r

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Zen_Maru_Gothic, JetBrains_Mono, Fraunces } from "next/font/google";
 import { ReactQueryProvider } from "./providers/ReactQueryProvider";
+import { ToastHost } from "./components/ui/Toast";
 import "./globals.css";
 
 const sans = Zen_Maru_Gothic({
@@ -31,8 +32,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
+  modal,
 }: {
   children: React.ReactNode;
+  modal: React.ReactNode;
 }) {
   return (
     <html
@@ -40,7 +43,11 @@ export default function RootLayout({
       className={`${sans.variable} ${mono.variable} ${display.variable}`}
     >
       <body>
-        <ReactQueryProvider>{children}</ReactQueryProvider>
+        <ReactQueryProvider>
+          {children}
+          {modal}
+        </ReactQueryProvider>
+        <ToastHost />
       </body>
     </html>
   );
