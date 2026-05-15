@@ -1,0 +1,43 @@
+# deploy/line-of-bugs.service — copy to /etc/systemd/system/ on the host.
+[Unit]
+Description=line-of-bugs Next.js app
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bawler
+Group=bawler
+WorkingDirectory=/srv/line-of-bugs/current
+EnvironmentFile=/srv/line-of-bugs/shared/.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOSTNAME=127.0.0.1
+ExecStart=/usr/bin/node .next/standalone/server.js
+Restart=always
+RestartSec=3
+
+# Resource bounds — leave plenty of headroom for the shared host
+MemoryMax=4G
+MemoryHigh=3G
+CPUQuota=400%
+TasksMax=512
+
+# Sandboxing
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/srv/line-of-bugs/shared
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+LockPersonality=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=line-of-bugs
+
+[Install]
+WantedBy=multi-user.target
