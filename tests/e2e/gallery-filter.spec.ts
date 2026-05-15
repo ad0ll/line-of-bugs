@@ -11,6 +11,8 @@ test("subject chip toggle is URL-synced and pagination resets", async ({ page })
 test("institution picker opens and toggles selection", async ({ page }) => {
   await page.goto("/gallery");
   await page.waitForSelector("#gallery-grid");
+  // R6 moved the institution picker behind the "more filters" collapse.
+  await page.getByRole("button", { name: /^▸?\s*more filters/i }).click();
   await page.getByRole("button", { name: /institution/i }).click();
   await expect(page.locator(".institution-popover")).toBeVisible();
   // Click the label (covers the checkbox + name span) to avoid label/checkbox dispatch races
