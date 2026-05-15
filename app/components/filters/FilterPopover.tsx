@@ -86,7 +86,17 @@ export function FilterPopover({
       {open && (
         <div className="filter-popover-panel" role="dialog" aria-label={ariaLabel ?? idleLabel}>
           <ul className="filter-popover-list">
-            {options.map((o) => {
+            {[...options]
+              .sort((a, b) => {
+                // Non-zero filtered options first (most useful at top);
+                // ties break on alphabetical name.
+                const an = a.count === 0 ? 1 : 0;
+                const bn = b.count === 0 ? 1 : 0;
+                if (an !== bn) return an - bn;
+                if (a.count !== b.count) return b.count - a.count;
+                return a.name.localeCompare(b.name);
+              })
+              .map((o) => {
               const total = o.total ?? o.count;
               if (total === 0) return null;
               const showSplit = typeof o.total === "number" && o.count !== o.total;
@@ -109,7 +119,7 @@ export function FilterPopover({
                   </label>
                 </li>
               );
-            })}
+              })}
           </ul>
           {selected.length > 0 && (
             <button
