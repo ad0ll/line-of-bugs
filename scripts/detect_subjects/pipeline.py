@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
+import cv2
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -12,6 +13,7 @@ from PIL import Image
 from scripts.detect_subjects.caches import load_completed_pairs
 from scripts.detect_subjects.classify import classify_framing
 from scripts.detect_subjects.config import (
+    BBOX_EDGE_TOLERANCE_NORMALIZED,
     CROPS_DIR,
     DATA_DIR,
     DINO_MODEL_ID,
@@ -107,20 +109,44 @@ def run_v1_on_sample(
 
                 bbox_area = None
                 offc = None
+                bbox_min_edge_px = None
+                bbox_touches_edge = None
                 if det.bbox_xywh_normalized is not None:
                     bx, by, bw, bh = det.bbox_xywh_normalized
                     bbox_area = bbox_area_ratio_normalized(bw, bh)
                     offc = offcenter_normalized(bx, by, bw, bh)
+                    # Absolute bug size in pixels (short edge — what limits usability for fullscreen drawing).
+                    bbox_min_edge_px = float(min(bw * W, bh * H))
+                    # Bug body extends to / runs off the image edge?
+                    bbox_touches_edge = bool(
+                        bx < BBOX_EDGE_TOLERANCE_NORMALIZED
+                        or by < BBOX_EDGE_TOLERANCE_NORMALIZED
+                        or (bx + bw) > (1.0 - BBOX_EDGE_TOLERANCE_NORMALIZED)
+                        or (by + bh) > (1.0 - BBOX_EDGE_TOLERANCE_NORMALIZED)
+                    )
 
                 mask_area = None
                 mask_iou = seg.iou_score if seg else None
                 d_e = None
                 sharp = None
+                subj_sharp = None
                 if mask is not None and mask.any():
                     rgb_np = np.array(im)
                     mask_area = float(mask.sum()) / float(mask.size)
                     d_e = lab_delta_e_mask_vs_background(rgb_np, mask)
                     sharp = boundary_sharpness(rgb_np, mask)
+                # Subject sharpness over the bbox region (Laplacian variance).
+                # NB: unreliable on uniform-textured subjects — stored for future
+                # training data but no longer used in classify_framing.
+                if det.bbox_xywh_normalized is not None:
+                    x1 = int(det.bbox_xywh_normalized[0] * W)
+                    y1 = int(det.bbox_xywh_normalized[1] * H)
+                    x2 = int((det.bbox_xywh_normalized[0] + det.bbox_xywh_normalized[2]) * W)
+                    y2 = int((det.bbox_xywh_normalized[1] + det.bbox_xywh_normalized[3]) * H)
+                    if x2 - x1 > 4 and y2 - y1 > 4:
+                        crop_np = np.array(im.crop((x1, y1, x2, y2)))
+                        gray = cv2.cvtColor(crop_np, cv2.COLOR_RGB2GRAY)
+                        subj_sharp = float(cv2.Laplacian(gray, cv2.CV_64F).var())
 
                 crop_x = crop_y = crop_w = crop_h = None
                 post_area = None
@@ -146,6 +172,7 @@ def run_v1_on_sample(
                 quality = classify_framing(
                     confidence=det.confidence,
                     bbox_area_ratio=bbox_area,
+                    bbox_min_edge_px=bbox_min_edge_px,
                     n_distinct_detections=det.n_distinct_detections,
                     mask_area_ratio=mask_area,
                     lab_delta_e=d_e,
@@ -169,6 +196,9 @@ def run_v1_on_sample(
                     bbox_area_ratio=bbox_area, offcenter=offc,
                     mask_area_ratio=mask_area, mask_iou_score=mask_iou,
                     lab_delta_e=d_e, boundary_sharpness=sharp,
+                    subject_sharpness=subj_sharp,
+                    bbox_min_edge_px=bbox_min_edge_px,
+                    bbox_touches_edge=bbox_touches_edge,
                     crop_x=crop_x, crop_y=crop_y, crop_w=crop_w, crop_h=crop_h,
                     post_crop_subject_area=post_area,
                     framing_quality=quality,

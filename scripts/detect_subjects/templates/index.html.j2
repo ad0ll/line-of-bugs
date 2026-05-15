@@ -11,47 +11,54 @@
   header select { background: #16141a; color: #f5f5f5; border: 1px solid #444; border-radius: 4px; padding: 4px 8px; }
   header button { background: #FF6EC7; color: #0d0c10; border: none; border-radius: 4px; padding: 6px 12px; font-weight: 600; cursor: pointer; }
   .totals { margin-left: auto; font-size: 13px; color: #aaa; }
+  #saveStatus { font-size: 12px; color: #666; margin-left: 8px; }
+
+  .help { font-size: 12px; color: #aaa; padding: 8px 24px; background: #1a1820; border-bottom: 1px solid #28252e; line-height: 1.6; }
+  .help code { background: #0d0c10; padding: 1px 6px; border-radius: 3px; color: #FF6EC7; font-family: 'JetBrains Mono', monospace; }
+  .help b { color: #f5f5f5; }
+
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 16px; padding: 24px; }
   .card { background: #1a1820; border: 1px solid #28252e; border-radius: 8px; padding: 12px; }
+  .card.reviewed { border-color: #2d4a2d; }
+  .card.flagged  { border-color: #f59e0b; }
   .imgs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; align-items: start; }
   .imgs figure { margin: 0; }
   .imgs figcaption { font-size: 11px; color: #888; margin-top: 2px; }
-  /* Image fills its container WIDTH and its own natural aspect ratio drives the height.
-     bbox-overlay wraps the image so the bbox div positions against the image bounds,
-     not a fixed-height letterboxed container. */
   .imgs img { width: 100%; height: auto; background: #0d0c10; border-radius: 4px; display: block; }
+  .bbox-overlay { position: relative; display: block; line-height: 0; }
+  .bbox-overlay .box { position: absolute; border: 0.2vw solid #FF6EC7; pointer-events: none; box-sizing: border-box; }
+  .nocrop { width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; background: #0d0c10; color: #666; font-size: 12px; border-radius: 4px; }
+
   .name { font-size: 14px; margin: 4px 0; color: #f5f5f5; }
   .name code { color: #67D4E6; font-size: 11px; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 4px 0; }
-  .badge.good { background: #2d4a2d; color: #a8e6a8; }
-  .badge.tight { background: #2d4a2d; color: #a8e6a8; }
-  .badge.wide { background: #4a3d2d; color: #e6c8a8; }
-  .badge.hidden { background: #4a2d2d; color: #e6a8a8; }
-  .badge.multi_bug { background: #4a2d4a; color: #e6a8e6; }
-  .badge.camouflaged { background: #2d3a4a; color: #a8c8e6; }
-  .badge.blurred { background: #3a2d4a; color: #c8a8e6; }
-  .metrics { font-size: 12px; color: #aaa; font-family: 'JetBrains Mono', monospace; margin: 4px 0; line-height: 1.5; }
-  /* Single button language used by both .labels and .should-be. */
-  .row-buttons { display: grid; gap: 4px; margin-top: 8px; }
-  .row-buttons button {
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 4px 0; font-family: 'JetBrains Mono', monospace; }
+  .badge.good          { background: #2d4a2d; color: #a8e6a8; }
+  .badge.tight         { background: #2d4a2d; color: #a8e6a8; }
+  .badge.wide          { background: #4a3d2d; color: #e6c8a8; }
+  .badge.no_bug        { background: #4a2d2d; color: #e6a8a8; }
+  .badge.bug_too_small { background: #4a2d2d; color: #e6a8a8; }
+  .badge.multi_bug     { background: #4a2d4a; color: #e6a8e6; }
+  .badge.poor_contrast { background: #2d3a4a; color: #a8c8e6; }
+  .action { font-size: 11px; color: #888; font-family: 'JetBrains Mono', monospace; margin-left: 4px; }
+  .metrics { font-size: 11px; color: #888; font-family: 'JetBrains Mono', monospace; margin: 4px 0; line-height: 1.5; }
+
+  /* Multi-select flag buttons */
+  .flags { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 8px; }
+  .flags button {
     padding: 6px 4px; border: 1px solid #444; background: #1a1820;
     color: #aaa; border-radius: 4px; cursor: pointer;
     font-size: 11px; font-weight: 400; white-space: nowrap;
     transition: background 0.08s, border-color 0.08s, color 0.08s;
   }
-  .row-buttons button:hover { color: #f5f5f5; border-color: #666; }
-  .row-buttons button.active { background: #FF6EC7; color: #0d0c10; border-color: #FF6EC7; font-weight: 600; }
-  .labels { grid-template-columns: 1fr 1fr 1fr 1fr 1fr; }
-  .labels button.wrong-bbox.active { background: #ef4444; color: #fff; border-color: #ef4444; }
-  .labels button.wrong-class.active { background: #f59e0b; color: #0d0c10; border-color: #f59e0b; }
-  .labels button.wrong-crop.active { background: #A78BFA; color: #0d0c10; border-color: #A78BFA; }
-  .bbox-overlay { position: relative; display: block; line-height: 0; }
-  .bbox-overlay .box { position: absolute; border: 2px solid #FF6EC7; pointer-events: none; box-sizing: border-box; }
-  .nocrop { width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; background: #0d0c10; color: #666; font-size: 12px; border-radius: 4px; }
-  /* Mouse-follow zoom popup. A single global #zoomPopup is created in JS
-     and positioned next to the cursor on mouseover. Capped at 560×560
-     with natural aspect ratio preserved. */
-  /* Zoom popup is a wrapper so we can render a bbox overlay alongside the enlarged image. */
+  .flags button:hover { color: #f5f5f5; border-color: #666; }
+  .flags button.active { background: #f59e0b; color: #0d0c10; border-color: #f59e0b; font-weight: 600; }
+  .flags button.good-button.active { background: #2d4a2d; color: #a8e6a8; border-color: #4a7a4a; }
+  .flags button.unsure-button.active { background: #28252e; color: #aaa; border-color: #666; }
+  /* "looks-good" takes the whole first row */
+  .flags button.looks-good { grid-column: 1 / -1; padding: 8px; font-weight: 600; }
+
+  /* Zoom popup */
   #zoomPopup {
     position: fixed; z-index: 1000;
     pointer-events: none; display: none;
@@ -73,16 +80,6 @@
     pointer-events: none;
     display: none;
   }
-  /* "should be" row: same button language as .labels, with an amber active state to
-     mirror the .labels .wrong-class color cue. */
-  .should-be { grid-template-columns: auto repeat(7, 1fr) auto; align-items: stretch; }
-  .should-be > .label { display: flex; align-items: center; padding: 0 6px; font-size: 11px; color: #888; }
-  .should-be button.active { background: #f59e0b; color: #0d0c10; border-color: #f59e0b; font-weight: 600; }
-  .should-be .clear { color: #666; font-weight: 700; }
-  /* Help blurb */
-  .help { font-size: 12px; color: #aaa; padding: 8px 24px; background: #1a1820; border-bottom: 1px solid #28252e; }
-  .help code { background: #0d0c10; padding: 1px 5px; border-radius: 3px; color: #FF6EC7; font-family: 'JetBrains Mono', monospace; }
-  .help b { color: #f5f5f5; }
 </style>
 </head>
 <body>
@@ -90,85 +87,92 @@
   <h1>✿ Framing Validator</h1>
   <label>Variant <select id="variant"><option>{{ variant }}</option></select></label>
   <label>Source <select id="source"><option value="all">all</option>{% for s in sources %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></label>
-  <label>Quality <select id="quality"><option value="all">all</option><option value="good">good</option><option value="tight">tight</option><option value="wide">wide</option><option value="hidden">hidden</option><option value="multi_bug">multi_bug</option><option value="camouflaged">camouflaged</option></select></label>
-  <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="random">random</option></select></label>
+  <label>Predicted <select id="quality"><option value="all">all</option><option value="good">good</option><option value="tight">tight</option><option value="wide">wide</option><option value="no_bug">no_bug</option><option value="bug_too_small">bug_too_small</option><option value="multi_bug">multi_bug</option><option value="poor_contrast">poor_contrast</option></select></label>
+  <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="looks-good">looks-good</option><option value="flagged">any flag</option></select></label>
+  <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_min_edge">min-edge px ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="random">random</option></select></label>
   <span class="totals" id="totals">{{ total }} images</span>
   <button onclick="exportLabels()" title="Download all labels as labels.json">Export labels</button>
-  <button onclick="document.getElementById('importLabels').click()" title="Load a previously-exported labels.json (merges with current)">Import labels</button>
+  <button onclick="document.getElementById('importLabels').click()" title="Load a previously-exported labels.json (merges)">Import labels</button>
   <input type="file" id="importLabels" accept=".json" style="display:none">
-  <span id="saveStatus" style="font-size:12px;color:#666;margin-left:8px"></span>
+  <span id="saveStatus"></span>
 </header>
 
 <div class="help">
-  <b>Labels:</b>
-  <code>✓ correct</code> bbox + class + crop all look right ·
-  <code>✗ bbox</code> bbox missed the bug, captured wrong part, or wrong subject ·
-  <code>✗ class</code> bbox is fine but the <code>good/wide/hidden/...</code> label is wrong ·
-  <code>✗ crop</code> bbox + class fine but crop aesthetic is wrong (too tight, too loose, off-center) ·
-  <code>? unsure</code> ambiguous · Hover any image to zoom.
+  <b>What to do:</b> click <code>✓ looks-good</code> when the system's predicted action looks right. Otherwise click ALL flags that apply — these are <em>multi-select</em>, not exclusive. Default state (no click) = unreviewed.
+  <br><b>Detection issues:</b>
+  <code>bbox-wrong</code> bbox missed the bug / on wrong subject / clipped the body ·
+  <code>no-bug</code> there's no insect in the image at all ·
+  <code>bug-too-small</code> bug is correctly boxed but too tiny for drawing
+  <br><b>Image properties (training data):</b>
+  <code>subject-blurred</code> the bug is out of focus (blurred background is fine) ·
+  <code>poor-contrast</code> bug nearly indistinguishable from background ·
+  <code>multi-bug</code> more than one insect ·
+  <code>subject-clipped</code> body runs off the frame edge ·
+  <code>other-bad</code> some other reason this image is unusable
+  <br><b>Auto-crop:</b>
+  <code>crop-too-tight</code> proposed crop clips the bug ·
+  <code>crop-too-loose</code> too much background in proposed crop
+  <br><b>Skip:</b> <code>? unsure</code> can't decide.
+  <br><span style="color:#666">Hover any image to zoom. Labels persist via localStorage; auto-export every 25 changes.</span>
 </div>
 
 <div class="grid" id="grid"></div>
 
 <script>
 const DATA = {{ data_json }};
-const ROOT = "{{ root }}";
 const LABEL_KEY = "framing_labels";
+const SAVE_META_KEY = "framing_labels_meta";
+
+const FLAGS = [
+  "bbox-wrong", "no-bug", "bug-too-small",
+  "subject-blurred", "poor-contrast", "multi-bug",
+  "subject-clipped", "other-bad",
+  "crop-too-tight", "crop-too-loose",
+];
+
+const FLAG_TITLES = {
+  "bbox-wrong":       "Bbox missed the bug, captured wrong part, or wrong subject",
+  "no-bug":           "There's no insect in this image at all",
+  "bug-too-small":    "Bug is correctly identified but too tiny for drawing (even after crop)",
+  "subject-blurred":  "The bug itself is out of focus (blurred background is OK)",
+  "poor-contrast":    "Bug nearly indistinguishable from background (camouflaged, dim)",
+  "multi-bug":        "More than one insect in the image",
+  "subject-clipped":  "Bug's body is cut off by the frame edge",
+  "other-bad":        "Bad for drawing for some other reason",
+  "crop-too-tight":   "Proposed crop cuts off part of the bug",
+  "crop-too-loose":   "Proposed crop has too much background",
+};
 
 function getLabels() {
   const raw = JSON.parse(localStorage.getItem(LABEL_KEY) || "{}");
-  // Upgrade old string-only entries into the {status, should_be} shape.
+  // Upgrade older shapes to the multi-select model.
   for (const k of Object.keys(raw)) {
-    if (typeof raw[k] === "string") raw[k] = { status: raw[k], should_be: null };
+    const v = raw[k];
+    if (typeof v === "string") raw[k] = { flags: [], unsure: false, looks_good: false, reviewed_at: Date.now() };
+    else if (v && Array.isArray(v.flags) === false) raw[k] = { flags: [], unsure: false, looks_good: false, reviewed_at: Date.now() };
   }
   return raw;
 }
 function setLabels(o) {
-  localStorage.setItem(LABEL_KEY, JSON.stringify(o));
+  try { localStorage.setItem(LABEL_KEY, JSON.stringify(o)); }
+  catch (e) { notifySaveError(e.message); }
 }
-
-// Toggle the status (✓ correct / ✗ bbox / ✗ class / ✗ crop / ? unsure).
-function label(id, kind) {
-  const all = getLabels();
-  const cur = all[id] || { status: null, should_be: null };
-  cur.status = cur.status === kind ? null : kind;
-  if (cur.status === null && cur.should_be === null) delete all[id];
-  else all[id] = cur;
-  setLabels(all);
-  bumpSaveMeta();
-  render();
-}
-
-// Set the "should be" override (or clear it if "" is selected).
-function setShouldBe(id, value) {
-  const all = getLabels();
-  const cur = all[id] || { status: null, should_be: null };
-  cur.should_be = value || null;
-  // Setting should_be implies wrong-class unless already flagged.
-  if (cur.should_be && !cur.status) cur.status = "wrong-class";
-  if (cur.status === null && cur.should_be === null) delete all[id];
-  else all[id] = cur;
-  setLabels(all);
-  bumpSaveMeta();
-  render();
-}
-
-const SAVE_META_KEY = "framing_labels_meta";
-function getSaveMeta() {
-  return JSON.parse(localStorage.getItem(SAVE_META_KEY) || '{"changes_since_export":0, "last_export":null, "last_change":null}');
-}
-function setSaveMeta(m) {
-  try {
-    localStorage.setItem(SAVE_META_KEY, JSON.stringify(m));
-  } catch (e) { /* localStorage may fail under quota; we silently degrade. */ }
+function getSaveMeta() { return JSON.parse(localStorage.getItem(SAVE_META_KEY) || '{"changes_since_export":0,"last_change":null}'); }
+function setSaveMeta(m) { try { localStorage.setItem(SAVE_META_KEY, JSON.stringify(m)); } catch (e) {} }
+function notifySaveError(msg) {
+  const el = document.getElementById("saveStatus");
+  if (el) { el.textContent = "save failed: " + msg; el.style.color = "#ef4444"; }
 }
 function updateSaveStatus() {
   const el = document.getElementById("saveStatus");
   if (!el) return;
+  el.style.color = "#666";
   const m = getSaveMeta();
-  const n = Object.keys(getLabels()).length;
+  const labels = getLabels();
+  const n = Object.keys(labels).length;
+  const reviewed = Object.values(labels).filter(v => v.looks_good || (v.flags && v.flags.length > 0) || v.unsure).length;
   const t = m.last_change ? new Date(m.last_change).toLocaleTimeString() : "—";
-  el.textContent = n + " labels · last saved " + t + (m.changes_since_export ? " · " + m.changes_since_export + " since export" : "");
+  el.textContent = `${reviewed} reviewed · ${n} total · last save ${t}${m.changes_since_export ? " · " + m.changes_since_export + " since export" : ""}`;
 }
 
 function bumpSaveMeta() {
@@ -177,14 +181,54 @@ function bumpSaveMeta() {
   m.last_change = Date.now();
   setSaveMeta(m);
   updateSaveStatus();
-  // Best-effort auto-export every 25 changes
   if (m.changes_since_export >= 25 && m.changes_since_export % 25 === 0) {
-    try { exportLabels(true); }
-    catch (e) {
-      const el = document.getElementById("saveStatus");
-      if (el) { el.textContent = "auto-export failed: " + e.message; el.style.color = "#ef4444"; }
-    }
+    try { exportLabels(true); } catch (e) { notifySaveError("auto-export: " + e.message); }
   }
+}
+
+function toggleFlag(id, flag) {
+  const all = getLabels();
+  const cur = all[id] || { flags: [], unsure: false, looks_good: false, reviewed_at: null };
+  // Toggling a flag clears looks_good and unsure (they're mutually exclusive states).
+  const i = cur.flags.indexOf(flag);
+  if (i >= 0) cur.flags.splice(i, 1);
+  else cur.flags.push(flag);
+  if (cur.flags.length > 0) { cur.looks_good = false; cur.unsure = false; }
+  cur.reviewed_at = Date.now();
+  if (cur.flags.length === 0 && !cur.looks_good && !cur.unsure) delete all[id];
+  else all[id] = cur;
+  setLabels(all);
+  bumpSaveMeta();
+  render();
+}
+
+function setLooksGood(id) {
+  const all = getLabels();
+  const cur = all[id] || { flags: [], unsure: false, looks_good: false, reviewed_at: null };
+  // Toggle looks_good; clears flags and unsure.
+  const was = cur.looks_good;
+  cur.looks_good = !was;
+  if (cur.looks_good) { cur.flags = []; cur.unsure = false; }
+  cur.reviewed_at = Date.now();
+  if (cur.flags.length === 0 && !cur.looks_good && !cur.unsure) delete all[id];
+  else all[id] = cur;
+  setLabels(all);
+  bumpSaveMeta();
+  render();
+}
+
+function setUnsure(id) {
+  const all = getLabels();
+  const cur = all[id] || { flags: [], unsure: false, looks_good: false, reviewed_at: null };
+  const was = cur.unsure;
+  cur.unsure = !was;
+  if (cur.unsure) { cur.flags = []; cur.looks_good = false; }
+  cur.reviewed_at = Date.now();
+  if (cur.flags.length === 0 && !cur.looks_good && !cur.unsure) delete all[id];
+  else all[id] = cur;
+  setLabels(all);
+  bumpSaveMeta();
+  render();
 }
 
 function exportLabels(auto) {
@@ -197,7 +241,6 @@ function exportLabels(auto) {
   a.click();
   const m = getSaveMeta();
   m.changes_since_export = 0;
-  m.last_export = Date.now();
   setSaveMeta(m);
   updateSaveStatus();
 }
@@ -212,8 +255,8 @@ document.getElementById("importLabels").addEventListener("change", (e) => {
       const cur = getLabels();
       let added = 0;
       for (const [k, v] of Object.entries(imported)) {
-        // Upgrade old-shape string entries to {status, should_be}
-        cur[k] = typeof v === "string" ? { status: v, should_be: null } : v;
+        if (typeof v === "string") cur[k] = { flags: [], unsure: false, looks_good: false, reviewed_at: Date.now() };
+        else cur[k] = v;
         added++;
       }
       setLabels(cur);
@@ -221,92 +264,93 @@ document.getElementById("importLabels").addEventListener("change", (e) => {
       render();
       const el = document.getElementById("saveStatus");
       if (el) { el.textContent = "imported " + added + " labels"; el.style.color = "#a8e6a8"; setTimeout(updateSaveStatus, 2000); }
-    } catch (err) {
-      const el = document.getElementById("saveStatus");
-      if (el) { el.textContent = "import failed: " + err.message; el.style.color = "#ef4444"; }
-    }
+    } catch (err) { notifySaveError("import: " + err.message); }
   };
   reader.readAsText(file);
-  e.target.value = "";  // allow re-importing the same file
+  e.target.value = "";
 });
 
 function fmtPct(n) { return n === null || n === undefined ? "—" : (n * 100).toFixed(1) + "%"; }
 function fmtNum(n, d) { return n === null || n === undefined ? "—" : n.toFixed(d); }
 
-const CLASS_DESC = {
-  good:        "bbox covers 20-50% of frame; bug visible with context (use as-is)",
-  tight:       "bbox covers >50% of frame; bug already fills the frame (use as-is)",
-  wide:        "bbox covers 2-20% of frame; bug small (auto-crop to 30% nature / 60% specimen)",
-  hidden:      "no detection, or conf<0.20, or bbox<2% (don't show; flag for review)",
-  multi_bug:   "2+ distinct detections after NMS (don't crop; flag for review)",
-  blurred:     "subject is out of focus (Laplacian variance over bbox < 60) — bad for drawing",
-  camouflaged: "subject and background nearly the same color (LAB ΔE<8)",
-};
-function classTitle(c) { return CLASS_DESC[c] || c; }
-
-const STATUS_DESC = {
-  ok:           "Everything looks correct: bbox + class + crop are all right",
-  "wrong-bbox": "Bbox is wrong: missed the bug, too small (clipped the body), captured the wrong part (head/wing only), or wrong subject entirely",
-  "wrong-class":"Bbox is fine but the framing class (good/wide/hidden/...) is wrong",
-  "wrong-crop": "Bbox + class are fine but the crop aesthetic is bad (too tight/loose/off-center)",
-  unsure:       "Ambiguous — not sure how to label this one",
-};
+// Predicted action a card's framing_quality implies (purely informational).
+function predictedAction(q) {
+  if (q === "no_bug" || q === "bug_too_small" || q === "multi_bug" || q === "poor_contrast") return "hide";
+  if (q === "wide") return "serve cropped";
+  if (q === "good" || q === "tight") return "serve as-is";
+  return "(unknown)";
+}
 
 function render() {
   const sf = document.getElementById("source").value;
   const qf = document.getElementById("quality").value;
+  const rf = document.getElementById("reviewStatus").value;
   const sortBy = document.getElementById("sort").value;
   const labels = getLabels();
   let rows = DATA.filter(r => sf === "all" || r.source === sf);
   rows = rows.filter(r => qf === "all" || r.framing_quality === qf);
+  if (rf !== "all") {
+    rows = rows.filter(r => {
+      const lbl = labels[r.image_id];
+      if (rf === "unreviewed") return !lbl;
+      if (rf === "reviewed")   return !!lbl;
+      if (rf === "looks-good") return lbl && lbl.looks_good;
+      if (rf === "flagged")    return lbl && lbl.flags && lbl.flags.length > 0;
+      return true;
+    });
+  }
   if (sortBy === "random") rows.sort(() => Math.random() - 0.5);
   else if (sortBy === "bbox_area") rows.sort((a, b) => (a.bbox_area_ratio ?? 0) - (b.bbox_area_ratio ?? 0));
+  else if (sortBy === "bbox_min_edge") rows.sort((a, b) => (a.bbox_min_edge_px ?? 0) - (b.bbox_min_edge_px ?? 0));
   else if (sortBy === "confidence") rows.sort((a, b) => (a.confidence ?? 0) - (b.confidence ?? 0));
   else if (sortBy === "lab_delta_e") rows.sort((a, b) => (a.lab_delta_e ?? 999) - (b.lab_delta_e ?? 999));
+  else if (sortBy === "subject_sharpness") rows.sort((a, b) => (a.subject_sharpness ?? 1e9) - (b.subject_sharpness ?? 1e9));
+
   document.getElementById("totals").textContent = rows.length + " of " + DATA.length + " images";
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
   for (const r of rows) {
-    const lblObj = labels[r.image_id] || { status: null, should_be: null };
-    const status = lblObj.status;
-    const shouldBe = lblObj.should_be;
+    const lbl = labels[r.image_id] || { flags: [], unsure: false, looks_good: false };
+    const flagged = (lbl.flags && lbl.flags.length > 0);
+    const reviewed = lbl.looks_good || flagged || lbl.unsure;
     const div = document.createElement("div");
-    div.className = "card";
+    div.className = "card" + (reviewed ? " reviewed" : "") + (flagged ? " flagged" : "");
+
     const boxHTML = r.bbox_x !== null
       ? '<div class="box" style="left:' + (r.bbox_x*100) + '%;top:' + (r.bbox_y*100) + '%;width:' + (r.bbox_w*100) + '%;height:' + (r.bbox_h*100) + '%"></div>'
       : '';
     const cropHTML = r.crop_path
       ? '<img src="' + r.crop_path + '" alt="">'
-      : '<div class="nocrop">no crop (' + r.framing_quality + ')</div>';
+      : '<div class="nocrop">no crop · ' + r.framing_quality + '</div>';
+
+    const flagButtons = FLAGS.map(f => {
+      const active = lbl.flags && lbl.flags.indexOf(f) >= 0;
+      return '<button title="' + FLAG_TITLES[f] + '" class="' + (active ? 'active' : '') + '" onclick="toggleFlag(\'' + r.image_id + '\',\'' + f + '\')">' + f + '</button>';
+    }).join('');
+
     div.innerHTML =
       '<div class="imgs">' +
         '<figure>' +
           '<div class="bbox-overlay"><img src="' + r.original_path + '" alt="">' + boxHTML + '</div>' +
-          '<figcaption>original · bbox shown in pink</figcaption>' +
+          '<figcaption>original · bbox pink</figcaption>' +
         '</figure>' +
         '<figure>' + cropHTML + '<figcaption>proposed crop · what users see</figcaption></figure>' +
       '</div>' +
       '<div class="name">' + (r.common_name || r.taxon_species || "?") + ' <code>· ' + r.image_id + '</code></div>' +
       '<span class="badge ' + r.framing_quality + '">' + r.framing_quality + '</span>' +
+      '<span class="action">→ ' + predictedAction(r.framing_quality) + '</span>' +
       '<div class="metrics">' +
-        'bbox: ' + fmtPct(r.bbox_area_ratio) + ' → crop: ' + fmtPct(r.post_crop_subject_area) + '<br>' +
-        'conf: ' + fmtNum(r.confidence, 2) + ' · ΔE: ' + fmtNum(r.lab_delta_e, 1) + ' · off-center: ' + fmtNum(r.offcenter, 2) + '<br>' +
+        'bbox: ' + fmtPct(r.bbox_area_ratio) + ' (' + (r.bbox_min_edge_px !== null && r.bbox_min_edge_px !== undefined ? r.bbox_min_edge_px.toFixed(0) : "—") + ' px min edge) · ' +
+        'crop fills: ' + fmtPct(r.post_crop_subject_area) + '<br>' +
+        'conf: ' + fmtNum(r.confidence, 2) + ' · ΔE: ' + fmtNum(r.lab_delta_e, 1) + ' · sharpness: ' + fmtNum(r.subject_sharpness, 0) + '<br>' +
         'detected: ' + r.n_distinct_detections + ' bug' + (r.n_distinct_detections === 1 ? '' : 's') +
+        (r.bbox_touches_edge ? ' · ⚠ bbox touches frame edge' : '') +
         (r.gt_iou !== null ? ' · gt_iou: ' + r.gt_iou.toFixed(2) : '') +
       '</div>' +
-      '<div class="row-buttons labels">' +
-        '<button title="' + STATUS_DESC.ok + '" class="' + (status === 'ok' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'ok\')">✓ correct</button>' +
-        '<button title="' + STATUS_DESC['wrong-bbox'] + '" class="wrong-bbox ' + (status === 'wrong-bbox' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-bbox\')">✗ bbox</button>' +
-        '<button title="' + STATUS_DESC['wrong-class'] + '" class="wrong-class ' + (status === 'wrong-class' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-class\')">✗ class</button>' +
-        '<button title="' + STATUS_DESC['wrong-crop'] + '" class="wrong-crop ' + (status === 'wrong-crop' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'wrong-crop\')">✗ crop</button>' +
-        '<button title="' + STATUS_DESC.unsure + '" class="' + (status === 'unsure' ? 'active' : '') + '" onclick="label(\'' + r.image_id + '\',\'unsure\')">? unsure</button>' +
-      '</div>' +
-      '<div class="row-buttons should-be">' +
-        '<span class="label">should be:</span>' +
-        ['good', 'tight', 'wide', 'hidden', 'multi_bug', 'blurred', 'camouflaged'].map(v =>
-          '<button class="' + (shouldBe === v ? 'active' : '') + '" title="' + classTitle(v) + '" onclick="setShouldBe(\'' + r.image_id + '\',\'' + v + '\')">' + v + '</button>'
-        ).join('') +
-        '<button class="clear" title="clear the override" onclick="setShouldBe(\'' + r.image_id + '\',null)">×</button>' +
+      '<div class="flags">' +
+        '<button title="Everything looks correct — system prediction is right" class="looks-good good-button ' + (lbl.looks_good ? 'active' : '') + '" onclick="setLooksGood(\'' + r.image_id + '\')">✓ looks-good</button>' +
+        flagButtons +
+        '<button title="Ambiguous, come back later" class="unsure-button ' + (lbl.unsure ? 'active' : '') + '" onclick="setUnsure(\'' + r.image_id + '\')">? unsure</button>' +
       '</div>';
     grid.appendChild(div);
   }
@@ -314,11 +358,12 @@ function render() {
 
 document.getElementById("source").addEventListener("change", render);
 document.getElementById("quality").addEventListener("change", render);
+document.getElementById("reviewStatus").addEventListener("change", render);
 document.getElementById("sort").addEventListener("change", render);
 render();
 updateSaveStatus();
 
-// ─── Mouse-follow zoom (with bbox preserved on originals) ─────────
+// Mouse-follow zoom popup with bbox-on-original preservation.
 const zoomPopup = document.createElement("div");
 zoomPopup.id = "zoomPopup";
 const zoomImg = document.createElement("img");
@@ -327,7 +372,7 @@ zoomBox.className = "zoom-bbox";
 zoomPopup.appendChild(zoomImg);
 zoomPopup.appendChild(zoomBox);
 document.body.appendChild(zoomPopup);
-const ZOOM_MARGIN_VW = 1;  // ~1vw margin from cursor
+const ZOOM_MARGIN_VW = 1;
 function vwToPx(v) { return v * window.innerWidth / 100; }
 function isZoomTarget(el) {
   return el && el.tagName === "IMG" && el.closest(".imgs figure");
@@ -335,8 +380,6 @@ function isZoomTarget(el) {
 document.addEventListener("mouseover", (e) => {
   if (!isZoomTarget(e.target)) return;
   zoomImg.src = e.target.src;
-  // If the hovered image is the original (inside .bbox-overlay with a .box sibling),
-  // mirror that bbox into the zoom popup. Otherwise hide the bbox.
   const overlay = e.target.closest(".bbox-overlay");
   const box = overlay ? overlay.querySelector(".box") : null;
   if (box) {

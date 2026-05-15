@@ -1,30 +1,44 @@
-"""Render the static review HTML page from the detections parquet."""
+"""Render the static review HTML page from the detections parquet.
+
+Reads image metadata (filename, common_name, taxon_species) from the
+SQLite DB (post-round-5: the CSV manifest layer was dropped).
+"""
 from __future__ import annotations
-import csv
 import json
+import sqlite3
 from pathlib import Path
 
 import polars as pl
 
 from scripts.detect_subjects.config import (
+    DATA_DIR,
     PARQUET_PATH,
     VALIDATOR_DIR,
-    MANIFEST_DIR,
 )
 
 
 TEMPLATE_PATH = Path(__file__).parent / "templates" / "index.html.j2"
+DB_PATH = DATA_DIR / "db" / "line-of-bugs.db"
 
 
-def _load_manifest_index(manifest_dir: Path = MANIFEST_DIR) -> dict[str, dict]:
+def _load_db_index() -> dict[str, dict]:
+    """Map image_id -> {filename, common_name, taxon_species}."""
     idx: dict[str, dict] = {}
-    for src in ["inaturalist", "bugwood", "smithsonian", "usda_ars"]:
-        path = manifest_dir / f"{src}.csv"
-        if not path.exists():
-            continue
-        with path.open("r", newline="") as f:
-            for row in csv.DictReader(f):
-                idx[row["image_id"]] = row
+    if not DB_PATH.exists():
+        return idx
+    con = sqlite3.connect(DB_PATH)
+    try:
+        cur = con.execute(
+            "SELECT image_id, filename, common_name, taxon_species FROM images"
+        )
+        for image_id, filename, common, species in cur:
+            idx[image_id] = {
+                "filename": filename or "",
+                "common_name": common or "",
+                "taxon_species": species or "",
+            }
+    finally:
+        con.close()
     return idx
 
 
@@ -37,13 +51,13 @@ def build_html_for_variant(
     if df.height == 0:
         raise RuntimeError(f"no rows in parquet for variant={variant}")
 
-    manifest = _load_manifest_index()
+    db_index = _load_db_index()
 
     records = []
     sources = set()
     for row in df.iter_rows(named=True):
         img_id = row["image_id"]
-        mrow = manifest.get(img_id, {})
+        mrow = db_index.get(img_id, {})
         crop_rel = f"crops/{variant}/{img_id}.jpg"
         crop_path = crop_rel if (out_dir / crop_rel).exists() else None
 
@@ -54,16 +68,19 @@ def build_html_for_variant(
             "bbox_x": row["bbox_x"], "bbox_y": row["bbox_y"],
             "bbox_w": row["bbox_w"], "bbox_h": row["bbox_h"],
             "bbox_area_ratio": row["bbox_area_ratio"],
+            "bbox_min_edge_px": row.get("bbox_min_edge_px"),
+            "bbox_touches_edge": row.get("bbox_touches_edge"),
             "post_crop_subject_area": row["post_crop_subject_area"],
             "confidence": row["confidence"],
             "lab_delta_e": row["lab_delta_e"],
+            "subject_sharpness": row.get("subject_sharpness"),
             "offcenter": row["offcenter"],
             "n_distinct_detections": row["n_distinct_detections"],
             "gt_iou": row["gt_iou"],
             "common_name": mrow.get("common_name", ""),
             "taxon_species": mrow.get("taxon_species", ""),
-            # Resolved relative to the HTML's location (audit/framing-validator/<file>.html).
-            # Manifest stores filenames as "images/<file>.jpg" relative to data/, so we go up
+            # Resolved relative to the HTML's location at audit/framing-validator/<f>.html.
+            # DB stores filenames as "images/<file>.jpg" relative to data/, so we go up
             # two levels then into data/. Crops live next to the HTML.
             "original_path": f"../../data/{mrow.get('filename', '')}",
             "crop_path": crop_path,
@@ -77,10 +94,6 @@ def build_html_for_variant(
     html = template_text.replace("{{ variant }}", variant)
     html = html.replace("{{ data_json }}", json.dumps(records))
     html = html.replace("{{ total }}", str(len(records)))
-    # ROOT is no longer prepended to image URLs — original_path and crop_path are
-    # already resolved relative to the HTML's location. Keep ROOT="" for backward
-    # compat in case the template still references it.
-    html = html.replace("{{ root }}", "")
     html = html.replace(
         '{% for s in sources %}<option value="{{ s }}">{{ s }}</option>{% endfor %}',
         sources_html,

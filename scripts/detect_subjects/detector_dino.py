@@ -16,6 +16,8 @@ from PIL import Image
 from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
 
 from scripts.detect_subjects.config import (
+    BBOX_CONF_TOLERANCE,
+    BBOX_MAX_AREA_RATIO,
     BOX_THRESHOLD,
     DINO_MODEL_ID,
     INSECT_PROMPT,
@@ -100,8 +102,41 @@ class GroundingDinoDetector:
                 continue
             kept.append(cand)
 
-        top = kept[0]
-        n_distinct = sum(1 for k in kept if k[4] >= HIGH_CONF_THRESHOLD)
+        # Bark-beetle fix: DINO's top-1 box is sometimes a small distinctive sub-feature
+        # (head/eye) while the whole-bug box ranks just below it. Among detections within
+        # BBOX_CONF_TOLERANCE of the top score AND covering <= BBOX_MAX_AREA_RATIO of the
+        # frame (rejects "whole image" boxes), pick the largest. Falls back to top-1.
+        top_conf = kept[0][4]
+        candidates = [
+            k for k in kept
+            if k[4] >= top_conf - BBOX_CONF_TOLERANCE
+            and (k[2] * k[3]) <= BBOX_MAX_AREA_RATIO
+        ]
+        top = max(candidates, key=lambda k: k[2] * k[3]) if candidates else kept[0]
+
+        # n_distinct_detections counts subject INSTANCES (not raw boxes).
+        # Greedy clustering: a box is a "new subject" only if its center is NOT
+        # inside any already-counted subject's box. This collapses head/body/whole
+        # multi-detections of the same bug into one and counts genuinely separated
+        # instances. Also exclude tiny specks (<0.5% area) and whole-scene boxes (>80%).
+        confident = [
+            k for k in kept
+            if k[4] >= HIGH_CONF_THRESHOLD
+            and 0.005 <= (k[2] * k[3]) <= BBOX_MAX_AREA_RATIO
+        ]
+        distinct_subjects: list[tuple[float, float, float, float, float]] = []
+        for c in confident:  # already sorted by conf desc
+            cx_center = c[0] + c[2] / 2.0
+            cy_center = c[1] + c[3] / 2.0
+            inside_any = False
+            for s in distinct_subjects:
+                if (s[0] <= cx_center <= s[0] + s[2]
+                        and s[1] <= cy_center <= s[1] + s[3]):
+                    inside_any = True
+                    break
+            if not inside_any:
+                distinct_subjects.append(c)
+        n_distinct = len(distinct_subjects)
         return DetectionResult(
             bbox_xywh_normalized=(top[0], top[1], top[2], top[3]),
             confidence=top[4],

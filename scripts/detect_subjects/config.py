@@ -61,7 +61,14 @@ CLASSIFY_HIDDEN_AREA       = 0.02
 CLASSIFY_WIDE_AREA         = 0.20
 CLASSIFY_TIGHT_AREA        = 0.50
 CLASSIFY_CAMOUFLAGED_DELTA = 8.0   # was 12 — data showed 17% being flagged camouflaged; 8 catches the genuinely-low-contrast 6%
-CLASSIFY_BLURRED_SHARPNESS = 60.0  # Laplacian variance over the bbox region — flags subjects out of focus (~20% of v1 at this threshold)
+CLASSIFY_BUG_TOO_SMALL_EDGE_PX = 512
+BBOX_EDGE_TOLERANCE_NORMALIZED = 0.005  # how close to image edge counts as 'touching' (~5 px on a 1000px image)
+# Bbox-selection rule (the bark-beetle fix): prefer larger high-confidence bboxes over
+# the top-1, because DINO sometimes top-ranks small distinctive sub-features (head, eye)
+# above the whole-subject box.
+BBOX_CONF_TOLERANCE = 0.05    # candidate must have conf >= top_conf - this
+BBOX_MAX_AREA_RATIO  = 0.80   # candidate must cover <= 80% of frame (rejects 'whole image' boxes)  # bug's short edge in pixels — below this, even auto-cropping produces an unusable image
+# CLASSIFY_BLURRED_SHARPNESS removed from active classification — Laplacian variance fails on uniform-textured subjects (false positives on smooth bug bodies). subject_sharpness is still computed and stored for future training data; users flag blur via labels.
 
 # ─── Crop targets ──────────────────────────────────────────────────
 CROP_TARGET_AREA_NATURE   = 0.30
