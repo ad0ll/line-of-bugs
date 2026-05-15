@@ -256,9 +256,13 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   transition: opacity var(--timing-base) var(--ease-out);
 }
 .tooltip-icon:hover, .tooltip-icon:focus-visible { opacity: 1; outline: none; }
+/* Default: position below the trigger. Section titles + filter chips
+   both have plenty of room below them in the page flow, and "below"
+   never overlaps the previous section (which "above" sometimes does
+   on the home page's narrow form column). */
 .tooltip-bubble {
   position: absolute;
-  bottom: calc(100% + 8px);
+  top: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
   max-width: 280px;
@@ -277,14 +281,14 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   pointer-events: none;
   text-transform: none;  /* override parent lowercasing */
 }
-.tooltip-bubble::after {
+.tooltip-bubble::before {
   content: "";
   position: absolute;
-  top: 100%;
+  bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: var(--accent-lilac);
+  border-bottom-color: var(--accent-lilac);
 }
 .tooltip-bubble strong {
   color: var(--accent-pink);
