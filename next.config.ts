@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV !== "production";
+
 const config: NextConfig = {
   serverExternalPackages: ["better-sqlite3"],
   cacheComponents: true,
@@ -12,6 +14,11 @@ const config: NextConfig = {
   },
   images: { unoptimized: true },
   async headers() {
+    // React's dev tooling uses eval() for callstack reconstruction; production
+    // never does. Allow it in dev only so the prod CSP stays tight.
+    const scriptSrc = isDev
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+      : "script-src 'self' 'unsafe-inline'";
     return [
       {
         source: "/(.*)",
@@ -25,10 +32,12 @@ const config: NextConfig = {
               "default-src 'self'",
               "img-src 'self' data:",
               "style-src 'self' 'unsafe-inline'",
-              "script-src 'self' 'unsafe-inline'",
+              scriptSrc,
               "connect-src 'self'",
               "font-src 'self' data:",
+              "frame-src 'none'",
               "frame-ancestors 'none'",
+              "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",
             ].join("; "),
