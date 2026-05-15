@@ -37,3 +37,37 @@ def iou_xywh_normalized(
     if union <= 0:
         return 0.0
     return float(min(1.0, inter / union))
+
+
+# ─── Mask-based metrics (Task 10) ─────────────────────────────────
+import numpy as np
+from skimage.color import rgb2lab
+from skimage.filters import sobel
+from skimage.segmentation import find_boundaries
+
+
+def lab_delta_e_mask_vs_background(rgb: np.ndarray, mask: np.ndarray) -> float:
+    """Mean LAB ΔE between pixels inside the mask vs outside."""
+    if rgb.dtype != np.uint8:
+        rgb = rgb.astype(np.uint8)
+    inside = mask
+    outside = ~mask
+    if not inside.any() or not outside.any():
+        return 0.0
+    lab = rgb2lab(rgb / 255.0)
+    mean_in = lab[inside].mean(axis=0)
+    mean_out = lab[outside].mean(axis=0)
+    return float(np.linalg.norm(mean_in - mean_out))
+
+
+def boundary_sharpness(rgb: np.ndarray, mask: np.ndarray) -> float:
+    """Mean Sobel gradient magnitude along the mask boundary."""
+    if not mask.any():
+        return 0.0
+    gray = (0.2126 * rgb[..., 0] + 0.7152 * rgb[..., 1] + 0.0722 * rgb[..., 2])
+    gray = gray.astype(np.float32) / 255.0
+    grad = sobel(gray)
+    boundary = find_boundaries(mask, mode="outer")
+    if not boundary.any():
+        return 0.0
+    return float(grad[boundary].mean() * 100.0)
