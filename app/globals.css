@@ -1472,3 +1472,16 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
     display: none;
   }
 }
+
+/* Phone-narrow: even with labels hidden the 9-button action bar at
+   54px each overflows a 375px viewport. Let it wrap to two rows
+   instead of overflowing horizontally; tap targets stay 44px. */
+@media (max-width: 480px) {
+  .session-action-bar-wrap { padding: 0 var(--s4) calc(var(--s4) + 2px); }
+  .session-action-bar-panel {
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: calc(100vw - var(--s8));
+    row-gap: var(--s1);
+  }
+}
