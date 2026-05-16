@@ -72,12 +72,24 @@ def build_html_for_variant(
             if (s["x"], s["y"], s["w"], s["h"]) != primary_bbox
         ]
 
+        # Per-bbox phrase data for the per-bbox text-label overlay in the UI.
+        # ds_structs (already loaded above) carries phrase per secondary too.
+        secondary_phrases = [
+            s.get("phrase")
+            for s in ds_structs
+            if (s["x"], s["y"], s["w"], s["h"]) != primary_bbox
+        ]
         records.append({
             "image_id": img_id,
             "source": row["source"],
+            "variant": row["variant"],
             "framing_quality": row["framing_quality"],
             "suggested_labels": list(row.get("suggested_labels") or []),
+            "gate_decision": row.get("gate_decision"),
             "secondary_bboxes": secondary_bboxes,
+            "secondary_phrases": secondary_phrases,
+            "text_label": row.get("text_label"),
+            "text_label_score": row.get("text_label_score"),
             "bbox_x": row["bbox_x"], "bbox_y": row["bbox_y"],
             "bbox_w": row["bbox_w"], "bbox_h": row["bbox_h"],
             "bbox_area_ratio": row["bbox_area_ratio"],
@@ -93,9 +105,7 @@ def build_html_for_variant(
             "gt_iou": row["gt_iou"],
             "common_name": mrow.get("common_name", ""),
             "taxon_species": mrow.get("taxon_species", ""),
-            # Resolved relative to the HTML's location at audit/framing-validator/<f>.html.
-            # DB stores filenames as "images/<file>.jpg" relative to data/, so we go up
-            # two levels then into data/. Crops live next to the HTML.
+            # HTML now at tools/validator/<variant>.html; data/ is 2 levels up.
             "original_path": f"../../data/{mrow.get('filename', '')}",
             "crop_path": crop_path,
         })
@@ -120,6 +130,7 @@ def build_html_for_variant(
 
 if __name__ == "__main__":
     import sys
-    variant = sys.argv[1] if len(sys.argv) > 1 else "v1_dino_insectsam"
+    from scripts.detect_subjects import config as cfg
+    variant = sys.argv[1] if len(sys.argv) > 1 else cfg.variant_tag()
     p = build_html_for_variant(variant)
     print(f"wrote {p}")
