@@ -302,7 +302,10 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   font-size: 0.9rem;
   cursor: pointer;
   min-height: 36px;
-  transition: all var(--timing-base) var(--ease-out);
+  transition: border-color var(--timing-base) var(--ease-out),
+              color var(--timing-base) var(--ease-out),
+              background var(--timing-base) var(--ease-out),
+              box-shadow var(--timing-base) var(--ease-out);
 }
 .chip:hover { border-color: var(--accent-pink-border); color: var(--text-primary); }
 .chip-active {
@@ -607,7 +610,9 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   padding: var(--s4) var(--s12);
   text-decoration: none;
   font-family: var(--font-sans), system-ui, sans-serif;
-  transition: all var(--timing-base);
+  transition: border-color var(--timing-base),
+              color var(--timing-base),
+              box-shadow var(--timing-base);
 }
 .gallery-load-more:hover {
   border-color: var(--accent-pink-border);
@@ -701,7 +706,9 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
-  transition: all var(--timing-base);
+  transition: background var(--timing-base),
+              border-color var(--timing-base),
+              color var(--timing-base);
   z-index: 1;
 }
 .modal-close:hover {
@@ -737,7 +744,10 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   border-radius: var(--r-pill);
   cursor: pointer;
   font-weight: 500;
-  transition: all var(--timing-base);
+  transition: border-color var(--timing-base),
+              background var(--timing-base),
+              color var(--timing-base),
+              box-shadow var(--timing-base);
 }
 .report-form-actions button:hover { border-color: var(--accent-pink-border); }
 .report-form-actions button[type="submit"] {
@@ -839,7 +849,9 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   font-family: var(--font-sans), system-ui, sans-serif;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all var(--timing-base);
+  transition: border-color var(--timing-base),
+              background var(--timing-base),
+              color var(--timing-base);
 }
 .report-card-actions button:hover { border-color: var(--accent-pink-border); }
 
@@ -858,7 +870,8 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   border-radius: var(--r-pill);
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all var(--timing-base);
+  transition: border-color var(--timing-base),
+              color var(--timing-base);
 }
 .btn-destructive-idle:hover { border-color: var(--border-danger); color: var(--accent-danger); }
 .btn-destructive {
@@ -1014,7 +1027,10 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   text-transform: lowercase;
   cursor: pointer;
   min-height: 40px;
-  transition: all var(--timing-base) var(--ease-out);
+  transition: border-color var(--timing-base) var(--ease-out),
+              color var(--timing-base) var(--ease-out),
+              background var(--timing-base) var(--ease-out),
+              box-shadow var(--timing-base) var(--ease-out);
 }
 .home-pill:hover { border-color: var(--accent-pink-border); color: var(--text-primary); }
 .home-pill.is-active {
@@ -1048,7 +1064,8 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   border-radius: var(--r-3xl);
   border: 1.5px solid var(--border-medium);
   background: var(--surface-1);
-  transition: all var(--timing-base) var(--ease-out);
+  transition: border-color var(--timing-base) var(--ease-out),
+              background var(--timing-base) var(--ease-out);
 }
 .home-radio-card:hover { border-color: var(--accent-pink-border); }
 .home-radio-card.is-selected {
