@@ -29,7 +29,12 @@ fi
 if [ ! -f "$APP/shared/.env" ]; then
     touch "$APP/shared/.env"
     chmod 600 "$APP/shared/.env"
-    chown bawler:bawler "$APP/shared/.env"
+    # The parent dir was created with `sudo install -d -o bawler -g bawler`
+    # in step 1, so the touch above runs as bawler and produces a
+    # bawler-owned file. If a previous partial run left a root-owned stub
+    # (e.g. the touch was once `sudo touch`), the bare chown would fail
+    # with EPERM. sudo here makes the step robust to that history.
+    sudo chown bawler:bawler "$APP/shared/.env"
 fi
 
 # 4. Clone the repo into a "scaffold" release so the first deploy has something to base off of.
