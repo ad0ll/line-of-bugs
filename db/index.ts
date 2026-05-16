@@ -11,8 +11,10 @@
  * Hot-reload safety:
  *   In Next.js dev, edits re-evaluate the module graph and can re-run
  *   `new Database(...)`, leaking file handles over a long session. We cache
- *   the underlying handle on `globalThis` in non-production builds — same
- *   trick Prisma's own example recommends.
+ *   the underlying handle on `globalThis` — same trick Prisma's own example
+ *   recommends. Production benefits too: re-imports during HMR-like
+ *   route compilation (and any future double-evaluation) reuse the handle
+ *   instead of opening another file descriptor.
  *
  * Drizzle init form is the object-config form recommended by the current
  * drizzle-orm/better-sqlite3 docs (https://orm.drizzle.team/docs/connect-better-sqlite3).
@@ -44,9 +46,7 @@ function makeSqlite(): Database.Database {
 }
 
 const sqlite = g.__lineOfBugsSqlite ?? makeSqlite();
-if (process.env.NODE_ENV !== "production") {
-  g.__lineOfBugsSqlite = sqlite;
-}
+g.__lineOfBugsSqlite = sqlite;
 
 export const db = drizzle({ client: sqlite, schema });
 export { schema };
