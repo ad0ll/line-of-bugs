@@ -88,3 +88,18 @@ N_METRICS_PROCESSES = 16
 DETECT_BATCH_SIZE = 16
 SEGMENT_BATCH_SIZE = 8
 PARQUET_WRITE_BATCH = 50
+
+# ─── Pipeline component selection ─────────────────────────────────
+# These names look up classes in detectors/__init__.py and segmenters/__init__.py.
+# Swapping is a one-line config change.
+DETECTOR_VARIANT = "grounding_dino"
+SEGMENTER_VARIANT = "insectsam"
+
+
+def variant_tag() -> str:
+    """The string written to parquet rows' `variant` column.
+
+    Two reasons it changes: a detector swap, or a segmenter swap.
+    A/B comparisons filter parquet by `variant`.
+    """
+    return f"{DETECTOR_VARIANT}__{SEGMENTER_VARIANT}"
