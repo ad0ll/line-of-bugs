@@ -16,7 +16,24 @@ const ZOOM = 3;
 
 export function Magnifier({ image, size, bw }: Props) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  // Viewport dims tracked via state + resize listener. Reading window.innerWidth
+  // directly during render skips React's update cycle, so a window resize while
+  // the loupe is active would leave the rendered-image rect stale until the next
+  // pointermove and the magnifier would sample the wrong region of the image.
+  const [viewport, setViewport] = useState<{ vw: number; vh: number }>({
+    vw: 1280,
+    vh: 720,
+  });
   const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const update = () =>
+      setViewport({ vw: window.innerWidth, vh: window.innerHeight });
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
 
   useEffect(() => {
     if (size === "off") {
@@ -42,8 +59,7 @@ export function Magnifier({ image, size, bw }: Props) {
   if (size === "off" || !pos) return null;
 
   const aspect = image.height && image.width ? image.height / image.width : 1;
-  const vw = typeof window !== "undefined" ? window.innerWidth : 1280;
-  const vh = typeof window !== "undefined" ? window.innerHeight : 720;
+  const { vw, vh } = viewport;
 
   // The underlying <img> is rendered with object-fit: contain inside the
   // viewport — so it's letterboxed. The loupe must sample from the rendered
