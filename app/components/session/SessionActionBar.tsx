@@ -14,7 +14,7 @@ interface Props {
   currentIdx: number;
   total: number;
   intervalSec: number;
-  sourceUrl: string;
+  sourceUrl: string | null | undefined;
   onPause: () => void;
   onToggleBw: () => void;
   onMagnifier: () => void;
@@ -85,9 +85,11 @@ export function SessionActionBar(props: Props) {
         <IconBtn label="report" hint="R" onClick={props.onReport}>
           ⚑
         </IconBtn>
-        <IconBtn label="source" as="a" href={props.sourceUrl} target="_blank">
-          ↗
-        </IconBtn>
+        {props.sourceUrl ? (
+          <IconBtn label="source" as="a" href={props.sourceUrl} target="_blank">
+            ↗
+          </IconBtn>
+        ) : null}
         <div className="session-counter">
           {props.currentIdx + 1} / {props.total}
         </div>
