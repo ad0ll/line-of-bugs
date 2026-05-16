@@ -190,6 +190,60 @@ def test_write_refresh_true_overwrites_existing_row(tmp_db, monkeypatch):
     w.close()
 
 
+def test_batch_commits_all_rows_on_success(tmp_db, monkeypatch):
+    """write() inside `with w.batch()` shares one transaction. All rows
+    must be visible on a fresh connection after the block exits."""
+    monkeypatch.setattr("scripts.db.DB_PATH", tmp_db)
+    w = DbWriter("inaturalist")
+    rows = [{**SAMPLE, "image_id": f"inat-{i}"} for i in range(5)]
+    with w.batch():
+        for r in rows:
+            assert w.write(r) is True
+    # outside the batch — verify a fresh connection sees the committed rows.
+    conn = sqlite3.connect(tmp_db)
+    n = conn.execute("SELECT COUNT(*) FROM images").fetchone()[0]
+    conn.close()
+    assert n == 5
+    w.close()
+
+
+def test_batch_rolls_back_on_exception(tmp_db, monkeypatch):
+    """If the batch block raises, partial writes are rolled back so the
+    DB never sees a half-written page."""
+    monkeypatch.setattr("scripts.db.DB_PATH", tmp_db)
+    w = DbWriter("inaturalist")
+    with pytest.raises(RuntimeError):
+        with w.batch():
+            assert w.write({**SAMPLE, "image_id": "inat-1"}) is True
+            assert w.write({**SAMPLE, "image_id": "inat-2"}) is True
+            raise RuntimeError("simulated mid-page failure")
+    # Fresh connection should see zero rows committed.
+    conn = sqlite3.connect(tmp_db)
+    n = conn.execute("SELECT COUNT(*) FROM images").fetchone()[0]
+    conn.close()
+    assert n == 0
+    # seen-set tracks in-memory state — it WILL hold the IDs that were
+    # write()-ed, but that's fine because the DbWriter object is
+    # typically discarded after a failed batch and a fresh one rebuilds
+    # seen from disk.
+    w.close()
+
+
+def test_write_outside_batch_autocommits(tmp_db, monkeypatch):
+    """A bare write() (no enclosing batch) must commit immediately so
+    a crash before the next write doesn't lose the row."""
+    monkeypatch.setattr("scripts.db.DB_PATH", tmp_db)
+    w = DbWriter("inaturalist")
+    assert w.write(dict(SAMPLE)) is True
+    # Open a second connection — if the first didn't commit, this
+    # second connection would see 0 rows under WAL.
+    conn = sqlite3.connect(tmp_db)
+    n = conn.execute("SELECT COUNT(*) FROM images").fetchone()[0]
+    conn.close()
+    assert n == 1
+    w.close()
+
+
 def test_write_empty_string_to_nullable_becomes_null(tmp_db, monkeypatch):
     """Many fetchers pass '' for unknown optional fields — treat those
     as SQL NULL too. The required NOT NULL cols stay literal."""

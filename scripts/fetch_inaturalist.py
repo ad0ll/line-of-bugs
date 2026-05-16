@@ -269,60 +269,63 @@ def fetch_order(mw: DbWriter, existing_by_label: Counter,
 
         # Fan-out downloads
         downloaded = parallel_download(S, batch, max_workers=MAX_WORKERS)
-        for meta, (_item, dl) in zip(page_meta, downloaded):
-            if dl is None:
-                continue
-            obs = meta["obs"]; ph = meta["photo"]; taxon = meta["taxon"]
-            lic_code, lic_url = LICENSE_MAP[ph["license_code"]]
-            user = obs.get("user") or {}
-            life_stage, sex = extract_inat_metadata(obs)
-            # Split synthetic labels like "Lepidoptera_larva" into their
-            # real (taxon_order, life_stage) for DB write — the gallery
-            # filters on the real order. Annotated life_stage from iNat
-            # wins; the synthetic split is a fallback for rows that
-            # didn't carry an explicit annotation.
-            db_taxon_order, synthetic_life_stage = (
-                LABEL_TO_TAXON_ORDER_AND_LIFE_STAGE.get(label, (label, ""))
-            )
-            effective_life_stage = life_stage or synthetic_life_stage
-            mw.write({
-                "image_id": meta["image_id"],
-                "collection_id": f"inat-obs-{obs['id']}",
-                "source": "inaturalist",
-                "source_id": str(meta["photo_id"]),
-                "source_page_url": f"https://www.inaturalist.org/observations/{obs['id']}",
-                "image_url": meta["url"],
-                "filename": f"images/{meta['filename']}",
-                "thumbnail_filename": f"thumbnails/{meta['filename']}",
-                "medium_filename": f"medium/{meta['filename']}",
-                "file_size_bytes": dl["file_size_bytes"],
-                "file_sha256": dl["file_sha256"],
-                "width": dl["width"],
-                "height": dl["height"],
-                "license": lic_code,
-                "license_url": lic_url,
-                "photographer_attribution": ph.get("attribution") or "",
-                "photographer": user.get("name") or user.get("login") or "",
-                "institution": "iNaturalist (citizen science)",
-                "taxon_order": db_taxon_order,
-                "taxon_species": meta["scientific"],
-                "common_name": meta["common_name"],
-                "subject_state": SUBJECT_STATE,
-                "taxon_subgroup": classify_subgroup(
-                    label, taxon.get("ancestor_ids") or []
-                ),
-                "view_label": "",
-                "life_stage": effective_life_stage,
-                "sex": sex or "",
-                "host_organism": "",
-                "specimen_condition": "",
-                "description": (obs.get("description") or ""),
-                "captured_date": (obs.get("observed_on") or "")[:10],
-                "raw_metadata": json.dumps(obs, separators=(",", ":")),
-            }, refresh=INAT_REFRESH)
-            kept_run += 1
-            if (kept_run % 25) == 0:
-                log.info("[%s] %d/%d", label, already + kept_run, target)
+        # Wrap the page's UPSERTs in a single transaction — one fsync
+        # per page instead of one per row.
+        with mw.batch():
+            for meta, (_item, dl) in zip(page_meta, downloaded):
+                if dl is None:
+                    continue
+                obs = meta["obs"]; ph = meta["photo"]; taxon = meta["taxon"]
+                lic_code, lic_url = LICENSE_MAP[ph["license_code"]]
+                user = obs.get("user") or {}
+                life_stage, sex = extract_inat_metadata(obs)
+                # Split synthetic labels like "Lepidoptera_larva" into their
+                # real (taxon_order, life_stage) for DB write — the gallery
+                # filters on the real order. Annotated life_stage from iNat
+                # wins; the synthetic split is a fallback for rows that
+                # didn't carry an explicit annotation.
+                db_taxon_order, synthetic_life_stage = (
+                    LABEL_TO_TAXON_ORDER_AND_LIFE_STAGE.get(label, (label, ""))
+                )
+                effective_life_stage = life_stage or synthetic_life_stage
+                mw.write({
+                    "image_id": meta["image_id"],
+                    "collection_id": f"inat-obs-{obs['id']}",
+                    "source": "inaturalist",
+                    "source_id": str(meta["photo_id"]),
+                    "source_page_url": f"https://www.inaturalist.org/observations/{obs['id']}",
+                    "image_url": meta["url"],
+                    "filename": f"images/{meta['filename']}",
+                    "thumbnail_filename": f"thumbnails/{meta['filename']}",
+                    "medium_filename": f"medium/{meta['filename']}",
+                    "file_size_bytes": dl["file_size_bytes"],
+                    "file_sha256": dl["file_sha256"],
+                    "width": dl["width"],
+                    "height": dl["height"],
+                    "license": lic_code,
+                    "license_url": lic_url,
+                    "photographer_attribution": ph.get("attribution") or "",
+                    "photographer": user.get("name") or user.get("login") or "",
+                    "institution": "iNaturalist (citizen science)",
+                    "taxon_order": db_taxon_order,
+                    "taxon_species": meta["scientific"],
+                    "common_name": meta["common_name"],
+                    "subject_state": SUBJECT_STATE,
+                    "taxon_subgroup": classify_subgroup(
+                        label, taxon.get("ancestor_ids") or []
+                    ),
+                    "view_label": "",
+                    "life_stage": effective_life_stage,
+                    "sex": sex or "",
+                    "host_organism": "",
+                    "specimen_condition": "",
+                    "description": (obs.get("description") or ""),
+                    "captured_date": (obs.get("observed_on") or "")[:10],
+                    "raw_metadata": json.dumps(obs, separators=(",", ":")),
+                }, refresh=INAT_REFRESH)
+                kept_run += 1
+                if (kept_run % 25) == 0:
+                    log.info("[%s] %d/%d", label, already + kept_run, target)
 
         time.sleep(1.1)  # iNat API politeness (1 req/sec)
     return already + kept_run, kept_run

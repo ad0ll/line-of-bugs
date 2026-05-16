@@ -280,74 +280,80 @@ def run_pass(mw: DbWriter, existing_in_bucket: int,
 
         # Fan-out downloads
         downloads = parallel_download(S, page_jobs, max_workers=MAX_WORKERS)
-        for job, (_item, dl) in zip(page_jobs, downloads):
-            if dl is None:
-                # Try smaller resolution variant
-                imgnum = job["_meta"]["img"]["imagenumber"]
-                url2 = f"https://bugwoodcloud.org/images/1536x1024/{imgnum}.jpg"
-                fallback = parallel_download(
-                    S, [{
-                        "url": url2,
-                        "out_path": job["out_path"],
-                        "thumb_path": job["thumb_path"],
-                        "medium_path": job["medium_path"],
-                        "min_edge": 1000,
-                    }],
-                    max_workers=1,
-                )
-                dl = fallback[0][1]
-                if dl is None: continue
-                job["url"] = url2
+        # Wrap each page's writes in one transaction. The occasional
+        # fallback download (smaller resolution variant) happens inside
+        # the batch too — that's a network call holding the SQLite txn
+        # open, but the page is small (≤ 200) and pages are rate-limited
+        # to ~1 req/sec anyway, so the lock isn't a practical concern.
+        with mw.batch():
+            for job, (_item, dl) in zip(page_jobs, downloads):
+                if dl is None:
+                    # Try smaller resolution variant
+                    imgnum = job["_meta"]["img"]["imagenumber"]
+                    url2 = f"https://bugwoodcloud.org/images/1536x1024/{imgnum}.jpg"
+                    fallback = parallel_download(
+                        S, [{
+                            "url": url2,
+                            "out_path": job["out_path"],
+                            "thumb_path": job["thumb_path"],
+                            "medium_path": job["medium_path"],
+                            "min_edge": 1000,
+                        }],
+                        max_workers=1,
+                    )
+                    dl = fallback[0][1]
+                    if dl is None: continue
+                    job["url"] = url2
 
-            m = job["_meta"]; img = m["img"]; detail = m["detail"]
-            descriptor_name = (img.get("descriptorname") or detail.get("descriptorname") or "").strip()
-            ctx_bits = [b for b in (descriptor_name, m["image_view"]) if b]
-            ctx_prefix = " · ".join(ctx_bits)
-            description = (f"{ctx_prefix}. {m['desc_clean']}" if ctx_prefix and m["desc_clean"]
-                           else (ctx_prefix or m["desc_clean"]))
-            citation = (img.get("citation") or "").strip().rstrip(",")
-            spec = detail.get("specimen") or {}
-            host_organism = (img.get("hostname") or detail.get("hostname") or "").strip()
-            gendercaste = (img.get("gendercaste") or detail.get("gendercaste") or
-                           detail.get("gender") or "").strip()
-            mw.write({
-                "image_id": m["image_id"],
-                "collection_id": m["collection_id"],
-                "source": "bugwood",
-                "source_id": str(img.get("imagenumber") or ""),
-                "source_page_url": f"https://www.insectimages.org/browse/detail.cfm?imgnum={img.get('imagenumber')}",
-                "image_url": job["url"],
-                "filename": f"images/{m['filename']}",
-                "thumbnail_filename": f"thumbnails/{m['filename']}",
-                "medium_filename": f"medium/{m['filename']}",
-                "file_size_bytes": dl["file_size_bytes"],
-                "file_sha256": dl["file_sha256"],
-                "width": dl["width"],
-                "height": dl["height"],
-                "license": lic_code,
-                "license_url": lic_url,
-                "photographer_attribution": citation,
-                "photographer": img.get("photographer") or "",
-                "institution": img.get("organization") or "",
-                "taxon_order": detect_order(img),
-                # Bugwood doesn't expose iNat-style ancestor_ids; fall back
-                # to the order-level default in classify().
-                "taxon_subgroup": classify_subgroup(detect_order(img), []),
-                "taxon_species": m["scientific"],
-                "common_name": m["subj_name"],
-                "subject_state": subject_state,
-                "view_label": m["view_label"],
-                "life_stage": BUGWOOD_DESCRIPTOR_TO_LIFE_STAGE.get(descriptor_name, ""),
-                "sex": BUGWOOD_GENDER_TO_SEX.get(gendercaste, ""),
-                "host_organism": host_organism,
-                "specimen_condition": (spec.get("specimencondition") or "").strip(),
-                "description": description,
-                "captured_date": (detail.get("dateacquired") or "")[:10],
-                "raw_metadata": json.dumps({"listing": img, "detail": detail}, separators=(",", ":")),
-            }, refresh=BUGWOOD_REFRESH)
-            kept += 1
-            if (kept % 25) == 0:
-                log.info("[%s] %d / %d", label, kept, needed)
+                m = job["_meta"]; img = m["img"]; detail = m["detail"]
+                descriptor_name = (img.get("descriptorname") or detail.get("descriptorname") or "").strip()
+                ctx_bits = [b for b in (descriptor_name, m["image_view"]) if b]
+                ctx_prefix = " · ".join(ctx_bits)
+                description = (f"{ctx_prefix}. {m['desc_clean']}" if ctx_prefix and m["desc_clean"]
+                               else (ctx_prefix or m["desc_clean"]))
+                citation = (img.get("citation") or "").strip().rstrip(",")
+                spec = detail.get("specimen") or {}
+                host_organism = (img.get("hostname") or detail.get("hostname") or "").strip()
+                gendercaste = (img.get("gendercaste") or detail.get("gendercaste") or
+                               detail.get("gender") or "").strip()
+                mw.write({
+                    "image_id": m["image_id"],
+                    "collection_id": m["collection_id"],
+                    "source": "bugwood",
+                    "source_id": str(img.get("imagenumber") or ""),
+                    "source_page_url": f"https://www.insectimages.org/browse/detail.cfm?imgnum={img.get('imagenumber')}",
+                    "image_url": job["url"],
+                    "filename": f"images/{m['filename']}",
+                    "thumbnail_filename": f"thumbnails/{m['filename']}",
+                    "medium_filename": f"medium/{m['filename']}",
+                    "file_size_bytes": dl["file_size_bytes"],
+                    "file_sha256": dl["file_sha256"],
+                    "width": dl["width"],
+                    "height": dl["height"],
+                    "license": lic_code,
+                    "license_url": lic_url,
+                    "photographer_attribution": citation,
+                    "photographer": img.get("photographer") or "",
+                    "institution": img.get("organization") or "",
+                    "taxon_order": detect_order(img),
+                    # Bugwood doesn't expose iNat-style ancestor_ids; fall back
+                    # to the order-level default in classify().
+                    "taxon_subgroup": classify_subgroup(detect_order(img), []),
+                    "taxon_species": m["scientific"],
+                    "common_name": m["subj_name"],
+                    "subject_state": subject_state,
+                    "view_label": m["view_label"],
+                    "life_stage": BUGWOOD_DESCRIPTOR_TO_LIFE_STAGE.get(descriptor_name, ""),
+                    "sex": BUGWOOD_GENDER_TO_SEX.get(gendercaste, ""),
+                    "host_organism": host_organism,
+                    "specimen_condition": (spec.get("specimencondition") or "").strip(),
+                    "description": description,
+                    "captured_date": (detail.get("dateacquired") or "")[:10],
+                    "raw_metadata": json.dumps({"listing": img, "detail": detail}, separators=(",", ":")),
+                }, refresh=BUGWOOD_REFRESH)
+                kept += 1
+                if (kept % 25) == 0:
+                    log.info("[%s] %d / %d", label, kept, needed)
         pages_per_batch[batch_idx] += 1
         time.sleep(0.5)
     return kept
