@@ -62,10 +62,21 @@ export function SpeciesAutocomplete({ selected, onAdd, onRemove }: SpeciesAutoco
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [hasFocus, setHasFocus] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
+  const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listboxId = useId();
   const optionIdPrefix = useId();
   const selectedSet = useMemo(() => new Set(selected.map((s) => s.toLowerCase())), [selected]);
+
+  /** Close the dropdown when focus actually leaves the autocomplete
+   *  container — onBlur on the <input> fires before option mousedown
+   *  resolves, which is why the prior implementation needed a 200ms
+   *  setTimeout. focusout + relatedTarget containment is race-free. */
+  function onFocusOut(e: React.FocusEvent<HTMLDivElement>) {
+    if (!containerRef.current?.contains(e.relatedTarget as Node | null)) {
+      setHasFocus(false);
+    }
+  }
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query), 200);
@@ -153,7 +164,7 @@ export function SpeciesAutocomplete({ selected, onAdd, onRemove }: SpeciesAutoco
     activeIdx >= 0 && activeIdx < results.length ? `${optionIdPrefix}-${activeIdx}` : undefined;
 
   return (
-    <div className="species-autocomplete">
+    <div className="species-autocomplete" ref={containerRef} onBlur={onFocusOut}>
       <div className="species-autocomplete-field">
         {selected.map((tag) => (
           <span key={tag} className="species-tag-chip">
@@ -178,7 +189,6 @@ export function SpeciesAutocomplete({ selected, onAdd, onRemove }: SpeciesAutoco
             setActiveIdx(-1);
           }}
           onFocus={() => setHasFocus(true)}
-          onBlur={() => setTimeout(() => setHasFocus(false), 200)}
           onKeyDown={onKeyDown}
           placeholder={selected.length === 0 ? 'search species or common name…' : '+ add another'}
           role="combobox"
@@ -192,7 +202,7 @@ export function SpeciesAutocomplete({ selected, onAdd, onRemove }: SpeciesAutoco
         <ul id={listboxId} role="listbox" className="species-autocomplete-dropdown">
           {results.map((r, i) => (
             <li
-              key={`${r.common_name}-${r.taxon_species}`}
+              key={`${r.common_name ?? ''}-${r.taxon_species ?? ''}-${r.taxon_order ?? ''}-${i}`}
               id={`${optionIdPrefix}-${i}`}
               role="option"
               aria-selected={i === activeIdx}
