@@ -48,9 +48,13 @@ echo "→ pre-frontend-edit backup at $BAK_PRE_FRONTEND"
 
 # 5. Automated frontend edits via Python (idempotent: skip if already present)
 sudo python3 <<'PYEOF'
+import os
 import re
+import tempfile
+
 cfg_path = "/etc/haproxy/haproxy.cfg"
-cfg = open(cfg_path).read()
+with open(cfg_path) as f:
+    cfg = f.read()
 
 # 5a. Add line-of-bugs.com cert to the existing bind *:443 ssl line
 if "line-of-bugs.com.pem" not in cfg:
@@ -82,7 +86,27 @@ if "is_lob" not in cfg:
     # Insert ACLs just before the existing default_backend ntfy line
     cfg = cfg.replace("\tdefault_backend ntfy", inject_acl + "    default_backend ntfy", 1)
 
-open(cfg_path, "w").write(cfg)
+# Atomic write: tmpfile in the same dir (same filesystem) → fsync →
+# os.replace. A SIGKILL or power loss mid-write would otherwise leave
+# /etc/haproxy/haproxy.cfg half-written, breaking the next reload.
+fd, tmp = tempfile.mkstemp(dir="/etc/haproxy", prefix=".haproxy.cfg.")
+try:
+    with os.fdopen(fd, "w") as f:
+        f.write(cfg)
+        f.flush()
+        os.fsync(f.fileno())
+    # Preserve the original mode bits (mkstemp creates 0600; haproxy.cfg
+    # is conventionally 0644 and root:root). Stat before replace.
+    st = os.stat(cfg_path)
+    os.chmod(tmp, st.st_mode & 0o7777)
+    os.chown(tmp, st.st_uid, st.st_gid)
+    os.replace(tmp, cfg_path)
+except Exception:
+    try:
+        os.unlink(tmp)
+    except FileNotFoundError:
+        pass
+    raise
 PYEOF
 echo "→ frontend edits applied (cert, security headers, ACL)"
 
