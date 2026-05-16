@@ -37,19 +37,30 @@ test.describe("R7 dynamic chip counts", () => {
       .filter({ hasText: "cockroaches" });
     const before = await cockroach.locator(".chip-count").innerText();
 
+    // Capture the pool-count text BEFORE the click so we can wait
+    // for it to change. Previously we matched against a hardcoded
+    // "2,855" which broke every time the fixture grew.
+    const poolCountBefore =
+      (await page.locator(".home-pool-count").innerText()) ?? "";
+
     // Click butterflies — own axis, shouldn't change cockroach.
     await page
       .locator(".taxon-group-chip")
       .filter({ hasText: "butterflies" })
       .click();
 
-    // Wait briefly for the facets fetch then assert no change.
+    // Wait for the URL update + a real pool-count change so we know
+    // the facets fetch landed. Any non-trivial change to the label
+    // text indicates the new filter has been applied.
     await page.waitForURL(/type=butterflies/);
-    await page.waitForFunction(() => {
-      // Ensure facets have refreshed — total in the pool label changes.
-      const lbl = document.querySelector(".home-pool-count")?.textContent ?? "";
-      return /butterflies|2,855|2855/.test(lbl) || /bugs/.test(lbl);
-    });
+    await page.waitForFunction(
+      (prev: string) => {
+        const txt =
+          document.querySelector(".home-pool-count")?.textContent ?? "";
+        return txt.length > 0 && txt !== prev;
+      },
+      poolCountBefore,
+    );
     await expect(cockroach.locator(".chip-count")).toHaveText(before);
   });
 
