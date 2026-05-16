@@ -64,9 +64,14 @@ export function createPreloadManager(
       queue = [...ids];
     },
     onIndexChange(idx) {
+      // Preload forward (next N) AND backward (previous N) so backtracking
+      // through the deck via ArrowLeft is instant. Previously only the
+      // forward direction was hot, making back-nav hit the network.
       for (let i = 1; i <= PRELOAD_AHEAD; i++) {
         const next = queue[idx + i];
         if (next) ensure(next);
+        const prev = queue[idx - i];
+        if (prev) ensure(prev);
       }
     },
     markUsed(id) {
