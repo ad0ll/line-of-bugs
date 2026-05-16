@@ -289,7 +289,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
       <ProgressBar percent={elapsedMs / durationMs} playing={!paused && !done} />
       <SessionTitle image={current} />
       <Timer remainingMs={durationMs - elapsedMs} paused={paused} />
-      <SessionImage image={current} bw={bw} zoom={zoom} pan={pan} />
+      <SessionImage image={current} bw={bw} zoom={zoom} pan={pan} chromeVisible={chromeVisible} />
       <SourceInfoChip image={current} visible={chromeVisible} />
       <EdgePrevNext
         visible={chromeVisible}
