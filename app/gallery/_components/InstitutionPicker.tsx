@@ -56,30 +56,31 @@ export function InstitutionPicker({ institutions, selected, onChange }: Institut
       >
         {label}
       </button>
-      {open && (
-        <div id={panelId} className="institution-popover">
-          <ul className="institution-list">
-            {institutions.map((i) => (
-              <li key={i.name}>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(i.name)}
-                    onChange={() => toggle(i.name)}
-                  />
-                  <span>{i.name}</span>
-                  <span className="institution-count">{i.count.toLocaleString()}</span>
-                </label>
-              </li>
-            ))}
-          </ul>
-          {selected.length > 0 && (
-            <button type="button" className="institution-clear" onClick={() => onChange([])}>
-              clear
-            </button>
-          )}
-        </div>
-      )}
+      {/* Always render the panel so the aria-controls target exists
+          even when closed. The `hidden` attribute keeps it out of the
+          a11y tree + visually hides it. */}
+      <div id={panelId} hidden={!open} className="institution-popover">
+        <ul className="institution-list">
+          {institutions.map((i) => (
+            <li key={i.name}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selected.includes(i.name)}
+                  onChange={() => toggle(i.name)}
+                />
+                <span>{i.name}</span>
+                <span className="institution-count">{i.count.toLocaleString()}</span>
+              </label>
+            </li>
+          ))}
+        </ul>
+        {selected.length > 0 && (
+          <button type="button" className="institution-clear" onClick={() => onChange([])}>
+            clear
+          </button>
+        )}
+      </div>
     </div>
   );
 }

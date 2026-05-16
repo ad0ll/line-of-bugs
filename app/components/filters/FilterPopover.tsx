@@ -89,55 +89,56 @@ export function FilterPopover({
       >
         {label}
       </button>
-      {open && (
-        <div id={panelId} className="filter-popover-panel">
-          <ul className="filter-popover-list">
-            {[...options]
-              .sort((a, b) => {
-                // Non-zero filtered options first (most useful at top);
-                // ties break on alphabetical name.
-                const an = a.count === 0 ? 1 : 0;
-                const bn = b.count === 0 ? 1 : 0;
-                if (an !== bn) return an - bn;
-                if (a.count !== b.count) return b.count - a.count;
-                return a.name.localeCompare(b.name);
-              })
-              .map((o) => {
-              const total = o.total ?? o.count;
-              if (total === 0) return null;
-              const showSplit = typeof o.total === "number" && o.count !== o.total;
-              const disabled = o.count === 0;
-              return (
-                <li key={o.name} className={disabled ? "filter-popover-row-disabled" : ""}>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(o.name)}
-                      onChange={() => toggle(o.name)}
-                    />
-                    <span className="filter-popover-name">{o.name}</span>
-                    <span className="filter-popover-count">
-                      {o.count.toLocaleString()}
-                      {showSplit && (
-                        <span className="filter-popover-count-total"> / {total.toLocaleString()}</span>
-                      )}
-                    </span>
-                  </label>
-                </li>
-              );
-              })}
-          </ul>
-          {selected.length > 0 && (
-            <button
-              type="button"
-              className="filter-popover-clear"
-              onClick={() => onChange([])}
-            >
-              clear
-            </button>
-          )}
-        </div>
-      )}
+      {/* Always render the panel so the aria-controls target exists
+          even when closed. The `hidden` attribute keeps it out of the
+          a11y tree + visually hides it. */}
+      <div id={panelId} hidden={!open} className="filter-popover-panel">
+        <ul className="filter-popover-list">
+          {[...options]
+            .sort((a, b) => {
+              // Non-zero filtered options first (most useful at top);
+              // ties break on alphabetical name.
+              const an = a.count === 0 ? 1 : 0;
+              const bn = b.count === 0 ? 1 : 0;
+              if (an !== bn) return an - bn;
+              if (a.count !== b.count) return b.count - a.count;
+              return a.name.localeCompare(b.name);
+            })
+            .map((o) => {
+            const total = o.total ?? o.count;
+            if (total === 0) return null;
+            const showSplit = typeof o.total === "number" && o.count !== o.total;
+            const disabled = o.count === 0;
+            return (
+              <li key={o.name} className={disabled ? "filter-popover-row-disabled" : ""}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(o.name)}
+                    onChange={() => toggle(o.name)}
+                  />
+                  <span className="filter-popover-name">{o.name}</span>
+                  <span className="filter-popover-count">
+                    {o.count.toLocaleString()}
+                    {showSplit && (
+                      <span className="filter-popover-count-total"> / {total.toLocaleString()}</span>
+                    )}
+                  </span>
+                </label>
+              </li>
+            );
+            })}
+        </ul>
+        {selected.length > 0 && (
+          <button
+            type="button"
+            className="filter-popover-clear"
+            onClick={() => onChange([])}
+          >
+            clear
+          </button>
+        )}
+      </div>
     </div>
   );
 }
