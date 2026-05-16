@@ -3,7 +3,6 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
-import cv2
 import numpy as np
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -13,7 +12,6 @@ from PIL import Image
 from scripts.detect_subjects.caches import load_completed_pairs
 from scripts.detect_subjects.rule_labeler import classify_framing, suggest_labels
 from scripts.detect_subjects.config import (
-    BBOX_EDGE_TOLERANCE_NORMALIZED,
     CLASSIFY_BUG_TOO_SMALL_EDGE_PX,
     CROPS_DIR,
     DATA_DIR,
@@ -24,14 +22,13 @@ from scripts.detect_subjects.config import (
 from scripts.detect_subjects import config as cfg
 from scripts.detect_subjects.crop import compute_crop_bbox, save_medium_and_thumb
 from scripts.detect_subjects.detectors import make_detector
-from scripts.detect_subjects.ground_truth import GroundTruthIndex, lookup_gt_bbox
-from scripts.detect_subjects.metrics import (
-    bbox_area_ratio_normalized,
-    boundary_sharpness,
-    iou_xywh_normalized,
-    lab_delta_e_mask_vs_background,
-    offcenter_normalized,
+from scripts.detect_subjects.features import (
+    compute_geometric_features,
+    compute_mask_features,
+    compute_subject_sharpness,
 )
+from scripts.detect_subjects.ground_truth import GroundTruthIndex, lookup_gt_bbox
+from scripts.detect_subjects.metrics import iou_xywh_normalized
 from scripts.detect_subjects.schema import (
     DetectionRow,
     SCHEMA,
@@ -111,49 +108,27 @@ def run_v1_on_sample(
                                                       det.bbox_xywh_normalized)
                     mask = seg.mask
 
-                bbox_area = None
-                offc = None
-                bbox_min_edge_px = None
-                bbox_long_edge_px = None
-                bbox_touches_edge = None
-                if det.bbox_xywh_normalized is not None:
-                    bx, by, bw, bh = det.bbox_xywh_normalized
-                    bbox_area = bbox_area_ratio_normalized(bw, bh)
-                    offc = offcenter_normalized(bx, by, bw, bh)
-                    # Absolute bug size in pixels — long edge is what we classify on
-                    # (at least one side must clear the 512px threshold), short edge is kept for diagnostics.
-                    bbox_min_edge_px = float(min(bw * W, bh * H))
-                    bbox_long_edge_px = float(max(bw * W, bh * H))
-                    # Bug body extends to / runs off the image edge?
-                    bbox_touches_edge = bool(
-                        bx < BBOX_EDGE_TOLERANCE_NORMALIZED
-                        or by < BBOX_EDGE_TOLERANCE_NORMALIZED
-                        or (bx + bw) > (1.0 - BBOX_EDGE_TOLERANCE_NORMALIZED)
-                        or (by + bh) > (1.0 - BBOX_EDGE_TOLERANCE_NORMALIZED)
-                    )
+                geom = compute_geometric_features(det.bbox_xywh_normalized, W, H)
+                bbox_area = geom["bbox_area_ratio"]
+                offc = geom["offcenter"]
+                bbox_min_edge_px = geom["bbox_min_edge_px"]
+                bbox_long_edge_px = geom["bbox_long_edge_px"]
+                bbox_touches_edge = geom["bbox_touches_edge"]
 
-                mask_area = None
                 mask_iou = seg.iou_score if seg else None
-                d_e = None
-                sharp = None
-                subj_sharp = None
+                # rgb_np is needed for mask features and subject sharpness; build once.
+                rgb_np = np.array(im) if det.bbox_xywh_normalized is not None else None
+                mask_area = d_e = sharp = None
                 if mask is not None and mask.any():
-                    rgb_np = np.array(im)
-                    mask_area = float(mask.sum()) / float(mask.size)
-                    d_e = lab_delta_e_mask_vs_background(rgb_np, mask)
-                    sharp = boundary_sharpness(rgb_np, mask)
+                    mf = compute_mask_features(mask, rgb_np)
+                    mask_area = mf["mask_area_ratio"]
+                    d_e = mf["lab_delta_e"]
+                    sharp = mf["boundary_sharpness"]
                 # Subject sharpness over the bbox region (Laplacian variance).
-                # NB: unreliable on uniform-textured subjects — stored for future
-                # training data but no longer used in classify_framing.
-                if det.bbox_xywh_normalized is not None:
-                    x1 = int(det.bbox_xywh_normalized[0] * W)
-                    y1 = int(det.bbox_xywh_normalized[1] * H)
-                    x2 = int((det.bbox_xywh_normalized[0] + det.bbox_xywh_normalized[2]) * W)
-                    y2 = int((det.bbox_xywh_normalized[1] + det.bbox_xywh_normalized[3]) * H)
-                    if x2 - x1 > 4 and y2 - y1 > 4:
-                        crop_np = np.array(im.crop((x1, y1, x2, y2)))
-                        gray = cv2.cvtColor(crop_np, cv2.COLOR_RGB2GRAY)
-                        subj_sharp = float(cv2.Laplacian(gray, cv2.CV_64F).var())
+                # Unreliable on uniform-textured subjects — stored for future training data.
+                subj_sharp = compute_subject_sharpness(
+                    rgb_np, det.bbox_xywh_normalized, W, H,
+                )
 
                 crop_x = crop_y = crop_w = crop_h = None
                 post_area = None
