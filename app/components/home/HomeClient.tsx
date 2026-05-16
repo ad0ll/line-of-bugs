@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { IntervalPicker } from "@/app/components/home/IntervalPicker";
 import { SubjectFilter } from "@/app/components/home/SubjectFilter";
@@ -94,28 +94,54 @@ export function HomeClient({
 
   // Faceted snapshot — refreshed on every filter change so chips
   // re-count with own-axis exclusion semantics.
+  //
+  // Guarded against three lag sources the audit identified:
+  //   1. React StrictMode double-fires this effect → ref-keyed dedupe
+  //      keyed on the params string skips the second fire.
+  //   2. Rapid chip toggling → 80 ms debounce collapses adjacent
+  //      clicks into one fetch.
+  //   3. In-flight requests get aborted whenever a newer one starts.
+  //
+  // initialFacets is held in a ref so a fresh SSR snapshot (sent
+  // every time router.replace runs after a URL change) doesn't re-
+  // trigger the effect via dep-change. Without this, the cleanup ran
+  // between mount-time fetch scheduling and the timeout firing,
+  // killing the fetch.
   const [facets, setFacets] = useState<FacetSnapshot>(initialFacets);
   const [facetsLoading, setFacetsLoading] = useState(false);
+  const lastFetchKey = useRef<string>("");
+  const initialFacetsRef = useRef(initialFacets);
+  initialFacetsRef.current = initialFacets;
   useEffect(() => {
-    const controller = new AbortController();
-    setFacetsLoading(true);
     const q = new URLSearchParams();
     q.set("subject", subject);
     if (views.length) q.set("view", views.join(","));
     if (life.length) q.set("life", life.join(","));
     if (sexes.length) q.set("sex", sexes.join(","));
     if (groups.length) q.set("type", groups.join(","));
-    fetch(`/api/facets?${q.toString()}`, { signal: controller.signal })
-      .then((r) => r.json())
-      .then((d: FacetSnapshot) => setFacets(d))
-      .catch((err) => {
-        if (err?.name !== "AbortError") setFacets(initialFacets);
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setFacetsLoading(false);
-      });
-    return () => controller.abort();
-  }, [subject, views, life, sexes, groups, initialFacets]);
+    const key = q.toString();
+    if (key === lastFetchKey.current) return; // StrictMode dedupe.
+    lastFetchKey.current = key;
+
+    const controller = new AbortController();
+    const handle = setTimeout(() => {
+      setFacetsLoading(true);
+      fetch(`/api/facets?${key}`, { signal: controller.signal })
+        .then((r) => r.json())
+        .then((d: FacetSnapshot) => setFacets(d))
+        .catch((err) => {
+          if (err?.name !== "AbortError") setFacets(initialFacetsRef.current);
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setFacetsLoading(false);
+        });
+    }, 80);
+
+    return () => {
+      clearTimeout(handle);
+      controller.abort();
+    };
+  }, [subject, views, life, sexes, groups]);
 
   const poolCount = facets.total;
   const countLoading = facetsLoading;
