@@ -94,13 +94,8 @@ export async function searchGallery(args: SearchGalleryArgs): Promise<SearchGall
     lifeStages: args.lifeStages,
     sexes: args.sexes,
     groups: args.groups,
+    institutions: args.institutions,
   });
-
-  // Institution is gallery-only — not part of the shared FilterState.
-  if (args.institutions.length > 0) {
-    const list = sql.join(args.institutions.map((x) => sql`${x}`), sql`, `);
-    filters.push(sql`institution IN (${list})`);
-  }
 
   // User typed something but every tag was unsanitizable — return empty.
   if (args.q.length > 0 && args.q.some((t) => t.trim()) && !ftsQuery) {

@@ -44,6 +44,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
     lifeStages,
     sexes,
     groups,
+    institutions,
   };
 
   return (

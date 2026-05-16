@@ -6,6 +6,10 @@ import type { SubjectType } from "@/lib/subject";
  * Shared filter state used by gallery, session, and facet queries.
  * Each axis maps to one SQL clause; empty arrays / "all" subject skip
  * their clause entirely.
+ *
+ * `institutions` is optional because the session API + home page
+ * never apply institution filtering — only the gallery + gallery
+ * facets do. Callers that don't care can omit it.
  */
 export interface FilterState {
   subjectType: SubjectType;
@@ -13,6 +17,7 @@ export interface FilterState {
   lifeStages: string[];
   sexes: string[];
   groups: string[];
+  institutions?: string[];
 }
 
 /**
@@ -55,6 +60,10 @@ export function buildFilterClauses(
   if (filters.groups.length > 0) {
     const groupClause = buildTaxonGroupSQL(filters.groups, sql`taxon_subgroup`);
     if (groupClause) clauses.push(groupClause);
+  }
+  if (filters.institutions && filters.institutions.length > 0) {
+    const list = sql.join(filters.institutions.map((x) => sql`${x}`), sql`, `);
+    clauses.push(sql`institution IN (${list})`);
   }
 
   return clauses;
