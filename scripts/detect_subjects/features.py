@@ -51,3 +51,52 @@ def compute_geometric_features(
             or (by + bh) > (1.0 - BBOX_EDGE_TOLERANCE_NORMALIZED)
         ),
     }
+
+
+import cv2
+import numpy as np
+
+from scripts.detect_subjects.metrics import (
+    lab_delta_e_mask_vs_background,
+    boundary_sharpness,
+)
+
+
+def compute_mask_features(mask, rgb) -> dict:
+    """Compute mask-derived scalar features.
+
+    Returns a dict with keys (None when mask is None/empty):
+      mask_area_ratio    — fraction of image pixels inside mask
+      lab_delta_e        — mean LAB color difference between mask interior and exterior
+      boundary_sharpness — mean Sobel gradient magnitude along mask boundary
+    """
+    if mask is None:
+        return {"mask_area_ratio": None, "lab_delta_e": None,
+                "boundary_sharpness": None}
+    if not mask.any():
+        return {"mask_area_ratio": 0.0, "lab_delta_e": None,
+                "boundary_sharpness": None}
+    return {
+        "mask_area_ratio": float(mask.sum()) / float(mask.size),
+        "lab_delta_e": lab_delta_e_mask_vs_background(rgb, mask),
+        "boundary_sharpness": boundary_sharpness(rgb, mask),
+    }
+
+
+def compute_subject_sharpness(rgb, bbox_xywh_normalized, img_w: int, img_h: int):
+    """Laplacian variance over the bbox region. Higher = sharper.
+
+    Returns None if no bbox or bbox is too small (< 4px in either dimension).
+    Note: known unreliable on uniform-textured subjects (e.g., smooth bug bodies).
+    Stored as a feature for ML labelers to use, not for hard rules.
+    """
+    if bbox_xywh_normalized is None or rgb is None:
+        return None
+    x, y, w, h = bbox_xywh_normalized
+    x1 = int(x * img_w); y1 = int(y * img_h)
+    x2 = int((x + w) * img_w); y2 = int((y + h) * img_h)
+    if x2 - x1 < 5 or y2 - y1 < 5:
+        return None
+    crop = rgb[y1:y2, x1:x2]
+    gray = cv2.cvtColor(crop, cv2.COLOR_RGB2GRAY)
+    return float(cv2.Laplacian(gray, cv2.CV_64F).var())
