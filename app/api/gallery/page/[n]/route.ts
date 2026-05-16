@@ -9,7 +9,9 @@ function readList(v: string | null): string[] {
 
 export async function GET(req: Request, { params }: Params): Promise<Response> {
   const { n } = await params;
-  const page = Math.max(1, parseInt(n, 10) || 1);
+  // Cap page number to bound the OFFSET on the underlying query; large
+  // offsets make SQLite scan the index linearly and become a DoS vector.
+  const page = Math.max(1, Math.min(2000, parseInt(n, 10) || 1));
   const url = new URL(req.url);
   const qRaw = url.searchParams.get("q") ?? "";
   const q = qRaw.split(",").map((s) => s.trim()).filter(Boolean);

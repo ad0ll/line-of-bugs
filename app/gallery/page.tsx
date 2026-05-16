@@ -36,7 +36,8 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
   const sexes = readList(sp.sex);
   const groups = readList(sp.type);
   const pageRaw = readArg(sp.page, '1') as string;
-  const page = Math.max(1, parseInt(pageRaw, 10) || 1);
+  // Cap page to keep the SQLite OFFSET bounded (see api/gallery/page/[n]).
+  const page = Math.max(1, Math.min(2000, parseInt(pageRaw, 10) || 1));
 
   const filterState = {
     subjectType: subject,
