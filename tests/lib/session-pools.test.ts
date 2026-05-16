@@ -36,4 +36,24 @@ describe("session-pools", () => {
     sweepExpired();
     expect(getPool("old")).toBeUndefined();
   });
+
+  it("setPool returns true on success", () => {
+    expect(setPool("ok", [fakeImg("a")])).toBe(true);
+  });
+
+  it("setPool rejects new pools when at capacity but keeps space after sweep", () => {
+    // Fill up to MAX_POOLS (500) with fresh entries.
+    for (let i = 0; i < 500; i++) {
+      setPool(`s${i}`, [fakeImg(`i${i}`)]);
+    }
+    // Next insertion should fail — all 500 are fresh, sweep finds nothing.
+    expect(setPool("overflow", [fakeImg("o")])).toBe(false);
+
+    // Backdate one entry past the TTL and try again — sweep frees a slot.
+    const stale = getPool("s0")!;
+    stale.createdAt = Date.now() - 2 * 60 * 60 * 1000;
+    expect(setPool("survives", [fakeImg("s")])).toBe(true);
+    expect(getPool("survives")).toBeDefined();
+    expect(getPool("s0")).toBeUndefined();
+  });
 });

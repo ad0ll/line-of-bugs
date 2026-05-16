@@ -1,10 +1,24 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
+import type { Image } from "@/db/schema";
 import { POST } from "@/app/api/session/start/route";
-import { getPool, _clearAll } from "@/lib/session-pools";
+import { getPool, setPool, _clearAll } from "@/lib/session-pools";
+
+const fakeImg = (id: string): Image => ({
+  imageId: id, collectionId: "c", source: "inaturalist", sourceId: id,
+  sourcePageUrl: "", imageUrl: "", filename: "", thumbnailFilename: "",
+  mediumFilename: "", fileSizeBytes: 0, fileSha256: "", width: 100, height: 100,
+  license: "cc-by-4.0", licenseUrl: null, photographerAttribution: null,
+  photographer: null, institution: null, taxonOrder: null, taxonSpecies: null,
+  commonName: null, subjectState: "wild", viewLabel: null, description: null,
+  capturedDate: null, hidden: false, addedAt: new Date(),
+  lifeStage: null, sex: null, hostOrganism: null, specimenCondition: null, rawMetadata: null,
+  taxonSubgroup: null,
+});
 
 describe("/api/session/start", () => {
+  beforeEach(() => _clearAll());
+
   it("returns a sessionId and stores the pool", async () => {
-    _clearAll();
     const res = await POST(
       new Request("http://localhost/api/session/start", {
         method: "POST",
@@ -33,5 +47,25 @@ describe("/api/session/start", () => {
       }),
     );
     expect(res.status).toBe(400);
+  });
+
+  it("503s when the session-pool cap is reached", async () => {
+    // Fill the pool table up to the cap with fresh entries so the
+    // capacity-check sweep can't reclaim anything.
+    for (let i = 0; i < 500; i++) {
+      setPool(`fill-${i}`, [fakeImg(`i${i}`)]);
+    }
+    const res = await POST(
+      new Request("http://localhost/api/session/start", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          intervalSec: 60,
+          subjectType: "both",
+          repeatMode: "default",
+        }),
+      }),
+    );
+    expect(res.status).toBe(503);
   });
 });

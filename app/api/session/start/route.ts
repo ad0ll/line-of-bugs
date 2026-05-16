@@ -50,7 +50,9 @@ export async function POST(req: Request) {
   }
 
   const sessionId = randomUUID();
-  setPool(sessionId, items);
+  if (!setPool(sessionId, items)) {
+    return new Response("server busy — retry shortly", { status: 503 });
+  }
 
   return Response.json({ sessionId, count: items.length });
 }

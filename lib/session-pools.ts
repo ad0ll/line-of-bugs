@@ -15,9 +15,23 @@ const POOLS: Map<string, Pool> = g.__lineOfBugsPools ?? new Map();
 g.__lineOfBugsPools = POOLS;
 
 const POOL_TTL_MS = 60 * 60 * 1000; // 1 hour
+const MAX_POOLS = 500;
 
-export function setPool(sessionId: string, items: Image[]): void {
+/**
+ * Store a pool keyed by sessionId. Returns true on success, false when
+ * the server is at capacity even after sweeping expired entries — the
+ * caller should surface a 503 in that case.
+ */
+export function setPool(sessionId: string, items: Image[]): boolean {
+  if (POOLS.size >= MAX_POOLS) {
+    // Try to free up capacity by sweeping expired pools first.
+    sweepExpired();
+    if (POOLS.size >= MAX_POOLS) {
+      return false;
+    }
+  }
   POOLS.set(sessionId, { items, createdAt: Date.now() });
+  return true;
 }
 
 export function getPool(sessionId: string): Pool | undefined {
