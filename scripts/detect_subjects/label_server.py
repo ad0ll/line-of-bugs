@@ -125,7 +125,7 @@ def serve(port: int = DEFAULT_PORT) -> None:
     print(f"[label-server] serving on http://localhost:{port}")
     print(f"[label-server] static root: {PROJECT_ROOT}")
     print(f"[label-server] labels file: {LABELS_PATH}")
-    print(f"[label-server] validator:   http://localhost:{port}/audit/framing-validator/v1_dino_insectsam.html")
+    print(f"[label-server] validator:   http://localhost:{port}/tools/validator/grounding_dino__insectsam.html")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

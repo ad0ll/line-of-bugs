@@ -1,0 +1,2772 @@
+{
+  "bugwood-1223047": {
+    "flags": [
+      "bug-too-small"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778876334151,
+    "user_edited": true
+  },
+  "bugwood-5611038": {
+    "flags": [
+      "bbox-wrong",
+      "bbox-wrong_correct-subject"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877330952,
+    "user_edited": true
+  },
+  "inat-313993": {
+    "flags": [
+      "bug-too-small",
+      "poor-contrast"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778876347876,
+    "user_edited": true
+  },
+  "inat-302754": {
+    "flags": [
+      "bug-too-small",
+      "bbox-wrong",
+      "bbox-wrong_correct-subject"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877313419,
+    "user_edited": true
+  },
+  "bugwood-5497042": {
+    "flags": [
+      "bug-too-small",
+      "multi-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778876367030,
+    "user_edited": true
+  },
+  "inat-5090845": {
+    "flags": [
+      "no-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877150328,
+    "user_edited": true
+  },
+  "inat-538988": {
+    "flags": [
+      "bug-too-small",
+      "bbox-wrong"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778876371389,
+    "user_edited": true
+  },
+  "inat-2719463": {
+    "flags": [
+      "multi-bug",
+      "bug-too-small",
+      "bbox-wrong_better-subject-other-bbox"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877308752,
+    "user_edited": true
+  },
+  "bugwood-5454460": {
+    "flags": [
+      "bug-too-small"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778876409448,
+    "user_edited": true
+  },
+  "inat-2476557": {
+    "flags": [
+      "bug-too-small"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778876412313,
+    "user_edited": true
+  },
+  "bugwood-5611254": {
+    "flags": [
+      "bbox-wrong",
+      "bbox-wrong_correct-subject"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877370314,
+    "user_edited": true
+  },
+  "bugwood-5552270": {
+    "flags": [
+      "bug-too-small",
+      "multi-bug",
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778876480155,
+    "user_edited": true
+  },
+  "bugwood-1233198": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877384922,
+    "user_edited": true
+  },
+  "smithsonian-usnment00346474-m3a0ab76ce": {
+    "flags": [
+      "bug-too-small",
+      "other-bad"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778876504363,
+    "user_edited": true
+  },
+  "inat-1486053": {
+    "flags": [
+      "bug-too-small",
+      "multi-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778876509446,
+    "user_edited": true
+  },
+  "inat-7351899": {
+    "flags": [
+      "bug-too-small"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778876512796,
+    "user_edited": true
+  },
+  "smithsonian-usnment00346664-m37e2e5ffd": {
+    "flags": [
+      "bug-too-small",
+      "other-bad"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778876559476,
+    "user_edited": true
+  },
+  "inat-2680628": {
+    "flags": [
+      "bug-too-small",
+      "multi-bug",
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778876615133,
+    "user_edited": true
+  },
+  "inat-5424073": {
+    "flags": [
+      "bbox-wrong",
+      "bbox-wrong_better-subject-other-bbox",
+      "bug-too-small"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879167393,
+    "user_edited": true
+  },
+  "inat-4963204": {
+    "flags": [
+      "bug-too-small",
+      "bbox-wrong",
+      "bbox-wrong_correct-subject",
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879156126,
+    "user_edited": true
+  },
+  "inat-7393453": {
+    "flags": [
+      "bug-too-small",
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877268892,
+    "user_edited": true
+  },
+  "bugwood-5341009": {
+    "flags": [
+      "bug-too-small",
+      "multi-bug",
+      "bbox-wrong_better-subject-other-bbox"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877334413,
+    "user_edited": true
+  },
+  "bugwood-1540228": {
+    "flags": [
+      "multi-bug",
+      "bug-too-small"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877357873,
+    "user_edited": true
+  },
+  "smithsonian-usnment00388662-m3adf2a93d": {
+    "flags": [
+      "bug-too-small",
+      "other-bad"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877438280,
+    "user_edited": true
+  },
+  "smithsonian-usnment00393528-m334e4bbcc": {
+    "flags": [
+      "bug-too-small",
+      "other-bad"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877449071,
+    "user_edited": true
+  },
+  "inat-9814225": {
+    "flags": [
+      "multi-bug",
+      "bbox-wrong_better-subject-other-bbox"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877476504,
+    "user_edited": true
+  },
+  "bugwood-5542391": {
+    "flags": [
+      "bbox-wrong_correct-subject",
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880293224,
+    "user_edited": true
+  },
+  "inat-1801574": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877546833,
+    "user_edited": true
+  },
+  "inat-7722704": {
+    "flags": [
+      "bug-too-small",
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877590349,
+    "user_edited": true
+  },
+  "inat-1703651": {
+    "flags": [
+      "bug-too-small",
+      "poor-contrast",
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880299570,
+    "user_edited": true
+  },
+  "bugwood-5614140": {
+    "flags": [
+      "bbox-wrong_correct-subject",
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880316028,
+    "user_edited": true
+  },
+  "inat-1929671": {
+    "flags": [
+      "bug-too-small"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877814131,
+    "user_edited": true
+  },
+  "inat-1379330": {
+    "flags": [
+      "multi-bug",
+      "bug-too-small"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877821508,
+    "user_edited": true
+  },
+  "bugwood-5602250": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778877860898,
+    "user_edited": true
+  },
+  "bugwood-1440129": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877878581,
+    "user_edited": true
+  },
+  "inat-22992224": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880358361,
+    "user_edited": true
+  },
+  "inat-1726555": {
+    "flags": [
+      "bbox-wrong_correct-subject",
+      "bug-too-small",
+      "multi-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877956676,
+    "user_edited": true
+  },
+  "inat-445304": {
+    "flags": [
+      "bug-too-small",
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877969465,
+    "user_edited": true
+  },
+  "bugwood-5371089": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778877975622,
+    "user_edited": true
+  },
+  "inat-14465072": {
+    "flags": [
+      "poor-contrast"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778877983123,
+    "user_edited": true
+  },
+  "inat-552617": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778877993230,
+    "user_edited": true
+  },
+  "smithsonian-usnment00384356-m3ea1420ff": {
+    "flags": [
+      "bug-too-small",
+      "other-bad"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878000223,
+    "user_edited": true
+  },
+  "inat-67537407": {
+    "flags": [],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878022431,
+    "user_edited": true
+  },
+  "bugwood-1549485": {
+    "flags": [
+      "subject-blurred_unusable",
+      "poor-contrast"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878056195,
+    "user_edited": true
+  },
+  "inat-7451316": {
+    "flags": [
+      "poor-contrast",
+      "bug-too-small"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879272843,
+    "user_edited": true
+  },
+  "bugwood-5367930": {
+    "flags": [
+      "bug-too-small",
+      "crop-too-tight"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879264668,
+    "user_edited": true
+  },
+  "inat-1417226": {
+    "flags": [
+      "bug-too-small",
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878085787,
+    "user_edited": true
+  },
+  "inat-112400": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878091212,
+    "user_edited": true
+  },
+  "inat-173971": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879283401,
+    "user_edited": true
+  },
+  "inat-6418757": {
+    "flags": [
+      "bbox-wrong_correct-subject"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878119468,
+    "user_edited": true
+  },
+  "inat-384152": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878124266,
+    "user_edited": true
+  },
+  "bugwood-5506340": {
+    "flags": [
+      "multi-bug",
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880435094,
+    "user_edited": true
+  },
+  "inat-360358": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879337051,
+    "user_edited": true
+  },
+  "bugwood-5488968": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778878157115,
+    "user_edited": true
+  },
+  "inat-517984": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778878166347,
+    "user_edited": true
+  },
+  "bugwood-5385553": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778878169388,
+    "user_edited": true
+  },
+  "inat-261516": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778878178681,
+    "user_edited": true
+  },
+  "inat-456268": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778878191499,
+    "user_edited": true
+  },
+  "inat-17486": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778878202466,
+    "user_edited": true
+  },
+  "inat-2506504": {
+    "flags": [
+      "bug-too-small",
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878210249,
+    "user_edited": true
+  },
+  "bugwood-5569183": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880455361,
+    "user_edited": true
+  },
+  "bugwood-5540605": {
+    "flags": [
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878251466,
+    "user_edited": true
+  },
+  "inat-5194505": {
+    "flags": [
+      "multi-bug",
+      "crop-too-loose"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878280008,
+    "user_edited": true
+  },
+  "inat-629753": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778878291995,
+    "user_edited": true
+  },
+  "inat-461707": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878298975,
+    "user_edited": true
+  },
+  "bugwood-5542835": {
+    "flags": [
+      "subject-clipped",
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878309037,
+    "user_edited": true
+  },
+  "inat-2639649": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778878312057,
+    "user_edited": true
+  },
+  "inat-464590": {
+    "flags": [
+      "crop-too-tight",
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880485886,
+    "user_edited": true
+  },
+  "inat-6267717": {
+    "flags": [
+      "multi-bug",
+      "bbox-wrong_better-subject-other-bbox",
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880498953,
+    "user_edited": true
+  },
+  "inat-228729940": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878462178,
+    "user_edited": true
+  },
+  "inat-2299337": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778878470261,
+    "user_edited": true
+  },
+  "inat-57010669": {
+    "flags": [
+      "bbox-wrong_correct-subject"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880526769,
+    "user_edited": true
+  },
+  "inat-107566552": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778878529349,
+    "user_edited": true
+  },
+  "inat-61030472": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778878553407,
+    "user_edited": true
+  },
+  "bugwood-1435030": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778878562498,
+    "user_edited": true
+  },
+  "inat-2312004": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778878568965,
+    "user_edited": true
+  },
+  "inat-396259": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778878578857,
+    "user_edited": true
+  },
+  "inat-1801018": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878724102,
+    "user_edited": true
+  },
+  "inat-1647390": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778878731627,
+    "user_edited": true
+  },
+  "inat-1481519": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778878740883,
+    "user_edited": true
+  },
+  "inat-966628": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778878745156,
+    "user_edited": true
+  },
+  "bugwood-5477308": {
+    "flags": [
+      "bbox-wrong_correct-subject"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878770797,
+    "user_edited": true
+  },
+  "inat-1410777": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880645669,
+    "user_edited": true
+  },
+  "inat-1994451": {
+    "flags": [
+      "subject-clipped",
+      "bbox-wrong_better-subject-other-bbox"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878855626,
+    "user_edited": true
+  },
+  "inat-61691209": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878861810,
+    "user_edited": true
+  },
+  "inat-330039": {
+    "flags": [
+      "subject-blurred_unusable",
+      "poor-contrast"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878871135,
+    "user_edited": true
+  },
+  "inat-4662758": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778878889343,
+    "user_edited": true
+  },
+  "bugwood-5394434": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778878921901,
+    "user_edited": true
+  },
+  "inat-12820955": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778878935176,
+    "user_edited": true
+  },
+  "bugwood-5443489": {
+    "flags": [
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878940301,
+    "user_edited": true
+  },
+  "inat-6988731": {
+    "flags": [
+      "poor-contrast"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878957176,
+    "user_edited": true
+  },
+  "inat-10325590": {
+    "flags": [
+      "multi-bug",
+      "bbox-wrong_better-subject-other-bbox"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778878968093,
+    "user_edited": true
+  },
+  "bugwood-1236055": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880692155,
+    "user_edited": true
+  },
+  "inat-24448492": {
+    "flags": [
+      "poor-contrast"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879000418,
+    "user_edited": true
+  },
+  "inat-2356234": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879003751,
+    "user_edited": true
+  },
+  "bugwood-1546216": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879004926,
+    "user_edited": true
+  },
+  "inat-1403948": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879005767,
+    "user_edited": true
+  },
+  "inat-322381": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879006518,
+    "user_edited": true
+  },
+  "bugwood-1236117": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880684997,
+    "user_edited": true
+  },
+  "inat-2162208": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880696505,
+    "user_edited": true
+  },
+  "inat-9811080": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879011868,
+    "user_edited": true
+  },
+  "inat-1035104": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879015043,
+    "user_edited": true
+  },
+  "inat-2066609": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880667023,
+    "user_edited": true
+  },
+  "inat-1478550": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879024609,
+    "user_edited": true
+  },
+  "bugwood-5386103": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879026001,
+    "user_edited": true
+  },
+  "bugwood-1326013": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879027551,
+    "user_edited": true
+  },
+  "inat-82854386": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880654102,
+    "user_edited": true
+  },
+  "inat-1154243": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879031643,
+    "user_edited": true
+  },
+  "inat-581078": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879032901,
+    "user_edited": true
+  },
+  "inat-38850598": {
+    "flags": [
+      "poor-contrast"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880635077,
+    "user_edited": true
+  },
+  "inat-1152092": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879037493,
+    "user_edited": true
+  },
+  "inat-18862546": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879038851,
+    "user_edited": true
+  },
+  "inat-2876350": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879046876,
+    "user_edited": true
+  },
+  "inat-1013146": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879057143,
+    "user_edited": true
+  },
+  "bugwood-5385923": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879065768,
+    "user_edited": true
+  },
+  "inat-6101168": {
+    "flags": [
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879074493,
+    "user_edited": true
+  },
+  "inat-1172044": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879086726,
+    "user_edited": true
+  },
+  "inat-59655344": {
+    "flags": [
+      "bug-too-small"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879136122,
+    "user_edited": true
+  },
+  "inat-40956495": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879144022,
+    "user_edited": true
+  },
+  "inat-1249247": {
+    "flags": [
+      "bug-too-small",
+      "multi-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879172043,
+    "user_edited": true
+  },
+  "inat-1289178": {
+    "flags": [
+      "bug-too-small"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879177593,
+    "user_edited": true
+  },
+  "bugwood-5445190": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879186984,
+    "user_edited": true
+  },
+  "inat-1156424": {
+    "flags": [
+      "bug-too-small",
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879205768,
+    "user_edited": true
+  },
+  "bugwood-5385534": {
+    "flags": [
+      "multi-bug",
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880319286,
+    "user_edited": true
+  },
+  "inat-2867852": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879225784,
+    "user_edited": true
+  },
+  "inat-49988": {
+    "flags": [
+      "bbox-wrong_better-subject-other-bbox"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880383678,
+    "user_edited": true
+  },
+  "inat-15382670": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879241094,
+    "user_edited": true
+  },
+  "inat-4611414": {
+    "flags": [
+      "bug-too-small"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879247360,
+    "user_edited": true
+  },
+  "inat-338804": {
+    "flags": [
+      "bug-too-small"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879250493,
+    "user_edited": true
+  },
+  "inat-1547836": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879254659,
+    "user_edited": true
+  },
+  "inat-433343": {
+    "flags": [
+      "bug-too-small"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879297093,
+    "user_edited": true
+  },
+  "inat-1703289": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879309188,
+    "user_edited": true
+  },
+  "inat-3113337": {
+    "flags": [
+      "bbox-wrong_better-subject-other-bbox"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879326301,
+    "user_edited": true
+  },
+  "inat-507104": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879348151,
+    "user_edited": true
+  },
+  "bugwood-1234225": {
+    "flags": [
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880476611,
+    "user_edited": true
+  },
+  "inat-1995761": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879381079,
+    "user_edited": true
+  },
+  "inat-1171990": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778880510010,
+    "user_edited": true
+  },
+  "bugwood-5445334": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879415294,
+    "user_edited": true
+  },
+  "inat-1239919": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879421334,
+    "user_edited": true
+  },
+  "inat-4863480": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879430701,
+    "user_edited": true
+  },
+  "inat-2450540": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879443373,
+    "user_edited": true
+  },
+  "inat-2428999": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879454430,
+    "user_edited": true
+  },
+  "inat-949552": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879456663,
+    "user_edited": true
+  },
+  "inat-1263824": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879467121,
+    "user_edited": true
+  },
+  "bugwood-1540547": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879468140,
+    "user_edited": true
+  },
+  "inat-1998310": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879479585,
+    "user_edited": true
+  },
+  "bugwood-1226298": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879482976,
+    "user_edited": true
+  },
+  "inat-436864": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879491517,
+    "user_edited": true
+  },
+  "bugwood-5521078": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879496786,
+    "user_edited": true
+  },
+  "inat-314861": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879510784,
+    "user_edited": true
+  },
+  "bugwood-1481029": {
+    "flags": [
+      "multi-bug",
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879516267,
+    "user_edited": true
+  },
+  "inat-397300": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879523767,
+    "user_edited": true
+  },
+  "inat-2111256": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879529292,
+    "user_edited": true
+  },
+  "inat-2741230": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879537042,
+    "user_edited": true
+  },
+  "inat-1961902": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879544284,
+    "user_edited": true
+  },
+  "inat-58562765": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879548417,
+    "user_edited": true
+  },
+  "inat-3421883": {
+    "flags": [
+      "bbox-wrong_better-subject-other-bbox",
+      "subject-blurred_unusable",
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879560567,
+    "user_edited": true
+  },
+  "inat-1409164": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880556352,
+    "user_edited": true
+  },
+  "inat-16459222": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879576934,
+    "user_edited": true
+  },
+  "bugwood-5542271": {
+    "flags": [
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879580642,
+    "user_edited": true
+  },
+  "bugwood-5424579": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879585100,
+    "user_edited": true
+  },
+  "inat-28524405": {
+    "flags": [],
+    "preference": null,
+    "unsure": true,
+    "reviewed_at": 1778879593375,
+    "user_edited": true
+  },
+  "bugwood-1327132": {
+    "flags": [
+      "bbox-wrong_correct-subject",
+      "multi-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879600709,
+    "user_edited": true
+  },
+  "inat-551666": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879610350,
+    "user_edited": true
+  },
+  "inat-353541": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880564498,
+    "user_edited": true
+  },
+  "inat-103970": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879638344,
+    "user_edited": true
+  },
+  "inat-2023365": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880571794,
+    "user_edited": true
+  },
+  "bugwood-5614723": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778879653444,
+    "user_edited": true
+  },
+  "bugwood-5389243": {
+    "flags": [],
+    "preference": null,
+    "unsure": true,
+    "reviewed_at": 1778880753306,
+    "user_edited": true
+  },
+  "bugwood-5613961": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880747147,
+    "user_edited": true
+  },
+  "inat-2173569": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880743580,
+    "user_edited": true
+  },
+  "inat-251861": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880759364,
+    "user_edited": true
+  },
+  "bugwood-5435456": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879710775,
+    "user_edited": true
+  },
+  "inat-1367825": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879715566,
+    "user_edited": true
+  },
+  "bugwood-1242001": {
+    "flags": [
+      "poor-contrast",
+      "bbox-wrong_correct-subject",
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880772801,
+    "user_edited": true
+  },
+  "inat-2050074": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879731583,
+    "user_edited": true
+  },
+  "inat-23899394": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879734611,
+    "user_edited": true
+  },
+  "inat-815619": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879737559,
+    "user_edited": true
+  },
+  "inat-193147573": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879740592,
+    "user_edited": true
+  },
+  "inat-2139414": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879747714,
+    "user_edited": true
+  },
+  "inat-8254808": {
+    "flags": [
+      "subject-blurred_unusable",
+      "poor-contrast"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880788652,
+    "user_edited": true
+  },
+  "inat-355325": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879754039,
+    "user_edited": true
+  },
+  "bugwood-5568979": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880797072,
+    "user_edited": true
+  },
+  "inat-1410779": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879760805,
+    "user_edited": true
+  },
+  "inat-405533": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879765464,
+    "user_edited": true
+  },
+  "inat-1933509": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879770422,
+    "user_edited": true
+  },
+  "inat-16207255": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879775622,
+    "user_edited": true
+  },
+  "inat-8570800": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879780164,
+    "user_edited": true
+  },
+  "inat-57107": {
+    "flags": [
+      "poor-contrast",
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879791297,
+    "user_edited": true
+  },
+  "inat-1289882": {
+    "flags": [
+      "other-bad",
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880814788,
+    "user_edited": true
+  },
+  "bugwood-5584720": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879799930,
+    "user_edited": true
+  },
+  "inat-647903": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879807764,
+    "user_edited": true
+  },
+  "inat-4334674": {
+    "flags": [
+      "bbox-wrong_correct-subject"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879812972,
+    "user_edited": true
+  },
+  "inat-2045251": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879818255,
+    "user_edited": true
+  },
+  "inat-1850359": {
+    "flags": [],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879820788,
+    "user_edited": true
+  },
+  "inat-8153606": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879850434,
+    "user_edited": true
+  },
+  "inat-121495068": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879855418,
+    "user_edited": true
+  },
+  "inat-7236247": {
+    "flags": [
+      "poor-contrast",
+      "multi-bug",
+      "bbox-wrong_correct-subject",
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880849309,
+    "user_edited": true
+  },
+  "inat-25440916": {
+    "flags": [
+      "bbox-wrong_correct-subject",
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880835805,
+    "user_edited": true
+  },
+  "inat-2696305": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879876110,
+    "user_edited": true
+  },
+  "inat-316943": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880856826,
+    "user_edited": true
+  },
+  "inat-2050071": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879889105,
+    "user_edited": true
+  },
+  "inat-386849": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879893189,
+    "user_edited": true
+  },
+  "bugwood-5439756": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879897397,
+    "user_edited": true
+  },
+  "inat-4770755": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880870322,
+    "user_edited": true
+  },
+  "bugwood-1267032": {
+    "flags": [],
+    "preference": null,
+    "unsure": true,
+    "reviewed_at": 1778880873222,
+    "user_edited": true
+  },
+  "inat-289589": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880878105,
+    "user_edited": true
+  },
+  "inat-8156900": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880887005,
+    "user_edited": true
+  },
+  "inat-1684736": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879919852,
+    "user_edited": true
+  },
+  "inat-520811": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879925758,
+    "user_edited": true
+  },
+  "inat-1465547": {
+    "flags": [
+      "multi-bug",
+      "crop-too-tight"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879941365,
+    "user_edited": true
+  },
+  "inat-1032257": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880897372,
+    "user_edited": true
+  },
+  "bugwood-1223089": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879956481,
+    "user_edited": true
+  },
+  "bugwood-2167001": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880908130,
+    "user_edited": true
+  },
+  "inat-15225644": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879972718,
+    "user_edited": true
+  },
+  "inat-1519300": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879976264,
+    "user_edited": true
+  },
+  "bugwood-5583200": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879979110,
+    "user_edited": true
+  },
+  "inat-9378052": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778879983043,
+    "user_edited": true
+  },
+  "inat-4803515": {
+    "flags": [
+      "multi-bug",
+      "crop-too-tight"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880922463,
+    "user_edited": true
+  },
+  "inat-6000296": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778879995143,
+    "user_edited": true
+  },
+  "bugwood-5614295": {
+    "flags": [
+      "multi-bug",
+      "bbox-wrong_correct-subject"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880002531,
+    "user_edited": true
+  },
+  "inat-1820661": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778880004835,
+    "user_edited": true
+  },
+  "inat-7173758": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880008460,
+    "user_edited": true
+  },
+  "inat-34755113": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880934196,
+    "user_edited": true
+  },
+  "inat-7300784": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880021876,
+    "user_edited": true
+  },
+  "inat-2588925": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880025727,
+    "user_edited": true
+  },
+  "inat-779719": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880032035,
+    "user_edited": true
+  },
+  "inat-20828715": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778880039548,
+    "user_edited": true
+  },
+  "inat-22272543": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778880041985,
+    "user_edited": true
+  },
+  "inat-234603": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778880044989,
+    "user_edited": true
+  },
+  "inat-437746": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778880046783,
+    "user_edited": true
+  },
+  "bugwood-5542341": {
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880049882,
+    "user_edited": true
+  },
+  "inat-204531": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880954271,
+    "user_edited": true
+  },
+  "inat-8846347": {
+    "flags": [
+      "multi-bug",
+      "bbox-wrong_correct-subject"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880066802,
+    "user_edited": true
+  },
+  "inat-684641": {
+    "flags": [
+      "no-bug"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880160001,
+    "user_edited": true
+  },
+  "inat-1036259": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880178272,
+    "user_edited": true
+  },
+  "inat-263571": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778880184635,
+    "user_edited": true
+  },
+  "inat-4692253": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778880185460,
+    "user_edited": true
+  },
+  "inat-1626973": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778880186718,
+    "user_edited": true
+  },
+  "inat-10819361": {
+    "flags": [
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880190664,
+    "user_edited": true
+  },
+  "inat-8498130": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880199482,
+    "user_edited": true
+  },
+  "inat-423205": {
+    "flags": [],
+    "preference": "cropped",
+    "unsure": false,
+    "reviewed_at": 1778880490510,
+    "user_edited": true
+  },
+  "bugwood-5618903": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880705913,
+    "user_edited": true
+  },
+  "inat-429212": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880731756,
+    "user_edited": true
+  },
+  "inat-183564": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880738930,
+    "user_edited": true
+  },
+  "inat-1575628": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880845114,
+    "user_edited": true
+  },
+  "inat-1568452": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880927455,
+    "user_edited": true
+  },
+  "inat-4681566": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880957081,
+    "user_edited": true
+  },
+  "inat-56778672": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880965671,
+    "user_edited": true
+  },
+  "inat-1140318": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880972013,
+    "user_edited": true
+  },
+  "bugwood-1402139": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880983821,
+    "user_edited": true
+  },
+  "inat-11838340": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778880996063,
+    "user_edited": true
+  },
+  "inat-8132345": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778880998463,
+    "user_edited": true
+  },
+  "inat-56778962": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881002813,
+    "user_edited": true
+  },
+  "inat-4795968": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881008563,
+    "user_edited": true
+  },
+  "inat-1579714": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881028455,
+    "user_edited": true
+  },
+  "inat-2444539": {
+    "flags": [
+      "poor-contrast"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881033505,
+    "user_edited": true
+  },
+  "inat-1385068": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881039192,
+    "user_edited": true
+  },
+  "inat-4883": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881042700,
+    "user_edited": true
+  },
+  "inat-254961055": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881050034,
+    "user_edited": true
+  },
+  "inat-20432301": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881050739,
+    "user_edited": true
+  },
+  "inat-1866498": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881058167,
+    "user_edited": true
+  },
+  "bugwood-5496066": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881064392,
+    "user_edited": true
+  },
+  "inat-8127442": {
+    "flags": [
+      "subject-clipped",
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881067800,
+    "user_edited": true
+  },
+  "inat-64586338": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881074125,
+    "user_edited": true
+  },
+  "inat-1115229": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881082725,
+    "user_edited": true
+  },
+  "inat-11781817": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881085975,
+    "user_edited": true
+  },
+  "bugwood-5544673": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881089100,
+    "user_edited": true
+  },
+  "inat-4739589": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881094617,
+    "user_edited": true
+  },
+  "inat-155196": {
+    "flags": [],
+    "preference": null,
+    "unsure": true,
+    "reviewed_at": 1778881100183,
+    "user_edited": true
+  },
+  "inat-3656117": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881107733,
+    "user_edited": true
+  },
+  "bugwood-5401801": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881119575,
+    "user_edited": true
+  },
+  "inat-1733781": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881125900,
+    "user_edited": true
+  },
+  "inat-3831266": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881130458,
+    "user_edited": true
+  },
+  "inat-2878705": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881133800,
+    "user_edited": true
+  },
+  "bugwood-1366011": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881136892,
+    "user_edited": true
+  },
+  "inat-1941997": {
+    "flags": [
+      "poor-contrast",
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881147342,
+    "user_edited": true
+  },
+  "inat-404977": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881152500,
+    "user_edited": true
+  },
+  "bugwood-5540746": {
+    "flags": [
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881162253,
+    "user_edited": true
+  },
+  "inat-42973459": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881163008,
+    "user_edited": true
+  },
+  "bugwood-5540588": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881163639,
+    "user_edited": true
+  },
+  "bugwood-5423859": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881170611,
+    "user_edited": true
+  },
+  "bugwood-5364324": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881172019,
+    "user_edited": true
+  },
+  "inat-5239296": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881178494,
+    "user_edited": true
+  },
+  "bugwood-1543869": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881184903,
+    "user_edited": true
+  },
+  "inat-12524812": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881189994,
+    "user_edited": true
+  },
+  "inat-2714436": {
+    "flags": [
+      "crop-too-tight",
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881206903,
+    "user_edited": true
+  },
+  "inat-3201313": {
+    "flags": [
+      "crop-too-tight"
+    ],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881214819,
+    "user_edited": true
+  },
+  "inat-289905": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881221711,
+    "user_edited": true
+  },
+  "bugwood-2135003": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881223944,
+    "user_edited": true
+  },
+  "bugwood-5459498": {
+    "flags": [
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881226578,
+    "user_edited": true
+  },
+  "inat-1139095": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881236586,
+    "user_edited": true
+  },
+  "inat-1918555": {
+    "flags": [
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881240836,
+    "user_edited": true
+  },
+  "inat-2227352": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881244819,
+    "user_edited": true
+  },
+  "inat-2521786": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881248694,
+    "user_edited": true
+  },
+  "inat-9103162": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881261444,
+    "user_edited": true
+  },
+  "inat-2628780": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881268340,
+    "user_edited": true
+  },
+  "inat-6180208": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881277802,
+    "user_edited": true
+  },
+  "bugwood-5542256": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881280444,
+    "user_edited": true
+  },
+  "inat-1960438": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881281956,
+    "user_edited": true
+  },
+  "bugwood-5486349": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881282561,
+    "user_edited": true
+  },
+  "bugwood-5516187": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881285986,
+    "user_edited": true
+  },
+  "inat-5443521": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881292744,
+    "user_edited": true
+  },
+  "inat-3011554": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881300619,
+    "user_edited": true
+  },
+  "bugwood-5498196": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881305919,
+    "user_edited": true
+  },
+  "inat-1467290": {
+    "flags": [
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881324085,
+    "user_edited": true
+  },
+  "inat-11375814": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881329952,
+    "user_edited": true
+  },
+  "inat-11495391": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881335552,
+    "user_edited": true
+  },
+  "inat-6099005": {
+    "flags": [
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881338686,
+    "user_edited": true
+  },
+  "bugwood-5617995": {
+    "flags": [
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881341011,
+    "user_edited": true
+  },
+  "inat-5156067": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881349369,
+    "user_edited": true
+  },
+  "inat-148029": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881353652,
+    "user_edited": true
+  },
+  "bugwood-5544518": {
+    "flags": [
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881356002,
+    "user_edited": true
+  },
+  "inat-21837403": {
+    "flags": [
+      "subject-blurred_partially-usable"
+    ],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881368244,
+    "user_edited": true
+  },
+  "bugwood-5616862": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881372285,
+    "user_edited": true
+  },
+  "inat-2946024": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881373494,
+    "user_edited": true
+  },
+  "bugwood-5610992": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881374485,
+    "user_edited": true
+  },
+  "bugwood-5540717": {
+    "flags": [
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881377177,
+    "user_edited": true
+  },
+  "inat-197453": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881383724,
+    "user_edited": true
+  },
+  "inat-5800529": {
+    "flags": [],
+    "preference": "original",
+    "unsure": false,
+    "reviewed_at": 1778881386982,
+    "user_edited": true
+  },
+  "bugwood-5615766": {
+    "flags": [
+      "subject-clipped"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881389094,
+    "user_edited": true
+  },
+  "inat-53185142": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881400060,
+    "user_edited": true
+  },
+  "inat-63635823": {
+    "flags": [
+      "subject-blurred_unusable"
+    ],
+    "preference": null,
+    "unsure": false,
+    "reviewed_at": 1778881399077,
+    "user_edited": true
+  }
+}

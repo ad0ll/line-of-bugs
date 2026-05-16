@@ -9,7 +9,7 @@ IMG_DIR = DATA_DIR / "images"
 MANIFEST_DIR = DATA_DIR / "manifest"
 CACHE_DIR = DATA_DIR / "cache"
 
-VALIDATOR_DIR = ROOT / "audit" / "framing-validator"
+VALIDATOR_DIR = ROOT / "tools" / "validator"
 CROPS_DIR = VALIDATOR_DIR / "crops"
 
 for d in (CACHE_DIR, VALIDATOR_DIR, CROPS_DIR):

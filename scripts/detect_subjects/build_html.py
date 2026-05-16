@@ -18,7 +18,7 @@ from scripts.detect_subjects.config import (
 )
 
 
-TEMPLATE_PATH = Path(__file__).parent / "templates" / "index.html.j2"
+TEMPLATE_PATH = Path(__file__).resolve().parents[2] / "tools" / "validator" / "templates" / "index.html.j2"
 DB_PATH = DATA_DIR / "db" / "line-of-bugs.db"
 SECONDARY_BBOXES_PATH = CACHE_DIR / "secondary_bboxes.json"
 
