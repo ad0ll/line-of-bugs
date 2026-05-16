@@ -34,7 +34,10 @@ export function CollapsibleSection({
   const id = useId();
 
   return (
-    <section className="collapsible-section">
+    // <div> rather than <section> so we don't create a duplicate landmark
+    // when the parent already wraps the disclosure in a <section>
+    // (the common case on the home page). The CSS targets the class.
+    <div className="collapsible-section">
       <button
         type="button"
         className="collapsible-trigger"
@@ -58,6 +61,6 @@ export function CollapsibleSection({
       >
         <div className="collapsible-body-inner">{children}</div>
       </div>
-    </section>
+    </div>
   );
 }
