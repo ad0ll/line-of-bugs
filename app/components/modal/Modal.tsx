@@ -6,7 +6,19 @@ import type { ReactNode } from "react";
 export interface ModalProps {
   onClose: () => void;
   children: ReactNode;
+  /**
+   * Visible-text label fallback. Prefer {@link ariaLabelledBy} so SR users
+   * hear the heading element verbatim (and so the label tracks any future
+   * heading-text change). Only set this when the modal genuinely has no
+   * heading.
+   */
   ariaLabel?: string;
+  /**
+   * id of the visible heading inside the modal. The dialog gets
+   * aria-labelledby pointing at it, satisfying APG dialog requirements
+   * (https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/).
+   */
+  ariaLabelledBy?: string;
 }
 
 /**
@@ -16,7 +28,7 @@ export interface ModalProps {
  * (clicks on dialog::backdrop bubble to the dialog and its e.target IS
  * the dialog when no inner content is hit).
  */
-export function Modal({ onClose, children, ariaLabel }: ModalProps) {
+export function Modal({ onClose, children, ariaLabel, ariaLabelledBy }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   // onClose is recreated every render by callers (e.g., `() => router.back()`);
   // we route through a ref so the open/close effect can be mount-only and
@@ -26,15 +38,33 @@ export function Modal({ onClose, children, ariaLabel }: ModalProps) {
   // Tracks whether the close was triggered by user action vs. unmount cleanup,
   // so we don't fire onClose twice (once on user action, once on cleanup).
   const closingRef = useRef(false);
+  // Where to send focus when the dialog closes. Captured BEFORE showModal()
+  // so the browser's "previously focused element" matches what the user
+  // expects (the trigger button, not the dialog itself).
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     const d = dialogRef.current;
     if (!d) return;
-    if (!d.open) d.showModal();
+    if (!d.open) {
+      restoreFocusRef.current = document.activeElement as HTMLElement | null;
+      d.showModal();
+    }
     const onNativeClose = () => {
       if (closingRef.current) return;
       closingRef.current = true;
       onCloseRef.current();
+      // Move focus back to the trigger AFTER the close handler runs so any
+      // router.back()-induced re-render has settled. We defer to the next
+      // task to give React time to reconcile.
+      const target = restoreFocusRef.current;
+      if (target && typeof target.focus === "function") {
+        queueMicrotask(() => {
+          // Only focus if the element is still in the document — the
+          // trigger may have unmounted while the modal was open.
+          if (target.isConnected) target.focus();
+        });
+      }
     };
     d.addEventListener("close", onNativeClose);
     // Cleanup only detaches the listener — calling d.close() here would queue
@@ -64,7 +94,8 @@ export function Modal({ onClose, children, ariaLabel }: ModalProps) {
   return (
     <dialog
       ref={dialogRef}
-      aria-label={ariaLabel}
+      aria-label={ariaLabelledBy ? undefined : ariaLabel}
+      aria-labelledby={ariaLabelledBy}
       className="modal-dialog"
       onClick={(e) => {
         // Clicks on dialog::backdrop bubble here with e.target === dialog
