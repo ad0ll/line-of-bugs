@@ -9,9 +9,12 @@ export interface ReportFormProps {
   imageId: string;
   onSubmit: (args: SubmitReportArgs) => Promise<void>;
   onClose: () => void;
+  /** When set, the "report this image" heading uses this id so a parent
+   *  dialog can reference it via aria-labelledby. */
+  headingId?: string;
 }
 
-export function ReportForm({ imageId, onSubmit, onClose }: ReportFormProps) {
+export function ReportForm({ imageId, onSubmit, onClose, headingId }: ReportFormProps) {
   const helpId = useId();
   const errorId = useId();
   const [category, setCategory] = useState<ReportCategory | null>(null);
@@ -47,7 +50,7 @@ export function ReportForm({ imageId, onSubmit, onClose }: ReportFormProps) {
         handleSubmit();
       }}
     >
-      <h2>report this image</h2>
+      <h2 id={headingId}>report this image</h2>
       <p className="report-form-help" id={helpId}>
         why should the admin take another look?
         <span aria-hidden="true" style={{ color: "var(--accent-pink)" }}> *</span>

@@ -21,10 +21,9 @@ interface ReportModalClientProps {
 export function ReportModalClient({ imageId, thumbnail, commonName, speciesName }: ReportModalClientProps) {
   const router = useRouter();
   const close = () => router.back();
-  // ID for the visible heading the dialog references via aria-labelledby.
-  // The element with this id is the "report this image" h2-equivalent text
-  // — using the specimen name keeps screen readers oriented to which image
-  // they're reporting.
+  // aria-labelledby points at the "report this image" h2 inside ReportForm
+  // so AT users hear the modal's purpose, not the specimen name. The form
+  // accepts the id as a prop to keep the markup co-located with the heading.
   const headingId = useId();
   return (
     <Modal onClose={close} ariaLabelledBy={headingId}>
@@ -36,12 +35,13 @@ export function ReportModalClient({ imageId, thumbnail, commonName, speciesName 
             width={160}
             height={160}
           />
-          <p id={headingId} className="preview-name">{commonName ?? speciesName ?? imageId}</p>
+          <p className="preview-name">{commonName ?? speciesName ?? imageId}</p>
         </div>
         <ReportForm
           imageId={imageId}
           onSubmit={submitReport}
           onClose={close}
+          headingId={headingId}
         />
       </div>
     </Modal>

@@ -16,9 +16,13 @@ test("gallery: view popover opens, shows unknown chip, filters results", async (
   await page.waitForSelector("#gallery-grid");
   await openMoreFilters(page);
   await page.getByRole("button", { name: /^view: all$/i }).click();
-  const unknownLabel = page.locator(".filter-popover-list li label").filter({ hasText: /unknown/i });
+  // FilterPopover keeps all panels in the DOM (toggling the `hidden`
+  // attribute) so aria-controls targets always exist. Scope to the open
+  // panel to dodge strict-mode multiplicity across the three popovers.
+  const openPanel = page.locator(".filter-popover-panel:not([hidden])");
+  const unknownLabel = openPanel.locator("li label").filter({ hasText: /unknown/i });
   await expect(unknownLabel).toBeVisible();
-  const dorsalLabel = page.locator(".filter-popover-list li label").filter({ hasText: /^dorsal/i });
+  const dorsalLabel = openPanel.locator("li label").filter({ hasText: /^dorsal/i });
   await expect(dorsalLabel).toBeVisible();
   await dorsalLabel.click();
   await page.waitForURL(/view=dorsal/);
@@ -34,7 +38,8 @@ test("home: filter popovers render and live count updates", async ({ page }) => 
 
   await openMoreFilters(page);
   await page.getByRole("button", { name: /^view: all$/i }).click();
-  const dorsalLabel = page.locator(".filter-popover-list li label").filter({ hasText: /^dorsal/i });
+  const openPanel = page.locator(".filter-popover-panel:not([hidden])");
+  const dorsalLabel = openPanel.locator("li label").filter({ hasText: /^dorsal/i });
   await dorsalLabel.click();
   await page.waitForURL(/view=dorsal/);
   await expect.poll(async () => {
