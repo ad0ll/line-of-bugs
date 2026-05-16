@@ -10,9 +10,14 @@ so they can be tested in isolation and reused across pipeline variants.
 from __future__ import annotations
 from typing import Optional
 
+import cv2
+import numpy as np
+
 from scripts.detect_subjects.config import BBOX_EDGE_TOLERANCE_NORMALIZED
 from scripts.detect_subjects.metrics import (
     bbox_area_ratio_normalized,
+    boundary_sharpness,
+    lab_delta_e_mask_vs_background,
     offcenter_normalized,
 )
 
@@ -53,16 +58,9 @@ def compute_geometric_features(
     }
 
 
-import cv2
-import numpy as np
-
-from scripts.detect_subjects.metrics import (
-    lab_delta_e_mask_vs_background,
-    boundary_sharpness,
-)
-
-
-def compute_mask_features(mask, rgb) -> dict:
+def compute_mask_features(
+    mask: Optional[np.ndarray], rgb: Optional[np.ndarray],
+) -> dict:
     """Compute mask-derived scalar features.
 
     Returns a dict with keys (None when mask is None/empty):
@@ -83,10 +81,16 @@ def compute_mask_features(mask, rgb) -> dict:
     }
 
 
-def compute_subject_sharpness(rgb, bbox_xywh_normalized, img_w: int, img_h: int):
+def compute_subject_sharpness(
+    rgb: Optional[np.ndarray],
+    bbox_xywh_normalized: Optional[tuple[float, float, float, float]],
+    img_w: int, img_h: int,
+) -> Optional[float]:
     """Laplacian variance over the bbox region. Higher = sharper.
 
-    Returns None if no bbox or bbox is too small (< 4px in either dimension).
+    Returns None if no bbox or bbox is too small (< 5px in either dimension).
+    `rgb` must be a uint8 HxWx3 numpy array in RGB order — call `np.array(im)`
+    on a PIL Image before passing.
     Note: known unreliable on uniform-textured subjects (e.g., smooth bug bodies).
     Stored as a feature for ML labelers to use, not for hard rules.
     """
