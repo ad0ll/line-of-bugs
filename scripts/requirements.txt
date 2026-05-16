@@ -1,18 +1,9 @@
-# scripts/requirements.txt — server-side venv deps
+# scripts/requirements.txt — fetcher venv deps only (no ML)
 # Set LOB_CONTACT env var to an email upstream APIs can use to reach you.
+# Heavy detect_subjects ML deps (torch/transformers/etc.) now live in
+# scripts/detect_subjects/requirements.txt — install separately when
+# working on the framing detector.
 requests>=2.32
 Pillow>=10.4
-
-# framing detector experiment (2026-05-15)
-torch>=2.5
-torchvision>=0.20
-transformers>=4.50
-accelerate>=1.0
-pyarrow>=18.0
-polars>=1.20
-opencv-python-headless>=4.10
-scikit-image>=0.24
-numpy>=2.0
-psutil>=5.9
 pytest>=8.3
 pytest-mock>=3.14
