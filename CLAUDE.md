@@ -61,6 +61,37 @@ Anything under `scripts/detect_subjects/` is a WIP ML pipeline. Don't
 modify it for code-review fixes, refactors, or test cleanup unless the
 user explicitly asks.
 
+## ML pipeline vocabulary (`scripts/detect_subjects/`)
+
+After the 2026-05-16 Phase 1 refactor, the modular pipeline composes:
+
+- **detector** — text-prompted object detector emitting bbox + confidence
+  + per-detection phrase. Wrappers in `detectors/` (registry in
+  `detectors/__init__.py`). Current: `grounding_dino`. Swap via
+  `cfg.DETECTOR_VARIANT`.
+- **segmenter** — bbox-conditioned mask producer. Wrappers in
+  `segmenters/`. Current: `insectsam`. Swap via `cfg.SEGMENTER_VARIANT`.
+- **features.py** — pure functions computing bbox/mask/sharpness scalars
+  from primitives. No model dependencies; testable in isolation.
+- **rule_labeler.py** (was `classify.py`) — hand-written rules over
+  features → `suggested_labels`. Tuned thresholds live in `config.py`.
+- **ml_labeler** — future learned classifiers consuming the same features
+  (Phase 3). Implements the `MLLabeler` Protocol in `interfaces.py`.
+- **gate.py** — `decide_drawability()` collapses all label sources into
+  one strict KEEP/REJECT. Dead code in Phase 1; wired in Phase 2 once the
+  validator UI migrates to the new vocabulary.
+- **classify.py** (was `pipeline.py`) — orchestrator. Calls factories,
+  computes features, runs rule labeler, writes parquet rows.
+- **interfaces.py** — `Detector` / `Segmenter` / `MLLabeler` Protocols
+  + `DetectionResult` / `SegmentationResult` dataclasses. Source of truth
+  for stage contracts.
+- **variant_tag** — `cfg.variant_tag()` returns `{detector}__{segmenter}`,
+  written to the parquet `variant` column for A/B filtering. (Phase 1
+  keeps `V1_NAME = "v1_dino_insectsam"` for legacy compat; Phase 2
+  introduces `variant_tag()`-based strings.)
+- **labels.json** — `data/cache/labels.json`, human-curated ground truth
+  used to evaluate rule-labeler thresholds (`evaluate_pipeline.py`).
+
 ## Reference
 
 - Design system: `docs/design-system.md`
