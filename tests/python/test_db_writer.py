@@ -154,6 +154,42 @@ def test_write_with_nullable_columns_omitted(tmp_db, monkeypatch):
     w.close()
 
 
+def test_write_refresh_true_overwrites_existing_row(tmp_db, monkeypatch):
+    """write(row, refresh=True) re-executes the UPSERT so upstream
+    corrections (relicensed photo, fixed attribution) propagate to the
+    DB instead of being silently dropped by the has() short-circuit."""
+    monkeypatch.setattr("scripts.db.DB_PATH", tmp_db)
+    w = DbWriter("inaturalist")
+    assert w.write(dict(SAMPLE)) is True
+
+    # Simulate an upstream correction: license + attribution changed.
+    updated = dict(SAMPLE)
+    updated["license"] = "cc-by-4.0"
+    updated["photographer_attribution"] = "Corrected Attribution"
+
+    # Default refresh=False keeps the old row.
+    assert w.write(updated) is False
+    conn = sqlite3.connect(tmp_db)
+    row = conn.execute(
+        "SELECT license, photographer_attribution FROM images WHERE image_id='inat-1'"
+    ).fetchone()
+    conn.close()
+    assert row == ("cc0-1.0", None), "default write must not overwrite"
+
+    # refresh=True propagates the change.
+    assert w.write(updated, refresh=True) is True
+    conn = sqlite3.connect(tmp_db)
+    row = conn.execute(
+        "SELECT license, photographer_attribution FROM images WHERE image_id='inat-1'"
+    ).fetchone()
+    conn.close()
+    assert row == ("cc-by-4.0", "Corrected Attribution")
+    # seen-set still has the image_id (refresh doesn't toggle it off).
+    assert w.has("inat-1")
+    assert w.count() == 1
+    w.close()
+
+
 def test_write_empty_string_to_nullable_becomes_null(tmp_db, monkeypatch):
     """Many fetchers pass '' for unknown optional fields — treat those
     as SQL NULL too. The required NOT NULL cols stay literal."""

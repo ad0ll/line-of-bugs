@@ -12,11 +12,16 @@ Production refactor (2026-05-14):
 """
 from __future__ import annotations
 import json
+import os
 import re
 import sys
 import time
 from collections import Counter
 from pathlib import Path
+
+# When set, every row gets re-UPSERTed even if image_id already exists
+# locally — useful when upstream relicensed photos or fixed attribution.
+BUGWOOD_REFRESH = os.environ.get("BUGWOOD_REFRESH", "").lower() in ("1", "true", "yes")
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (
@@ -229,7 +234,7 @@ def run_pass(mw: DbWriter, existing_in_bucket: int,
             imgnum = str(img.get("imagenumber") or "")
             if not imgnum: continue
             image_id = f"bugwood-{slugify(imgnum)}"
-            if mw.has(image_id): continue
+            if mw.has(image_id) and not BUGWOOD_REFRESH: continue
             desc_clean = html_strip(img.get("description") or "")
             if MATING_PATTERNS.search(desc_clean): continue
             # Spider/arachnid guard: skip records that don't map to a known
@@ -339,7 +344,7 @@ def run_pass(mw: DbWriter, existing_in_bucket: int,
                 "description": description,
                 "captured_date": (detail.get("dateacquired") or "")[:10],
                 "raw_metadata": json.dumps({"listing": img, "detail": detail}, separators=(",", ":")),
-            })
+            }, refresh=BUGWOOD_REFRESH)
             kept += 1
             if (kept % 25) == 0:
                 log.info("[%s] %d / %d", label, kept, needed)

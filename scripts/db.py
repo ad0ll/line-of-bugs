@@ -85,9 +85,21 @@ class DbWriter:
     def has(self, image_id: str) -> bool:
         return image_id in self.seen
 
-    def write(self, row: dict) -> bool:
+    def write(self, row: dict, refresh: bool = False) -> bool:
+        """Insert a new image_id, or refresh an existing row if `refresh=True`.
+
+        Default behaviour skips rows whose image_id is already in `self.seen`
+        — fetchers normally short-circuit duplicates via `.has()` before
+        ever calling `write()`. When `refresh=True`, the existing row gets
+        UPSERTed (every non-PK column overwritten by the new values) so
+        upstream corrections — relicensed photos, updated common names,
+        better attribution strings — propagate. Returns True if a row was
+        written (insert OR refresh), False if skipped.
+        """
         image_id = row.get("image_id")
-        if not image_id or image_id in self.seen:
+        if not image_id:
+            return False
+        if image_id in self.seen and not refresh:
             return False
         values = []
         for c in COLUMNS:

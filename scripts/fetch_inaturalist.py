@@ -22,6 +22,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 # Useful to expand the dataset without editing the per-order table.
 SCALE = float(os.environ.get("INAT_SCALE", "1"))
 
+# When set, every row gets re-UPSERTed even if image_id already exists
+# locally — useful when upstream relicensed photos or fixed attribution.
+# Default skips known image_ids for speed.
+INAT_REFRESH = os.environ.get("INAT_REFRESH", "").lower() in ("1", "true", "yes")
+
 # Mode toggle: "wild" (default — what we've always done) vs "captive" (zoos,
 # butterfly conservatories, lab insectariums, hand-held macro shots). When
 # captive: send captive=true to the API + write subject_state="captive" so
@@ -235,7 +240,7 @@ def fetch_order(mw: DbWriter, existing_by_label: Counter,
             if photo_id is None:
                 continue
             image_id = f"inat-{photo_id}"
-            if mw.has(image_id):
+            if mw.has(image_id) and not INAT_REFRESH:
                 continue
             url = (ph.get("url") or "").replace("/square.", "/original.")
             if not url or "/square" in url:
@@ -314,7 +319,7 @@ def fetch_order(mw: DbWriter, existing_by_label: Counter,
                 "description": (obs.get("description") or ""),
                 "captured_date": (obs.get("observed_on") or "")[:10],
                 "raw_metadata": json.dumps(obs, separators=(",", ":")),
-            })
+            }, refresh=INAT_REFRESH)
             kept_run += 1
             if (kept_run % 25) == 0:
                 log.info("[%s] %d/%d", label, already + kept_run, target)
