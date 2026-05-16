@@ -49,6 +49,44 @@ describe("/api/session/start", () => {
     expect(res.status).toBe(400);
   });
 
+  // intervalSec validation boundary cases — the route accepts only
+  // finite numbers in [10, 3600]; anything outside that range 400s.
+  it.each([
+    { label: "below the floor (9)", intervalSec: 9 },
+    { label: "above the ceiling (3601)", intervalSec: 3601 },
+    { label: "NaN", intervalSec: Number.NaN },
+  ])("400s when intervalSec is $label", async ({ intervalSec }) => {
+    const res = await POST(
+      new Request("http://localhost/api/session/start", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          intervalSec,
+          subjectType: "both",
+          repeatMode: "default",
+        }),
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("422s when filters resolve to an empty pool", async () => {
+    // Fixture has ants only as `specimen`; asking for wild ants yields 0.
+    const res = await POST(
+      new Request("http://localhost/api/session/start", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          intervalSec: 60,
+          subjectType: "wild",
+          repeatMode: "default",
+          groups: ["ants"],
+        }),
+      }),
+    );
+    expect(res.status).toBe(422);
+  });
+
   it("503s when the session-pool cap is reached", async () => {
     // Fill the pool table up to the cap with fresh entries so the
     // capacity-check sweep can't reclaim anything.
