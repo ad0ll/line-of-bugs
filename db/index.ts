@@ -50,4 +50,5 @@ if (process.env.NODE_ENV !== "production") {
 
 export const db = drizzle({ client: sqlite, schema });
 export { schema };
+export { sqlite };
 export type DB = typeof db;
