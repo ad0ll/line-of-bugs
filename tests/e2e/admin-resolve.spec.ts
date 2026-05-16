@@ -1,11 +1,17 @@
 import { test, expect } from "@playwright/test";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-if (!ADMIN_PASSWORD) {
-  throw new Error("ADMIN_PASSWORD env var is required for admin-resolve e2e (no default — security smell)");
-}
 
-test.use({ httpCredentials: { username: "admin", password: ADMIN_PASSWORD } });
+// Skip cleanly when the credential isn't supplied. Older revisions threw at
+// import time which made the test runner crash before reporting other suites.
+test.beforeAll(() => {
+  test.skip(!ADMIN_PASSWORD, "ADMIN_PASSWORD env var required for admin-resolve e2e");
+  // Reset tile counter so re-running the suite within a single process (e.g.
+  // `playwright test --repeat-each`) doesn't drift off the end of the grid.
+  tileIdx = 0;
+});
+
+test.use({ httpCredentials: { username: "admin", password: ADMIN_PASSWORD ?? "" } });
 
 // Serial because each test reports + resolves its own image; running parallel
 // produces tile-pick collisions and shared gallery state.
