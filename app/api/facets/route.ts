@@ -1,4 +1,4 @@
-import { getFacetCounts } from "@/lib/queries/facets";
+import { getFacetCounts, getUnfilteredFacets } from "@/lib/queries/facets";
 import { parseSubject } from "@/lib/subject";
 
 function readList(v: string | null): string[] {
@@ -16,15 +16,45 @@ function readList(v: string | null): string[] {
  *
  * Replaces /api/session/count — the `total` field carries the same
  * pool size that endpoint used to return.
+ *
+ * When no filters are applied (the SSR initial-render case), we hit
+ * the cached unfiltered snapshot which is invalidated by the same
+ * `images-stats` tag that admin actions already revalidate.
  */
 export async function GET(req: Request): Promise<Response> {
   const url = new URL(req.url);
-  const snap = await getFacetCounts({
-    subjectType: parseSubject(url.searchParams.get("subject")),
-    views: readList(url.searchParams.get("view")),
-    lifeStages: readList(url.searchParams.get("life")),
-    sexes: readList(url.searchParams.get("sex")),
-    groups: readList(url.searchParams.get("type")),
+  const subjectType = parseSubject(url.searchParams.get("subject"));
+  const views = readList(url.searchParams.get("view"));
+  const lifeStages = readList(url.searchParams.get("life"));
+  const sexes = readList(url.searchParams.get("sex"));
+  const groups = readList(url.searchParams.get("type"));
+  const institutions = readList(url.searchParams.get("inst"));
+
+  const unfiltered =
+    subjectType === "all" &&
+    views.length === 0 &&
+    lifeStages.length === 0 &&
+    sexes.length === 0 &&
+    groups.length === 0 &&
+    institutions.length === 0;
+
+  const snap = unfiltered
+    ? await getUnfilteredFacets()
+    : await getFacetCounts({
+        subjectType,
+        views,
+        lifeStages,
+        sexes,
+        groups,
+        institutions,
+      });
+
+  return Response.json(snap, {
+    headers: {
+      // Short shared-cache window — invalidations from admin actions
+      // hit `images-stats` immediately, so this only smooths over
+      // bursty client polling.
+      "Cache-Control": "public, max-age=30, s-maxage=60",
+    },
   });
-  return Response.json(snap);
 }
