@@ -19,11 +19,19 @@ export function TimerDropdown({ current, onChange }: Props) {
   const listboxId = useId();
   const rootRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLDivElement | null>(null);
-  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const optionRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [activeIdx, setActiveIdx] = useState<number>(() => {
     const i = OPTIONS.indexOf(current);
     return i >= 0 ? i : 0;
   });
+
+  // Keep activeIdx in sync with external `current` so opening the dropdown
+  // always highlights the currently selected interval even when the parent
+  // changes it via another control (e.g. keyboard shortcut).
+  useEffect(() => {
+    const i = OPTIONS.indexOf(current);
+    if (i >= 0) setActiveIdx(i);
+  }, [current]);
 
   const closeAndRestoreFocus = () => {
     setOpen(false);
@@ -40,14 +48,15 @@ export function TimerDropdown({ current, onChange }: Props) {
     optionRefs.current[target]?.focus();
   }, [open, current]);
 
-  // Outside mousedown closes the dropdown.
+  // Outside pointerdown closes the dropdown — pointerdown covers both touch
+  // and mouse on the same event so taps on tablets dismiss properly.
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: PointerEvent) => {
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
     };
-    window.addEventListener("mousedown", onDown);
-    return () => window.removeEventListener("mousedown", onDown);
+    window.addEventListener("pointerdown", onDown);
+    return () => window.removeEventListener("pointerdown", onDown);
   }, [open]);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -93,22 +102,23 @@ export function TimerDropdown({ current, onChange }: Props) {
           onKeyDown={onKeyDown}
         >
           {OPTIONS.map((s, i) => (
-            <button
+            <div
               key={s}
               ref={(el) => {
                 optionRefs.current[i] = el;
               }}
-              type="button"
               role="option"
+              tabIndex={0}
               aria-selected={current === s}
               className={`u-icon-btn session-timer-dropdown-option${current === s ? " is-active" : ""}`}
               onClick={() => {
                 onChange(s);
                 closeAndRestoreFocus();
               }}
+              onFocus={() => setActiveIdx(i)}
             >
               {label(s)}
-            </button>
+            </div>
           ))}
         </div>
       ) : null}
