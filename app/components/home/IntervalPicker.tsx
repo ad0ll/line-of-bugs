@@ -53,7 +53,12 @@ export function IntervalPicker({ value, onChange }: Props) {
             min={10}
             max={3600}
             value={value}
-            onChange={(e) => onChange(Number(e.target.value))}
+            onChange={(e) =>
+              // Mirror the server-side clamp at app/session/page.tsx so
+              // a user typing 9999 doesn't send the API a bad value and
+              // get bounced back. Empty / NaN falls through to 60s.
+              onChange(Math.max(10, Math.min(3600, Number(e.target.value) || 60)))
+            }
             className="home-custom-seconds"
           />
         </div>
