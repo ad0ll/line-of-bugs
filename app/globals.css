@@ -130,15 +130,110 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   }
 }
 
+/* Per-element prefers-reduced-motion audit. Wave 9.13's universal
+   override (animation-duration: 0.01ms + iteration-count: 1) worked
+   but blasted every transition, including informational hover colour
+   shifts that benefit from staying smooth. Here each animation and
+   each meaningful transition is classified:
+     • Decorative loops (pulse, float-slow, wobble, armed-pulse,
+       chip-pop stagger) → halt entirely with `animation: none`.
+     • Functional one-shots (toast fade-in, end-of-session fade-in)
+       → keep but shorten to 0.01s so the user still gets a
+       "completed" visual event.
+     • Hover/focus colour transitions → left alone (brief,
+       informational, not motion in the vestibular sense).
+     • Layout / position / size transitions (chrome auto-hide,
+       collapsible expand, grid-item hover-lift) → set to
+       transition: none.
+   Spirit of Wave 9.13 preserved: no animation marked `infinite`
+   survives this media query. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    /* iteration-count: 1 stops infinite animations (pulse, float-slow,
-       wobble, armed-pulse) cold — without this, the 0.01ms duration
-       just makes them flicker forever instead of stop. */
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  /* ── Decorative infinite loops: halt entirely ─────────────────── */
+  .gallery-filters-skeleton,
+  .search-skeleton,
+  .grid-item.skeleton-tile {
+    /* Skeletons keep their muted surface-1 background; the pulsing
+       opacity is purely decorative. */
+    animation: none;
   }
+  .gallery-empty-icon {
+    animation: none;
+  }
+  .home-bloom::before,
+  .home-bloom::after {
+    /* Floating blurred discs — pure ambience. */
+    animation: none;
+  }
+  .home-title::after {
+    /* Wobbling flower glyph. */
+    animation: none;
+  }
+  .btn-armed {
+    /* Armed-state pulse is decorative; the red fill + "Confirm?"
+       label still communicate the armed state without animation. */
+    animation: none;
+  }
+
+  /* ── One-shot fades: keep but make near-instant ───────────────── */
+  .toast {
+    animation-duration: 0.01s;
+  }
+  .end-of-session-overlay {
+    animation-duration: 0.01s;
+  }
+  .collapsible-body[data-open="true"] .taxon-group-chip {
+    /* The staggered fade-in via --i delay would otherwise still
+       trickle in over ~200ms even at 0.01s duration. Zero both. */
+    animation: none;
+  }
+
+  /* ── Layout / position / size transitions: halt ───────────────── */
+  .grid-item {
+    /* Hover lift uses transform: translateY(-3px) — vestibular motion. */
+    transition: none;
+  }
+  .home-start {
+    /* Same: translateY(-2px) on hover. */
+    transition: none;
+  }
+  .collapsible-chevron {
+    /* Rotation on expand — orientation change, treat as layout. */
+    transition: none;
+  }
+  .collapsible-body {
+    /* grid-template-rows expand/collapse. */
+    transition: none;
+  }
+  .collapsible-body-inner {
+    /* Opacity-only, but tied to the layout transition above. */
+    transition: none;
+  }
+  .session-timer,
+  .session-source-chip,
+  .session-edge-btn,
+  .session-action-bar-wrap {
+    /* Chrome auto-hide: opacity + transform fades. Keep instant so
+       the chrome still appears/disappears, just without sliding. */
+    transition-duration: 0.01s;
+  }
+  .hover-zoom-popup {
+    /* Pure opacity reveal — keep but instant so it still feels
+       like a discrete on/off rather than vanishing mid-fade. */
+    transition-duration: 0.01s;
+  }
+  .session-image-frame img {
+    /* Filter transition on zoom — drop, no perceptual loss. */
+    transition: none;
+  }
+
+  /* Hover/focus colour transitions on .u-icon-btn, .chip, .home-pill,
+     .modal-close, .report-form-actions button, .home-radio-card,
+     .tooltip-icon, .collapsible-trigger, .gallery-load-more,
+     .species-autocomplete-field, .btn-destructive-idle,
+     .report-card-actions button are intentionally LEFT ALONE —
+     they're brief (~120–200ms) colour/border/box-shadow shifts,
+     not vestibular motion, and reduced-motion users still benefit
+     from the affordance feedback. */
 }
 
 @keyframes pulse {
