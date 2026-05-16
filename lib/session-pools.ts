@@ -9,6 +9,7 @@ interface Pool {
 // Turbopack bundles them into separate module instances.
 const g = globalThis as typeof globalThis & {
   __lineOfBugsPools?: Map<string, Pool>;
+  __lineOfBugsSweeperStarted?: boolean;
 };
 const POOLS: Map<string, Pool> = g.__lineOfBugsPools ?? new Map();
 g.__lineOfBugsPools = POOLS;
@@ -35,7 +36,15 @@ export function _clearAll(): void {
   POOLS.clear();
 }
 
-// Start a periodic sweeper (only in production / dev — not in tests)
-if (typeof process !== "undefined" && process.env.NODE_ENV !== "test") {
+// Start a periodic sweeper (only in production / dev — not in tests).
+// Guard against duplicate intervals on HMR / re-import: Turbopack will
+// re-evaluate this module several times in dev and the sweeper would
+// otherwise stack up.
+if (
+  typeof process !== "undefined" &&
+  process.env.NODE_ENV !== "test" &&
+  !g.__lineOfBugsSweeperStarted
+) {
+  g.__lineOfBugsSweeperStarted = true;
   setInterval(sweepExpired, 5 * 60 * 1000).unref?.();
 }
