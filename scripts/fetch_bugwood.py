@@ -143,8 +143,13 @@ def fetch_detail(imgnum: str, backoff_budget: float = 30.0) -> dict:
                 return r.json() or {}
             if r.status_code in (404, 410):
                 return {}
-        except Exception:
-            pass
+        except Exception as e:
+            # Per-image detail failures are non-fatal (we have enough
+            # data from the listing for collection_id fallback), but
+            # were previously invisible. Log at warning so a sustained
+            # outage stands out in the run summary.
+            log.warning("fetch_detail failed for %s: %s: %s",
+                        imgnum, type(e).__name__, e)
         attempt += 1
         time.sleep(min(2 ** attempt, 8))
     return {}
