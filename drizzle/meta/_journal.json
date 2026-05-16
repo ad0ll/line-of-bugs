@@ -36,6 +36,13 @@
       "when": 1778873076000,
       "tag": "0004_taxon_subgroup",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1778889397000,
+      "tag": "0005_subject_state_notnull",
+      "breakpoints": true
     }
   ]
 }
