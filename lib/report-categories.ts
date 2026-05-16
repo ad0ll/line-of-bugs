@@ -1,14 +1,9 @@
-export const REPORT_CATEGORIES = [
-  "low-resolution",
-  "spooky",
-  "cropped",
-  "ai-generated",
-  "zoomed-out",
-  "wheres-the-bug",
-  "other",
-] as const;
+// Single source of truth for report categories lives in `db/schema.ts` so the
+// Drizzle column enum and the UI list can't drift. Re-export here for the
+// historical `REPORT_CATEGORIES` constant name used across client + server.
+export { reportCategories as REPORT_CATEGORIES, type ReportCategory } from "@/db/schema";
 
-export type ReportCategory = (typeof REPORT_CATEGORIES)[number];
+import type { ReportCategory } from "@/db/schema";
 
 // Human-readable labels for the chip UI.
 export const REPORT_CATEGORY_LABELS: Record<ReportCategory, string> = {
