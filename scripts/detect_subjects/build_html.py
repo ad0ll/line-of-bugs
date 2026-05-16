@@ -11,7 +11,6 @@ from pathlib import Path
 import polars as pl
 
 from scripts.detect_subjects.config import (
-    CACHE_DIR,
     DATA_DIR,
     PARQUET_PATH,
     VALIDATOR_DIR,
@@ -20,7 +19,6 @@ from scripts.detect_subjects.config import (
 
 TEMPLATE_PATH = Path(__file__).resolve().parents[2] / "tools" / "validator" / "templates" / "index.html.j2"
 DB_PATH = DATA_DIR / "db" / "line-of-bugs.db"
-SECONDARY_BBOXES_PATH = CACHE_DIR / "secondary_bboxes.json"
 
 
 def _load_db_index() -> dict[str, dict]:
@@ -54,12 +52,6 @@ def build_html_for_variant(
         raise RuntimeError(f"no rows in parquet for variant={variant}")
 
     db_index = _load_db_index()
-    secondary_bboxes: dict[str, list[list[float]]] = {}
-    if SECONDARY_BBOXES_PATH.exists():
-        try:
-            secondary_bboxes = json.loads(SECONDARY_BBOXES_PATH.read_text())
-        except Exception:
-            secondary_bboxes = {}
 
     records = []
     sources = set()
@@ -69,12 +61,23 @@ def build_html_for_variant(
         crop_rel = f"crops/{variant}/{img_id}.jpg"
         crop_path = crop_rel if (out_dir / crop_rel).exists() else None
 
+        # distinct_subjects is a list of structs from parquet. Convert to the
+        # legacy [x, y, w, h, conf] list-of-lists shape the UI consumer expects.
+        # Skip the row whose bbox matches the primary (first item, by construction).
+        ds_structs = row.get("distinct_subjects") or []
+        primary_bbox = (row["bbox_x"], row["bbox_y"], row["bbox_w"], row["bbox_h"])
+        secondary_bboxes = [
+            [float(s["x"]), float(s["y"]), float(s["w"]), float(s["h"]), float(s["conf"])]
+            for s in ds_structs
+            if (s["x"], s["y"], s["w"], s["h"]) != primary_bbox
+        ]
+
         records.append({
             "image_id": img_id,
             "source": row["source"],
             "framing_quality": row["framing_quality"],
             "suggested_labels": list(row.get("suggested_labels") or []),
-            "secondary_bboxes": secondary_bboxes.get(img_id, []),
+            "secondary_bboxes": secondary_bboxes,
             "bbox_x": row["bbox_x"], "bbox_y": row["bbox_y"],
             "bbox_w": row["bbox_w"], "bbox_h": row["bbox_h"],
             "bbox_area_ratio": row["bbox_area_ratio"],
