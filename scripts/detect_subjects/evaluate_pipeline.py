@@ -7,8 +7,8 @@ Phase 1: optimal-threshold sweeps for each tunable single-knob rule.
          we can see whether the tuned value is worth committing.
 
 Usage:
-    .venv/bin/python -m scripts.detect_subjects.evaluate_v1
-    .venv/bin/python -m scripts.detect_subjects.evaluate_v1 --tune  # full sweeps
+    .venv/bin/python -m scripts.detect_subjects.evaluate_pipeline
+    .venv/bin/python -m scripts.detect_subjects.evaluate_pipeline --tune  # full sweeps
 
 Output is a markdown-formatted report to stdout. Read it, then call
 `recompute_parquet()` to apply tuned thresholds to existing rows.
