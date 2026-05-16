@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { db } from "@/db";
@@ -13,7 +14,7 @@ export default function ReportPage({ params }: { params: Params }) {
   return (
     <main className="report-page">
       <header className="report-page-header">
-        <a href="/" className="report-page-back">← back</a>
+        <Link href="/" className="report-page-back">← back</Link>
       </header>
       <Suspense fallback={<p>loading…</p>}>
         <ReportLoader params={params} />

@@ -10,6 +10,7 @@
  * to the user — the message could leak DB internals.
  */
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 export default function GalleryError({
   error,
@@ -28,32 +29,21 @@ export default function GalleryError({
         <div className="gallery-empty-icon" aria-hidden>
           ✿
         </div>
-        <p
-          style={{
-            margin: 0,
-            fontFamily: 'var(--font-display), serif',
-            fontStyle: 'italic',
-            fontSize: '1.2rem',
-            color: 'var(--text-secondary)',
-          }}
-        >
-          something went wrong
-        </p>
-        <p style={{ margin: 0, fontSize: '0.9rem' }}>
+        <p className="gallery-empty-title">something went wrong</p>
+        <p className="gallery-empty-hint">
           the gallery hit a snag loading bugs. you can retry, or head home.
         </p>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div className="gallery-empty-actions">
           <button
             type="button"
             onClick={() => reset()}
-            className="gallery-load-more"
-            style={{ margin: 0 }}
+            className="gallery-load-more is-inline"
           >
             try again
           </button>
-          <a href="/" className="gallery-load-more" style={{ margin: 0 }}>
+          <Link href="/" className="gallery-load-more is-inline">
             go home
-          </a>
+          </Link>
         </div>
       </div>
     </main>

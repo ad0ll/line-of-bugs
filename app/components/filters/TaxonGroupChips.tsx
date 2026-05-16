@@ -1,10 +1,8 @@
 'use client';
 
 /**
- * R6 "what kind of bug?" chip wall — multi-select multi-row flex of
- * buttons keyed to lib/taxonomy.ts. Empty selection = all bugs (no
- * filter applied). Optional staggered fade-in handled in CSS via
- * --i custom property when the parent is data-open=true.
+ * "What kind of bug?" chip wall — multi-select multi-row flex of buttons
+ * keyed to lib/taxonomy.ts. Empty selection = all bugs (no filter).
  *
  * Chips with a `tooltip` field in TAXON_GROUPS (e.g., aphids, stick
  * insects) pass it through to the shared <Chip>; the rest pass
@@ -39,7 +37,7 @@ export function TaxonGroupChips({ counts, selected, onChange }: TaxonGroupChipsP
 
   return (
     <div className="taxon-group-chips" role="group" aria-label="filter by what kind of bug">
-      {TAXON_GROUPS.map((g, i) => {
+      {TAXON_GROUPS.map((g) => {
         const opt = byKey.get(g.key);
         // No total → no data ever for this chip; hide it permanently.
         const total = opt?.total ?? opt?.count;
@@ -56,7 +54,6 @@ export function TaxonGroupChips({ counts, selected, onChange }: TaxonGroupChipsP
             tooltip={g.tooltip ?? null}
             onClick={() => toggle(g.key)}
             className="taxon-group-chip"
-            style={{ ['--i' as string]: i }}
           />
         );
       })}

@@ -42,7 +42,9 @@ function formatCount(n: number): string {
   return String(n);
 }
 
-/** Bold the substring of `name` that matches the current query. */
+/** Mark the substring of `name` that matches the current query. <mark>
+ *  exposes "highlighted" semantics to assistive tech; <b> would be purely
+ *  presentational. */
 function highlightMatch(name: string, query: string): React.ReactNode {
   const q = query.trim().toLowerCase();
   if (!q) return name;
@@ -51,7 +53,7 @@ function highlightMatch(name: string, query: string): React.ReactNode {
   return (
     <>
       {name.slice(0, idx)}
-      <b>{name.slice(idx, idx + q.length)}</b>
+      <mark>{name.slice(idx, idx + q.length)}</mark>
       {name.slice(idx + q.length)}
     </>
   );

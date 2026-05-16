@@ -33,7 +33,7 @@ export function RepeatModeToggle({ value, onChange }: Props) {
               checked={value === opt.value}
               onChange={() => onChange(opt.value)}
             />
-            <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <span className="home-radio-card-text">
               <span className="home-radio-label">{opt.label}</span>
               <span className="home-radio-hint">{opt.hint}</span>
             </span>

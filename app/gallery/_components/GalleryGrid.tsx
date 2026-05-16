@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { searchGallery } from '@/lib/queries/gallery';
 import { InfiniteScroller } from './InfiniteScroller';
 import type { SubjectType } from '@/lib/subject';
@@ -24,15 +25,11 @@ export async function GalleryGrid({
     return (
       <div className="gallery-empty">
         <div className="gallery-empty-icon" aria-hidden>✿</div>
-        <p style={{ margin: 0, fontFamily: "var(--font-display), serif", fontStyle: "italic", fontSize: "1.2rem", color: "var(--text-secondary)" }}>
-          no bugs found here
-        </p>
-        <p style={{ margin: 0, fontSize: "0.9rem" }}>
-          try a broader search or fewer filters
-        </p>
-        <a href="/gallery" className="gallery-load-more" style={{ margin: 0 }}>
+        <p className="gallery-empty-title">no bugs found here</p>
+        <p className="gallery-empty-hint">try a broader search or fewer filters</p>
+        <Link href="/gallery" className="gallery-load-more is-inline">
           clear filters
-        </a>
+        </Link>
       </div>
     );
   }

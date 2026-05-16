@@ -33,11 +33,11 @@ export const T = {
   surfaceActive: "rgba(255, 255, 255, 0.14)",
   surfaceInput: "rgba(255, 255, 255, 0.04)",
 
-  // ── Text (WCAG AA floor 0.55) ──
+  // ── Text (WCAG AA floor) ──
   textPrimary: "rgba(255, 255, 255, 0.92)",
   textSecondary: "rgba(255, 255, 255, 0.7)",
-  textTertiary: "rgba(255, 255, 255, 0.55)",
-  textMuted: "rgba(255, 255, 255, 0.55)",
+  textTertiary: "rgba(255, 255, 255, 0.62)",
+  textMuted: "rgba(255, 255, 255, 0.62)",
   textDisabled: "rgba(255, 255, 255, 0.42)",
   textDanger: "#ef4444",
   textOnDanger: "#ffffff",

@@ -20,8 +20,8 @@ export function IntervalPicker({ value, onChange }: Props) {
   const inputId = useId();
   const isPreset = PRESETS.some((p) => p.seconds === value);
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+    <div className="home-interval">
+      <div className="home-interval-presets">
         {PRESETS.map((p) => (
           <button
             key={p.seconds}
@@ -43,7 +43,7 @@ export function IntervalPicker({ value, onChange }: Props) {
         </button>
       </div>
       {customOpen ? (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <div className="home-interval-custom">
           <label htmlFor={inputId} className="home-radio-hint">
             seconds (10–3600)
           </label>

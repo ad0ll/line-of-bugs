@@ -10,7 +10,7 @@
  * shouldn't leak to UI.
  */
 import { useEffect } from 'react';
-import { T } from '@/lib/tokens';
+import Link from 'next/link';
 
 export default function SessionError({
   error,
@@ -24,59 +24,25 @@ export default function SessionError({
   }, [error]);
 
   return (
-    <main
-      role="alert"
-      aria-label="session crashed"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: T.surface0,
-        color: T.textPrimary,
-        display: 'grid',
-        placeItems: 'center',
-        padding: '2rem',
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '1rem',
-          maxWidth: 480,
-          textAlign: 'center',
-        }}
-      >
-        <div aria-hidden style={{ fontSize: '2.5rem' }}>
-          ⚠
-        </div>
-        <p
-          style={{
-            margin: 0,
-            fontFamily: 'var(--font-display), serif',
-            fontStyle: 'italic',
-            fontSize: '1.4rem',
-            color: 'var(--text-secondary, #cbb4d4)',
-          }}
-        >
-          session crashed
-        </p>
-        <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: 1.5 }}>
+    <main role="alert" aria-label="session crashed" className="session-crash">
+      <div className="session-crash-card">
+        <div aria-hidden className="session-crash-icon">⚠</div>
+        <p className="session-crash-title">session crashed</p>
+        <p className="session-crash-detail">
           the session player hit an unexpected error. you can try resuming,
           or head back home to start a new one.
         </p>
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div className="session-crash-actions">
           <button
             type="button"
             onClick={() => reset()}
-            className="gallery-load-more"
-            style={{ margin: 0 }}
+            className="gallery-load-more is-inline"
           >
             try again
           </button>
-          <a href="/" className="gallery-load-more" style={{ margin: 0 }}>
+          <Link href="/" className="gallery-load-more is-inline">
             return home
-          </a>
+          </Link>
         </div>
       </div>
     </main>

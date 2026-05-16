@@ -3,7 +3,13 @@ import { test, expect } from "@playwright/test";
 test("subject chip toggle is URL-synced and pagination resets", async ({ page }) => {
   await page.goto("/gallery?page=3");
   await page.waitForSelector("#gallery-grid");
-  await page.locator(".subject-type-chips .chip").filter({ hasText: /^wild/ }).first().click();
+  // Subject chips live in the first .filter-bar-chips row (role="group"
+  // labelled "subject type"). Earlier .subject-type-chips selector was
+  // dropped in the FilterBar unification.
+  await page.getByRole("group", { name: "subject type" })
+    .getByRole("button", { name: /^wild/ })
+    .first()
+    .click();
   await page.waitForURL(/subject=wild/);
   expect(page.url()).not.toMatch(/page=3/);
 });
@@ -11,13 +17,14 @@ test("subject chip toggle is URL-synced and pagination resets", async ({ page })
 test("institution picker opens and toggles selection", async ({ page }) => {
   await page.goto("/gallery");
   await page.waitForSelector("#gallery-grid");
-  // R6 moved the institution picker behind the "more filters" collapse.
-  await page.getByRole("button", { name: /^▸?\s*more filters/i }).click();
+  // Institution lives inside "more filters" — disclosed panel hosts the
+  // shared FilterPopover, no separate institution-popover class anymore.
+  await page.getByRole("button", { name: /^more filters/i }).click();
   await page.getByRole("button", { name: /institution/i }).click();
-  await expect(page.locator(".institution-popover")).toBeVisible();
+  await expect(page.locator(".filter-popover-panel").first()).toBeVisible();
   // Click the label (covers the checkbox + name span) to avoid label/checkbox dispatch races
-  const firstLabel = page.locator(".institution-list li label").first();
-  const name = (await firstLabel.locator("span").first().textContent())!.trim();
+  const firstLabel = page.locator(".filter-popover-list li label").first();
+  const name = (await firstLabel.locator(".filter-popover-name").textContent())!.trim();
   await firstLabel.click();
   await page.waitForURL(/inst=/);
   // URLSearchParams.toString() form-encodes spaces as `+`, but the test

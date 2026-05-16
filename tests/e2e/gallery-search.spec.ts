@@ -13,6 +13,9 @@ test.describe('Gallery', () => {
     await page.waitForSelector('#gallery-grid');
     const beforeCount = await page.locator('.grid-item').count();
 
+    // FilterBar defaults to "chips" mode; switch to "species" first so
+    // the autocomplete combobox is rendered.
+    await page.getByRole('tab', { name: 'species' }).click();
     const input = page.getByRole('combobox');
     await input.fill('bee');
     // Wait for the species-search XHR rather than guessing the debounce
@@ -34,7 +37,10 @@ test.describe('Gallery', () => {
     await page.waitForSelector('.gallery-result-count');
     const before = await page.locator('.gallery-result-count').innerText();
 
-    await page.locator('.subject-type-chips .chip').filter({ hasText: 'specimen' }).first().click();
+    await page.getByRole('group', { name: 'subject type' })
+      .getByRole('button', { name: /^specimen/ })
+      .first()
+      .click();
     await page.waitForURL(/subject=specimen/);
     const after = await page.locator('.gallery-result-count').innerText();
     expect(after).not.toBe(before);

@@ -60,7 +60,7 @@ export function StartSessionButton({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+    <div className="home-start-stack">
       <button type="button" onClick={start} disabled={pending} className="home-start">
         {pending ? "starting…" : "start session"}
       </button>

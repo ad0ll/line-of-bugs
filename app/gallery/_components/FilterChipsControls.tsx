@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useCallback } from 'react';
-import { FilterBar, type FilterBarState } from '@/app/components/filters/FilterBar';
+import { FilterBar, defaultMode, parseMode, type FilterBarState } from '@/app/components/filters/FilterBar';
 import type { FilterOption } from '@/app/components/filters/FilterPopover';
 import { parseSubject, type SubjectType } from '@/lib/subject';
 
@@ -40,14 +40,16 @@ export function FilterChipsControls({
   const pathname = usePathname();
   const params = useSearchParams();
 
+  const speciesTags = parseList(params.get('q'));
   const state: FilterBarState = {
     subject: parseSubject(params.get('subject')),
     groups: parseList(params.get('type')),
-    species: parseList(params.get('q')),
+    species: speciesTags,
     views: parseList(params.get('view')),
     lifeStages: parseList(params.get('life')),
     sexes: parseList(params.get('sex')),
     institutions: parseList(params.get('inst')),
+    mode: parseMode(params.get('mode'), speciesTags),
   };
 
   const pushNext = useCallback(
@@ -90,6 +92,14 @@ export function FilterChipsControls({
         if (next.institutions.length === 0) url.delete('inst');
         else url.set('inst', next.institutions.join(','));
       }
+      // Mode is only serialized when it overrides the species-driven
+      // default (chips with tags / species without tags). Compute the
+      // post-mutation species so a same-call tag change picks the right
+      // default.
+      const nextSpecies = next.species ?? speciesTags;
+      const nextMode = next.mode ?? state.mode;
+      if (nextMode === defaultMode(nextSpecies)) url.delete('mode');
+      else url.set('mode', nextMode);
     });
   }
 

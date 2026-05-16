@@ -94,11 +94,13 @@ export function InfiniteScroller({
 
   return (
     <>
-      <div className="gallery-grid" id="gallery-grid" aria-busy={loading}>
+      <div className="gallery-grid" id="gallery-grid">
         {rows.map((row) => (
           <GridTile key={row.image_id} row={row} />
         ))}
       </div>
+      {/* aria-live region is the load-bearing announcement for infinite
+          scroll fetches — aria-busy on the grid was duplicating the cue. */}
       <div className="u-sr-only" role="status" aria-live="polite">
         {loading ? "loading more bugs" : ""}
       </div>

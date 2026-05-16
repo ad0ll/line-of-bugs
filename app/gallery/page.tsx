@@ -54,7 +54,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
         {/* Species search lives inside FilterBar (species mode); no
             separate SearchBar — the two were writing to the same `?q=`
             param and the user wanted a unified entry point. */}
-        <Suspense fallback={<div className="gallery-filters-skeleton" />}>
+        <Suspense fallback={<FilterBarSkeleton />}>
           <FilterChipsBar filters={filterState} />
         </Suspense>
       </header>
@@ -83,6 +83,20 @@ function GallerySkeleton() {
       {Array.from({ length: 24 }, (_, i) => (
         <div key={i} className="grid-item skeleton-tile" />
       ))}
+    </div>
+  );
+}
+
+// Mirrors the real FilterBar shape (4 rows) so hydration doesn't visibly
+// shift content. Wide first row = subject chips, mid row = mode toggle +
+// label, wide row = picker chip wall, narrow trailing pill = "more filters".
+function FilterBarSkeleton() {
+  return (
+    <div className="gallery-filters-skeleton" aria-hidden>
+      <div className="gallery-filters-skeleton-row gallery-filters-skeleton-row--wide" />
+      <div className="gallery-filters-skeleton-row gallery-filters-skeleton-row--mid" />
+      <div className="gallery-filters-skeleton-row gallery-filters-skeleton-row--wide" />
+      <div className="gallery-filters-skeleton-row gallery-filters-skeleton-row--narrow" />
     </div>
   );
 }

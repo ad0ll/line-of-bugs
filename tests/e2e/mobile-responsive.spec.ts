@@ -14,20 +14,24 @@ test.describe("mobile responsive (375px)", () => {
   test("home: no horizontal overflow + filter sections visible", async ({ page }) => {
     await page.goto("/");
     expect(await getOverflow(page)).toBeLessThanOrEqual(0);
-    await expect(page.getByRole("button", { name: /what kind of bug\?/i })).toBeVisible();
+    // FilterBar shape: subject group (toggle buttons, not radios — see
+    // 2026-05-16 audit on radiogroup semantics), kind tablist with the
+    // category chip wall always visible, trailing "more filters" pill.
     await expect(page.getByRole("button", { name: /more filters/i })).toBeVisible();
-    const subjectGroup = page.getByRole("radiogroup", { name: /subject type/i });
-    await expect(subjectGroup.getByRole("radio", { name: "wild" })).toBeVisible();
-    await expect(subjectGroup.getByRole("radio", { name: "captive" })).toBeVisible();
-    await expect(subjectGroup.getByRole("radio", { name: "specimen" })).toBeVisible();
-    await expect(subjectGroup.getByRole("radio", { name: "all" })).toBeVisible();
+    await expect(page.getByRole("group", { name: /filter by what kind of bug/i })).toBeVisible();
+    const subjectGroup = page.getByRole("group", { name: /subject type/i });
+    await expect(subjectGroup.getByRole("button", { name: /^wild/ })).toBeVisible();
+    await expect(subjectGroup.getByRole("button", { name: /^captive/ })).toBeVisible();
+    await expect(subjectGroup.getByRole("button", { name: /^specimen/ })).toBeVisible();
+    await expect(subjectGroup.getByRole("button", { name: /^all/ })).toBeVisible();
   });
 
   test("gallery: no horizontal overflow + subject chips show counts", async ({ page }) => {
     await page.goto("/gallery");
     await page.waitForSelector("#gallery-grid");
     expect(await getOverflow(page)).toBeLessThanOrEqual(0);
-    const counts = page.locator(".subject-type-chips .chip .chip-count");
+    const subjectGroup = page.getByRole("group", { name: /subject type/i });
+    const counts = subjectGroup.locator(".chip .chip-count");
     await expect(counts).toHaveCount(4);
     const texts = await counts.allTextContents();
     for (const t of texts) expect(t).toMatch(/\d/);

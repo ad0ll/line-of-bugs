@@ -9,7 +9,9 @@ describe("design tokens", () => {
   it("exposes text alpha ladder", () => {
     expect(T.textPrimary).toMatch(/rgba\(255,\s*255,\s*255,\s*0\.92\)/);
     expect(T.textSecondary).toMatch(/rgba\(255,\s*255,\s*255,\s*0\.7\)/);
-    expect(T.textTertiary).toMatch(/rgba\(255,\s*255,\s*255,\s*0\.55\)/);
+    // Tertiary was bumped from 0.55 → 0.62 in the 2026-05-16 contrast audit
+    // (5.7:1 → 6.3:1 on --surface-0).
+    expect(T.textTertiary).toMatch(/rgba\(255,\s*255,\s*255,\s*0\.62\)/);
   });
 
   it("exposes 4 px spacing grid", () => {

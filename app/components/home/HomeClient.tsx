@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { IntervalPicker } from "@/app/components/home/IntervalPicker";
 import { RepeatModeToggle } from "@/app/components/home/RepeatModeToggle";
 import { StartSessionButton } from "@/app/components/home/StartSessionButton";
-import { FilterBar, type FilterBarState } from "@/app/components/filters/FilterBar";
+import { FilterBar, defaultMode, parseMode, type FilterBarState } from "@/app/components/filters/FilterBar";
 import { type FilterOption } from "@/app/components/filters/FilterPopover";
 import { Tooltip } from "@/app/components/ui/Tooltip";
 import { TOOLTIPS } from "@/lib/tooltips";
@@ -69,7 +70,9 @@ export function HomeClient({
   const [life, setLife] = useState<string[]>(parseList(params.get("life")));
   const [sexes, setSexes] = useState<string[]>(parseList(params.get("sex")));
   const [groups, setGroups] = useState<string[]>(parseList(params.get("type")));
-  const [species, setSpecies] = useState<string[]>(parseList(params.get("q")));
+  const initialSpecies = parseList(params.get("q"));
+  const [species, setSpecies] = useState<string[]>(initialSpecies);
+  const [mode, setMode] = useState(() => parseMode(params.get("mode"), initialSpecies));
 
   // Push state → URL.
   useEffect(() => {
@@ -82,12 +85,17 @@ export function HomeClient({
     if (sexes.length) next.set("sex", sexes.join(","));
     if (groups.length) next.set("type", groups.join(","));
     if (species.length) next.set("q", species.join(","));
+    // Only serialize mode when it diverges from the species-driven default.
+    // Defaults (chips with no tags, species with tags) stay implicit so URLs
+    // don't carry redundant params; overrides (species mode pre-tags, chips
+    // mode despite tags) get pinned.
+    if (mode !== defaultMode(species)) next.set("mode", mode);
     const qs = next.toString();
     const target = qs ? `${pathname}?${qs}` : pathname;
     startTransition(() => {
       router.replace(target, { scroll: false });
     });
-  }, [intervalSec, subject, repeat, views, life, sexes, groups, species, pathname, router]);
+  }, [intervalSec, subject, repeat, views, life, sexes, groups, species, mode, pathname, router]);
 
   // Faceted snapshot — refreshed on every filter change so chips
   // re-count with own-axis exclusion semantics. See git blame for the
@@ -147,7 +155,7 @@ export function HomeClient({
   };
 
   const filterState: FilterBarState = {
-    subject, groups, species, views, lifeStages: life, sexes, institutions: [],
+    subject, groups, species, views, lifeStages: life, sexes, institutions: [], mode,
   };
 
   function handleFilterChange(next: Partial<FilterBarState>) {
@@ -157,6 +165,7 @@ export function HomeClient({
     if (next.views !== undefined) setViews(next.views);
     if (next.lifeStages !== undefined) setLife(next.lifeStages);
     if (next.sexes !== undefined) setSexes(next.sexes);
+    if (next.mode !== undefined) setMode(next.mode);
     // No institutions axis on home.
   }
 
@@ -164,7 +173,10 @@ export function HomeClient({
     <div className="home-wrap">
       <main className="home-main">
         <header className="home-header">
-          <h1 className="home-title">line of bugs</h1>
+          <h1 className="home-title">
+            line of bugs
+            <span aria-hidden className="home-title-flower">✿</span>
+          </h1>
           <p className="home-tagline">
             gesture drawing practice with five thousand insects, tenderly photographed
           </p>
@@ -172,7 +184,7 @@ export function HomeClient({
 
         <section className="home-section">
           <h2 className="home-section-title">
-            <Tooltip content={TOOLTIPS.interval.content}>
+            <Tooltip content={TOOLTIPS.interval.content} iconLabel="more info about interval per slide">
               <span>interval per slide</span>
             </Tooltip>
           </h2>
@@ -181,7 +193,7 @@ export function HomeClient({
 
         <section className="home-section">
           <h2 className="home-section-title">
-            <Tooltip content={TOOLTIPS.subject.content}>
+            <Tooltip content={TOOLTIPS.subject.content} iconLabel="more info about filters">
               <span>filters</span>
             </Tooltip>
           </h2>
@@ -208,7 +220,7 @@ export function HomeClient({
 
         <section className="home-section">
           <h2 className="home-section-title">
-            <Tooltip content={TOOLTIPS.repeatMode.content}>
+            <Tooltip content={TOOLTIPS.repeatMode.content} iconLabel="more info about repeat behavior">
               <span>repeat behavior</span>
             </Tooltip>
           </h2>
@@ -226,9 +238,9 @@ export function HomeClient({
             species={species}
             groups={groups}
           />
-          <a href="/gallery" className="home-gallery-link">
+          <Link href="/gallery" className="home-gallery-link">
             browse the gallery →
-          </a>
+          </Link>
         </div>
       </main>
     </div>

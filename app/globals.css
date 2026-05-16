@@ -15,8 +15,12 @@
   /* ── Text ── */
   --text-primary: rgba(255, 255, 255, 0.92);
   --text-secondary: rgba(255, 255, 255, 0.7);
-  --text-tertiary: rgba(255, 255, 255, 0.55);
-  --text-muted: rgba(255, 255, 255, 0.55);
+  /* Tertiary / muted bumped from 0.55 → 0.62 for safety margin on small
+     mono captions (gallery-result-count, species-sci, filter-popover-count).
+     0.55 sat at ~5.7:1 on --surface-0 (passes AA 4.5:1 but close); 0.62
+     lifts to ~6.3:1. */
+  --text-tertiary: rgba(255, 255, 255, 0.62);
+  --text-muted: rgba(255, 255, 255, 0.62);
   --text-disabled: rgba(255, 255, 255, 0.42);
   --text-on-accent: #0d0c10;
   --text-on-danger: #ffffff;
@@ -135,16 +139,15 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
    but blasted every transition, including informational hover colour
    shifts that benefit from staying smooth. Here each animation and
    each meaningful transition is classified:
-     • Decorative loops (pulse, float-slow, wobble, armed-pulse,
-       chip-pop stagger) → halt entirely with `animation: none`.
+     • Decorative loops (pulse, float-slow, wobble, armed-pulse)
+       → halt entirely with `animation: none`.
      • Functional one-shots (toast fade-in, end-of-session fade-in)
        → keep but shorten to 0.01s so the user still gets a
        "completed" visual event.
      • Hover/focus colour transitions → left alone (brief,
        informational, not motion in the vestibular sense).
      • Layout / position / size transitions (chrome auto-hide,
-       collapsible expand, grid-item hover-lift) → set to
-       transition: none.
+       grid-item hover-lift) → set to transition: none.
    Spirit of Wave 9.13 preserved: no animation marked `infinite`
    survives this media query. */
 @media (prefers-reduced-motion: reduce) {
@@ -159,12 +162,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   .gallery-empty-icon {
     animation: none;
   }
-  .home-bloom::before,
-  .home-bloom::after {
-    /* Floating blurred discs — pure ambience. */
-    animation: none;
-  }
-  .home-title::after {
+  .home-title-flower {
     /* Wobbling flower glyph. */
     animation: none;
   }
@@ -181,11 +179,6 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   .end-of-session-overlay {
     animation-duration: 0.01s;
   }
-  .collapsible-body[data-open="true"] .taxon-group-chip {
-    /* The staggered fade-in via --i delay would otherwise still
-       trickle in over ~200ms even at 0.01s duration. Zero both. */
-    animation: none;
-  }
 
   /* ── Layout / position / size transitions: halt ───────────────── */
   .grid-item {
@@ -194,18 +187,6 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   }
   .home-start {
     /* Same: translateY(-2px) on hover. */
-    transition: none;
-  }
-  .collapsible-chevron {
-    /* Rotation on expand — orientation change, treat as layout. */
-    transition: none;
-  }
-  .collapsible-body {
-    /* grid-template-rows expand/collapse. */
-    transition: none;
-  }
-  .collapsible-body-inner {
-    /* Opacity-only, but tied to the layout transition above. */
     transition: none;
   }
   .session-timer,
@@ -228,12 +209,11 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 
   /* Hover/focus colour transitions on .u-icon-btn, .chip, .home-pill,
      .modal-close, .report-form-actions button, .home-radio-card,
-     .tooltip-icon, .collapsible-trigger, .gallery-load-more,
-     .species-autocomplete-field, .btn-destructive-idle,
-     .report-card-actions button are intentionally LEFT ALONE —
-     they're brief (~120–200ms) colour/border/box-shadow shifts,
-     not vestibular motion, and reduced-motion users still benefit
-     from the affordance feedback. */
+     .tooltip-icon, .gallery-load-more, .species-autocomplete-field,
+     .btn-destructive-idle, .report-card-actions button are intentionally
+     LEFT ALONE — they're brief (~120–200ms) colour/border/box-shadow
+     shifts, not vestibular motion, and reduced-motion users still
+     benefit from the affordance feedback. */
 }
 
 @keyframes pulse {
@@ -361,7 +341,13 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   cursor: pointer;
 }
 .species-row.active { background: var(--accent-pink-soft); }
-.species-row b { color: var(--accent-pink); font-weight: 700; }
+/* Match highlight inside a result row. The default UA <mark> style is
+   black-on-yellow — undo it and use our pink accent. */
+.species-row mark {
+  background: transparent;
+  color: var(--accent-pink);
+  font-weight: 700;
+}
 .species-row-disabled { opacity: 0.45; cursor: not-allowed; }
 .species-row-disabled:hover { background: transparent; }
 .species-name { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 600; }
@@ -386,7 +372,6 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 }
 
 .filter-chips-bar { display: flex; gap: var(--s4); flex-wrap: wrap; align-items: center; }
-.subject-type-chips { display: flex; gap: var(--s2); }
 .chip {
   background: var(--surface-1);
   border: 1.5px solid var(--border-medium);
@@ -410,13 +395,22 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   font-weight: 600;
   box-shadow: var(--shadow-pink-soft);
 }
-.chip-active .chip-count { color: var(--text-on-accent); opacity: 0.75; }
-.chip-count { font-family: var(--font-mono), monospace; margin-left: var(--s2); opacity: 0.6; }
+/* Count text uses solid token colors instead of stacked opacity — nested
+   .chip-count > .chip-count-total previously multiplied to ~0.23 alpha
+   white on surface-1 (~2.6:1, fails WCAG AA). Tertiary on surface-1 lands
+   at ~5.7:1; the "/ total" portion uses rgba(255,255,255,0.48) for ~4.6:1. */
+.chip-count {
+  font-family: var(--font-mono), monospace;
+  margin-left: var(--s2);
+  color: var(--text-tertiary);
+}
 .chip-count-total {
-  opacity: 0.55;
+  color: rgba(255, 255, 255, 0.48);
   margin-left: 1px;
   font-variant-numeric: tabular-nums;
 }
+.chip-active .chip-count { color: var(--text-on-accent); opacity: 0.82; }
+.chip-active .chip-count-total { color: var(--text-on-accent); opacity: 0.65; }
 .chip-label { display: inline-block; }
 /* Chips greyed because their filtered count is 0 given the current
    other-axis selection. Still clickable — the user might want to
@@ -424,12 +418,25 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 .chip-disabled { opacity: 0.4; }
 .chip-disabled:hover { opacity: 0.55; }
 
+/* Multi-row skeleton mirroring the real FilterBar (subject row, mode
+   toggle row, picker chip-wall, trailing more-filters pill). Single-bar
+   skeletons caused noticeable CLS once the live filters streamed in. */
 .gallery-filters-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  width: 100%;
+}
+.gallery-filters-skeleton-row {
   height: 36px;
   background: var(--surface-1);
   border-radius: var(--r-pill);
   animation: pulse 1.4s ease-in-out infinite;
 }
+.gallery-filters-skeleton-row--wide { width: 100%; max-width: 560px; }
+.gallery-filters-skeleton-row--mid  { width: 60%;  max-width: 420px; }
+.gallery-filters-skeleton-row--narrow { width: 28%; max-width: 180px; }
+
 .search-skeleton {
   height: 42px;
   max-width: 480px;
@@ -558,55 +565,13 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   margin-top: var(--s4);
 }
 
-/* Home-page filter row + live count */
-.home-filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s3);
-}
+/* Home pool count — live "N bugs in your session pool" caption. */
 .home-pool-count {
   margin: var(--s3) 0 0 0;
   font-family: var(--font-mono), monospace;
   font-size: 0.85rem;
   color: var(--text-tertiary);
   font-variant-numeric: tabular-nums;
-}
-
-.institution-picker { position: relative; }
-.institution-popover {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  background: var(--surface-1);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--r-3xl);
-  padding: var(--s4);
-  z-index: 100;
-  min-width: 240px;
-  max-height: 360px;
-  overflow-y: auto;
-  box-shadow: var(--shadow-panel);
-}
-.institution-list { list-style: none; padding: 0; margin: 0; }
-.institution-list li label {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: var(--s4);
-  align-items: center;
-  padding: var(--s2) var(--s4);
-  border-radius: var(--r-md);
-  cursor: pointer;
-}
-.institution-list li label:hover { background: var(--accent-pink-soft); }
-.institution-count { font-family: var(--font-mono), monospace; color: var(--text-tertiary); font-size: 0.8rem; }
-.institution-clear {
-  background: transparent;
-  border: none;
-  color: var(--accent-pink);
-  cursor: pointer;
-  font-size: 0.85rem;
-  padding: var(--s2) var(--s4);
-  margin-top: var(--s4);
 }
 
 .gallery-grid {
@@ -733,6 +698,23 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   font-size: 32px;
   animation: float-slow 4s ease-in-out infinite;
 }
+.gallery-empty-title {
+  margin: 0;
+  font-family: var(--font-display), serif;
+  font-style: italic;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
+.gallery-empty-hint { margin: 0; font-size: 0.9rem; }
+.gallery-empty-actions {
+  display: flex;
+  gap: var(--s4);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+/* Anchors/buttons in gallery-load-more style sit flush in flex rows
+   without their default top margin. */
+.gallery-load-more.is-inline { margin: 0; }
 
 /* Touch-target floor on coarse pointers — applies to both pill systems
    (.chip is the gallery dense pill; .home-pill is the touch-friendly
@@ -745,6 +727,8 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   .modal-close { width: 44px; height: 44px; }
   .tooltip-icon { width: 44px; height: 44px; font-size: 16px; }
   .taxon-group-clear { min-height: 44px; padding: var(--s4) var(--s8); }
+  .filter-bar-mode-tab { min-height: 44px; padding: var(--s4) var(--s8); }
+  .species-tag-remove { min-width: 44px; min-height: 44px; padding: 0 var(--s3); }
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -1030,8 +1014,10 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   position: relative;
   display: inline-block;
 }
-.home-title::after {
-  content: "✿";
+/* Real <span aria-hidden> rather than a ::after pseudo-element so screen
+   readers don't announce the decorative flower character as part of the
+   title. */
+.home-title-flower {
   position: absolute;
   top: -10px;
   right: -28px;
@@ -1066,12 +1052,6 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
    Kept as a separate class because the home page wants larger, friendlier
    pills (min-height 40px+, larger padding, mono numerals); both classes
    share the active state (var(--shadow-pink-soft)) so they stay in step. */
-.subject-filter {
-  display: flex;
-  gap: var(--s2);
-  flex-wrap: wrap;
-}
-
 .home-pill {
   background: var(--surface-1);
   border: 1.5px solid var(--border-medium);
@@ -1109,6 +1089,16 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   min-width: 88px;
 }
 
+/* Interval picker stack — preset row + optional custom-seconds row. */
+.home-interval { display: flex; flex-direction: column; gap: var(--s6); }
+.home-interval-presets { display: flex; flex-wrap: wrap; gap: var(--s4); }
+.home-interval-custom {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  flex-wrap: wrap;
+}
+
 /* Repeat mode list — radio cards */
 .home-radio-list { display: flex; flex-direction: column; gap: var(--s3); }
 .home-radio-card {
@@ -1136,6 +1126,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 }
 .home-radio-card .home-radio-label { color: var(--text-primary); font-weight: 500; }
 .home-radio-card .home-radio-hint { color: var(--text-tertiary); font-size: 0.85rem; }
+.home-radio-card-text { display: flex; flex-direction: column; gap: var(--s1); }
 
 .home-start {
   background: var(--accent-pink);
@@ -1160,6 +1151,14 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 }
 .home-start:disabled { opacity: 0.55; cursor: default; transform: none; }
 .home-start-error { color: var(--accent-danger); font-size: 0.9rem; margin: var(--s2) 0 0 0; text-align: center; }
+/* CTA wrapper inside .home-ctas — keeps the error message hugged under
+   the button instead of joining the row's flex-baseline. */
+.home-start-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s4);
+}
 
 /* Secondary CTA — sibling to .home-start in .home-ctas. Same visual
    weight family (rounded pill, generous tap area) but lilac-outlined
@@ -1256,6 +1255,27 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
      prevents a tall→short jump when toggling modes. */
   min-height: 44px;
 }
+/* "kind" row: align the label to the top of the controls column so the
+   stacked toggle + picker reads as a single labelled unit (M7). Without
+   flex-start the centered alignment of .filter-bar-row would float the
+   label to the vertical middle of the tall column. */
+.filter-bar-row.filter-bar-kind {
+  align-items: flex-start;
+}
+.filter-bar-row.filter-bar-kind > .tooltip-wrap {
+  /* Nudge the label down so it sits on the toggle's text baseline rather
+     than the toggle's top edge. */
+  padding-top: var(--s3);
+}
+.filter-bar-kind-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  flex: 1;
+  /* `min-width: 0` lets the column shrink below its intrinsic content
+     width (the chip wall can wrap and overflow without this in flex). */
+  min-width: 0;
+}
 .filter-bar-more {
   position: relative;
 }
@@ -1268,6 +1288,12 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   background: var(--surface-1);
   border: 1px solid var(--border-medium);
   border-radius: var(--r-3xl);
+}
+/* Author `display: flex` above overrides the UA's `[hidden] {display:none}`
+   declaration — explicitly restore it so the always-in-DOM disclosure
+   panel (needed for aria-controls) actually hides when closed. */
+.filter-bar-more-row[hidden] {
+  display: none;
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -1349,68 +1375,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 }
 
 /* ════════════════════════════════════════════════════════════
-   COLLAPSIBLE SECTION (R6) — disclosure widget for hiding
-   advanced filters behind a chevron.
-   ════════════════════════════════════════════════════════════ */
-.collapsible-section {
-  display: flex;
-  flex-direction: column;
-}
-.collapsible-trigger {
-  display: flex;
-  align-items: center;
-  gap: var(--s2);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: var(--s2) 0;
-  font-family: var(--font-display), serif;
-  font-style: italic;
-  font-size: 1.15rem;
-  color: var(--accent-lilac);
-  text-align: left;
-  transition: color var(--timing-base) var(--ease-out);
-}
-.collapsible-trigger:hover { color: var(--text-primary); }
-.collapsible-chevron {
-  display: inline-block;
-  color: var(--accent-pink);
-  font-size: 0.8em;
-  transition: transform var(--timing-slow) var(--ease-out);
-}
-.collapsible-trigger[aria-expanded="true"] .collapsible-chevron {
-  transform: rotate(90deg);
-}
-.collapsible-badge {
-  font-family: var(--font-mono), monospace;
-  font-size: 0.7rem;
-  color: var(--accent-sky);
-  background: var(--surface-1);
-  padding: 2px var(--s3);
-  border: 1px solid var(--border-medium);
-  border-radius: var(--r-pill);
-  letter-spacing: 0.02em;
-}
-/* CSS-only auto-height transition: grid-template-rows 0fr → 1fr
-   carries the body smoothly to its natural height without JS. */
-.collapsible-body {
-  display: grid;
-  grid-template-rows: 0fr;
-  overflow: hidden;
-  transition: grid-template-rows var(--timing-layout) var(--ease-out);
-}
-.collapsible-body[data-open="true"] { grid-template-rows: 1fr; }
-.collapsible-body-inner {
-  min-height: 0;  /* enables the grid-row transition for nested overflowing content */
-  opacity: 0;
-  transition: opacity var(--timing-slow) var(--ease-out) 100ms;
-}
-.collapsible-body[data-open="true"] .collapsible-body-inner {
-  opacity: 1;
-}
-
-/* ════════════════════════════════════════════════════════════
-   TAXON GROUP CHIPS (R6) — chip wall for "what kind of bug?"
+   TAXON GROUP CHIPS — chip wall for "what kind of bug?"
    ════════════════════════════════════════════════════════════ */
 .taxon-group-chips {
   display: flex;
@@ -1441,27 +1406,6 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 .taxon-group-clear:hover {
   background: var(--accent-pink-soft);
   color: var(--text-primary);
-}
-
-/* Gallery's existing inline filter row, repurposed inside the
-   "more filters" collapse. */
-.advanced-filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s3);
-}
-
-/* Staggered fade-in for chips when the parent CollapsibleSection opens.
-   --i is set inline on each chip (its index in TAXON_GROUPS). The
-   prefers-reduced-motion media query at the top of the file already
-   zeroes animation durations — no extra branch needed here. */
-.collapsible-body[data-open="true"] .taxon-group-chip {
-  animation: chip-pop var(--timing-layout) var(--ease-out) backwards;
-  animation-delay: calc(var(--i, 0) * 20ms);
-}
-@keyframes chip-pop {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -1759,4 +1703,57 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
     max-width: calc(100vw - var(--s8));
     row-gap: var(--s1);
   }
+}
+
+/* ════════════════════════════════════════════════════════════
+   SESSION CRASH (error boundary) — full-viewport recovery UI.
+   Used by app/session/error.tsx. Kept here so the page can stay
+   inline-style-free.
+   ════════════════════════════════════════════════════════════ */
+.session-crash {
+  position: fixed;
+  inset: 0;
+  background: var(--surface-0);
+  color: var(--text-primary);
+  display: grid;
+  place-items: center;
+  padding: var(--s16);
+}
+.session-crash-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s8);
+  max-width: 480px;
+  text-align: center;
+}
+.session-crash-icon { font-size: 2.5rem; }
+.session-crash-title {
+  margin: 0;
+  font-family: var(--font-display), serif;
+  font-style: italic;
+  font-size: 1.4rem;
+  color: var(--text-secondary);
+}
+.session-crash-detail {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.session-crash-actions {
+  display: flex;
+  gap: var(--s6);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ════════════════════════════════════════════════════════════
+   REPORT STANDALONE PAGE — preview image styling. The dialog
+   variant uses .report-modal-preview img instead.
+   ════════════════════════════════════════════════════════════ */
+.report-page-preview-img {
+  width: 100%;
+  height: auto;
+  max-width: 320px;
+  border-radius: var(--r-3xl);
 }

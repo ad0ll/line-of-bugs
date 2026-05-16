@@ -35,13 +35,17 @@ export interface TooltipProps {
   /** When true, render a small `(?)` affordance next to the children so users
    *  know there's help available without having to hover-hunt. Defaults true. */
   showIcon?: boolean;
+  /** Accessible label for the (?) icon button. Defaults to "more info"; pass
+   *  a specific string ("more info about life stage") so SR users scanning
+   *  by button don't hear a string of identical "more info" prompts. */
+  iconLabel?: string;
 }
 
 interface ChildWithAria {
   'aria-describedby'?: string;
 }
 
-export function Tooltip({ content, children, showIcon = true }: TooltipProps) {
+export function Tooltip({ content, children, showIcon = true, iconLabel = 'more info' }: TooltipProps) {
   const id = useId();
   const [open, setOpen] = useState(false);
   // Once a descendant has been clicked (e.g. opening a filter popover),
@@ -73,7 +77,9 @@ export function Tooltip({ content, children, showIcon = true }: TooltipProps) {
   function onClickWithin(e: React.MouseEvent) {
     // Don't suppress when the click is on our own ⓘ icon — that button
     // explicitly toggles the tooltip and handles its own preventDefault.
-    if ((e.target as HTMLElement).closest('.tooltip-icon')) return;
+    // Match by data-attr rather than class so the suppression survives
+    // class renames.
+    if ((e.target as HTMLElement).closest('[data-tooltip-icon="true"]')) return;
     setOpen(false);
     setSuppressed(true);
   }
@@ -111,7 +117,8 @@ export function Tooltip({ content, children, showIcon = true }: TooltipProps) {
         <button
           type="button"
           className="tooltip-icon"
-          aria-label="more info"
+          data-tooltip-icon="true"
+          aria-label={iconLabel}
           aria-expanded={open}
           tabIndex={0}
           onClick={(e) => {

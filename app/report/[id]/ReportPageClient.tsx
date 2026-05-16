@@ -32,7 +32,7 @@ export function ReportPageClient({
           alt={commonName ?? speciesName ?? "reported specimen"}
           width={width}
           height={height}
-          style={{ width: "100%", height: "auto", maxWidth: 320, borderRadius: "var(--r-3xl)" }}
+          className="report-page-preview-img"
         />
         <p className="preview-name">{commonName ?? speciesName ?? imageId}</p>
       </div>
