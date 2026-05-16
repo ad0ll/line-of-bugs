@@ -184,6 +184,13 @@ def run_v1_on_sample(
                 if gt_bbox is not None and det.bbox_xywh_normalized is not None:
                     gt_iou = iou_xywh_normalized(det.bbox_xywh_normalized, gt_bbox)
 
+                # Convert distinct_subjects tuples → dicts for parquet struct storage
+                distinct_subj_dicts = [
+                    {"x": float(s[0]), "y": float(s[1]), "w": float(s[2]),
+                     "h": float(s[3]), "conf": float(s[4]),
+                     "phrase": s[5] if len(s) > 5 else None}
+                    for s in (det.distinct_subjects or [])
+                ]
                 dr = DetectionRow(
                     image_id=image_id, source=source, variant=V1_NAME,
                     img_w=W, img_h=H, subject_state=subject_state,
@@ -216,6 +223,10 @@ def run_v1_on_sample(
                     segmenter_model=segmenter.model_id,
                     processed_at=_now_ms(),
                     schema_version=SCHEMA_VERSION,
+                    text_label=det.text_label,
+                    text_label_score=det.text_label_score,
+                    gate_decision=None,
+                    distinct_subjects=distinct_subj_dicts,
                 )
                 pending_records.append(row_to_pyarrow_record(dr))
 
