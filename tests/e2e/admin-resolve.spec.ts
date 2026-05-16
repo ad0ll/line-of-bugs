@@ -20,11 +20,15 @@ test.describe.configure({ mode: "serial" });
 let tileIdx = 0;
 
 async function seedReport(page: import("@playwright/test").Page): Promise<string> {
-  await page.goto("/gallery");
-  await page.waitForSelector(".grid-item");
-  // Pick a unique tile per test so we don't collide with previously-hidden images
+  // submitReport rate-limits per-IP to 1 / 10 s. Stamp a unique X-Forwarded-For
+  // per test invocation so serial tests don't trip the limit on each other.
   const idx = tileIdx++;
-  const imageId = (await page.locator(".grid-item").nth(idx).getAttribute("data-id"))!;
+  await page.setExtraHTTPHeaders({ "x-forwarded-for": `10.0.0.${idx + 1}` });
+  await page.goto("/gallery");
+  // Wait for a real tile (skeleton tiles share `.grid-item` but lack data-id;
+  // in headless mode they paint first and racing them lands /report/null).
+  await page.waitForSelector(".grid-item[data-id]");
+  const imageId = (await page.locator(".grid-item[data-id]").nth(idx).getAttribute("data-id"))!;
   await page.goto(`/report/${imageId}`);
   await page.getByRole("button", { name: /^cropped$/i }).click();
   await page.getByRole("button", { name: /^submit$/i }).click();
@@ -57,7 +61,7 @@ test("Delete needs two clicks; image vanishes from gallery", async ({ page }) =>
   await expect(card).toBeVisible();
 
   await card.getByRole("button", { name: /^delete$/i }).click();
-  await expect(card.getByRole("button", { name: /are you sure/i })).toBeVisible();
-  await card.getByRole("button", { name: /are you sure/i }).click();
+  await expect(card.getByRole("button", { name: /confirm delete/i })).toBeVisible();
+  await card.getByRole("button", { name: /confirm delete/i }).click();
   await expect(card).toHaveCount(0);
 });
