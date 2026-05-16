@@ -182,13 +182,17 @@ The IoU primitive is universal in object detection (COCO/PASCAL VOC). The IoU = 
 ## User workflow after both ship
 
 1. **Run SAM 3 over full image set** (or labeled subset to start) → generates new variant parquet
-2. **Run `transfer_labels.py`** → auto-transferred `labels.json` + re-review queue (expect ~150-200 of 318)
-3. **20-image sanity check** (per protocol above)
-4. **Bbox-only labeling marathon** on the re-review queue + any new images, using UI's bbox-only mode
-5. **Knob tuning sweeps** against locked SAM 3 labels (`BOX_THRESHOLD`, `TEXT_THRESHOLD`, `BBOX_CONF_TOLERANCE`, `BBOX_MAX_AREA_RATIO`, `NMS_IOU_THRESHOLD`, `HIGH_CONF_THRESHOLD`)
-6. **Mask + ML label review** comes AFTER bbox is locked
+2. **Claude visual smoke test, 30-image sample (auto, not user-run).** Claude executes `tools/render_bbox_overlays.py --variant sam3__sam3 --n 30 --out /tmp/bbox_check_30/`, reads each rendered image, reports findings: `X/30 look sensible, Y/30 wrong subject, Z/30 wildly clipped, problem image_ids: [...]`. If ≥20% obvious failures, Claude recommends knob tuning + iterates Steps 2-3 with a fresh 30-image sample after each tune. Loop until Claude is **confident the bbox params look good** based on the 30-sample.
+3. **Knob tuning iterations.** Claude runs `tools/knob_sweep.py` over suspected knobs based on Step 2 findings. After each applied change, re-run Step 2 with a fresh 30-image sample. Keep iterating until 30/30 (or close) look sensible AND Claude is confident.
+4. **Final 50-image confidence check (Claude, before human review).** Claude executes `tools/render_bbox_overlays.py --variant sam3__sam3 --n 50 --out /tmp/bbox_check_final_50/ --seed-fresh`, reads all 50, reports: `Pass rate, breakdown by failure mode, recommendation: HAND TO HUMAN or KEEP TUNING`. Only when this final 50 looks clean does Claude hand off to user.
+5. **Run `bbox_stability.py`** → quantitative comparison v1 vs v2 bbox shifts; sizes re-review queue
+6. **Run `transfer_labels.py --dry-run`** → preview auto-transferred labels + re-review queue (expect ~150-200 of 318)
+7. **20-image sanity check** (user-run, per IoU transfer protocol above)
+8. **Run `transfer_labels.py --apply`** if sanity check passes
+9. **Bbox-only labeling marathon** on the re-review queue + any new images, using UI's bbox-only mode
+10. **Mask + ML label review** comes AFTER bbox is locked
 
-The workflow ordering is deliberate — bbox is upstream of everything. If bbox shifts, mask labels and gate decisions become noise. Locking bbox first means all downstream label work has stable foundation.
+The workflow ordering is deliberate — bbox is upstream of everything. If bbox shifts, mask labels and gate decisions become noise. Locking bbox first means all downstream label work has stable foundation. Claude's two-tier visual smoke test (iterative 30-image during knob tuning, final 50-image confidence check before handoff) ensures the user doesn't burn review time on output Claude could've caught.
 
 ## Small decisions (baked in)
 

@@ -61,6 +61,37 @@ Anything under `scripts/detect_subjects/` is a WIP ML pipeline. Don't
 modify it for code-review fixes, refactors, or test cleanup unless the
 user explicitly asks.
 
+## ML pipeline bbox visual smoke test (Claude responsibility)
+
+**Always visually smoke-test bbox quality before asking the user to review.**
+
+After any change that affects which bboxes get picked (model swap, prompt
+change, knob tune), Claude (not the user) runs the bbox overlay renderer
+and inspects the output:
+
+Two-tier protocol:
+
+1. **Iterative 30-image samples during knob tuning** —
+   ```
+   .venv/bin/python -m tools.render_bbox_overlays \
+       --variant sam3__sam3 --n 30 --out /tmp/bbox_check_30/
+   ```
+   Read each `/tmp/bbox_check_30/*.jpg` via the Read tool. Report:
+   `X/30 sensible, Y/30 wrong subject, Z/30 wildly clipped, problem image_ids: [...]`.
+   If ≥20% obvious failures, recommend knob tuning + iterate with a fresh
+   30-sample after each tune. Keep tuning until confident.
+
+2. **Final 50-image confidence check before human review** —
+   ```
+   .venv/bin/python -m tools.render_bbox_overlays \
+       --variant sam3__sam3 --n 50 --out /tmp/bbox_check_final_50/ --seed-fresh
+   ```
+   Use `--seed-fresh` so the 50 don't overlap with prior 30-samples.
+   Read all 50, report pass rate + recommendation. Only hand off to user
+   when the final 50 looks clean.
+
+Don't burn the user's review time on output Claude could've caught.
+
 ## ML pipeline vocabulary (`scripts/detect_subjects/`)
 
 After the 2026-05-16 Phase 1 refactor, the modular pipeline composes:
