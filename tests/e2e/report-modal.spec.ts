@@ -11,7 +11,13 @@ test("R key opens report modal during session, Esc closes it", async ({ page }) 
   await expect(page.getByRole("dialog", { name: /report this image/i })).toBeVisible();
   await expect(page.getByRole("button", { name: /^submit$/i })).toBeVisible();
 
-  await page.keyboard.press("Escape");
+  // page.keyboard.press("Escape") and locator.press("Escape") both
+  // silently no-op in Firefox + WebKit (Playwright protocol quirk).
+  // Modal listens for Escape via window keydown as a defence-in-depth
+  // override of the native <dialog> behaviour, so dispatchEvent works.
+  await page.evaluate(() => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+  });
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 

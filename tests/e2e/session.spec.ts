@@ -16,9 +16,18 @@ test("home → start → session player → exit", async ({ page }) => {
   // Press space to pause
   await page.keyboard.press("Space");
 
-  // Press Escape — back to home
-  await page.keyboard.press("Escape");
-  await page.waitForURL("/");
+  // Press Escape — back to home.
+  // Both `page.keyboard.press("Escape")` and `locator.press("Escape")`
+  // silently no-op in Firefox + WebKit (Playwright protocol quirk —
+  // verified by instrumenting window/document/body keydown listeners
+  // and observing zero events). The only reliable cross-browser way
+  // to fire a keydown for Escape is evaluate + dispatchEvent.
+  await page.evaluate(() => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+  });
+  // Home page re-syncs interval state into the URL on mount (e.g.,
+  // `/?interval=30`), so wait on the pathname only.
+  await page.waitForURL((url) => new URL(url).pathname === "/");
 });
 
 test("session keyboard B toggles B&W", async ({ page }) => {

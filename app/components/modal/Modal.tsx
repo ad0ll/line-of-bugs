@@ -84,6 +84,25 @@ export function Modal({ onClose, children, ariaLabel, ariaLabelledBy }: ModalPro
     };
   }, []);
 
+  // Defence in depth around the native <dialog> Escape behaviour.
+  // Native dialog close-on-Escape works in modern browsers, but: (a) it
+  // requires the event to be 'trusted' (so synthetic dispatchEvent tests
+  // can't drive it), and (b) WebKit/Firefox have known edge cases where
+  // it doesn't fire (e.g., before initial focus has been placed inside
+  // the dialog). Listening at window lets `d.close()` run from any
+  // Escape press — and `d.close()` is idempotent if the browser already
+  // closed it via the native path.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      const d = dialogRef.current;
+      if (!d || !d.open) return;
+      d.close();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   function triggerClose() {
     const d = dialogRef.current;
     if (!d) return;
