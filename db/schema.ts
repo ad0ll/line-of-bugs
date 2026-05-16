@@ -12,7 +12,7 @@
  * Generated types are exported below for use throughout the app.
  */
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, index, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { integer, sqliteTable, text, index, uniqueIndex, check } from "drizzle-orm/sqlite-core";
 
 // ──────────────────────────── images ────────────────────────────
 
@@ -128,9 +128,28 @@ export const images = sqliteTable(
     uniqueIndex("idx_images_source_source_id").on(t.source, t.sourceId),
     // (0007) Composite for the gallery hot path (hidden=0 + subject_state filter).
     index("idx_images_hidden_subject_state").on(t.hidden, t.subjectState),
-    // TODO: CHECK constraints for enums (subject_state, life_stage, sex, source)
-    // require a SQLite table rebuild and have low marginal value over the TS
-    // enums already enforced at the application layer; deferred.
+    // (0008) SQL-level enum CHECK constraints. The TS enums in the column
+    // definitions above are the canonical source — these constraints just
+    // backstop the storage layer against raw inserts that bypass the ORM.
+    // Drizzle-orm 0.45 only supports table-level `check(name, sql)`; there
+    // is no column-level `.$check()` API. Keep the IN-lists in sync with
+    // sources / subjectStates / lifeStages / sexes above.
+    check(
+      "images_source_check",
+      sql`${t.source} IN ('inaturalist', 'bugwood')`,
+    ),
+    check(
+      "images_subject_state_check",
+      sql`${t.subjectState} IN ('wild', 'captive', 'specimen')`,
+    ),
+    check(
+      "images_life_stage_check",
+      sql`${t.lifeStage} IS NULL OR ${t.lifeStage} IN ('adult', 'nymph', 'larva', 'pupa', 'egg', 'cocoon', 'juvenile', 'unknown')`,
+    ),
+    check(
+      "images_sex_check",
+      sql`${t.sex} IS NULL OR ${t.sex} IN ('male', 'female', 'worker', 'unknown')`,
+    ),
   ],
 );
 
@@ -185,6 +204,15 @@ export const reports = sqliteTable(
     index("idx_reports_pending_recent")
       .on(sql`${t.createdAt} DESC`)
       .where(sql`${t.resolvedAt} IS NULL`),
+    // (0008) SQL-level enum CHECK constraints — see same note on images.
+    check(
+      "reports_category_check",
+      sql`${t.category} IN ('low-resolution', 'spooky', 'cropped', 'ai-generated', 'zoomed-out', 'wheres-the-bug', 'other')`,
+    ),
+    check(
+      "reports_resolved_action_check",
+      sql`${t.resolvedAction} IS NULL OR ${t.resolvedAction} IN ('dismissed', 'image-hidden', 'image-deleted')`,
+    ),
   ],
 );
 
