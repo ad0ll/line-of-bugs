@@ -1,6 +1,6 @@
 """PyArrow schema + DetectionRow dataclass for the framing detector parquet."""
 from __future__ import annotations
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Optional
 
 import pyarrow as pa
@@ -49,6 +49,11 @@ class DetectionRow:
     segmenter_model: Optional[str]
     processed_at: int  # unix epoch milliseconds
     schema_version: int
+    # Phase 2 additions
+    text_label: Optional[str] = None
+    text_label_score: Optional[float] = None
+    gate_decision: Optional[str] = None
+    distinct_subjects: list[dict] = field(default_factory=list)
 
 
 SCHEMA = pa.schema([
@@ -93,6 +98,17 @@ SCHEMA = pa.schema([
     ("segmenter_model", pa.string()),
     ("processed_at", pa.timestamp("ms")),
     ("schema_version", pa.int8()),
+    ("text_label", pa.string()),
+    ("text_label_score", pa.float32()),
+    ("gate_decision", pa.string()),
+    ("distinct_subjects", pa.list_(pa.struct([
+        ("x", pa.float32()),
+        ("y", pa.float32()),
+        ("w", pa.float32()),
+        ("h", pa.float32()),
+        ("conf", pa.float32()),
+        ("phrase", pa.string()),
+    ]))),
 ])
 
 
