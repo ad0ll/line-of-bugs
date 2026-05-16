@@ -54,7 +54,10 @@ export function HoverZoom({ itemSelector, gridRef, delay }: HoverZoomProps) {
       const popup = popupRef.current;
       const img = imgRef.current;
       if (popup) popup.classList.remove('visible');
-      if (img) img.src = '';
+      // Use removeAttribute('src') rather than `img.src = ''`. Setting
+      // src to empty string makes the browser issue a phantom GET for
+      // the page URL (or worse, for the current directory) on every hide.
+      if (img) img.removeAttribute('src');
     }
 
     let currentHoverId: string | null = null;
