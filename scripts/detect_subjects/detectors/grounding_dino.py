@@ -8,7 +8,6 @@ Reference: https://huggingface.co/docs/transformers/en/model_doc/grounding-dino
 """
 from __future__ import annotations
 import time
-from dataclasses import dataclass
 from typing import Optional
 
 import torch
@@ -43,20 +42,14 @@ def _dino_cache_key(prompt: str, model_id: str) -> str:
 from scripts.detect_subjects.metrics import iou_xywh_normalized
 
 
-@dataclass(slots=True)
-class DetectionResult:
-    bbox_xywh_normalized: Optional[tuple[float, float, float, float]]
-    confidence: Optional[float]
-    n_raw_detections: int
-    n_distinct_detections: int
-    detection_ms: int
-    # Every distinct subject instance after center-clustering, sorted by
-    # confidence desc. Same coordinate system as `bbox_xywh_normalized`
-    # (normalized xywh). The first element is the chosen primary; downstream
-    # consumers that want SECONDARY detections should skip index 0 (or filter
-    # for boxes whose xywh != primary's xywh, since the "bark-beetle fix" may
-    # pick a non-top-conf box as primary).
-    distinct_subjects: list[tuple[float, float, float, float, float]] = None
+from scripts.detect_subjects.interfaces import DetectionResult
+
+# Each distinct_subjects tuple is (x, y, w, h, confidence, phrase). GroundingDINO
+# can emit a per-detection phrase but the current wrapper does not yet thread it
+# through, so the 6th slot is always None. interfaces.DetectionResult's text_label
+# and text_label_score fields are likewise unpopulated for the same reason.
+# The "bark-beetle fix" may pick a non-top-conf primary, so downstream consumers
+# that want SECONDARY detections should skip whichever box matches the primary.
 
 
 class GroundingDinoDetector:
@@ -166,7 +159,11 @@ class GroundingDinoDetector:
             if k[4] >= HIGH_CONF_THRESHOLD
             and 0.005 <= (k[2] * k[3]) <= BBOX_MAX_AREA_RATIO
         ]
-        distinct_subjects: list[tuple[float, float, float, float, float]] = []
+        # Each distinct_subjects tuple is (x, y, w, h, conf, phrase). Phrase is
+        # None until the per-detection phrase pipeline lands (Phase 2).
+        distinct_subjects: list[
+            tuple[float, float, float, float, float, Optional[str]]
+        ] = []
         for c in confident:  # already sorted by conf desc
             cx_center = c[0] + c[2] / 2.0
             cy_center = c[1] + c[3] / 2.0
@@ -177,7 +174,7 @@ class GroundingDinoDetector:
                     inside_any = True
                     break
             if not inside_any:
-                distinct_subjects.append(c)
+                distinct_subjects.append((c[0], c[1], c[2], c[3], c[4], None))
         n_distinct = len(distinct_subjects)
         return DetectionResult(
             bbox_xywh_normalized=(top[0], top[1], top[2], top[3]),
