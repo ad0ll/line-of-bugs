@@ -22,8 +22,16 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import requests
+from PIL import Image, ImageOps
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+# Cap Pillow's image-decode size. Default is ~178 MP (which raises a
+# DecompressionBombWarning at ~89 MP and a hard error at ~178 MP). 80 MP
+# comfortably covers any modern camera (40 MP full-frame, 100 MP medium-
+# format) while protecting the fetcher venv from OOM on a malicious /
+# pathologically-large upstream file.
+Image.MAX_IMAGE_PIXELS = 80_000_000
 
 # ───────────────────────── paths + constants ────────────────────
 
@@ -182,11 +190,12 @@ def build_filename(source: str, source_id: str, subject_state: str,
 
 def make_resized(src_path: Path, dst_path: Path, max_dim: int, quality: int) -> bool:
     """Generate a fit-within-{max_dim} JPEG q{quality} resized variant.
-    Preserves aspect ratio (long edge ≤ max_dim)."""
+    Preserves aspect ratio (long edge ≤ max_dim). Applies EXIF orientation
+    so phone-camera portraits aren't rotated 90° in the gallery."""
     try:
-        from PIL import Image
         with Image.open(src_path) as img:
             img.load()
+            img = ImageOps.exif_transpose(img)
             if img.mode in ("RGBA", "LA", "P"):
                 img = img.convert("RGB")
             img.thumbnail((max_dim, max_dim), Image.LANCZOS)
