@@ -91,7 +91,7 @@ Independent of model changes; ships with the existing DINO + InsectSAM stack.
 **Deliverables:**
 
 - **`migrate_labels.py`** — one-shot script. Applies parent spec's rename mapping (§446-466). Drops the 42 `multi-bug` labels entirely (semantic changed — rule labeler will re-suggest under new vocab). Backs up old `labels.json` to `tools/manual-labels-backups/labels-pre-phase2.json` before rewriting. Deleted after running per repo convention.
-- **4-column validator UI** (HTML/JS in `tools/validator/`):
+- **4-column validator UI** — **in-place rewrite of the single 583-line `index.html.j2` template** (current location: `scripts/detect_subjects/templates/`, relocates to `tools/validator/templates/` in pre-work item 9). The template is one file with inline `<style>` + `<script>`. Existing `suggested` (sky-blue outline) vs `active` (amber fill) button states are reused; new 4-column layout replaces the current flat flag grid:
   - Column 1 (BBox): green when set, mutex of 3, human-only
   - Column 2 (BBox Content): amber, count mutex + independent flags, rule labeler auto-fills
   - Column 3 (Mask Rule): sky-blue, blur pair mutex, rule labeler auto-fills today (ML labeler in Phase 3)
@@ -99,7 +99,7 @@ Independent of model changes; ships with the existing DINO + InsectSAM stack.
   - "Good" default at the top of each column = the gate-pass state
 - **Bbox-only labeling mode** (UI toggle): focuses Column 1, auto-fills Columns 2-4 with rule labeler suggestions, "Save & next" commits Column 1 + accepts auto-fills. Lets the user blast through bbox labeling without distraction.
 - **Stale label warning**: UI flags when a displayed label was set against a different variant than what's currently rendered (uses `variant_tag` from parquet vs the row that produced the label).
-- **`label_server.py`** updates: serves new vocab, accepts new label POST payloads, handles soft-reject `_usable` variants.
+- **`label_server.py`** updates: stays as the existing `http.server`-based static + `/api/labels` GET/POST endpoint. The atomic-write pattern (`tempfile.mkstemp` → `os.replace`) is unchanged. POST continues to replace the entire `labels.json` dict in one shot (per existing pattern). New label vocabulary values flow through unchanged — the server is vocabulary-agnostic. Print statement at startup updated to point at new validator path.
 - **`build_html.py`** updates: renders the 4-column layout, applies per-column colors, draws per-bbox text-label overlays (`phrase·confidence` at each bbox corner; red border for NEGATIVE-class matches).
 - **`evaluate_pipeline.py`** vocab refresh: per-label F1 + bootstrap CIs against new label names.
 
@@ -115,7 +115,7 @@ Model-layer changes. Independent of vocab/UI work after pre-work.
 
 **Deliverables:**
 
-- **`detectors/sam3.py`** — SAM 3 wrapper implementing `Detector` Protocol. Populates `text_label` / `text_label_score` / per-detection phrases from the model output. Loads SAM 3 from `facebook/sam3` on MPS, F32 dtype.
+- **`detectors/sam3.py`** — SAM 3 wrapper implementing `Detector` Protocol. Uses `Sam3Model` + `Sam3Processor` from `transformers`. Loads `facebook/sam3` on MPS, F32 dtype. Calls `processor(images=image, text=PROMPT_LIST, return_tensors="pt")` followed by `processor.post_process_instance_segmentation(outputs, threshold=0.5, mask_threshold=0.5, target_sizes=...)`. Initial implementation: one inference call per image with multi-class prompt list. If per-instance text-label exposure fails (see Open Questions), fall back to N single-class calls.
 - **`segmenters/sam3.py`** — same model instance, bbox-prompted mode. Per parent spec §91: no separate `OneShotDetectorSegmenter` protocol; the unified mode is implementation-level (share model weights between `Detector` and `Segmenter` instances).
 - **`prompt_builder.py`** — DB-driven prompt:
   - Queries `taxon_order` from `data/db/line-of-bugs.db`
@@ -236,12 +236,16 @@ Parent spec's overall success criteria (gate precision ≥0.94, full 34k run, <3
 
 ## Open questions to resolve during implementation
 
-- **SAM 3 PCS per-instance text label exposure.** Parent spec §515. If SAM 3 doesn't return per-detection phrases natively when given multi-class prompts, fallback options: (a) separate inference call per phrase; (b) post-hoc text-image embedding similarity. Verify in Phase 2b's first task.
+- **SAM 3 PCS per-instance text label exposure.** Parent spec §515. After researching the [HF SAM 3 docs](https://huggingface.co/docs/transformers/model_doc/sam3): the API exposes `outputs.pred_masks [batch, num_queries, H, W]` + boxes, but the docs don't explicitly say whether each `query` slot carries a "which-text-prompt-matched" identifier for multi-class prompts. The "presence token" architectural feature suggests per-instance class discrimination is supported, but the post-processing surface needs hands-on verification. Phase 2b's first task: write a 20-line probe script that runs SAM 3 with `text=["a beetle", "a flower"]` on a known image and inspects the output structure. If per-instance phrase is exposed → use multi-class prompt. If not → fall back to N single-class calls per image (slower but works).
 - **Sanity check sample size.** 20 images is a starting point. If the dataset's bbox shift distribution is bimodal (most images either super-stable or super-shifted), 20 may miss the middle ground. Revisit if validation results look ambiguous.
 - **Pre-trained classifier for ablation test.** The ablation needs SOME classifier to compare with-mask vs without-mask AUC. The spec doesn't specify which. Plan to use a simple `LogisticRegression` on the labeled subset (rather than training a deep model just for ablation). Decision point in Phase 2b.
 
 ## Sources
 
+- [HuggingFace `facebook/sam3` model card](https://huggingface.co/facebook/sam3)
+- [HF Transformers SAM3 docs](https://huggingface.co/docs/transformers/model_doc/sam3) — `Sam3Model`/`Sam3Processor` API surface
+- [SAM 3 paper (arXiv 2511.16719)](https://arxiv.org/html/2511.16719v1) — PCS architecture, presence token, multi-class prompts
+- [Ultralytics SAM 3 docs](https://docs.ultralytics.com/models/sam-3) — multi-class text prompt examples (`text=["person", "bus"]`)
 - [COCO Detection Evaluation](https://cocodataset.org/#detection-eval) — IoU thresholds for mAP
 - [PASCAL VOC devkit doc](http://host.robots.ox.ac.uk/pascal/VOC/voc2012/htmldoc/devkit_doc.html) — IoU = 0.5 as matching detection
 - [Fast Vehicle Detection (Liu et al. 2022)](https://arxiv.org/pdf/2207.01183) — HCC propagation at IoU ≥ 0.8
