@@ -12,10 +12,14 @@ interface Props {
   lifeStages: string[];
   sexes: string[];
   groups: string[];
+  /** Species tags (booru-style multi-tag search). When the home
+   *  filter is in "species" mode, selected tags flow through here
+   *  so the session pool respects them. */
+  species: string[];
 }
 
 export function StartSessionButton({
-  intervalSec, subjectType, repeatMode, views, lifeStages, sexes, groups,
+  intervalSec, subjectType, repeatMode, views, lifeStages, sexes, groups, species,
 }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -36,6 +40,7 @@ export function StartSessionButton({
         body: JSON.stringify({
           intervalSec, subjectType, repeatMode,
           views, lifeStages, sexes, groups,
+          q: species,
         }),
       });
       if (!res.ok) {

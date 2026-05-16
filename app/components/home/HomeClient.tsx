@@ -104,6 +104,7 @@ export function HomeClient({
     if (life.length) q.set("life", life.join(","));
     if (sexes.length) q.set("sex", sexes.join(","));
     if (groups.length) q.set("type", groups.join(","));
+    if (species.length) q.set("q", species.join(","));
     const key = q.toString();
     if (key === lastFetchKey.current) return;
     lastFetchKey.current = key;
@@ -126,7 +127,7 @@ export function HomeClient({
       clearTimeout(handle);
       controller.abort();
     };
-  }, [subject, views, life, sexes, groups]);
+  }, [subject, views, life, sexes, groups, species]);
 
   const poolCount = facets.total;
 
@@ -222,6 +223,7 @@ export function HomeClient({
             views={views}
             lifeStages={life}
             sexes={sexes}
+            species={species}
             groups={groups}
           />
           <a href="/gallery" className="home-gallery-link">

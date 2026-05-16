@@ -29,6 +29,7 @@ export async function GET(req: Request): Promise<Response> {
   const sexes = readList(url.searchParams.get("sex"));
   const groups = readList(url.searchParams.get("type"));
   const institutions = readList(url.searchParams.get("inst"));
+  const q = readList(url.searchParams.get("q"));
 
   const unfiltered =
     subjectType === "all" &&
@@ -36,7 +37,8 @@ export async function GET(req: Request): Promise<Response> {
     lifeStages.length === 0 &&
     sexes.length === 0 &&
     groups.length === 0 &&
-    institutions.length === 0;
+    institutions.length === 0 &&
+    q.length === 0;
 
   const snap = unfiltered
     ? await getUnfilteredFacets()
@@ -47,6 +49,7 @@ export async function GET(req: Request): Promise<Response> {
         sexes,
         groups,
         institutions,
+        q,
       });
 
   return Response.json(snap, {

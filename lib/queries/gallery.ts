@@ -2,7 +2,11 @@ import { sql, type SQL } from "drizzle-orm";
 import { cacheTag, cacheLife } from "next/cache";
 import { db } from "@/db";
 import type { SubjectType } from "@/lib/subject";
-import { buildFilterClauses } from "@/lib/queries/filter-clauses";
+import { buildFilterClauses, buildFtsQuery } from "@/lib/queries/filter-clauses";
+
+// Re-export FTS helpers from the canonical location so existing test
+// imports (`from "@/lib/queries/gallery"`) keep working.
+export { buildFtsTag, buildFtsQuery } from "@/lib/queries/filter-clauses";
 
 export type GalleryRow = {
   image_id: string;
@@ -51,46 +55,18 @@ export type SearchGalleryResult = {
 
 const PAGE_SIZE = 50;
 
-/**
- * Build one FTS5 MATCH expression from one search tag. Multi-word
- * tags are AND'd internally with the last word prefix-matched (so
- * "tiger swal" matches "tiger swallowtail").
- *
- * Exported for unit tests; ordinary callers use `buildFtsQuery`.
- */
-export function buildFtsTag(raw: string): string | null {
-  const cleaned = raw.replace(/[^\p{L}\p{N}\s]/gu, " ").trim();
-  if (!cleaned) return null;
-  const tokens = cleaned.split(/\s+/).filter(Boolean);
-  if (tokens.length === 0) return null;
-  const head = tokens.slice(0, -1).map((t) => `"${t}"`);
-  const last = `"${tokens.at(-1)!}"*`;
-  return [...head, last].join(" ");
-}
-
-/**
- * Combine multiple tags into one FTS5 expression. Tags are OR'd
- * together — selecting "monarch" + "swallowtail" matches rows that
- * mention either. Returns null if no tags produce valid FTS terms.
- *
- * Exported for unit tests.
- */
-export function buildFtsQuery(tags: readonly string[]): string | null {
-  const sub = tags
-    .map((t) => buildFtsTag(t))
-    .filter((s): s is string => s !== null)
-    .map((s) => `(${s})`);
-  if (sub.length === 0) return null;
-  return sub.join(" OR ");
-}
-
 export async function searchGallery(args: SearchGalleryArgs): Promise<SearchGalleryResult> {
   "use cache";
   cacheTag("gallery-results");
   cacheLife("hours");
 
   const offset = (args.page - 1) * PAGE_SIZE;
-  const ftsQuery = buildFtsQuery(args.q);
+
+  // User typed something but every tag was unsanitizable — return empty
+  // BEFORE we hit the DB, so we don't show the unfiltered set.
+  if (args.q.length > 0 && args.q.some((t) => t.trim()) && !buildFtsQuery(args.q)) {
+    return { rows: [], totalCount: 0, hasMore: false, page: args.page, pageSize: PAGE_SIZE };
+  }
 
   const filters: SQL[] = buildFilterClauses({
     subjectType: args.subject,
@@ -99,16 +75,8 @@ export async function searchGallery(args: SearchGalleryArgs): Promise<SearchGall
     sexes: args.sexes,
     groups: args.groups,
     institutions: args.institutions,
+    q: args.q,
   });
-
-  // User typed something but every tag was unsanitizable — return empty.
-  if (args.q.length > 0 && args.q.some((t) => t.trim()) && !ftsQuery) {
-    return { rows: [], totalCount: 0, hasMore: false, page: args.page, pageSize: PAGE_SIZE };
-  }
-
-  if (ftsQuery) {
-    filters.push(sql`image_id IN (SELECT image_id FROM images_fts WHERE images_fts MATCH ${ftsQuery})`);
-  }
 
   const whereClause = sql.join(filters, sql` AND `);
 

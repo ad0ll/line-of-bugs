@@ -43,6 +43,10 @@ export async function POST(req: Request) {
     lifeStages: readList(b.lifeStages),
     sexes: readList(b.sexes),
     groups: readList(b.groups),
+    // Species filter — booru-style multi-tag, OR'd via FTS5. The
+    // home page's "species" mode pushes selections here so the
+    // session pool respects them.
+    q: readList(b.q),
   });
 
   if (items.length === 0) {

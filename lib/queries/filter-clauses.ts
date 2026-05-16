@@ -7,9 +7,10 @@ import type { SubjectType } from "@/lib/subject";
  * Each axis maps to one SQL clause; empty arrays / "all" subject skip
  * their clause entirely.
  *
- * `institutions` is optional because the session API + home page
- * never apply institution filtering — only the gallery + gallery
- * facets do. Callers that don't care can omit it.
+ * Optional axes (`q`, `institutions`) — leave undefined or empty when
+ * the caller doesn't use them. The session API doesn't filter on
+ * institution. The facet endpoint doesn't filter on q (autocomplete
+ * already narrows). The gallery filters on both.
  */
 export interface FilterState {
   subjectType: SubjectType;
@@ -17,7 +18,41 @@ export interface FilterState {
   lifeStages: string[];
   sexes: string[];
   groups: string[];
+  /** Booru-style multi-tag species search. Each tag is AND-joined
+   *  on its own tokens; tags are OR'd together via FTS5. */
+  q?: string[];
   institutions?: string[];
+}
+
+/**
+ * Build one FTS5 MATCH expression from one search tag. Multi-word
+ * tags are AND'd internally with the last word prefix-matched
+ * ("tiger swal" matches "tiger swallowtail").
+ *
+ * Exported for unit tests; ordinary callers use buildFtsQuery.
+ */
+export function buildFtsTag(raw: string): string | null {
+  const cleaned = raw.replace(/[^\p{L}\p{N}\s]/gu, " ").trim();
+  if (!cleaned) return null;
+  const tokens = cleaned.split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return null;
+  const head = tokens.slice(0, -1).map((t) => `"${t}"`);
+  const last = `"${tokens.at(-1)!}"*`;
+  return [...head, last].join(" ");
+}
+
+/**
+ * Combine multiple tags into one FTS5 expression. Tags OR together —
+ * selecting "monarch" + "swallowtail" matches rows mentioning either.
+ * Returns null if no tags produce valid FTS terms.
+ */
+export function buildFtsQuery(tags: readonly string[]): string | null {
+  const sub = tags
+    .map((t) => buildFtsTag(t))
+    .filter((s): s is string => s !== null)
+    .map((s) => `(${s})`);
+  if (sub.length === 0) return null;
+  return sub.join(" OR ");
 }
 
 /**
@@ -65,13 +100,19 @@ export function buildFilterClauses(
     const list = sql.join(filters.institutions.map((x) => sql`${x}`), sql`, `);
     clauses.push(sql`institution IN (${list})`);
   }
+  if (filters.q && filters.q.length > 0) {
+    const ftsQuery = buildFtsQuery(filters.q);
+    if (ftsQuery) {
+      clauses.push(
+        sql`${outerImageId} IN (SELECT image_id FROM images_fts WHERE images_fts MATCH ${ftsQuery})`,
+      );
+    }
+  }
 
   return clauses;
 }
 
 function inOrUnknown(column: SQL, values: string[]): SQL {
-  // Multi-select facet: "unknown" is a synthetic sentinel for the
-  // NULL ∪ empty-string bucket (most older iNat rows have no annotation).
   const real = values.filter((v) => v !== "unknown");
   const includeUnknown = values.includes("unknown");
   const parts: SQL[] = [];
