@@ -23,6 +23,15 @@ export function applyRepeatMode(items: Image[], mode: RepeatMode): Image[] {
   const out: Image[] = [];
   for (const it of items) {
     const speciesKey = it.taxonSpecies || it.commonName || it.imageId;
+    // Defensive: collectionId is currently notNull in the schema, but if the
+    // type ever loosens (or a row is malformed) every nulled item would
+    // collapse into a single "null" bucket and only the first would survive.
+    // Treat null/missing collection as "unique image, always keep" — that
+    // matches the user-visible intent of "allow different angles".
+    if (it.collectionId == null) {
+      out.push(it);
+      continue;
+    }
     if (seenCollections.has(it.collectionId)) {
       out.push(it);
       continue;

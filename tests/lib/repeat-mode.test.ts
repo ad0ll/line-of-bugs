@@ -38,4 +38,19 @@ describe("applyRepeatMode", () => {
     expect(out).toHaveLength(4);
     expect(out.map((i) => i.imageId).sort()).toEqual(["a1", "a2", "b1", "b2"]);
   });
+
+  it("allow-different-angles treats null collectionId as always-unique", () => {
+    // If the schema ever loosens to allow null collectionId, every nulled
+    // item must NOT collapse into a single bucket. Cast through unknown to
+    // bypass the current notNull type while still exercising the runtime path.
+    const malformed = [
+      { ...mk("n1", "Bee Z", "col-X"), collectionId: null },
+      { ...mk("n2", "Bee Z", "col-Y"), collectionId: null },
+      mk("n3", "Bee Z", "col-Y"),
+    ] as unknown as Image[];
+    const out = applyRepeatMode(malformed, "allow-different-angles");
+    // Both null-collection items survive (always-unique path); the
+    // well-formed third one is kept as the species' canonical collection.
+    expect(out.map((i) => i.imageId)).toEqual(["n1", "n2", "n3"]);
+  });
 });
