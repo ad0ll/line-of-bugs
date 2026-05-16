@@ -19,8 +19,11 @@ describe("/api/img/[name]", () => {
     expect(res.headers.get("cache-control")).toBe(
       "public, max-age=31536000, immutable",
     );
+    const contentLength = res.headers.get("content-length");
+    expect(contentLength).not.toBeNull();
     const body = await res.arrayBuffer();
     expect(body.byteLength).toBeGreaterThan(1000);
+    expect(Number(contentLength)).toBe(body.byteLength);
   });
 
   it("returns 404 for non-existent file", async () => {

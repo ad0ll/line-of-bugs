@@ -15,10 +15,14 @@ describe("/api/thumb/[name]", () => {
       params: Promise.resolve({ name: knownFilename }),
     });
     expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("image/jpeg");
     expect(res.headers.get("cache-control")).toContain("immutable");
+    const contentLength = res.headers.get("content-length");
+    expect(contentLength).not.toBeNull();
     const body = await res.arrayBuffer();
     expect(body.byteLength).toBeGreaterThan(1000);
     expect(body.byteLength).toBeLessThan(200_000);
+    expect(Number(contentLength)).toBe(body.byteLength);
   });
 
   it("returns 404 for missing file", async () => {

@@ -10,8 +10,8 @@ describe("safeBasename", () => {
     expect(safeBasename("../etc/passwd")).toBe("");
   });
 
-  it("strips null bytes", () => {
-    expect(safeBasename("ok.jpg\u0000.txt")).toBe("ok.jpg.txt");
+  it("rejects null bytes outright", () => {
+    expect(safeBasename("ok.jpg\u0000.txt")).toBe("");
   });
 
   it("rejects backslash traversal attempts (returns empty)", () => {
