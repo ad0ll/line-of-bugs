@@ -1,19 +1,20 @@
 import { defineConfig } from "vitest/config";
+import { playwright } from "@vitest/browser-playwright";
 import path from "node:path";
 
+// Three test tiers:
+//   - node:    pure logic, DB queries, route handlers — fastest, no DOM
+//   - browser: real chromium via @vitest/browser-playwright — DOM behaviour
+//              that happy-dom can't fake faithfully (<dialog>, focus, layout,
+//              real keyboard events)
+//   - legacy-happydom: holding pen for tests not yet migrated; will be
+//                      emptied + removed in a follow-up commit.
+//
+// Coverage must live at root level — vitest 4 merges traces across
+// projects automatically.
 export default defineConfig({
   test: {
-    environment: "happy-dom",
-    setupFiles: ["./tests/setup.ts"],
-    include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
-    exclude: ["tests/e2e/**", "node_modules", ".next"],
     globals: true,
-    // Must be set before db/index.ts loads. ES-module import hoisting
-    // would otherwise pull setup.ts's imports above an in-file
-    // assignment to process.env, binding the db singleton to the
-    // real production file. vitest applies `env` before any module
-    // evaluates.
-    env: { DATABASE_URL: ":memory:" },
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "json-summary"],
@@ -28,6 +29,64 @@ export default defineConfig({
         "app/api/healthz/**",
       ],
     },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "node",
+          environment: "node",
+          setupFiles: ["./tests/setup-node.ts"],
+          include: [
+            "tests/api/**/*.test.ts",
+            "tests/lib/facets.test.ts",
+            "tests/lib/filter-clauses.test.ts",
+            "tests/lib/fts-query.test.ts",
+            "tests/lib/order-colors.test.ts",
+            "tests/lib/repeat-mode.test.ts",
+            "tests/lib/session-pools.test.ts",
+            "tests/lib/subject.test.ts",
+            "tests/lib/tokens.test.ts",
+          ],
+          env: { DATABASE_URL: ":memory:" },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "browser",
+          setupFiles: ["./tests/setup-browser.ts"],
+          // Pilot — Timer + IconBtn. More files migrate in a follow-up.
+          include: [
+            "tests/components/Timer.test.tsx",
+            "tests/components/IconBtn.test.tsx",
+          ],
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            instances: [{ browser: "chromium" }],
+            headless: true,
+          },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "legacy-happydom",
+          environment: "happy-dom",
+          setupFiles: ["./tests/setup.ts"],
+          include: [
+            "tests/components/Chip.test.tsx",
+            "tests/components/ProgressBar.test.tsx",
+            "tests/components/SessionActionBar.test.tsx",
+            "tests/components/SourceInfoChip.test.tsx",
+            "tests/lib/audio.test.ts",
+            "tests/lib/preload-manager.test.ts",
+            "tests/lib/useHighResTimer.test.ts",
+          ],
+          env: { DATABASE_URL: ":memory:" },
+        },
+      },
+    ],
   },
   resolve: {
     alias: { "@": path.resolve(__dirname) },
