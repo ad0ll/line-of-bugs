@@ -23,8 +23,9 @@ from scripts.detect_subjects.config import (
     PARQUET_WRITE_BATCH,
     SCHEMA_VERSION,
 )
+from scripts.detect_subjects import config as cfg
 from scripts.detect_subjects.crop import compute_crop_bbox, save_medium_and_thumb
-from scripts.detect_subjects.detector_dino import GroundingDinoDetector
+from scripts.detect_subjects.detectors import make_detector
 from scripts.detect_subjects.ground_truth import GroundTruthIndex, lookup_gt_bbox
 from scripts.detect_subjects.metrics import (
     bbox_area_ratio_normalized,
@@ -38,9 +39,13 @@ from scripts.detect_subjects.schema import (
     SCHEMA,
     row_to_pyarrow_record,
 )
-from scripts.detect_subjects.segmenter_insectsam import InsectSAMSegmenter
+from scripts.detect_subjects.segmenters import make_segmenter
 
-V1_NAME = "v1_dino_insectsam"
+V1_NAME = "v1_dino_insectsam"   # legacy variant string used in existing parquet
+# Future variants use cfg.variant_tag() instead. We keep V1_NAME tied to the
+# legacy string so the existing parquet's variant column doesn't have to migrate
+# during Phase 1. Phase 2 introduces a new variant_tag()-based string when SAM 3
+# swap lands.
 
 
 def _image_path_for(row: dict) -> Path:
@@ -76,8 +81,8 @@ def run_v1_on_sample(
     print(f"[v1] {len(sample_rows)} total, {len(completed)} cached, "
           f"{len(to_process)} to process")
 
-    detector = GroundingDinoDetector(device=device, dtype=dtype)
-    segmenter = InsectSAMSegmenter(device=device, dtype=dtype)
+    detector = make_detector(cfg.DETECTOR_VARIANT, device=device, dtype=dtype)
+    segmenter = make_segmenter(cfg.SEGMENTER_VARIANT, device=device, dtype=dtype)
 
     CROPS_DIR.joinpath(V1_NAME).mkdir(parents=True, exist_ok=True)
 

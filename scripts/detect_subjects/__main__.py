@@ -17,7 +17,7 @@ from scripts.detect_subjects.data import (
     pick_stratified_sample,
 )
 from scripts.detect_subjects.ground_truth import GroundTruthIndex
-from scripts.detect_subjects.pipeline import V1_NAME, run_v1_on_sample
+from scripts.detect_subjects.classify import V1_NAME, run_v1_on_sample
 
 
 def _save_sample(sample: list[dict], path: Path) -> None:
