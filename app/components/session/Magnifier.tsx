@@ -25,6 +25,19 @@ export function Magnifier({ image, size, bw }: Props) {
     vh: 720,
   });
   const rafRef = useRef<number | null>(null);
+  // RAF callbacks can fire after cleanup cancels them if the browser has
+  // already dispatched the frame (cancelAnimationFrame is racey with the
+  // tick boundary). A late setPos on an unmounted component, or after the
+  // size dep changed, would log a React warning and waste work; gate on
+  // mountedRef to make the callback a no-op after teardown.
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -46,6 +59,7 @@ export function Magnifier({ image, size, bw }: Props) {
     const onMove = (e: PointerEvent) => {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       rafRef.current = requestAnimationFrame(() => {
+        if (!mountedRef.current) return;
         setPos({ x: e.clientX, y: e.clientY });
       });
     };
