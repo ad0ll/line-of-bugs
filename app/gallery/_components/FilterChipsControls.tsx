@@ -105,7 +105,13 @@ export function FilterChipsControls({
         onChange={setSubject}
       />
 
-      <CollapsibleSection title="what kind of bug?" badge={typeBadge}>
+      {/* Open the sections when filters are pre-selected via URL so
+          users see the active filters without having to expand. */}
+      <CollapsibleSection
+        title="what kind of bug?"
+        badge={typeBadge}
+        defaultOpen={selectedTypes.length > 0}
+      >
         <Tooltip content={TOOLTIPS.taxonGroup.content} showIcon={false}>
           <TaxonGroupChips
             counts={taxonGroupCounts}
@@ -115,7 +121,11 @@ export function FilterChipsControls({
         </Tooltip>
       </CollapsibleSection>
 
-      <CollapsibleSection title="more filters" badge={advancedBadge}>
+      <CollapsibleSection
+        title="more filters"
+        badge={advancedBadge}
+        defaultOpen={advancedActive > 0}
+      >
         <div className="advanced-filter-row">
           <Tooltip content={TOOLTIPS.institution.content} showIcon={false}>
             <InstitutionPicker
