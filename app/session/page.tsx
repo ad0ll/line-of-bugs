@@ -22,7 +22,10 @@ async function SessionLoader({ searchParams }: PageProps) {
   await connection();
   const params = await searchParams;
   const sessionId = params.session;
-  const intervalSec = Number(params.interval) || 60;
+  // Clamp to the same [10s, 1h] envelope the API enforces. Prevents URL-fed
+  // sessions from getting a sub-second timer (too fast to draw) or a multi-day
+  // timer (silently DoS'd against this server's session-pool TTL).
+  const intervalSec = Math.max(10, Math.min(3600, Number(params.interval) || 60));
 
   if (!sessionId) {
     redirect("/");
