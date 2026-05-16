@@ -100,19 +100,23 @@ export function Magnifier({ image, size, bw }: Props) {
   const aspect = image.height && image.width ? image.height / image.width : 1;
   const { vw, vh } = viewport;
 
-  // The underlying <img> is rendered with object-fit: contain inside the
-  // viewport — so it's letterboxed. The loupe must sample from the rendered
-  // image rect, not the raw viewport, or it will magnify empty letterbox space.
+  // The underlying <img> uses object-fit: cover — the image overflows the
+  // viewport on the longer axis (no letterbox; opposite of contain). The
+  // loupe must sample from that overflowing rect or it magnifies the wrong
+  // image region. With cover the shorter axis matches the viewport and the
+  // longer axis extends past it; offsets are NEGATIVE on that axis.
   const imgAspect = image.width && image.height ? image.width / image.height : 1;
   const viewAspect = vw / vh;
   let renderedW: number;
   let renderedH: number;
   if (imgAspect > viewAspect) {
-    renderedW = vw;
-    renderedH = vw / imgAspect;
-  } else {
+    // image wider than viewport per height — height = vh, sides clipped
     renderedH = vh;
     renderedW = vh * imgAspect;
+  } else {
+    // image taller than viewport per width — width = vw, top/bottom clipped
+    renderedW = vw;
+    renderedH = vw / imgAspect;
   }
   const offsetX = (vw - renderedW) / 2;
   const offsetY = (vh - renderedH) / 2;
