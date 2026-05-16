@@ -33,13 +33,17 @@ from scripts.detect_subjects.config import (
     PARQUET_PATH,
 )
 
-VARIANT = "v1_dino_insectsam"
-PREF_LABEL_FROM_KIND = {"original": "original-good", "cropped": "cropped-good"}
-# Labels the v1 system actually tries to predict via suggest_labels().
-# Anything outside this set is user-only (we report frequency, not P/R).
+from scripts.detect_subjects import config as cfg
+VARIANT = cfg.variant_tag()
+# Phase 2a vocab. Labels the rule labeler emits via suggest_labels().
+# Column 1 (bbox_*) and Column 4 (ml_*) are human-only and not predicted here.
 SYSTEM_LABELS = {
-    "no-bug", "bug-too-small", "multi-bug", "poor-contrast",
-    "subject-clipped", "original-good", "cropped-good",
+    "bbox-content_no-bug",
+    "bbox-content_subject-too-small",
+    "bbox-content_bbox-multibug_unusable",
+    "bbox-content_image-multi-bug",
+    "bbox-content_single",
+    "mask_poor-contrast",
 }
 
 
@@ -56,14 +60,10 @@ def _load_labels() -> dict[str, dict]:
 
 
 def _user_label_set(record: dict | None) -> set[str]:
-    """Flatten a user label record into the set of label names that applied."""
+    """Flatten a new-vocab user label record into the set of label names."""
     if not record:
         return set()
-    out = set(record.get("flags") or [])
-    pref = record.get("preference")
-    if pref in PREF_LABEL_FROM_KIND:
-        out.add(PREF_LABEL_FROM_KIND[pref])
-    return out
+    return set(record.get("flags") or [])
 
 
 # ─── Phase 0: confusion ────────────────────────────────────────────
