@@ -1,3 +1,5 @@
+import "server-only";
+
 import bcrypt from "bcryptjs";
 import { timingSafeEqual } from "node:crypto";
 import { headers } from "next/headers";
