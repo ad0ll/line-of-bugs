@@ -276,7 +276,13 @@ def run_pass(mw: DbWriter, existing_in_bucket: int,
                 imgnum = job["_meta"]["img"]["imagenumber"]
                 url2 = f"https://bugwoodcloud.org/images/1536x1024/{imgnum}.jpg"
                 fallback = parallel_download(
-                    S, [{"url": url2, "out_path": job["out_path"], "thumb_path": job["thumb_path"], "min_edge": 1000}],
+                    S, [{
+                        "url": url2,
+                        "out_path": job["out_path"],
+                        "thumb_path": job["thumb_path"],
+                        "medium_path": job["medium_path"],
+                        "min_edge": 1000,
+                    }],
                     max_workers=1,
                 )
                 dl = fallback[0][1]
