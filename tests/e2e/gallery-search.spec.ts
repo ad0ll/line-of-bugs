@@ -22,7 +22,7 @@ test.describe('Gallery', () => {
 
     await page.waitForURL(/q=bee/);
     const afterCount = await page.locator('.grid-item').count();
-    expect(afterCount).toBeLessThanOrEqual(beforeCount);
+    expect(afterCount).toBeLessThan(beforeCount);
   });
 
   test('result count updates with filter', async ({ page }) => {
