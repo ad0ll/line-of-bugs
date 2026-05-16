@@ -10,6 +10,7 @@ import torch
 from PIL import Image
 
 from scripts.detect_subjects.caches import load_completed_pairs
+from scripts.detect_subjects.gate import decide_drawability
 from scripts.detect_subjects.rule_labeler import (
     classify_framing,
     count_bugs_in_primary_bbox,
@@ -188,10 +189,35 @@ def run_v1_on_sample(
                     bbox_area_ratio=bbox_area,
                     bbox_long_edge_px=bbox_long_edge_px,
                     n_distinct_detections=det.n_distinct_detections,
+                    n_in_primary_bbox=n_in_primary,
                     mask_area_ratio=mask_area,
                     lab_delta_e=d_e,
                     bbox_touches_edge=bbox_touches_edge,
                 )
+
+                # Phase 2a: compute drawability gate decision from rule-labeler output.
+                # Column 1 (bbox quality) is human-only; assume gate-pass default
+                # until the user reviews. Mask/ML labels not yet emitted in Phase 2a.
+                _bbox_content_count = "bbox-content_single"
+                _bbox_too_small = False
+                _bbox_img_multibug = False
+                for lbl in suggested_labels:
+                    if lbl == "bbox-content_no-bug":
+                        _bbox_content_count = "bbox-content_no-bug"
+                    elif lbl == "bbox-content_bbox-multibug_unusable":
+                        _bbox_content_count = "bbox-content_bbox-multibug_unusable"
+                    elif lbl == "bbox-content_subject-too-small":
+                        _bbox_too_small = True
+                    elif lbl == "bbox-content_image-multi-bug":
+                        _bbox_img_multibug = True
+                gate_decision_str = decide_drawability({
+                    "bbox": "bbox_correct-subject_not-clipped",
+                    "bbox_content_count": _bbox_content_count,
+                    "bbox_too_small": _bbox_too_small,
+                    "mask_labels": [],
+                    "ml_labels": [],
+                    "bbox_content_image_multi_bug": _bbox_img_multibug,
+                }).value
 
                 gt_bbox = lookup_gt_bbox(gt_index, image_id)
                 gt_iou = None
@@ -239,7 +265,7 @@ def run_v1_on_sample(
                     schema_version=SCHEMA_VERSION,
                     text_label=det.text_label,
                     text_label_score=det.text_label_score,
-                    gate_decision=None,
+                    gate_decision=gate_decision_str,
                     distinct_subjects=distinct_subj_dicts,
                 )
                 pending_records.append(row_to_pyarrow_record(dr))
