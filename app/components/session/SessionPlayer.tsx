@@ -60,6 +60,12 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
   const preloadRef = useRef<PreloadManager | null>(null);
   const firedCuesRef = useRef<Set<string>>(new Set());
   const chromeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Mirror of `idx` for callbacks that need the current index without taking
+  // it as a dependency (advance/goNext/goPrev should remain stable refs).
+  const idxRef = useRef<number>(0);
+  useEffect(() => {
+    idxRef.current = idx;
+  }, [idx]);
 
   // Initialize audio + preload once
   useEffect(() => {
@@ -86,14 +92,15 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
   const durationMs = intervalSec * 1000;
 
   const advance = useCallback(() => {
-    setIdx((cur) => {
-      audioRef.current?.transition();
-      if (cur + 1 >= items.length) {
-        setDone(true);
-        return cur;
-      }
-      return cur + 1;
-    });
+    // Side effects (audio cue, done flag) live outside the setIdx updater so
+    // React StrictMode double-invocation can't fire them twice.
+    audioRef.current?.transition();
+    const cur = idxRef.current;
+    if (cur + 1 >= items.length) {
+      setDone(true);
+      return;
+    }
+    setIdx(cur + 1);
   }, [items.length]);
 
   const goPrev = useCallback(() => {
