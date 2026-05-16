@@ -303,12 +303,11 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
         paused={paused}
         bw={bw}
         magnifier={magnifier}
-        zoom={zoom}
         isFullscreen={isFullscreen}
         currentIdx={idx}
         total={items.length}
         intervalSec={intervalSec}
-        sourceUrl={current.sourcePageUrl}
+        sourceImageUrl={current.imageUrl}
         onPause={() => setPaused((p) => !p)}
         onToggleBw={() => setBw((v) => !v)}
         onMagnifier={() =>
@@ -317,12 +316,6 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
             return MAG_CYCLE[(i + 1) % MAG_CYCLE.length]!;
           })
         }
-        onZoomIn={zoomIn}
-        onZoomOut={zoomOut}
-        onResetZoom={() => {
-          setZoom(1);
-          setPan({ x: 0, y: 0 });
-        }}
         onToggleFullscreen={toggleFullscreen}
         onReport={() => router.push(`/report/${encodeURIComponent(current.imageId)}`)}
         onIntervalChange={(s) => setIntervalSec(s)}

@@ -12,10 +12,20 @@ interface Props {
 const FACTOR: Record<Exclude<MagnifierSize, "off">, number> = {
   S: 8, M: 4, L: 3, XL: 2,
 };
-const ZOOM = 3;
+const ZOOM_BASE = 3;
+// Right-click expand grows the loupe area 2× — the "expand" affordance
+// the user wanted back. Esc / left-click close handled at the action-bar
+// + global keyboard layer; this component just listens for contextmenu.
+const EXPAND_MULTIPLIER = 2;
 
 export function Magnifier({ image, size, bw }: Props) {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  // Whether the user has expanded the loupe via right-click. Resets on
+  // each toggle (size cycle). Also drives the "first-time hint" pill —
+  // shown until the user has either expanded once OR moved the cursor
+  // a healthy distance, indicating they've figured out the affordance.
+  const [expanded, setExpanded] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   // Viewport dims tracked via state + resize listener. Reading window.innerWidth
   // directly during render skips React's update cycle, so a window resize while
   // the loupe is active would leave the rendered-image rect stale until the next
@@ -51,6 +61,8 @@ export function Magnifier({ image, size, bw }: Props) {
   useEffect(() => {
     if (size === "off") {
       setPos(null);
+      setExpanded(false);
+      setShowHint(false);
       return;
     }
     // pointermove covers both mouse (hover) and touch (drag). For touch the
@@ -63,9 +75,22 @@ export function Magnifier({ image, size, bw }: Props) {
         setPos({ x: e.clientX, y: e.clientY });
       });
     };
+    // Right-click toggles the expand state. preventDefault keeps the
+    // browser's context menu out of the way.
+    const onContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      setExpanded((v) => !v);
+    };
     window.addEventListener("pointermove", onMove);
+    window.addEventListener("contextmenu", onContextMenu);
+    setShowHint(true);
+    // Hint fades after 4 s of magnifier-on time so it doesn't linger
+    // for users who already know the controls.
+    const hintTimer = setTimeout(() => setShowHint(false), 4000);
     return () => {
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("contextmenu", onContextMenu);
+      clearTimeout(hintTimer);
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     };
   }, [size]);
@@ -93,30 +118,49 @@ export function Magnifier({ image, size, bw }: Props) {
   const offsetY = (vh - renderedH) / 2;
 
   // Loupe size: viewport-area fraction, aspect-locked to the image.
-  const loupeArea = (vw * vh) / FACTOR[size];
+  // Right-click expands by the multiplier; clicking again contracts.
+  const sizeMultiplier = expanded ? EXPAND_MULTIPLIER : 1;
+  const loupeArea = ((vw * vh) / FACTOR[size]) * sizeMultiplier;
   const loupeW = Math.sqrt(loupeArea / aspect);
   const loupeH = loupeW * aspect;
+  const ZOOM = ZOOM_BASE;
 
   // Map cursor (viewport coords) into image-rect coords.
   const cursorInImageX = pos.x - offsetX;
   const cursorInImageY = pos.y - offsetY;
 
   const filename = image.filename.replace(/^images\//, "");
-  // Square hit area so the circle isn't an ellipse when source aspect != 1.
+  // Square hit area so the box reads as square (R8: was circular).
   const side = Math.max(loupeW, loupeH);
   return (
-    <div
-      className="session-magnifier"
-      style={{
-        left: pos.x - side / 2,
-        top: pos.y - side / 2,
-        width: side,
-        height: side,
-        backgroundImage: `url(/api/img/${filename})`,
-        backgroundSize: `${renderedW * ZOOM}px ${renderedH * ZOOM}px`,
-        backgroundPosition: `${-(cursorInImageX * ZOOM - side / 2)}px ${-(cursorInImageY * ZOOM - side / 2)}px`,
-        filter: bw ? "grayscale(1) contrast(1.05)" : "none",
-      }}
-    />
+    <>
+      <div
+        className="session-magnifier"
+        style={{
+          left: pos.x - side / 2,
+          top: pos.y - side / 2,
+          width: side,
+          height: side,
+          backgroundImage: `url(/api/img/${filename})`,
+          backgroundSize: `${renderedW * ZOOM}px ${renderedH * ZOOM}px`,
+          backgroundPosition: `${-(cursorInImageX * ZOOM - side / 2)}px ${-(cursorInImageY * ZOOM - side / 2)}px`,
+          filter: bw ? "grayscale(1) contrast(1.05)" : "none",
+        }}
+      />
+      {showHint && (
+        <div
+          className="session-magnifier-hint"
+          style={{
+            // Anchor below the loupe; cap to viewport to avoid clipping.
+            left: Math.max(8, Math.min(vw - 280, pos.x - 130)),
+            top: Math.min(vh - 28, pos.y + side / 2 + 8),
+          }}
+          role="status"
+          aria-live="polite"
+        >
+          esc / left-click: close · right-click: expand
+        </div>
+      )}
+    </>
   );
 }

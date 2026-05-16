@@ -9,18 +9,14 @@ const baseProps = {
   paused: false,
   bw: false,
   magnifier: "off" as const,
-  zoom: 1,
   isFullscreen: false,
   currentIdx: 0,
   total: 47,
   intervalSec: 60,
-  sourceUrl: "https://example.com",
+  sourceImageUrl: "https://example.com/img.jpg",
   onPause: noop,
   onToggleBw: noop,
   onMagnifier: noop,
-  onZoomIn: noop,
-  onZoomOut: noop,
-  onResetZoom: noop,
   onToggleFullscreen: noop,
   onReport: noop,
   onIntervalChange: noop,
@@ -32,13 +28,12 @@ describe("SessionActionBar", () => {
     await expect.element(screen.getByText(/pause/i)).toBeInTheDocument();
     await expect.element(screen.getByText(/b\.w/i)).toBeInTheDocument();
     await expect.element(screen.getByText(/magnifier/i)).toBeInTheDocument();
-    await expect.element(screen.getByLabelText(/zoom in/i)).toBeInTheDocument();
-    await expect.element(screen.getByLabelText(/zoom out/i)).toBeInTheDocument();
-    await expect.element(screen.getByLabelText(/reset zoom/i)).toBeInTheDocument();
     await expect.element(screen.getByText(/fullscreen/i)).toBeInTheDocument();
     await expect.element(screen.getByText(/report/i)).toBeInTheDocument();
     await expect.element(screen.getByText(/source/i)).toBeInTheDocument();
-    await expect.element(screen.getByText("1 / 47")).toBeInTheDocument();
+    // Counter now splits "1 of 47" across three spans.
+    const counter = screen.container.querySelector(".session-counter");
+    expect(counter?.textContent).toMatch(/1\s*of\s*47/);
   });
 
   it("calls onPause when pause button clicked", async () => {

@@ -9,23 +9,25 @@ interface Props {
   paused: boolean;
   bw: boolean;
   magnifier: MagnifierSize;
-  zoom: number;
   isFullscreen: boolean;
   currentIdx: number;
   total: number;
   intervalSec: number;
-  sourceUrl: string | null | undefined;
+  /** Direct URL to the image file (preferred — the user wanted source
+   *  to open the actual image, not the source page). */
+  sourceImageUrl: string | null | undefined;
   onPause: () => void;
   onToggleBw: () => void;
   onMagnifier: () => void;
-  onZoomIn: () => void;
-  onZoomOut: () => void;
-  onResetZoom: () => void;
   onToggleFullscreen: () => void;
   onReport: () => void;
   onIntervalChange: (s: number) => void;
 }
 
+// R8 (2026-05-16): zoom cluster removed — browser zoom does the same
+// job and the bar is overflowing on mobile. Source button now uses
+// the IconBtn-as-link pattern with the same stacked label + (empty)
+// hint slot so its height matches every other tile in the bar.
 export function SessionActionBar(props: Props) {
   return (
     <div
@@ -47,51 +49,21 @@ export function SessionActionBar(props: Props) {
         <IconBtn label="magnifier" hint={props.magnifier === "off" ? "Z" : props.magnifier} active={props.magnifier !== "off"} onClick={props.onMagnifier}>
           ⊙
         </IconBtn>
-
-        {/* Zoom cluster: −  ⤢ (reset, shows current zoom)  + */}
-        <div className="session-zoom-cluster">
-          <button
-            type="button"
-            aria-label="zoom out"
-            onClick={props.onZoomOut}
-            disabled={props.zoom <= 0.25}
-            className="u-icon-btn session-zoom-btn"
-          >
-            −
-          </button>
-          <button
-            type="button"
-            aria-label="reset zoom"
-            onClick={props.onResetZoom}
-            className={`u-icon-btn session-zoom-btn session-zoom-btn-reset${props.zoom !== 1 ? " is-active" : ""}`}
-            title="reset zoom (0)"
-          >
-            {props.zoom === 1 ? "1.00×" : `${props.zoom.toFixed(2)}×`}
-          </button>
-          <button
-            type="button"
-            aria-label="zoom in"
-            onClick={props.onZoomIn}
-            disabled={props.zoom >= 4}
-            className="u-icon-btn session-zoom-btn"
-          >
-            +
-          </button>
-        </div>
-
         <IconBtn label="fullscreen" hint="F" active={props.isFullscreen} onClick={props.onToggleFullscreen}>
-          {props.isFullscreen ? "⛶" : "⛶"}
+          ⛶
         </IconBtn>
         <IconBtn label="report" hint="R" onClick={props.onReport}>
           ⚑
         </IconBtn>
-        {props.sourceUrl ? (
-          <IconBtn label="source" as="a" href={props.sourceUrl} target="_blank">
+        {props.sourceImageUrl ? (
+          <IconBtn label="source" hint=" " as="a" href={props.sourceImageUrl} target="_blank">
             ↗
           </IconBtn>
         ) : null}
         <div className="session-counter">
-          {props.currentIdx + 1} / {props.total}
+          <span className="session-counter-current">{props.currentIdx + 1}</span>
+          <span className="session-counter-sep">of</span>
+          <span className="session-counter-total">{props.total}</span>
         </div>
       </div>
     </div>

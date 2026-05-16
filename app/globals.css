@@ -1595,7 +1595,10 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 
 .session-magnifier {
   position: fixed;
-  border-radius: 50%;
+  /* R8 (2026-05-16): square per user feedback. Small radius keeps the
+     pink-glow pill style of the rest of the chrome without being
+     fully rectilinear. */
+  border-radius: var(--r-3xl);
   border: 3px solid var(--accent-pink);
   box-shadow: var(--shadow-magnifier);
   overflow: hidden;
@@ -1603,6 +1606,24 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   z-index: 40;
   background-color: var(--surface-0);
   background-repeat: no-repeat;
+}
+/* First-time hint that teaches the right-click affordance. Fades after
+   ~4 s. role="status" + aria-live so AT users hear it once when the
+   loupe activates. */
+.session-magnifier-hint {
+  position: fixed;
+  z-index: 41;
+  background: var(--surface-0-scrim-80);
+  color: var(--text-primary);
+  border: 1px solid var(--accent-pink-border);
+  border-radius: var(--r-pill);
+  padding: var(--s2) var(--s5);
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: fade-in 0.3s var(--ease-out) backwards;
 }
 
 .session-action-bar-wrap {
@@ -1626,28 +1647,9 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   padding: var(--s3);
   box-shadow: var(--shadow-panel);
 }
-.session-zoom-cluster {
-  display: flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--r-3xl);
-  padding: 2px;
-  margin: 0 2px;
-}
-.session-zoom-btn {
-  min-width: 32px;
-  height: 32px;
-  padding: 0;
-  font-family: var(--font-mono), monospace;
-  font-size: 16px;
-  border-radius: var(--r-2xl);
-}
-.session-zoom-btn-reset {
-  min-width: 56px;
-  padding: 0 var(--s3);
-  font-size: 12px;
-}
+/* R8 (2026-05-16): zoom cluster removed from the action bar — browser
+   zoom handles in-image scaling and the bar was overflowing mobile. */
+
 .session-counter {
   padding: var(--s2) var(--s4);
   font-family: var(--font-mono), monospace;
@@ -1656,6 +1658,15 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   min-width: 64px;
   text-align: center;
   font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+}
+.session-counter-sep {
+  color: var(--text-tertiary);
+  font-size: 0.8em;
+  text-transform: lowercase;
 }
 
 .session-timer-dropdown {

@@ -17,9 +17,9 @@ interface Props {
 
 export function SessionImage({ image, bw, zoom, pan, chromeVisible }: Props) {
   const filename = image.filename.replace(/^images\//, "");
-  // DB has width/height for every image; fall back to a sensible 4:3 if a
-  // legacy row is missing dimensions. next/image needs them for CLS protection
-  // (even with images.unoptimized=true).
+  // next/image needs the intrinsic dimensions for CLS protection; with
+  // object-fit:cover the rendered size is dictated by the container.
+  // Fall back to a 4:3 sentinel if a legacy row lacks dimensions.
   const w = image.width ?? 1600;
   const h = image.height ?? 1200;
   return (
@@ -34,11 +34,13 @@ export function SessionImage({ image, bw, zoom, pan, chromeVisible }: Props) {
         priority
         draggable={false}
         style={{
-          maxWidth: "100%",
-          maxHeight: "100%",
-          width: "auto",
-          height: "auto",
-          objectFit: "contain",
+          // R8 (2026-05-16): switched contain → cover per user direction.
+          // Maximizes drawing canvas area at the cost of cropping edges.
+          // Magnifier handles seeing detail in the clipped regions; users
+          // skip to the next image if a crop ate the subject.
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
           filter: bw ? "grayscale(1) contrast(1.05)" : "none",
           transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
         }}
