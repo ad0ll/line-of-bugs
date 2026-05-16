@@ -1,6 +1,8 @@
 """Tests for the drawability gate."""
 from __future__ import annotations
 
+import pytest
+
 from scripts.detect_subjects.gate import (
     decide_drawability, GateDecision,
 )
@@ -82,3 +84,14 @@ def test_image_multi_bug_is_informational_only():
     rec = _empty_label_record()
     rec["bbox_content_image_multi_bug"] = True  # informational flag
     assert decide_drawability(rec) == GateDecision.KEEP
+
+
+@pytest.mark.parametrize("missing", [
+    "bbox", "bbox_content_count", "bbox_too_small", "mask_labels", "ml_labels",
+])
+def test_missing_required_key_raises_key_error(missing):
+    """Malformed records must fail loudly, not silently keep."""
+    rec = _empty_label_record()
+    del rec[missing]
+    with pytest.raises(KeyError, match=missing):
+        decide_drawability(rec)

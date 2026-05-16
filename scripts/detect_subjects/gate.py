@@ -26,25 +26,29 @@ _BBOX_CONTENT_SINGLE = "bbox-content_single"
 def decide_drawability(label_record: dict) -> GateDecision:
     """Return KEEP if all four columns at their 'good' default, REJECT otherwise.
 
-    Expected label_record shape:
-      {
-        "bbox": str,                       # §1 — one of bbox_*
-        "bbox_content_count": str,         # §2 count — one of bbox-content_*
-        "bbox_too_small": bool,            # §2 independent flag
-        "bbox_content_image_multi_bug": bool,  # §2 informational (NOT a gate signal)
-        "mask_labels": list[str],          # §3 selections (any non-empty = reject)
-        "ml_labels": list[str],            # §4 selections (any non-empty = reject)
-      }
+    Required label_record keys (KeyError on missing — safe-fail):
+      bbox: str                       # §1 — one of bbox_*
+      bbox_content_count: str         # §2 count — one of bbox-content_*
+      bbox_too_small: bool            # §2 independent flag
+      mask_labels: list[str]          # §3 selections; empty list = mask_good
+      ml_labels: list[str]            # §4 selections; empty list = ml_good
+
+    Optional label_record keys:
+      bbox_content_image_multi_bug: bool  # §2 informational — NOT a gate signal
+
+    `mask_good` and `ml_good` are represented as empty lists in mask_labels /
+    ml_labels respectively, NOT as list entries. A non-empty list means at
+    least one non-good selection was made → REJECT.
     """
-    if label_record.get("bbox") != _BBOX_GOOD:
+    if label_record["bbox"] != _BBOX_GOOD:
         return GateDecision.REJECT
-    if label_record.get("bbox_content_count") != _BBOX_CONTENT_SINGLE:
+    if label_record["bbox_content_count"] != _BBOX_CONTENT_SINGLE:
         return GateDecision.REJECT
-    if label_record.get("bbox_too_small"):
+    if label_record["bbox_too_small"]:
         return GateDecision.REJECT
-    if label_record.get("mask_labels"):
+    if label_record["mask_labels"]:
         return GateDecision.REJECT
-    if label_record.get("ml_labels"):
+    if label_record["ml_labels"]:
         return GateDecision.REJECT
-    # image_multi_bug is informational; NOT checked.
+    # bbox_content_image_multi_bug is informational; not checked.
     return GateDecision.KEEP
