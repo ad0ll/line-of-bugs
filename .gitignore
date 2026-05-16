@@ -383,3 +383,5 @@ coverage/
 data/cache/
 audit/framing-validator/
 .pytest_cache/
+
+palette-*.png
