@@ -25,11 +25,11 @@ export function StartSessionButton({
     setPending(true);
     setError(null);
     try {
-      await document.documentElement.requestFullscreen?.();
-    } catch {
-      // ignore — permission denied or unsupported
-    }
-    try {
+      try {
+        await document.documentElement.requestFullscreen?.();
+      } catch {
+        // ignore — permission denied or unsupported
+      }
       const res = await fetch("/api/session/start", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -40,13 +40,16 @@ export function StartSessionButton({
       });
       if (!res.ok) {
         setError(await res.text());
-        setPending(false);
         return;
       }
       const data = (await res.json()) as { sessionId: string };
       router.push(`/session?session=${encodeURIComponent(data.sessionId)}&interval=${intervalSec}`);
     } catch (e) {
       setError(String(e));
+    } finally {
+      // Always clear pending — covers cancelled navigation (router.push
+      // throws on user back-nav under React Suspense), network errors,
+      // and the happy path equally.
       setPending(false);
     }
   }
