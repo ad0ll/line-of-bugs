@@ -36,7 +36,7 @@ from scripts.detect_subjects.schema import (
 )
 from scripts.detect_subjects.segmenters import make_segmenter
 
-V1_NAME = "v1_dino_insectsam"   # legacy variant string used in existing parquet
+V1_NAME = "grounding_dino__insectsam"   # legacy variant string (re-tagged from v1_dino_insectsam in pre-work T6 to match cfg.variant_tag() format)
 # Future variants use cfg.variant_tag() instead. We keep V1_NAME tied to the
 # legacy string so the existing parquet's variant column doesn't have to migrate
 # during Phase 1. Phase 2 introduces a new variant_tag()-based string when SAM 3
