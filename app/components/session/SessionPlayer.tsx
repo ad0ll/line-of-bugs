@@ -33,8 +33,6 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
   const [chromeVisible, setChromeVisible] = useState(true);
   const [bw, setBw] = useState(false);
   const [magnifier, setMagnifier] = useState<MagnifierSize>("off");
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
   const [done, setDone] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -52,9 +50,6 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
       void document.documentElement.requestFullscreen().catch(() => {});
     }
   }, []);
-
-  const zoomIn = useCallback(() => setZoom((z) => Math.min(4, z + 0.25)), []);
-  const zoomOut = useCallback(() => setZoom((z) => Math.max(0.25, z - 0.25)), []);
 
   const audioRef = useRef<AudioCues | null>(null);
   const preloadRef = useRef<PreloadManager | null>(null);
@@ -80,8 +75,6 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
   // On slide change: reset per-slide state + preload next + mark current used
   useEffect(() => {
     setElapsedMs(0);
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
     firedCuesRef.current = new Set();
     if (preloadRef.current && items[idx]) {
       preloadRef.current.onIndexChange(idx);
@@ -218,18 +211,6 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
             return MAG_CYCLE[(i + 1) % MAG_CYCLE.length]!;
           });
           break;
-        case "+":
-        case "=":
-          setZoom((z) => Math.min(4, z + 0.25));
-          break;
-        case "-":
-        case "_":
-          setZoom((z) => Math.max(0.25, z - 0.25));
-          break;
-        case "0":
-          setZoom(1);
-          setPan({ x: 0, y: 0 });
-          break;
         case "f":
         case "F":
           toggleFullscreen();
@@ -259,20 +240,6 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
     };
   }, [chromeVisible]);
 
-  // Drag-pan when zoomed
-  const dragRef = useRef<{ x: number; y: number } | null>(null);
-  const onMouseDown = (e: React.MouseEvent) => {
-    if (zoom <= 1) return;
-    dragRef.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
-  };
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!dragRef.current || zoom <= 1) return;
-    setPan({ x: e.clientX - dragRef.current.x, y: e.clientY - dragRef.current.y });
-  };
-  const onMouseUp = () => {
-    dragRef.current = null;
-  };
-
   const current = items[idx]!;
   const currentName = current.commonName || current.taxonSpecies || current.imageId;
 
@@ -280,16 +247,12 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
     <main
       aria-label="drawing session"
       style={{ position: "fixed", inset: 0, background: T.surface0 }}
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-      onMouseLeave={onMouseUp}
     >
       <h1 className="u-sr-only">{currentName}</h1>
       <ProgressBar percent={elapsedMs / durationMs} playing={!paused && !done} />
       <SessionTitle image={current} />
       <Timer remainingMs={durationMs - elapsedMs} paused={paused} />
-      <SessionImage image={current} bw={bw} zoom={zoom} pan={pan} chromeVisible={chromeVisible} />
+      <SessionImage image={current} bw={bw} chromeVisible={chromeVisible} />
       <SourceInfoChip image={current} visible={chromeVisible} />
       <EdgePrevNext
         visible={chromeVisible}

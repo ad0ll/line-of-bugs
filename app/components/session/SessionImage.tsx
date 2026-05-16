@@ -6,8 +6,6 @@ import { SOURCE_INFO_CHIP_ID } from "./SourceInfoChip";
 interface Props {
   image: Image;
   bw: boolean;
-  zoom: number;
-  pan: { x: number; y: number };
   // SourceInfoChip is animated to opacity:0 / pointer-events:none when chrome
   // is hidden. Keeping aria-describedby pointed at it in that state forces
   // AT users to hear stale attribution metadata for an invisible element on
@@ -15,7 +13,7 @@ interface Props {
   chromeVisible: boolean;
 }
 
-export function SessionImage({ image, bw, zoom, pan, chromeVisible }: Props) {
+export function SessionImage({ image, bw, chromeVisible }: Props) {
   const filename = image.filename.replace(/^images\//, "");
   // next/image needs the intrinsic dimensions for CLS protection; with
   // object-fit:cover the rendered size is dictated by the container.
@@ -42,7 +40,6 @@ export function SessionImage({ image, bw, zoom, pan, chromeVisible }: Props) {
           height: "100%",
           objectFit: "cover",
           filter: bw ? "grayscale(1) contrast(1.05)" : "none",
-          transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
         }}
       />
     </div>
