@@ -1,6 +1,5 @@
 """Tests for pure feature computation helpers in features.py."""
 from __future__ import annotations
-import numpy as np
 
 from scripts.detect_subjects.features import compute_geometric_features
 
