@@ -385,7 +385,11 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   line-height: 1.45;
   color: var(--text-primary);
   z-index: 200;
-  pointer-events: none;
+  /* The bubble is now selectable — users hovering long tooltip text
+     can mouse over it without the wrap's focusout closing it. The
+     Tooltip wrap's onMouseLeave handler now checks relatedTarget
+     containment so this doesn't cause flicker. */
+  pointer-events: auto;
   text-transform: none;  /* override parent lowercasing */
 }
 .tooltip-bubble::before {
