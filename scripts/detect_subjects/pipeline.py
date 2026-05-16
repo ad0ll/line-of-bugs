@@ -11,7 +11,7 @@ import torch
 from PIL import Image
 
 from scripts.detect_subjects.caches import load_completed_pairs
-from scripts.detect_subjects.classify import classify_framing, suggest_labels
+from scripts.detect_subjects.rule_labeler import classify_framing, suggest_labels
 from scripts.detect_subjects.config import (
     BBOX_EDGE_TOLERANCE_NORMALIZED,
     CLASSIFY_BUG_TOO_SMALL_EDGE_PX,

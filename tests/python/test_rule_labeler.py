@@ -1,7 +1,7 @@
 """Tests for suggest_labels and primary_label / classify_framing."""
 from __future__ import annotations
 
-from scripts.detect_subjects.classify import suggest_labels, classify_framing, primary_label
+from scripts.detect_subjects.rule_labeler import suggest_labels, classify_framing, primary_label
 
 
 def _row(**overrides):

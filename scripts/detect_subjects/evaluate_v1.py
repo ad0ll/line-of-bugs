@@ -305,7 +305,7 @@ def phase1(rows: list[dict], labels: dict[str, dict]) -> dict[str, dict]:
             if r["confidence"] < CLASSIFY_HIDDEN_CONF:
                 return False
             # Use CURRENT problem-detection rules to identify "no problems" cases
-            from scripts.detect_subjects.classify import suggest_labels
+            from scripts.detect_subjects.rule_labeler import suggest_labels
             sl = suggest_labels(
                 confidence=r["confidence"], bbox_area_ratio=r["bbox_area_ratio"],
                 bbox_long_edge_px=r.get("bbox_long_edge_px"),
@@ -340,7 +340,7 @@ def recompute_parquet(rows: list[dict],
     """Recompute suggested_labels + framing_quality using current config (or
     tuned overrides) and rewrite the parquet for VARIANT rows in place."""
     from scripts.detect_subjects import config as cfg
-    from scripts.detect_subjects.classify import suggest_labels, classify_framing
+    from scripts.detect_subjects.rule_labeler import suggest_labels, classify_framing
     if tuned:
         for k, v in tuned.items():
             setattr(cfg, k, v)
