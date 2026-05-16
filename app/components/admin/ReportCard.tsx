@@ -5,10 +5,7 @@ import type { PendingReport } from "@/lib/queries/reports";
 import { ConfirmDeleteButton } from "./ConfirmDeleteButton";
 import { RelativeAge } from "./RelativeAge";
 import { OrderBadge } from "@/app/components/ui/OrderBadge";
-
-function basename(p: string): string {
-  return p.split("/").pop() ?? p;
-}
+import { basename } from "@/lib/path-utils";
 
 export interface ReportCardProps {
   report: PendingReport;

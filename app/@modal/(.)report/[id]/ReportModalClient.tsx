@@ -6,10 +6,7 @@ import { useRouter } from "next/navigation";
 import { Modal } from "@/app/components/modal/Modal";
 import { ReportForm } from "@/app/components/report/ReportForm";
 import { submitReport } from "@/actions/submitReport";
-
-function basename(p: string): string {
-  return p.split("/").pop() ?? p;
-}
+import { basename } from "@/lib/path-utils";
 
 interface ReportModalClientProps {
   imageId: string;

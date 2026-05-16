@@ -4,10 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ReportForm } from "@/app/components/report/ReportForm";
 import { submitReport } from "@/actions/submitReport";
-
-function basename(p: string): string {
-  return p.split("/").pop() ?? p;
-}
+import { basename } from "@/lib/path-utils";
 
 interface ReportPageClientProps {
   imageId: string;
