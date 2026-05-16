@@ -123,6 +123,14 @@ export const images = sqliteTable(
     // The manifest already dedups by image_id; sha256 here is for audit only.
     index("idx_images_sha256").on(t.fileSha256),
     index("idx_images_hidden").on(t.hidden),
+    // (0007) Unique upstream identity — prevents double-inserting the same
+    // upstream image under different image_ids when fetchers re-run.
+    uniqueIndex("idx_images_source_source_id").on(t.source, t.sourceId),
+    // (0007) Composite for the gallery hot path (hidden=0 + subject_state filter).
+    index("idx_images_hidden_subject_state").on(t.hidden, t.subjectState),
+    // TODO: CHECK constraints for enums (subject_state, life_stage, sex, source)
+    // require a SQLite table rebuild and have low marginal value over the TS
+    // enums already enforced at the application layer; deferred.
   ],
 );
 
@@ -171,6 +179,11 @@ export const reports = sqliteTable(
     // resolving a report lets the same category be reopened later.
     uniqueIndex("idx_reports_dedup_open")
       .on(t.imageId, t.category)
+      .where(sql`${t.resolvedAt} IS NULL`),
+    // (0007) Admin queue: open reports newest-first. DESC + partial keeps it
+    // tiny and lets the queue page skip a sort.
+    index("idx_reports_pending_recent")
+      .on(sql`${t.createdAt} DESC`)
       .where(sql`${t.resolvedAt} IS NULL`),
   ],
 );

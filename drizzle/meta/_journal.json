@@ -50,6 +50,13 @@
       "when": 1778889490000,
       "tag": "0006_reports_dedup",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1778891662000,
+      "tag": "0007_constraints_and_indexes",
+      "breakpoints": true
     }
   ]
 }
