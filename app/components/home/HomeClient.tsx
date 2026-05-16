@@ -210,8 +210,8 @@ export function HomeClient({
         </section>
 
         <p className="home-pool-count" aria-live="polite">
-          {poolCount === null
-            ? (countLoading ? "counting…" : "")
+          {countLoading
+            ? "counting…"
             : poolCount === 0
             ? "no images match — broaden the filters"
             : `${poolCount.toLocaleString()} bugs in your session pool`}
