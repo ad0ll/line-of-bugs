@@ -2,6 +2,11 @@
 // Ported verbatim from /Users/adoll/projects/eagle-gesture-drawing/src/design-tokens.js
 // (See that file for the prefix-suffix ruling system: s<N>, r<Size>, text<Size>, etc.)
 // When updating, keep this in sync with app/globals.css.
+//
+// IMPORTANT: this file is the JS mirror of the :root block in
+// app/globals.css. Any new CSS custom property (--foo-bar) that
+// inline-style consumers might need MUST be added here as a
+// fooBar key so we don't drift over time.
 
 export const T = {
   // ── Surfaces ──
@@ -36,6 +41,7 @@ export const T = {
   textDisabled: "rgba(255, 255, 255, 0.42)",
   textDanger: "#ef4444",
   textOnDanger: "#ffffff",
+  textOnAccent: "#0d0c10",
 
   // ── Borders ──
   borderSubtle: "rgba(255, 255, 255, 0.07)",
@@ -50,6 +56,7 @@ export const T = {
   accentDanger: "#ef4444",    // Destructive actions only
   accentPinkSoft: "rgba(255, 110, 199, 0.18)",
   accentPinkBorder: "rgba(255, 110, 199, 0.55)",
+  accentPinkGlow: "rgba(255, 110, 199, 0.32)",
 
   // ── Spacing (s<N> prefix; N IS the pixel value, with some skips at 9, 11) ──
   s1: 2, s2: 4, s3: 6, s4: 8, s5: 10, s6: 12, s7: 14, s8: 16,
