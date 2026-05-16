@@ -55,8 +55,10 @@ const PAGE_SIZE = 50;
  * Build one FTS5 MATCH expression from one search tag. Multi-word
  * tags are AND'd internally with the last word prefix-matched (so
  * "tiger swal" matches "tiger swallowtail").
+ *
+ * Exported for unit tests; ordinary callers use `buildFtsQuery`.
  */
-function buildFtsTag(raw: string): string | null {
+export function buildFtsTag(raw: string): string | null {
   const cleaned = raw.replace(/[^\p{L}\p{N}\s]/gu, " ").trim();
   if (!cleaned) return null;
   const tokens = cleaned.split(/\s+/).filter(Boolean);
@@ -70,8 +72,10 @@ function buildFtsTag(raw: string): string | null {
  * Combine multiple tags into one FTS5 expression. Tags are OR'd
  * together — selecting "monarch" + "swallowtail" matches rows that
  * mention either. Returns null if no tags produce valid FTS terms.
+ *
+ * Exported for unit tests.
  */
-function buildFtsQuery(tags: readonly string[]): string | null {
+export function buildFtsQuery(tags: readonly string[]): string | null {
   const sub = tags
     .map((t) => buildFtsTag(t))
     .filter((s): s is string => s !== null)
