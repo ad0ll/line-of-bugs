@@ -64,6 +64,18 @@ ORDERS = [
     (47504, "Plecoptera",         40, 2),
 ]
 
+# Synthetic-label → (taxon_order, life_stage) for DB write time.
+# Internal `label` values used as iNat query keys aren't always the true
+# taxonomic order — e.g. "Lepidoptera_larva" is our project's way of
+# pulling caterpillars under term_id=1 / term_value_id=6, but the real
+# taxon_order is still "Lepidoptera". Without this split, gallery
+# queries like `WHERE taxon_order='Lepidoptera'` miss caterpillar rows.
+# taxonomy_subgroup.classify() continues to see the synthetic label so
+# its "Lepidoptera_larva → caterpillar" mapping still fires.
+LABEL_TO_TAXON_ORDER_AND_LIFE_STAGE: dict[str, tuple[str, str]] = {
+    "Lepidoptera_larva": ("Lepidoptera", "larva"),
+}
+
 EVIDENCE_DROP = {23, 25, 26, 27, 28, 29, 31, 32, 35}
 
 # iNat controlled-term mappings into our normalized enums.
@@ -259,6 +271,15 @@ def fetch_order(mw: DbWriter, existing_by_label: Counter,
             lic_code, lic_url = LICENSE_MAP[ph["license_code"]]
             user = obs.get("user") or {}
             life_stage, sex = extract_inat_metadata(obs)
+            # Split synthetic labels like "Lepidoptera_larva" into their
+            # real (taxon_order, life_stage) for DB write — the gallery
+            # filters on the real order. Annotated life_stage from iNat
+            # wins; the synthetic split is a fallback for rows that
+            # didn't carry an explicit annotation.
+            db_taxon_order, synthetic_life_stage = (
+                LABEL_TO_TAXON_ORDER_AND_LIFE_STAGE.get(label, (label, ""))
+            )
+            effective_life_stage = life_stage or synthetic_life_stage
             mw.write({
                 "image_id": meta["image_id"],
                 "collection_id": f"inat-obs-{obs['id']}",
@@ -278,7 +299,7 @@ def fetch_order(mw: DbWriter, existing_by_label: Counter,
                 "photographer_attribution": ph.get("attribution") or "",
                 "photographer": user.get("name") or user.get("login") or "",
                 "institution": "iNaturalist (citizen science)",
-                "taxon_order": label,
+                "taxon_order": db_taxon_order,
                 "taxon_species": meta["scientific"],
                 "common_name": meta["common_name"],
                 "subject_state": SUBJECT_STATE,
@@ -286,7 +307,7 @@ def fetch_order(mw: DbWriter, existing_by_label: Counter,
                     label, taxon.get("ancestor_ids") or []
                 ),
                 "view_label": "",
-                "life_stage": life_stage or "",
+                "life_stage": effective_life_stage,
                 "sex": sex or "",
                 "host_organism": "",
                 "specimen_condition": "",
@@ -310,14 +331,27 @@ def main() -> int:
     # One-shot startup pre-flight: per-label counts for THIS mode's subject_state.
     # Wild and captive are independent pools; we mustn't let wild rows count
     # against the captive target.
+    # Note: synthetic labels (e.g. Lepidoptera_larva) are stored in DB as
+    # (taxon_order='Lepidoptera', life_stage='larva'), so we need to split
+    # the count back out per synthetic label.
     existing_by_label = Counter()
     for label, n in mw.conn.execute(
         "SELECT taxon_order, COUNT(*) FROM images "
         "WHERE source = 'inaturalist' AND subject_state = ? "
+        "  AND (life_stage IS NULL OR life_stage != 'larva') "
         "GROUP BY taxon_order",
         (SUBJECT_STATE,),
     ):
         existing_by_label[label or ""] = n
+    # Pull the synthetic Lepidoptera_larva count from the split fields.
+    larva_count = mw.conn.execute(
+        "SELECT COUNT(*) FROM images "
+        "WHERE source = 'inaturalist' AND subject_state = ? "
+        "  AND taxon_order = 'Lepidoptera' AND life_stage = 'larva'",
+        (SUBJECT_STATE,),
+    ).fetchone()[0]
+    if larva_count:
+        existing_by_label["Lepidoptera_larva"] = larva_count
 
     api_guard = ConsecutiveFailureGuard(threshold=6, name="inat-api")
     summary: dict[str, tuple[int, int, int]] = {}
