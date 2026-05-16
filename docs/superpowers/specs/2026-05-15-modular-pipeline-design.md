@@ -483,7 +483,7 @@ The pipeline targets Apple M5 Max (the dev machine). Confirmed compatibility:
 - PyTorch MPS device used throughout (`device="mps"`)
 - F32 dtype required — MPS F16 Metal kernels have known issues
 - SAM 3 works on MPS via Hugging Face transformers ([HF SAM 3 discussion](https://huggingface.co/facebook/sam3/discussions/11))
-- Install pin: `pip install git+https://github.com/huggingface/transformers torchvision` (need transformers main branch as of Nov 2025 for SAM 3 support; pinned in `requirements.txt`)
+- SAM 3 is available in `transformers==5.8.1` stable (no git-main install required). Verified: installed version matches latest stable as of 2026-05-16.
 - SAM 3 video processor has a known `pin_memory()` MPS bug ([ultralytics issue #22954](https://github.com/ultralytics/ultralytics/issues/22954)) — we don't use video, so unaffected
 - Memory pressure: M5 Max with 128GB has ample headroom (SAM 3 weights ~3.4 GB, <4 GB inference)
 
