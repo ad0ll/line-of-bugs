@@ -37,6 +37,19 @@ export async function GalleryGrid({
     );
   }
 
+  // Stable identity for the filter set — drives InfiniteScroller's
+  // reset effect. Joining sorted arrays keeps the key independent of
+  // chip-click order so toggling on/off doesn't churn pages needlessly.
+  const filterKey = [
+    q.join(","),
+    subject,
+    [...institutions].sort().join(","),
+    [...views].sort().join(","),
+    [...lifeStages].sort().join(","),
+    [...sexes].sort().join(","),
+    [...groups].sort().join(","),
+  ].join("|");
+
   return (
     <>
       <p className="gallery-result-count">
@@ -51,6 +64,7 @@ export async function GalleryGrid({
         lifeStages={lifeStages}
         sexes={sexes}
         groups={groups}
+        filterKey={filterKey}
       />
     </>
   );

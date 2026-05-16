@@ -14,10 +14,15 @@ interface Props {
   lifeStages: string[];
   sexes: string[];
   groups: string[];
+  /** Stable fingerprint of the filter state. Used as the effect dep
+   *  for resetting rows when the parent re-renders with new filters —
+   *  prevents identity-based reset loops since `initial` is a new
+   *  object on every render. */
+  filterKey: string;
 }
 
 export function InfiniteScroller({
-  initial, q, subject, institutions, views, lifeStages, sexes, groups,
+  initial, q, subject, institutions, views, lifeStages, sexes, groups, filterKey,
 }: Props) {
   const [rows, setRows] = useState<GalleryRow[]>(initial.rows);
   const [page, setPage] = useState(initial.page);
@@ -25,12 +30,15 @@ export function InfiniteScroller({
   const [loading, setLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  // Reset state if the query identity changes (parent re-renders with new filters)
+  // Reset state when the filter fingerprint changes. Keyed on the
+  // stable string rather than the `initial` object identity so React
+  // doesn't re-run the effect on every parent render.
   useEffect(() => {
     setRows(initial.rows);
     setPage(initial.page);
     setHasMore(initial.hasMore);
-  }, [initial]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterKey]);
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
