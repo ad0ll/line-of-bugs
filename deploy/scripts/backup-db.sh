@@ -9,7 +9,7 @@ DIR=/srv/line-of-bugs/shared/data/db/backups
 mkdir -p "$DIR"
 
 # Use SQLite's online backup API — safe while the app is writing.
-sqlite3 "$DB" ".backup '$DIR/$(date +%Y%m%d).db'"
+sqlite3 "$DB" ".backup '$DIR/$(date +%Y%m%d-%H%M%S).db'"
 
 # Retain last 30 days
 find "$DIR" -name '*.db' -mtime +30 -delete

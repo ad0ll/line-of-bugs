@@ -214,27 +214,33 @@ def make_medium(src_path: Path, dst_path: Path,
 
 def _download_stream(s: requests.Session, url: str, out_path: Path,
                      max_bytes: int) -> tuple[bool, int, str]:
-    """Stream URL to out_path. Aborts mid-download if size > max_bytes.
-    Returns (ok, bytes_read, reason)."""
+    """Stream URL to out_path atomically. Writes to <out_path>.tmp first
+    and renames into place only on full success — partial / oversize /
+    network-error downloads never leave a half-file at out_path. Aborts
+    mid-download if size > max_bytes. Returns (ok, bytes_read, reason)."""
+    tmp_path = out_path.with_suffix(out_path.suffix + ".tmp")
     try:
         with s.get(url, timeout=120, stream=True) as r:
             if r.status_code != 200:
                 return False, 0, f"http_{r.status_code}"
             size = 0
-            with open(out_path, "wb") as f:
+            with open(tmp_path, "wb") as f:
                 for chunk in r.iter_content(1 << 16):
                     if not chunk:
                         continue
                     size += len(chunk)
                     if size > max_bytes:
-                        f.close()
-                        out_path.unlink(missing_ok=True)
+                        tmp_path.unlink(missing_ok=True)
                         return False, size, "oversize"
                     f.write(chunk)
-            return True, size, "ok"
+        tmp_path.rename(out_path)
+        return True, size, "ok"
     except requests.RequestException as e:
-        out_path.unlink(missing_ok=True)
+        tmp_path.unlink(missing_ok=True)
         return False, 0, f"err_{type(e).__name__}"
+    except Exception:
+        tmp_path.unlink(missing_ok=True)
+        raise
 
 
 def download(s: requests.Session, url: str, out_path: Path,
