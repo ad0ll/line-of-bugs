@@ -8,6 +8,12 @@ function makeClient() {
     defaultOptions: {
       queries: {
         staleTime: 5 * 60_000,
+        // gcTime MUST exceed staleTime — otherwise tanstack/react-query
+        // garbage-collects entries the moment they go inactive, and the
+        // staleTime never gets a chance to keep cached data warm across
+        // route transitions. 10 minutes keeps gallery thumbs cached
+        // through quick back-nav from a session.
+        gcTime: 10 * 60_000,
         refetchOnWindowFocus: false,
         retry: 1,
         placeholderData: undefined,

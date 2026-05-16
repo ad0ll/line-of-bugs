@@ -23,4 +23,14 @@ describe("Timer", () => {
     const root = container.firstChild as HTMLElement;
     expect(root.style.opacity).toBe("0.55");
   });
+
+  it("renders SR status when announcement threshold is hit (30s)", () => {
+    render(<Timer remainingMs={30_000} paused={false} />);
+    expect(screen.getByRole("status")).toHaveTextContent("30 seconds remaining");
+  });
+
+  it("does not mount a status node at non-announcement seconds", () => {
+    render(<Timer remainingMs={15_000} paused={false} />);
+    expect(screen.queryByRole("status")).toBeNull();
+  });
 });

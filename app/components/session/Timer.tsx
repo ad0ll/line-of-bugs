@@ -25,6 +25,7 @@ function announce(seconds: number): string {
 
 export function Timer({ remainingMs, paused }: Props) {
   const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  const announcement = announce(seconds);
   return (
     <>
       <div
@@ -33,9 +34,11 @@ export function Timer({ remainingMs, paused }: Props) {
       >
         {fmt(remainingMs)}
       </div>
-      <span className="u-sr-only" role="status" aria-live="polite" aria-atomic="true">
-        {announce(seconds)}
-      </span>
+      {announcement ? (
+        <span className="u-sr-only" role="status" aria-live="polite" aria-atomic="true">
+          {announcement}
+        </span>
+      ) : null}
     </>
   );
 }
