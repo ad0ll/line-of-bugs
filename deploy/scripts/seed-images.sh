@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # deploy/scripts/seed-images.sh — one-time rsync of data/ from laptop → server.
 # Resumable: if interrupted, rerun and rsync picks up where it left off.
+#
+# WARNING: Re-seeding the db/ directory over a live WAL SQLite database is
+# unsafe — the -wal and -shm files are excluded below, so a running app will
+# see a snapshot inconsistent with its own write-ahead log. Stop the
+# line-of-bugs.service systemd unit before re-running this against a live
+# server, then start it again after the rsync completes.
 
 set -euo pipefail
 TARGET="bawler@195.201.8.147"
