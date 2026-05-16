@@ -191,6 +191,9 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
     const handler = (e: KeyboardEvent) => {
       const tgt = e.target as HTMLElement;
       if (tgt.tagName === "INPUT" || tgt.tagName === "TEXTAREA" || tgt.isContentEditable) return;
+      // Holding an arrow key would otherwise auto-repeat at the OS rate and
+      // race past the preload manager. Slide changes should be discrete.
+      if (e.repeat && (e.key === "ArrowLeft" || e.key === "ArrowRight")) return;
       switch (e.key) {
         case "ArrowLeft":
           e.preventDefault();
