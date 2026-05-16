@@ -45,9 +45,9 @@ from scripts.detect_subjects.metrics import iou_xywh_normalized
 from scripts.detect_subjects.interfaces import DetectionResult
 
 # Each distinct_subjects tuple is (x, y, w, h, confidence, phrase). GroundingDINO
-# can emit a per-detection phrase but the current wrapper does not yet thread it
-# through, so the 6th slot is always None. interfaces.DetectionResult's text_label
-# and text_label_score fields are likewise unpopulated for the same reason.
+# populates the phrase slot from the matched text prompt phrase per detection.
+# interfaces.DetectionResult's text_label and text_label_score are populated from
+# the primary detection's matched phrase and text-alignment logit score.
 # The "bark-beetle fix" may pick a non-top-conf primary, so downstream consumers
 # that want SECONDARY detections should skip whichever box matches the primary.
 
@@ -83,6 +83,8 @@ class GroundingDinoDetector:
         if cached is not None:
             boxes = cached["boxes"]
             scores = cached["scores"]
+            text_scores = cached.get("text_scores", [None] * len(boxes))
+            labels = cached.get("labels", [None] * len(boxes))
         else:
             inputs = self.processor(
                 images=image, text=self.prompt, return_tensors="pt"
@@ -98,13 +100,46 @@ class GroundingDinoDetector:
             )[0]
             boxes = results["boxes"].cpu().tolist()
             scores = results["scores"].cpu().tolist()
+            labels = [str(l) for l in results.get("labels", [None] * len(boxes))]
+            logits = results.get("logits", None)
+            if logits is not None:
+                text_scores = logits.cpu().max(dim=-1).values.tolist()
+            else:
+                text_scores = [None] * len(boxes)
             if cache_path is not None:
                 try:
-                    cache_path.write_text(json.dumps({"boxes": boxes, "scores": scores}))
+                    cache_path.write_text(json.dumps({
+                        "boxes": boxes,
+                        "scores": scores,
+                        "text_scores": text_scores,
+                        "labels": labels,
+                    }))
                 except Exception:
                     pass  # best-effort cache; don't fail the run
 
         elapsed_ms = int((time.perf_counter() - start) * 1000)
+        return self._detect_from_raw(
+            boxes=boxes, scores=scores, text_scores=text_scores,
+            labels=labels, elapsed_ms=elapsed_ms,
+            image_w=image.width, image_h=image.height,
+        )
+
+    def _detect_from_raw(
+        self,
+        boxes: list,
+        scores: list,
+        elapsed_ms: int,
+        image_w: int,
+        image_h: int,
+        text_scores: list | None = None,
+        labels: list | None = None,
+    ) -> DetectionResult:
+        """Core detection logic, separated for testability."""
+        if text_scores is None:
+            text_scores = [None] * len(boxes)
+        if labels is None:
+            labels = [None] * len(boxes)
+
         n_raw = len(boxes)
 
         if not boxes:
@@ -113,22 +148,26 @@ class GroundingDinoDetector:
                 n_raw_detections=0, n_distinct_detections=0,
                 detection_ms=elapsed_ms,
                 distinct_subjects=[],
+                text_label=None,
+                text_label_score=None,
             )
 
         normalized = []
-        for (x1, y1, x2, y2), score in zip(boxes, scores):
+        for idx, ((x1, y1, x2, y2), score) in enumerate(zip(boxes, scores)):
             normalized.append((
-                x1 / image.width,
-                y1 / image.height,
-                (x2 - x1) / image.width,
-                (y2 - y1) / image.height,
+                x1 / image_w,
+                y1 / image_h,
+                (x2 - x1) / image_w,
+                (y2 - y1) / image_h,
                 float(score),
+                text_scores[idx],
+                labels[idx],
             ))
 
         normalized.sort(key=lambda r: r[4], reverse=True)
-        kept: list[tuple[float, float, float, float, float]] = []
+        kept: list[tuple] = []
         for cand in normalized:
-            cx, cy, cw, ch, cs = cand
+            cx, cy, cw, ch, cs = cand[0], cand[1], cand[2], cand[3], cand[4]
             if any(
                 iou_xywh_normalized((cx, cy, cw, ch), (k[0], k[1], k[2], k[3]))
                 > NMS_IOU_THRESHOLD
@@ -159,8 +198,6 @@ class GroundingDinoDetector:
             if k[4] >= HIGH_CONF_THRESHOLD
             and 0.005 <= (k[2] * k[3]) <= BBOX_MAX_AREA_RATIO
         ]
-        # Each distinct_subjects tuple is (x, y, w, h, conf, phrase). Phrase is
-        # None until the per-detection phrase pipeline lands (Phase 2).
         distinct_subjects: list[
             tuple[float, float, float, float, float, Optional[str]]
         ] = []
@@ -174,8 +211,15 @@ class GroundingDinoDetector:
                     inside_any = True
                     break
             if not inside_any:
-                distinct_subjects.append((c[0], c[1], c[2], c[3], c[4], None))
+                phrase = c[6] if len(c) > 6 else None
+                distinct_subjects.append((c[0], c[1], c[2], c[3], c[4], phrase))
         n_distinct = len(distinct_subjects)
+
+        primary_text_label = top[6] if len(top) > 6 else None
+        primary_text_score = top[5] if len(top) > 5 else None
+        if primary_text_score is not None:
+            primary_text_score = float(primary_text_score)
+
         return DetectionResult(
             bbox_xywh_normalized=(top[0], top[1], top[2], top[3]),
             confidence=top[4],
@@ -183,4 +227,6 @@ class GroundingDinoDetector:
             n_distinct_detections=n_distinct,
             detection_ms=elapsed_ms,
             distinct_subjects=distinct_subjects,
+            text_label=primary_text_label,
+            text_label_score=primary_text_score,
         )
