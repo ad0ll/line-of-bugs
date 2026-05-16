@@ -72,7 +72,7 @@ def run_v1_on_sample(
     """Run V1 (DINO + InsectSAM) over every row in sample_rows."""
     completed = load_completed_pairs(parquet_path)
     to_process = [r for r in sample_rows
-                  if (r["image_id"], V1_NAME) not in completed]
+                  if (r["image_id"], cfg.variant_tag()) not in completed]
     print(f"[v1] {len(sample_rows)} total, {len(completed)} cached, "
           f"{len(to_process)} to process")
 
@@ -192,7 +192,7 @@ def run_v1_on_sample(
                     for s in (det.distinct_subjects or [])
                 ]
                 dr = DetectionRow(
-                    image_id=image_id, source=source, variant=V1_NAME,
+                    image_id=image_id, source=source, variant=cfg.variant_tag(),
                     img_w=W, img_h=H, subject_state=subject_state,
                     n_raw_detections=det.n_raw_detections,
                     n_distinct_detections=det.n_distinct_detections,
