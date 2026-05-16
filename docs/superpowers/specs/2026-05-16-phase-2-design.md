@@ -66,7 +66,7 @@ Pre-work (Phase 2-prep)
 - **2a and 2b parallel** because they touch different layers (vocab/UI vs models) and depend on disjoint files after pre-work.
 - **User workflow ordered**: bbox labeling waits until SAM 3 ships (otherwise the user would label DINO bboxes that SAM 3 invalidates).
 
-## Pre-work (Phase 2-prep) — 11 deliverables
+## Pre-work (Phase 2-prep) — 12 deliverables
 
 Must land **before** 2a and 2b run in parallel:
 
@@ -75,7 +75,7 @@ Must land **before** 2a and 2b run in parallel:
 | 1 | Per-detection phrase wiring in `grounding_dino.py` | 2a's per-bbox text overlay needs phrase data; DINO already emits it, wrapper just dropped it |
 | 2 | Schema additions: `text_label` (string), `text_label_score` (float) columns in parquet | Both phases write these; landing first avoids dual schema migrations |
 | 3 | `cfg.variant_tag()` invoked in `classify.py` (replaces `V1_NAME` in completion tracking + parquet rows) | Both phases need consistent variant tagging behavior |
-| 4 | Wire `gate.py` into `classify.py` orchestrator; write gate decision to parquet | 2a's UI displays gate result; 2b's ablation evaluates against gate output |
+| 4 | Add `gate_decision` column (nullable string) to parquet schema | Both phases write to this column; 2a populates it when rule labeler emits new vocab. Gate.py invocation itself moves to 2a (can't wire before vocab migrates — rule labeler emits OLD vocab today, gate.py expects NEW vocab keys, would crash). |
 | 5 | Re-tag legacy v1 rows: `"v1_dino_insectsam"` → `"grounding_dino__insectsam"` (matches `variant_tag()` format) | Forward-compatible tagging; one-shot migration script |
 | 6 | Extract PR curve + bootstrap CI utilities from `evaluate_pipeline.py` → shared module | Both phases use; avoids duplication |
 | 7 | `data/cache/labels.json` → git-tracked (`.gitignore` exception per parent spec §353) | Both phases commit edits to it; need version control |
@@ -83,6 +83,7 @@ Must land **before** 2a and 2b run in parallel:
 | 9 | Relocate validator HTML to `tools/validator/`, delete `audit/` (per parent spec §354-355) | 2a's UI rewrite assumes the file is in the new location |
 | 10 | Integration test infrastructure: stub `Detector` / `Segmenter` returning deterministic fixed outputs | Phase 1 had no CI-runnable integration test for `classify.py`; both phases need this for regression assertions |
 | 11 | Snapshot current parquet → `tests/python/_phase2_baseline/baseline.parquet` | Regression comparison anchor for both phases (same pattern as Phase 1 T0) |
+| 12 | Add `distinct_subjects` column to parquet schema (struct-list of `x/y/w/h/conf/phrase`); update `classify.py` to write `det.distinct_subjects`; update `build_html.py` to read from parquet column instead of `secondary_bboxes.json` sidecar; backfill existing parquet rows with empty list | Removes the sidecar dependency. After SAM 3 ships in 2b, distinct_subjects flows naturally from the model output through parquet to UI. backfill_secondary_bboxes.py can be deleted in 2b. |
 
 ## Phase 2a — UI + vocab + gate
 
@@ -102,6 +103,8 @@ Independent of model changes; ships with the existing DINO + InsectSAM stack.
 - **`label_server.py`** updates: stays as the existing `http.server`-based static + `/api/labels` GET/POST endpoint. The atomic-write pattern (`tempfile.mkstemp` → `os.replace`) is unchanged. POST continues to replace the entire `labels.json` dict in one shot (per existing pattern). New label vocabulary values flow through unchanged — the server is vocabulary-agnostic. Print statement at startup updated to point at new validator path.
 - **`build_html.py`** updates: renders the 4-column layout, applies per-column colors, draws per-bbox text-label overlays (`phrase·confidence` at each bbox corner; red border for NEGATIVE-class matches).
 - **`evaluate_pipeline.py`** vocab refresh: per-label F1 + bootstrap CIs against new label names.
+- **Wire `gate.py` into `classify.py` orchestrator** (moved here from pre-work). After rule_labeler emits new vocab, build the `label_record` dict from the row's rule-labeler output + (currently empty) mask/ml label lists, call `decide_drawability()`, write result to `gate_decision` parquet column.
+- **`backfill_secondary_bboxes.py` decision deferred to 2b** — kept through 2a since it still works for `grounding_dino__insectsam` variant.
 
 **Verification:**
 - Integration tests using stub `Detector`/`Segmenter` produce expected parquet rows under new schema
@@ -139,7 +142,7 @@ Model-layer changes. Independent of vocab/UI work after pre-work.
   - Decision rule: ΔAUC ≥ 0.05 → keep segmenter; else drop
   - Runs for `mask_blur_*` and `mask_poor-contrast`
   - Output: markdown report + persisted JSON for future re-runs
-- **Delete `backfill_secondary_bboxes.py`** — SAM 3 returns distinct_subjects natively; the backfill sidecar becomes redundant.
+- **Delete `backfill_secondary_bboxes.py` + `data/cache/secondary_bboxes.json`** — SAM 3 returns distinct_subjects natively; pre-work item 12 already routed UI to read from parquet, so the sidecar + backfill script are both redundant.
 
 **Verification:**
 - SAM 3 wrapper passes integration tests using stub-replaced model layer
@@ -201,7 +204,7 @@ The workflow ordering is deliberate — bbox is upstream of everything. If bbox 
 
 Phase 2 is "done" when ALL of:
 
-- [ ] Pre-work (11 items) committed and verified
+- [ ] Pre-work (12 items) committed and verified
 - [ ] Phase 2a deliverables shipped (UI + vocab + gate wiring)
 - [ ] Phase 2b deliverables shipped (SAM 3 + prompt + ablation)
 - [ ] IoU transfer sanity-check protocol completed (validated or fallen back to full re-label)

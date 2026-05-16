@@ -155,16 +155,16 @@ Phase 3 is "done" when:
 - Joint multi-label training / label correlations (deferred)
 - Cropped-image classifier (never per parent spec out-of-scope)
 
-## Open questions to resolve before plan writing
+## Decisions made for plan writing
 
-These will be answered by Phase 2 outcomes or by initial Phase 3 research:
+Resolved using judgment + parent spec defaults. Each is a defensible default — revisit if Phase 2 data invalidates the choice.
 
-- **Ablation outcome from Phase 2b**: keep or drop the segmenter? Drives whether mask features are available to ML labelers.
-- **Final label counts after Phase 2 marathon**: drives active learning priorities. If `bbox_wrong-subject` is already ≥30 after marathon, drop it from active learning targets.
-- **`mask_poor-contrast` ML migration trigger**: parent spec says "if rule F1 stays low." What's "low"? Suggest **F1 < 0.5 after Phase 2** as the trigger; revisit if data suggests otherwise.
-- **Active surfacer embedding source for diversity clustering**: options include (a) reuse SAM 3 visual features (free if already cached), (b) CLIP image embeddings (additional dependency, well-understood), (c) simple feature-vector clustering (cheap, less semantically meaningful). Default suggestion: (a) if SAM 3 visual features are accessible from the model output; (c) as fallback.
-- **PR curve sample size**: per parent spec §319, statistical A/B needs 100 positives per label. Most current labels are below this. Decide whether Phase 3 ships at "directional" (30) or holds for "statistical" (100).
-- **Active learning round budget**: parent spec says 20-30 per round. Confirm — or scale up/down based on user fatigue tolerance.
+- **Ablation outcome from Phase 2b**: genuinely unknown until Phase 2b ships. Plan written assuming **"segmenter STAYS"** (mask features available). Plan includes one explicit fallback task — "if ablation result = drop, swap blur classifier feature set from `{subject_sharpness, boundary_sharpness, mask_area_ratio, lab_delta_e}` to `{subject_sharpness, bbox-cropped image embedding from CLIP}`."
+- **Final label counts after marathon**: unknown. Plan handles generically — each active learning task checks per-label count at runtime and skips labels already above target (30 positives directional).
+- **`mask_poor-contrast` ML migration trigger**: **F1 < 0.5** on the rule labeler against post-Phase-2 labels. If rule F1 ≥ 0.5, keep as rule labeler (avoid premature ML complexity). If F1 < 0.5, train ML labeler in Phase 3.
+- **Active surfacer embedding source for diversity clustering**: **CLIP `openai/clip-vit-base-patch32`**. Justification: (a) SAM 3 visual features not confirmed exposed in HF output surface; (b) CLIP is well-understood, ~150MB model, fast on MPS; (c) feature-vector clustering (13 scalars from features.py) won't cluster meaningfully. CLIP was already a transitive dep via the deleted `blur_model_bench.py` — re-adding is cheap.
+- **PR curve sample size**: **start at directional (30 positives per label)**; push to statistical (100) only if Phase 3 active learning shows rule labeler can't reach Phase 4 gate target with 30. Pragmatic — don't over-collect labels if directional is enough.
+- **Active learning round budget**: **20-30 per round per label** (parent spec default). User can lower per-round if fatigued.
 
 ## Sources
 

@@ -130,15 +130,19 @@ Parent spec's full success criteria (parent spec §521-527):
 - Re-calibration on data distribution shift (future operational concern)
 - Production monitoring dashboards
 
-## Open questions to resolve before plan writing
+## Decisions made for plan writing
 
-These will be answered by Phase 2/3 outcomes or by initial Phase 4 research:
+Resolved using judgment + parent spec defaults. Revisit if Phase 2/3 data invalidates the choice.
 
-- **Pipeline throughput per image under SAM 3 + ML labelers** — measure during Phase 3, project to 34k. Drives batching strategy.
-- **Sample-review iteration loop if disagreement ≥ 4** — what specifically does the user iterate on? Likely Phase 3 active learning for the weakest label, but should be a documented decision tree before Phase 4 starts.
-- **Sample-review reviewer**: just you? Or do you want a second reviewer for inter-rater check on the 100-image sample? Adds calendar overhead but improves confidence in the precision number.
-- **Gate threshold storage**: `config.py` is currently the source of truth for thresholds, but those are coupled with detector params. Should ML labeler thresholds live in a new `gate_config.py`? Decide based on `config.py` size at end of Phase 3.
-- **34k storage strategy**: keep full parquet, prune old variant rows, archive to cold storage? Defer until run completes and we see actual size.
+- **Pipeline throughput measurement**: plan includes a **first-task throughput measurement** in Phase 4-prep using the labeled subset (~360 images already in parquet). Extrapolate to 34k. If projected wall-clock > 4 hours (parent spec budget), optimize before launching full run.
+- **Sample-review iteration loop if disagreement ≥ 4** — decision tree:
+  - **Categorize disagreements by label**: which labels account for most disagreements?
+  - **If one label dominates (≥50% of disagreements)** → re-enter Phase 3 active learning for that label; grow it past 30 (toward statistical 100); retrain classifier; re-run gate sweep; re-run sample review
+  - **If disagreements are spread across labels** → re-tune gate thresholds (rerun `gate_sweep.py` with possibly-lower precision target; accept the new ceiling)
+  - **If neither path improves things after one iteration** → escalate to Phase 2 revisit (possibly SAM 3 is picking wrong bboxes; possibly prompt needs refinement)
+- **Sample-review reviewer**: **just you, single reviewer**. Inter-rater check is overkill for an initial ship decision. If the first review fails the criterion, can add a second reviewer in the iteration loop as needed.
+- **Gate threshold storage**: **keep in `config.py`** under a new `# ─── Gate thresholds ─────` section. Don't introduce a separate `gate_config.py` — adds an import that has to be remembered. `config.py` is already the single source of truth.
+- **34k storage strategy**: defer. Plan includes a final cleanup task: "if parquet > 10 GB after 34k run, prune dead variant rows (any `variant` no longer in active use)."
 
 ## Sources
 
