@@ -13,11 +13,16 @@ function safePath(rel: string): string {
   return path.join(process.cwd(), "data", cleaned);
 }
 
-function unlinkIfExists(p: string): void {
+function unlinkBestEffort(p: string): void {
   try {
     fs.unlinkSync(p);
   } catch (err) {
-    if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+    const code = (err as NodeJS.ErrnoException).code;
+    if (code === "ENOENT") return;
+    // Admin deletes are rare; a stuck file (mode issue, NFS hiccup, etc.) is
+    // not worth rolling back the DB delete over. Surface as a warning and
+    // continue — the cleanup script can sweep orphans later.
+    console.warn(`deleteImage: failed to unlink ${p}: ${(err as Error).message}`);
   }
 }
 
@@ -30,13 +35,22 @@ export async function deleteImage(imageId: string): Promise<void> {
   }
   const row = existing[0]!;
 
-  // Delete DB row first — reports cascade via FK, FTS trigger fires.
-  // If file unlinks fail mid-way, the row is still gone and gallery is consistent.
-  db.delete(images).where(eq(images.imageId, imageId)).run();
+  // Collect file paths from the row first, then delete the DB row in a
+  // transaction. Reports cascade via FK; FTS trigger fires on DELETE.
+  // File unlinks happen AFTER the DB commit — if one fails we log and keep
+  // going so the gallery stays consistent (orphaned files are tolerable;
+  // a stuck DB row with no files is not).
+  const paths = [
+    safePath(row.filename),
+    safePath(row.mediumFilename),
+    safePath(row.thumbnailFilename),
+  ];
 
-  unlinkIfExists(safePath(row.filename));
-  unlinkIfExists(safePath(row.mediumFilename));
-  unlinkIfExists(safePath(row.thumbnailFilename));
+  db.transaction((tx) => {
+    tx.delete(images).where(eq(images.imageId, imageId)).run();
+  });
+
+  for (const p of paths) unlinkBestEffort(p);
 
   invalidateOnDelete();
 }
