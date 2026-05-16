@@ -1,5 +1,8 @@
 .claude
-data/
+data/*
+!data/cache/
+data/cache/*
+!data/cache/labels.json
 __pycache__/
 .venv/
 *.pyc
@@ -380,7 +383,7 @@ audit/
 coverage/
 
 # Framing detector experiment outputs
-data/cache/
+# (data/cache exception for labels.json handled at the top of this file)
 audit/framing-validator/
 .pytest_cache/
 
