@@ -3,16 +3,14 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { IntervalPicker } from "@/app/components/home/IntervalPicker";
-import { SubjectFilter } from "@/app/components/home/SubjectFilter";
 import { RepeatModeToggle } from "@/app/components/home/RepeatModeToggle";
 import { StartSessionButton } from "@/app/components/home/StartSessionButton";
-import { FilterPopover, type FilterOption } from "@/app/components/filters/FilterPopover";
-import { TaxonGroupChips } from "@/app/components/filters/TaxonGroupChips";
-import { CollapsibleSection } from "@/app/components/ui/CollapsibleSection";
+import { FilterBar, type FilterBarState } from "@/app/components/filters/FilterBar";
+import { type FilterOption } from "@/app/components/filters/FilterPopover";
 import { Tooltip } from "@/app/components/ui/Tooltip";
 import { TOOLTIPS } from "@/lib/tooltips";
 import type { RepeatMode } from "@/lib/repeat-mode";
-import type { SubjectType } from "@/lib/subject";
+import { parseSubject, type SubjectType } from "@/lib/subject";
 import type { FacetCount, FacetSnapshot } from "@/lib/queries/facets";
 
 interface Props {
@@ -22,12 +20,6 @@ interface Props {
   initialFacets: FacetSnapshot;
 }
 
-/**
- * Merge the absolute "totals" snapshot with the live "filtered" one
- * into the {name, count, total} shape FilterPopover/TaxonGroupChips
- * expect. Order is preserved from the totals array (whichever order
- * server-side returned them in).
- */
 function mergeFacetCounts(
   filtered: FacetCount[],
   totals: FacetCount[],
@@ -45,16 +37,16 @@ function parseList(v: string | null): string[] {
 }
 
 /**
- * URL-driven home page. Every filter setting reflects in the query
- * string so a refresh preserves selection and links are shareable.
+ * URL-driven home page. Filter state lives in the URL — useState is
+ * only used for the local "start session" form fields (interval +
+ * repeat-mode) that don't need to be shareable links.
  *
- * Layout intent (R6):
- *   - interval / subject / start-session stay visible — the core flow.
- *   - "what kind of bug?" chip wall + the existing view/life/sex
- *     popovers are concealed behind two CollapsibleSections. Default
- *     closed; badge shows "(3 selected)" if a filter is active while
- *     hidden so users notice the impact.
- *   - Live pool count is always visible regardless of collapse state.
+ * Layout intent (R8 redesign 2026-05-16):
+ *   - Title centered up top.
+ *   - One vertical stack of controls: interval → FilterBar → repeat → CTAs.
+ *   - No 2-column grid (the old layout left half the viewport empty).
+ *   - Layperson chips visible by default — no collapse.
+ *   - "browse the gallery" promoted to a sibling CTA next to "start".
  */
 export function HomeClient({
   initialInterval,
@@ -68,12 +60,16 @@ export function HomeClient({
   const [, startTransition] = useTransition();
 
   const [intervalSec, setIntervalSec] = useState(initialInterval);
-  const [subject, setSubject] = useState<SubjectType>(initialSubject);
   const [repeat, setRepeat] = useState<RepeatMode>(initialRepeat);
+
+  // Filter state is read from + written to the URL. Initialized from
+  // SSR params and from useSearchParams for client-side restoration.
+  const [subject, setSubject] = useState<SubjectType>(initialSubject);
   const [views, setViews] = useState<string[]>(parseList(params.get("view")));
   const [life, setLife] = useState<string[]>(parseList(params.get("life")));
   const [sexes, setSexes] = useState<string[]>(parseList(params.get("sex")));
   const [groups, setGroups] = useState<string[]>(parseList(params.get("type")));
+  const [species, setSpecies] = useState<string[]>(parseList(params.get("q")));
 
   // Push state → URL.
   useEffect(() => {
@@ -85,28 +81,17 @@ export function HomeClient({
     if (life.length) next.set("life", life.join(","));
     if (sexes.length) next.set("sex", sexes.join(","));
     if (groups.length) next.set("type", groups.join(","));
+    if (species.length) next.set("q", species.join(","));
     const qs = next.toString();
     const target = qs ? `${pathname}?${qs}` : pathname;
     startTransition(() => {
       router.replace(target, { scroll: false });
     });
-  }, [intervalSec, subject, repeat, views, life, sexes, groups, pathname, router]);
+  }, [intervalSec, subject, repeat, views, life, sexes, groups, species, pathname, router]);
 
   // Faceted snapshot — refreshed on every filter change so chips
-  // re-count with own-axis exclusion semantics.
-  //
-  // Guarded against three lag sources the audit identified:
-  //   1. React StrictMode double-fires this effect → ref-keyed dedupe
-  //      keyed on the params string skips the second fire.
-  //   2. Rapid chip toggling → 80 ms debounce collapses adjacent
-  //      clicks into one fetch.
-  //   3. In-flight requests get aborted whenever a newer one starts.
-  //
-  // initialFacets is held in a ref so a fresh SSR snapshot (sent
-  // every time router.replace runs after a URL change) doesn't re-
-  // trigger the effect via dep-change. Without this, the cleanup ran
-  // between mount-time fetch scheduling and the timeout firing,
-  // killing the fetch.
+  // re-count with own-axis exclusion semantics. See git blame for the
+  // dedupe + debounce rationale (batch 1 fixed a multi-second lag).
   const [facets, setFacets] = useState<FacetSnapshot>(initialFacets);
   const [facetsLoading, setFacetsLoading] = useState(false);
   const lastFetchKey = useRef<string>("");
@@ -120,7 +105,7 @@ export function HomeClient({
     if (sexes.length) q.set("sex", sexes.join(","));
     if (groups.length) q.set("type", groups.join(","));
     const key = q.toString();
-    if (key === lastFetchKey.current) return; // StrictMode dedupe.
+    if (key === lastFetchKey.current) return;
     lastFetchKey.current = key;
 
     const controller = new AbortController();
@@ -144,24 +129,40 @@ export function HomeClient({
   }, [subject, views, life, sexes, groups]);
 
   const poolCount = facets.total;
-  const countLoading = facetsLoading;
 
-  const typeBadge = groups.length > 0 ? `${groups.length} selected` : null;
-  const advancedActive = views.length + life.length + sexes.length;
-  const advancedBadge = advancedActive > 0 ? `${advancedActive} selected` : null;
+  const subjectCounts = {
+    filtered: {
+      wild: facets.subject.wild,
+      captive: facets.subject.captive,
+      specimen: facets.subject.specimen,
+      all: facets.subject.wild + facets.subject.captive + facets.subject.specimen,
+    },
+    totals: {
+      wild: initialFacets.subject.wild,
+      captive: initialFacets.subject.captive,
+      specimen: initialFacets.subject.specimen,
+      all: initialFacets.subject.wild + initialFacets.subject.captive + initialFacets.subject.specimen,
+    },
+  };
 
-  // Merge filtered counts (axis-excluded) with unchanging totals so
-  // chips render "filtered / total" when they differ.
-  const taxonGroupOptions = mergeFacetCounts(facets.taxonGroups, initialFacets.taxonGroups);
-  const viewOptions = mergeFacetCounts(facets.views, initialFacets.views);
-  const lifeOptions = mergeFacetCounts(facets.lifeStages, initialFacets.lifeStages);
-  const sexOptions = mergeFacetCounts(facets.sexes, initialFacets.sexes);
+  const filterState: FilterBarState = {
+    subject, groups, species, views, lifeStages: life, sexes, institutions: [],
+  };
+
+  function handleFilterChange(next: Partial<FilterBarState>) {
+    if (next.subject !== undefined) setSubject(next.subject);
+    if (next.groups !== undefined) setGroups(next.groups);
+    if (next.species !== undefined) setSpecies(next.species);
+    if (next.views !== undefined) setViews(next.views);
+    if (next.lifeStages !== undefined) setLife(next.lifeStages);
+    if (next.sexes !== undefined) setSexes(next.sexes);
+    // No institutions axis on home.
+  }
 
   return (
     <div className="home-wrap">
-      <div aria-hidden className="home-bloom" />
       <main className="home-main">
-        <header>
+        <header className="home-header">
           <h1 className="home-title">line of bugs</h1>
           <p className="home-tagline">
             gesture drawing practice with five thousand insects, tenderly photographed
@@ -180,63 +181,24 @@ export function HomeClient({
         <section className="home-section">
           <h2 className="home-section-title">
             <Tooltip content={TOOLTIPS.subject.content}>
-              <span>subject type</span>
+              <span>filters</span>
             </Tooltip>
           </h2>
-          <SubjectFilter value={subject} onChange={setSubject} />
-        </section>
-
-        <section className="home-section">
-          <CollapsibleSection title="what kind of bug?" badge={typeBadge}>
-            <Tooltip content={TOOLTIPS.taxonGroup.content} showIcon={false}>
-              <TaxonGroupChips
-                counts={taxonGroupOptions}
-                selected={groups}
-                onChange={setGroups}
-              />
-            </Tooltip>
-          </CollapsibleSection>
-        </section>
-
-        <section className="home-section">
-          <CollapsibleSection title="more filters" badge={advancedBadge}>
-            <div className="home-filter-row">
-              <Tooltip content={TOOLTIPS.view.content} showIcon={false}>
-                <FilterPopover
-                  idleLabel="view: all"
-                  selectedLabel={(n) => `view: ${n} selected`}
-                  ariaLabel="view filter"
-                  options={viewOptions}
-                  selected={views}
-                  onChange={setViews}
-                />
-              </Tooltip>
-              <Tooltip content={TOOLTIPS.lifeStage.content} showIcon={false}>
-                <FilterPopover
-                  idleLabel="life stage: all"
-                  selectedLabel={(n) => `life: ${n} selected`}
-                  ariaLabel="life stage filter"
-                  options={lifeOptions}
-                  selected={life}
-                  onChange={setLife}
-                />
-              </Tooltip>
-              <Tooltip content={TOOLTIPS.sex.content} showIcon={false}>
-                <FilterPopover
-                  idleLabel="sex: all"
-                  selectedLabel={(n) => `sex: ${n} selected`}
-                  ariaLabel="sex filter"
-                  options={sexOptions}
-                  selected={sexes}
-                  onChange={setSexes}
-                />
-              </Tooltip>
-            </div>
-          </CollapsibleSection>
+          <FilterBar
+            state={filterState}
+            options={{
+              taxonGroups: mergeFacetCounts(facets.taxonGroups, initialFacets.taxonGroups),
+              views: mergeFacetCounts(facets.views, initialFacets.views),
+              lifeStages: mergeFacetCounts(facets.lifeStages, initialFacets.lifeStages),
+              sexes: mergeFacetCounts(facets.sexes, initialFacets.sexes),
+              subjectCounts,
+            }}
+            onChange={handleFilterChange}
+          />
         </section>
 
         <p className="home-pool-count" aria-live="polite">
-          {countLoading
+          {facetsLoading
             ? "counting…"
             : poolCount === 0
             ? "no images match — broaden the filters"
@@ -252,19 +214,20 @@ export function HomeClient({
           <RepeatModeToggle value={repeat} onChange={setRepeat} />
         </section>
 
-        <StartSessionButton
-          intervalSec={intervalSec}
-          subjectType={subject}
-          repeatMode={repeat}
-          views={views}
-          lifeStages={life}
-          sexes={sexes}
-          groups={groups}
-        />
-
-        <a href="/gallery" className="home-gallery-link">
-          browse the gallery →
-        </a>
+        <div className="home-ctas">
+          <StartSessionButton
+            intervalSec={intervalSec}
+            subjectType={subject}
+            repeatMode={repeat}
+            views={views}
+            lifeStages={life}
+            sexes={sexes}
+            groups={groups}
+          />
+          <a href="/gallery" className="home-gallery-link">
+            browse the gallery →
+          </a>
+        </div>
       </main>
     </div>
   );

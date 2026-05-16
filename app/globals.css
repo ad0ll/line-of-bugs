@@ -986,75 +986,36 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 .home-wrap {
   min-height: 100vh;
   position: relative;
-  overflow: hidden;
-}
-.home-bloom {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(900px 600px at 12% 8%, rgba(255,110,199,0.18), transparent 60%),
-    radial-gradient(800px 600px at 88% 22%, rgba(167,139,250,0.22), transparent 60%),
-    radial-gradient(700px 500px at 50% 110%, rgba(103,212,230,0.16), transparent 60%);
-}
-.home-bloom::before,
-.home-bloom::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(40px);
-  opacity: 0.55;
-  pointer-events: none;
-  will-change: transform;
-}
-.home-bloom::before {
-  top: 5%; left: -5%;
-  width: 280px; height: 280px;
-  background: var(--accent-pink);
-  animation: float-slow 7s ease-in-out infinite;
-}
-.home-bloom::after {
-  bottom: 10%; right: -8%;
-  width: 360px; height: 360px;
-  background: var(--accent-lilac);
-  animation: float-slow 9s ease-in-out infinite reverse;
 }
 
-/* Fluid layout: single column on mobile; sticky-header + form column at ≥960px.
-   Form column caps at 580px so radio cards stay legible; header flexes with the viewport. */
+/* Centered single-column form. The previous 2-col grid left half the
+   viewport empty on wide screens (the "wasted space" complaint). The
+   header now sits above the form instead of in a parallel column. */
 .home-main {
   min-height: 100dvh;
   padding: clamp(var(--s8), 4vw, var(--s20));
-  display: grid;
-  grid-template-columns: 1fr;
-  align-content: start;
-  gap: clamp(var(--s8), 3vw, var(--s12));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(var(--s6), 2.5vw, var(--s10));
   position: relative;
   z-index: 1;
 }
-@media (min-width: 960px) {
-  .home-main {
-    grid-template-columns: minmax(320px, 1fr) minmax(440px, 580px);
-    column-gap: clamp(var(--s12), 6vw, var(--s24));
-    row-gap: var(--s8);
-    align-items: start;
-  }
-  .home-main > header {
-    grid-column: 1;
-    grid-row: 1;
-    position: sticky;
-    top: clamp(var(--s10), 6vw, var(--s24));
-    align-self: start;
-  }
-  .home-main > .home-section,
-  .home-main > .home-start,
-  .home-main > .home-start-error,
-  .home-main > .home-gallery-link {
-    grid-column: 2;
-  }
-  .home-main > .home-start { align-self: start; margin-top: var(--s4); }
-  .home-main > .home-gallery-link { text-align: left; padding-top: var(--s2); }
+.home-main > * {
+  width: 100%;
+  max-width: 640px;
+}
+.home-header {
+  text-align: center;
+  margin-bottom: var(--s4);
+}
+.home-ctas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s8);
+  margin-top: var(--s6);
+  flex-wrap: wrap;
 }
 
 .home-title {
@@ -1200,16 +1161,114 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 .home-start:disabled { opacity: 0.55; cursor: default; transform: none; }
 .home-start-error { color: var(--accent-danger); font-size: 0.9rem; margin: var(--s2) 0 0 0; text-align: center; }
 
+/* Secondary CTA — sibling to .home-start in .home-ctas. Same visual
+   weight family (rounded pill, generous tap area) but lilac-outlined
+   so it reads as "the other option," not "afterthought link." */
 .home-gallery-link {
-  color: var(--text-tertiary);
-  font-size: 0.9rem;
-  text-align: center;
-  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s5) var(--s10);
+  border-radius: var(--r-pill);
+  border: 1.5px solid var(--accent-pink-border);
+  color: var(--text-primary);
+  background: transparent;
   font-family: var(--font-display), serif;
   font-style: italic;
-  letter-spacing: 0.02em;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: background var(--timing-base), border-color var(--timing-base);
 }
-.home-gallery-link:hover { color: var(--accent-pink); }
+.home-gallery-link:hover {
+  background: var(--accent-pink-soft);
+  border-color: var(--accent-pink);
+  color: var(--accent-pink);
+}
+
+/* ════════════════════════════════════════════════════════════
+   FILTER BAR — shared between home + gallery
+   ════════════════════════════════════════════════════════════ */
+
+.filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  width: 100%;
+}
+.filter-bar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  flex-wrap: wrap;
+}
+.filter-bar-row-end {
+  justify-content: flex-start;
+}
+.filter-bar-label {
+  font-family: var(--font-display), serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--accent-lilac);
+  letter-spacing: 0.01em;
+  min-width: 64px;
+}
+.filter-bar-chips {
+  display: flex;
+  gap: var(--s2);
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+/* Tab-like mode toggle: chip-bordered control where the active tab
+   is filled; sits where the picker label would go. */
+.filter-bar-mode {
+  display: inline-flex;
+  background: var(--surface-1);
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--r-pill);
+  padding: 2px;
+  gap: 2px;
+}
+.filter-bar-mode-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.85rem;
+  padding: var(--s2) var(--s6);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  text-transform: lowercase;
+  transition: background var(--timing-base), color var(--timing-base);
+  min-height: 32px;
+}
+.filter-bar-mode-tab:hover { color: var(--text-primary); }
+.filter-bar-mode-tab.is-active {
+  background: var(--accent-pink);
+  color: var(--text-on-accent);
+  font-weight: 600;
+  box-shadow: var(--shadow-pink-soft);
+}
+
+.filter-bar-picker {
+  /* Holds either the chip wall OR the species autocomplete. Min-height
+     prevents a tall→short jump when toggling modes. */
+  min-height: 44px;
+}
+.filter-bar-more {
+  position: relative;
+}
+.filter-bar-more-row {
+  display: flex;
+  gap: var(--s3);
+  flex-wrap: wrap;
+  margin-top: var(--s3);
+  padding: var(--s4);
+  background: var(--surface-1);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--r-3xl);
+}
 
 /* ════════════════════════════════════════════════════════════
    SESSION

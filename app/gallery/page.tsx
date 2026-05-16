@@ -1,5 +1,4 @@
 import { Suspense } from 'react';
-import { SearchBar } from './_components/SearchBar';
 import { FilterChipsBar } from './_components/FilterChipsBar';
 import { GalleryGrid } from './_components/GalleryGrid';
 import { HoverZoomMount } from './_components/HoverZoomMount';
@@ -52,7 +51,9 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
     <main className="gallery-page">
       <header className="gallery-header">
         <h1>gallery</h1>
-        <SearchBar />
+        {/* Species search lives inside FilterBar (species mode); no
+            separate SearchBar — the two were writing to the same `?q=`
+            param and the user wanted a unified entry point. */}
         <Suspense fallback={<div className="gallery-filters-skeleton" />}>
           <FilterChipsBar filters={filterState} />
         </Suspense>
