@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
@@ -42,11 +43,12 @@
     "@types/node": "^25.7.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitest/ui": "^3.2.4",
+    "@vitest/coverage-v8": "^4.1.6",
+    "@vitest/ui": "^4.1.6",
     "drizzle-kit": "^0.31.10",
     "happy-dom": "^20.9.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.6"
   }
 }

@@ -14,6 +14,20 @@ export default defineConfig({
     // real production file. vitest applies `env` before any module
     // evaluates.
     env: { DATABASE_URL: ":memory:" },
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html", "json-summary"],
+      reportsDirectory: "./coverage",
+      include: ["app/**", "lib/**", "actions/**", "db/**"],
+      exclude: [
+        "**/*.d.ts",
+        "**/*.test.*",
+        "**/_components/**/index.ts",
+        "scripts/**",
+        "drizzle/**",
+        "app/api/healthz/**",
+      ],
+    },
   },
   resolve: {
     alias: { "@": path.resolve(__dirname) },
