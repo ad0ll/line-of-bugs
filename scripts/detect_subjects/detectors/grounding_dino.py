@@ -60,6 +60,8 @@ class DetectionResult:
 
 
 class GroundingDinoDetector:
+    model_id: str = DINO_MODEL_ID  # written to parquet rows; survives variant swaps
+
     def __init__(self, device: str = "mps", dtype: torch.dtype = torch.float32) -> None:
         self.device = device
         self.dtype = dtype

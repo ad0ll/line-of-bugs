@@ -32,6 +32,8 @@ class SegmentationResult:
 
 
 class InsectSAMSegmenter:
+    model_id: str = INSECTSAM_MODEL_ID  # written to parquet rows; survives variant swaps
+
     def __init__(self, device: str = "mps", dtype: torch.dtype = torch.float32) -> None:
         self.device = device
         self.dtype = dtype
