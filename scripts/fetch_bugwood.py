@@ -22,7 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (
     session, IMG_DIR, THUMB_DIR, MEDIUM_DIR,
     parallel_download, ConsecutiveFailureGuard,
-    setup_logging, build_filename, slugify,
+    setup_logging, build_filename, slugify, ensure_data_dirs,
 )
 from db import DbWriter
 from taxonomy_subgroup import classify as classify_subgroup
@@ -344,6 +344,7 @@ def run_pass(mw: DbWriter, existing_in_bucket: int,
 
 
 def main() -> int:
+    ensure_data_dirs()
     mw = DbWriter("bugwood")
     log.info("Bugwood: resuming with %d already in DB", mw.count())
 

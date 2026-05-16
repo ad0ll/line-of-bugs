@@ -40,8 +40,16 @@ IMG_DIR = ROOT / "data" / "images"
 THUMB_DIR = ROOT / "data" / "thumbnails"
 MEDIUM_DIR = ROOT / "data" / "medium"
 LOG_DIR = ROOT / "data" / "logs"
-for d in (IMG_DIR, THUMB_DIR, MEDIUM_DIR, LOG_DIR):
-    d.mkdir(parents=True, exist_ok=True)
+
+
+def ensure_data_dirs() -> None:
+    """Create the four output directories under ROOT/data.
+    Entry points must call this explicitly — `import scripts.common` no
+    longer performs filesystem side-effects, so tooling that imports
+    helpers (slugify, build_filename, etc.) for unit tests doesn't
+    accidentally create empty data/ folders in random working dirs."""
+    for d in (IMG_DIR, THUMB_DIR, MEDIUM_DIR, LOG_DIR):
+        d.mkdir(parents=True, exist_ok=True)
 
 _DEFAULT_CONTACT = "line-of-bugs@example.invalid"
 USER_AGENT = f"line-of-bugs/0.1 ({os.environ.get('LOB_CONTACT', _DEFAULT_CONTACT)})"
@@ -68,6 +76,7 @@ def setup_logging(name: str) -> logging.Logger:
     sh = logging.StreamHandler()
     sh.setFormatter(fmt)
     logger.addHandler(sh)
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
     fh = logging.FileHandler(LOG_DIR / f"{name}.log")
     fh.setFormatter(fmt)
     logger.addHandler(fh)

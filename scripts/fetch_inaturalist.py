@@ -36,7 +36,7 @@ if INAT_MODE == "captive":
 from common import (
     session, IMG_DIR, THUMB_DIR, MEDIUM_DIR, MIN_LONG_EDGE_DEFAULT,
     parallel_download, ConsecutiveFailureGuard,
-    setup_logging, build_filename, slugify,
+    setup_logging, build_filename, slugify, ensure_data_dirs,
 )
 from db import DbWriter
 from taxonomy_subgroup import classify as classify_subgroup
@@ -324,6 +324,7 @@ def fetch_order(mw: DbWriter, existing_by_label: Counter,
 
 
 def main() -> int:
+    ensure_data_dirs()
     mw = DbWriter("inaturalist")
     log.info("iNat: mode=%s, resuming with %d already in DB (across all states)",
              INAT_MODE, mw.count())
