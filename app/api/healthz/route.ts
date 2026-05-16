@@ -6,9 +6,8 @@ export async function GET() {
     const row = db.get<{ c: number }>(sql`SELECT COUNT(*) AS c FROM images`);
     return Response.json({ ok: true, images: row?.c ?? 0, ts: new Date().toISOString() });
   } catch (err) {
-    return Response.json(
-      { ok: false, error: err instanceof Error ? err.message : String(err) },
-      { status: 500 },
-    );
+    // Log the underlying error for ops, but never leak DB text to clients.
+    console.error("healthz:", err);
+    return Response.json({ ok: false }, { status: 503 });
   }
 }
