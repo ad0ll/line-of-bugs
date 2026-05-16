@@ -18,9 +18,10 @@ export const TOOLTIPS = {
   subject: {
     label: "subject type",
     content: <>
-      <strong>nature</strong> — bugs in their habitat, alive.{" "}
+      <strong>wild</strong> — bugs photographed in their habitat, alive.{" "}
+      <strong>captive</strong> — alive but staged (a hand, a leaf in a jar, a studio shot).{" "}
       <strong>specimen</strong> — preserved/pinned museum photos.{" "}
-      <strong>both</strong> — everything.
+      <strong>all</strong> — everything.
     </>,
   },
   view: {
