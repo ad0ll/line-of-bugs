@@ -1,0 +1,26 @@
+# Coverage configuration for line-of-bugs Python scripts.
+# Run via pytest-cov: `pytest --cov=scripts` (configured in pytest.ini).
+
+[run]
+branch = True
+source = scripts
+omit =
+    __pycache__/*
+    */__pycache__/*
+    .venv/*
+    tests/*
+    scripts/detect_subjects/*
+
+[report]
+# Show lines that are not covered.
+show_missing = True
+# Skip files that are fully covered to keep reports concise.
+skip_covered = False
+exclude_lines =
+    pragma: no cover
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+
+[html]
+directory = .coverage_html
