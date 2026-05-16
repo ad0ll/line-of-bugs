@@ -1,29 +1,32 @@
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 
-// expire: 0 forces immediate invalidation (vs 'max' which is stale-while-revalidate).
-// Admin mutations must be visible on the very next request.
-const EXPIRE_NOW = { expire: 0 } as const;
+// All four helpers are invoked exclusively from server actions, so we use
+// updateTag — Next 16's read-your-own-writes variant. updateTag immediately
+// expires the cached data with no stale-while-revalidate window, so the
+// admin / reporter sees the result of their action on the very next request.
+// Use revalidateTag(tag, profile) only from non-action contexts (route
+// handlers, webhooks) where SWR is acceptable.
 
 export function invalidateOnReportSubmit(): void {
-  revalidateTag("reports", EXPIRE_NOW);
-  revalidateTag("gallery-results", EXPIRE_NOW);
-  revalidateTag("images-stats", EXPIRE_NOW);
+  updateTag("reports");
+  updateTag("gallery-results");
+  updateTag("images-stats");
 }
 
 export function invalidateOnDismiss(): void {
-  revalidateTag("reports", EXPIRE_NOW);
-  revalidateTag("gallery-results", EXPIRE_NOW);
+  updateTag("reports");
+  updateTag("gallery-results");
 }
 
 export function invalidateOnHide(): void {
-  revalidateTag("reports", EXPIRE_NOW);
-  revalidateTag("gallery-results", EXPIRE_NOW);
-  revalidateTag("images-stats", EXPIRE_NOW);
+  updateTag("reports");
+  updateTag("gallery-results");
+  updateTag("images-stats");
 }
 
 export function invalidateOnDelete(): void {
-  revalidateTag("reports", EXPIRE_NOW);
-  revalidateTag("gallery-results", EXPIRE_NOW);
-  revalidateTag("images-stats", EXPIRE_NOW);
-  revalidateTag("species-index", EXPIRE_NOW);
+  updateTag("reports");
+  updateTag("gallery-results");
+  updateTag("images-stats");
+  updateTag("species-index");
 }
