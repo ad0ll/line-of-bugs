@@ -10,7 +10,11 @@ import torch
 from PIL import Image
 
 from scripts.detect_subjects.caches import load_completed_pairs
-from scripts.detect_subjects.rule_labeler import classify_framing, suggest_labels
+from scripts.detect_subjects.rule_labeler import (
+    classify_framing,
+    count_bugs_in_primary_bbox,
+    suggest_labels,
+)
 from scripts.detect_subjects.config import (
     CLASSIFY_BUG_TOO_SMALL_EDGE_PX,
     CROPS_DIR,
@@ -160,11 +164,21 @@ def run_v1_on_sample(
                             CROPS_DIR / V1_NAME / f"{image_id}_thumb.jpg",
                         )
 
+                # Phase 2a: count bug centers inside the primary bbox
+                # (drives bbox-content_bbox-multibug_unusable rule).
+                if det.bbox_xywh_normalized is not None:
+                    n_in_primary = count_bugs_in_primary_bbox(
+                        det.bbox_xywh_normalized,
+                        det.distinct_subjects or [],
+                    )
+                else:
+                    n_in_primary = 0
                 suggested_labels = suggest_labels(
                     confidence=det.confidence,
                     bbox_area_ratio=bbox_area,
                     bbox_long_edge_px=bbox_long_edge_px,
                     n_distinct_detections=det.n_distinct_detections,
+                    n_in_primary_bbox=n_in_primary,
                     mask_area_ratio=mask_area,
                     lab_delta_e=d_e,
                     bbox_touches_edge=bbox_touches_edge,

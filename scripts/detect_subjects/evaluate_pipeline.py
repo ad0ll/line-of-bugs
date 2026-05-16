@@ -306,10 +306,14 @@ def phase1(rows: list[dict], labels: dict[str, dict]) -> dict[str, dict]:
                 return False
             # Use CURRENT problem-detection rules to identify "no problems" cases
             from scripts.detect_subjects.rule_labeler import suggest_labels
+            # Phase 2a: parquet rows now carry distinct_subjects; pass count or 1 default.
+            distinct = r.get("distinct_subjects") or []
+            n_in_primary = len(distinct) if distinct else 1
             sl = suggest_labels(
                 confidence=r["confidence"], bbox_area_ratio=r["bbox_area_ratio"],
                 bbox_long_edge_px=r.get("bbox_long_edge_px"),
                 n_distinct_detections=r["n_distinct_detections"],
+                n_in_primary_bbox=n_in_primary,
                 mask_area_ratio=r.get("mask_area_ratio"),
                 lab_delta_e=r.get("lab_delta_e"),
                 bbox_touches_edge=r.get("bbox_touches_edge"),
@@ -354,10 +358,13 @@ def recompute_parquet(rows: list[dict],
         tol = cfg.BBOX_EDGE_TOLERANCE_NORMALIZED
         new_touches = _bbox_touches_edge(row, tol) if row.get("bbox_x") is not None else None
         row["bbox_touches_edge"] = new_touches
+        distinct = row.get("distinct_subjects") or []
+        n_in_primary = len(distinct) if distinct else 1
         row["suggested_labels"] = suggest_labels(
             confidence=row["confidence"], bbox_area_ratio=row["bbox_area_ratio"],
             bbox_long_edge_px=row.get("bbox_long_edge_px"),
             n_distinct_detections=row["n_distinct_detections"],
+            n_in_primary_bbox=n_in_primary,
             mask_area_ratio=row.get("mask_area_ratio"),
             lab_delta_e=row.get("lab_delta_e"),
             bbox_touches_edge=row["bbox_touches_edge"],
