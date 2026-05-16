@@ -2,7 +2,7 @@
 
 import { db } from "@/db";
 import { images, reports } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { invalidateOnReportSubmit } from "./_invalidation";
 import { REPORT_CATEGORIES, type SubmitReportArgs } from "@/lib/report-categories";
@@ -45,7 +45,13 @@ export async function submitReport(args: SubmitReportArgs): Promise<void> {
   }
   recentSubmits.set(ip, now);
 
-  const existing = db.select().from(images).where(eq(images.imageId, args.imageId)).all();
+  // SELECT 1 projection — we only need to know the row exists. Avoids
+  // pulling raw_metadata (~121 KB/row) over a no-op probe.
+  const existing = db
+    .select({ exists: sql<number>`1` })
+    .from(images)
+    .where(eq(images.imageId, args.imageId))
+    .all();
   if (existing.length === 0) {
     throw new Error(`unknown image_id: ${args.imageId}`);
   }

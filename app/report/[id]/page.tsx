@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { db } from "@/db";
 import { images } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
+import { IMAGE_COLS_NO_RAW } from "@/lib/queries/_image-cols";
 import { ReportPageClient } from "./ReportPageClient";
 
 type Params = Promise<{ id: string }>;
@@ -26,7 +27,8 @@ async function ReportLoader({ params }: { params: Params }) {
   const { id } = await params;
   // Hidden images cannot be re-reported via direct URL — they're already out
   // of the gallery; surfacing a report form just lets bots refile dupes.
-  const row = db.select()
+  // Projection skips raw_metadata — the report form only needs display fields.
+  const row = db.select(IMAGE_COLS_NO_RAW)
     .from(images)
     .where(and(eq(images.imageId, id), eq(images.hidden, false)))
     .all();

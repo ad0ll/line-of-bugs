@@ -29,7 +29,17 @@ function unlinkBestEffort(p: string): void {
 export async function deleteImage(imageId: string): Promise<void> {
   await requireAdmin();
 
-  const existing = db.select().from(images).where(eq(images.imageId, imageId)).all();
+  // Project only the filename columns we need for unlink — skips
+  // raw_metadata (the upstream archival blob, ~121 KB/row).
+  const existing = db
+    .select({
+      filename: images.filename,
+      mediumFilename: images.mediumFilename,
+      thumbnailFilename: images.thumbnailFilename,
+    })
+    .from(images)
+    .where(eq(images.imageId, imageId))
+    .all();
   if (existing.length === 0) {
     throw new Error(`unknown image_id: ${imageId}`);
   }

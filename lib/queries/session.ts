@@ -4,6 +4,7 @@ import { db, schema } from "@/db";
 import { applyRepeatMode, type RepeatMode } from "@/lib/repeat-mode";
 import type { Image } from "@/db/schema";
 import { buildFilterClauses, type FilterState } from "@/lib/queries/filter-clauses";
+import { IMAGE_COLS_NO_RAW } from "@/lib/queries/_image-cols";
 
 export type SessionFilters = FilterState;
 
@@ -16,19 +17,24 @@ export interface BuildSessionPoolOpts extends SessionFilters {
  * Build a randomized image queue for a session.
  * Not cached — each call returns a fresh shuffle.
  * Excludes hidden images and any image with an unresolved report.
+ *
+ * Projection skips `raw_metadata` (see lib/queries/_image-cols.ts). The
+ * return type stays Image[] for compatibility with callers; rawMetadata
+ * is structurally present in the type but undefined at runtime, which is
+ * fine because nothing reads it.
  */
 export async function buildSessionPool(
   opts: BuildSessionPoolOpts,
 ): Promise<Image[]> {
   const conditions = buildFilterClauses(opts, "images");
   const all = await db
-    .select()
+    .select(IMAGE_COLS_NO_RAW)
     .from(schema.images)
     .where(and(...conditions))
     .orderBy(sql`RANDOM()`)
     .limit(opts.limit ?? 500);
 
-  return applyRepeatMode(all, opts.repeatMode);
+  return applyRepeatMode(all as unknown as Image[], opts.repeatMode);
 }
 
 /**
@@ -49,9 +55,10 @@ export async function countSessionPool(opts: SessionFilters): Promise<number> {
 // Enforces the same visibility predicate as buildSessionPool — a hidden image
 // or one with an unresolved report should not be reachable even by direct
 // imageId lookup (e.g., bookmarked session URL).
+// Projection skips `raw_metadata` — no consumer of getImage reads it.
 export const getImage = cache(async (imageId: string) => {
   return db
-    .select()
+    .select(IMAGE_COLS_NO_RAW)
     .from(schema.images)
     .where(
       and(
