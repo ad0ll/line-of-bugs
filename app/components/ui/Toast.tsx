@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 export type ToastSeverity = "success" | "error";
 export interface ToastItem {
+  id: string;
   message: string;
   severity: ToastSeverity;
 }
@@ -11,8 +12,21 @@ export interface ToastItem {
 let toastQueue: ToastItem[] = [];
 const listeners = new Set<(items: ToastItem[]) => void>();
 
+// Stable id source. crypto.randomUUID() is available in all modern browsers
+// and in Node 19+. Falls back to a counter+timestamp when crypto isn't on
+// the global (older test environments, SSR before hydration). We keep the
+// fallback monotonic so React's key invariant (unique per parent) holds.
+let _toastCounter = 0;
+function nextToastId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  _toastCounter += 1;
+  return `toast-${Date.now()}-${_toastCounter}`;
+}
+
 export function showToast(message: string, severity: ToastSeverity = "success"): void {
-  const item: ToastItem = { message, severity };
+  const item: ToastItem = { id: nextToastId(), message, severity };
   toastQueue = [...toastQueue, item];
   listeners.forEach((l) => l(toastQueue));
   setTimeout(() => {
@@ -34,13 +48,13 @@ export function ToastHost() {
   return (
     <div className="toast-host">
       <div role="status" aria-live="polite">
-        {successItems.map((t, i) => (
-          <div key={`s-${t.message}-${i}`} className="toast">{t.message}</div>
+        {successItems.map((t) => (
+          <div key={t.id} className="toast">{t.message}</div>
         ))}
       </div>
       <div role="alert" aria-live="assertive">
-        {errorItems.map((t, i) => (
-          <div key={`e-${t.message}-${i}`} className="toast toast--error">{t.message}</div>
+        {errorItems.map((t) => (
+          <div key={t.id} className="toast toast--error">{t.message}</div>
         ))}
       </div>
     </div>
