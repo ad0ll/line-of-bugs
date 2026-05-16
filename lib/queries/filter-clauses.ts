@@ -28,7 +28,7 @@ export interface FilterState {
  */
 export function buildFilterClauses(
   filters: FilterState,
-  alias: string = "i",
+  alias: "i" | "images" = "i",
 ): SQL[] {
   const outerImageId = sql.raw(`${alias}.image_id`);
   const clauses: SQL[] = [
