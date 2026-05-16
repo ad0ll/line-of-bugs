@@ -37,7 +37,17 @@ export function streamImage(
 ): Response | null {
   const safe = safeBasename(rawName);
   if (!safe) return null;
-  const base = path.resolve(process.cwd(), "data", tierDir);
+  // Resolve `base` through any intervening symlinks BEFORE the path-traversal
+  // check below. In prod the deploy symlinks `.next/standalone/data` →
+  // `/srv/line-of-bugs/shared/data`, so the on-disk realpath of every file is
+  // outside the literal base. Without resolving base too the check rejects
+  // every legitimate request.
+  let base: string;
+  try {
+    base = fs.realpathSync(path.resolve(process.cwd(), "data", tierDir));
+  } catch {
+    return null;
+  }
   const filePath = path.join(base, safe);
   let realPath: string;
   try {
