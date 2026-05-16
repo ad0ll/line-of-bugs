@@ -2,6 +2,13 @@ import { test, expect } from "@playwright/test";
 
 const BASE = "https://line-of-bugs.com";
 
+// Hit production only when explicitly opted-in. Guards against developers
+// running `npx playwright test` locally and hammering the live deploy.
+test.skip(
+  !process.env.PROD_SMOKE,
+  "PROD_SMOKE=1 required to run prod-smoke against the live deploy",
+);
+
 test.use({ baseURL: BASE });
 
 test("home renders title + start button", async ({ page }) => {
@@ -31,15 +38,10 @@ test("gallery thumbnail returns image bytes", async ({ page }) => {
   expect(body.length).toBeGreaterThan(1000);
 });
 
-test("session start API returns sessionId", async ({ request }) => {
-  const res = await request.post("/api/session/start", {
-    data: { intervalSec: 60, subjectType: "all", repeatMode: "default" },
-  });
-  expect(res.status()).toBe(200);
-  const body = await res.json();
-  expect(body.sessionId).toBeTruthy();
-  expect(body.count).toBeGreaterThan(0);
-});
+// `session start API returns sessionId` removed — it allocated a server-side
+// pool on the live deploy on every CI run, gradually leaking memory until
+// the sweeper cleaned it up. The route is covered by the local
+// session-start vitest suite.
 
 test("/admin returns 401 unauthorized", async ({ request }) => {
   const res = await request.get("/admin");
@@ -73,6 +75,9 @@ test("www→apex 301 redirect", async ({ request }) => {
   expect(loc).toMatch(/^https:\/\/line-of-bugs\.com\//);
 });
 
-test("CAA records enforce LE", async ({ }) => {
-  // External proof via DNS — done out of band in smoke.sh / dig. Sanity stub.
+test.skip("CAA records enforce LE", async () => {
+  // CAA verification lives out-of-band in deploy/scripts/smoke.sh (which
+  // runs `dig CAA line-of-bugs.com`). Playwright can't see DNS records
+  // without a custom resolver; skipping in-suite rather than leaving an
+  // empty pass that gives false confidence.
 });

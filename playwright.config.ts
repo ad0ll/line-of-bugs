@@ -21,7 +21,23 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      // Local + CI suite. Prod-smoke specs are gated to the `prod`
+      // project so they don't run against localhost — they hit the
+      // live deploy and would otherwise corrupt local data.
+      testIgnore: /prod-smoke\.spec\.ts/,
+    },
+    {
+      // Only runs when PROD_SMOKE=1 is set in the env. Targets the
+      // live deploy via the baseURL inside prod-smoke.spec.ts. CI
+      // should invoke `PROD_SMOKE=1 npx playwright test --project=prod`
+      // explicitly; the default `npm run test:e2e` skips this project.
+      name: "prod",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /prod-smoke\.spec\.ts/,
+    },
   ],
   // Skip starting the local dev server when an external base URL is set
   // (e.g. when running the suite against the live deploy).
