@@ -64,6 +64,13 @@
       "when": 1778901559098,
       "tag": "0008_enum_check_constraints",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1778913842358,
+      "tag": "0009_report_categories_expand",
+      "breakpoints": true
     }
   ]
 }

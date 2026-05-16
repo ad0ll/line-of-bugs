@@ -8,11 +8,14 @@ import type { ReportCategory } from "@/db/schema";
 // Human-readable labels for the chip UI.
 export const REPORT_CATEGORY_LABELS: Record<ReportCategory, string> = {
   "low-resolution": "low-resolution",
+  "blurry": "blurry",
+  "bug-too-small": "bug too small",
+  "hard-to-see": "hard to see",
   "spooky": "spooky",
   "cropped": "cropped",
   "ai-generated": "ai-generated",
   "zoomed-out": "zoomed out",
-  "wheres-the-bug": "where's the bug?",
+  "wheres-the-bug": "where bug?",
   "other": "other",
 };
 

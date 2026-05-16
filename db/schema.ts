@@ -157,6 +157,9 @@ export const images = sqliteTable(
 
 export const reportCategories = [
   "low-resolution",
+  "blurry",
+  "bug-too-small",
+  "hard-to-see",
   "spooky",
   "cropped",
   "ai-generated",
@@ -207,7 +210,7 @@ export const reports = sqliteTable(
     // (0008) SQL-level enum CHECK constraints — see same note on images.
     check(
       "reports_category_check",
-      sql`${t.category} IN ('low-resolution', 'spooky', 'cropped', 'ai-generated', 'zoomed-out', 'wheres-the-bug', 'other')`,
+      sql`${t.category} IN ('low-resolution', 'blurry', 'bug-too-small', 'hard-to-see', 'spooky', 'cropped', 'ai-generated', 'zoomed-out', 'wheres-the-bug', 'other')`,
     ),
     check(
       "reports_resolved_action_check",
