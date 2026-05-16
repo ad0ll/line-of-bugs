@@ -12,7 +12,7 @@
  * Generated types are exported below for use throughout the app.
  */
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
+import { integer, sqliteTable, text, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 // ──────────────────────────── images ────────────────────────────
 
@@ -167,6 +167,11 @@ export const reports = sqliteTable(
     index("idx_reports_created").on(t.createdAt),
     // Partial index for the hot path: "is this image hidden?"
     index("idx_reports_unresolved").on(t.imageId).where(sql`${t.resolvedAt} IS NULL`),
+    // Dedup unresolved reports by (image_id, category). Scoped to open rows so
+    // resolving a report lets the same category be reopened later.
+    uniqueIndex("idx_reports_dedup_open")
+      .on(t.imageId, t.category)
+      .where(sql`${t.resolvedAt} IS NULL`),
   ],
 );
 
