@@ -26,6 +26,13 @@ export function SubjectFilter({ value, onChange }: Props) {
     } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
       e.preventDefault();
       onChange(OPTIONS[(idx - 1 + OPTIONS.length) % OPTIONS.length]!.value);
+    } else if (e.key === "Home") {
+      // WAI-ARIA radiogroup pattern: Home → first, End → last.
+      e.preventDefault();
+      onChange(OPTIONS[0]!.value);
+    } else if (e.key === "End") {
+      e.preventDefault();
+      onChange(OPTIONS[OPTIONS.length - 1]!.value);
     }
   }
 
