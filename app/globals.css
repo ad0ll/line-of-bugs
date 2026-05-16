@@ -133,6 +133,10 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
+    /* iteration-count: 1 stops infinite animations (pulse, float-slow,
+       wobble, armed-pulse) cold — without this, the 0.01ms duration
+       just makes them flicker forever instead of stop. */
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
