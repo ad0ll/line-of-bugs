@@ -1,7 +1,7 @@
 // proxy.ts (project root) — runs on the Node runtime (default in Next 16)
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import { ADMIN_USER, constantTimeEq, parseBasicAuth } from "./lib/auth";
 
 export const config = {
