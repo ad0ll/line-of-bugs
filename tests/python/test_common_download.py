@@ -17,10 +17,12 @@ class _FakeResponse:
     """Minimal context-manager mock for requests.Session.get(stream=True)."""
 
     def __init__(self, status_code: int, chunks: list[bytes],
-                 raise_mid: Exception | None = None):
+                 raise_mid: Exception | None = None,
+                 content_type: str = "image/jpeg"):
         self.status_code = status_code
         self._chunks = chunks
         self._raise_mid = raise_mid
+        self.headers = {"Content-Type": content_type}
 
     def __enter__(self):
         return self
@@ -85,6 +87,21 @@ def test_non_200_response_leaves_no_file(tmp_out):
     ok, size, reason = _download_stream(s, "https://x", tmp_out, max_bytes=1024)
     assert ok is False
     assert reason == "http_404"
+    assert not tmp_out.exists()
+    assert not tmp_out.with_suffix(tmp_out.suffix + ".tmp").exists()
+
+
+def test_non_image_content_type_is_rejected(tmp_out):
+    """Many CDNs serve a 200 OK HTML interstitial (captcha / login /
+    'rate limited') instead of the real image. The fetcher must catch
+    this on Content-Type rather than save a 1.4 KB HTML file as .jpg."""
+    s = MagicMock(spec=requests.Session)
+    s.get.return_value = _FakeResponse(
+        200, [b"<html>nope</html>"], content_type="text/html; charset=utf-8",
+    )
+    ok, size, reason = _download_stream(s, "https://x", tmp_out, max_bytes=1024)
+    assert ok is False
+    assert reason == "non-image-content-type"
     assert not tmp_out.exists()
     assert not tmp_out.with_suffix(tmp_out.suffix + ".tmp").exists()
 

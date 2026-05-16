@@ -241,6 +241,13 @@ def _download_stream(s: requests.Session, url: str, out_path: Path,
         with s.get(url, timeout=120, stream=True) as r:
             if r.status_code != 200:
                 return False, 0, f"http_{r.status_code}"
+            # Reject upstream responses that aren't actually images —
+            # an HTML 200 "captcha" / interstitial / login wall would
+            # otherwise get saved as <id>.jpg and then fail Pillow
+            # decode later, after we'd already done the work.
+            ctype = (r.headers.get("Content-Type") or "").lower()
+            if not ctype.startswith("image/"):
+                return False, 0, "non-image-content-type"
             size = 0
             with open(tmp_path, "wb") as f:
                 for chunk in r.iter_content(1 << 16):
