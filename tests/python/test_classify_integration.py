@@ -58,7 +58,8 @@ def test_run_v1_with_stubs_produces_valid_parquet_row(tmp_path):
     row = table.to_pydict()
     assert row["text_label"][0] == "a beetle", f"unexpected text_label: {row['text_label'][0]}"
     assert isinstance(row["text_label_score"][0], float)
-    assert row["gate_decision"][0] is None
+    # gate_decision wired in Phase 2a — must now be a "keep" or "reject" string
+    assert row["gate_decision"][0] in ("keep", "reject")
     ds = row["distinct_subjects"][0]
     assert len(ds) == 1
     assert ds[0]["phrase"] == "a beetle"
