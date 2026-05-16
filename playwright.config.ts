@@ -1,5 +1,32 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// Opt-in cross-browser projects. Playwright runs every listed project
+// by default, so to keep bare `npx playwright test` chromium-only for
+// fast local iteration we only register firefox/webkit when one of:
+//   - env CROSS_BROWSER=1 (CI cross-browser stage, both browsers)
+//   - argv mentions the project explicitly
+//     (`--project=firefox`, `--project=webkit`, `--project=all`)
+//
+// We have to promote argv hits into env vars here in the parent
+// process: Playwright re-imports this config in each worker subprocess
+// (which only inherit env, not argv), so an argv-only check would
+// drop the project from the worker's view of the config and the run
+// would fail with `Project "firefox" not found in the worker
+// process.` Setting the env var here makes the gate worker-safe.
+const argv = process.argv.join(" ");
+if (/--project[= ](firefox|all)/.test(argv)) {
+  process.env.CROSS_BROWSER_FIREFOX = "1";
+}
+if (/--project[= ](webkit|all)/.test(argv)) {
+  process.env.CROSS_BROWSER_WEBKIT = "1";
+}
+const wantsFirefox =
+  process.env.CROSS_BROWSER === "1" ||
+  process.env.CROSS_BROWSER_FIREFOX === "1";
+const wantsWebkit =
+  process.env.CROSS_BROWSER === "1" ||
+  process.env.CROSS_BROWSER_WEBKIT === "1";
+
 export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
@@ -29,6 +56,30 @@ export default defineConfig({
       // live deploy and would otherwise corrupt local data.
       testIgnore: /prod-smoke\.spec\.ts/,
     },
+    // Firefox + webkit are opt-in (see `wantsFirefox` / `wantsWebkit`
+    // at the top of this file). Bare `npx playwright test` only runs
+    // chromium; cross-browser triage uses `--project=firefox`,
+    // `--project=webkit`, or `CROSS_BROWSER=1`. Tests that are
+    // chromium-only flag themselves with `test.skip(browserName === …)`
+    // per-test rather than excluding whole spec files here.
+    ...(wantsFirefox
+      ? [
+          {
+            name: "firefox",
+            use: { ...devices["Desktop Firefox"] },
+            testIgnore: /prod-smoke\.spec\.ts/,
+          },
+        ]
+      : []),
+    ...(wantsWebkit
+      ? [
+          {
+            name: "webkit",
+            use: { ...devices["Desktop Safari"] },
+            testIgnore: /prod-smoke\.spec\.ts/,
+          },
+        ]
+      : []),
     {
       // Only runs when PROD_SMOKE=1 is set in the env. Targets the
       // live deploy via the baseURL inside prod-smoke.spec.ts. CI
