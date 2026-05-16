@@ -1,7 +1,7 @@
 {
   "bugwood-1223047": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "bug-too-small"
     ],
     "preference": null,
     "unsure": false,
@@ -10,8 +10,8 @@
   },
   "bugwood-5611038": {
     "flags": [
-      "bbox_correct-subject_clipped",
-      "bbox_correct-subject_clipped"
+      "bbox-wrong",
+      "bbox-wrong_correct-subject"
     ],
     "preference": null,
     "unsure": false,
@@ -20,8 +20,8 @@
   },
   "inat-313993": {
     "flags": [
-      "bbox-content_subject-too-small",
-      "mask_poor-contrast"
+      "bug-too-small",
+      "poor-contrast"
     ],
     "preference": null,
     "unsure": false,
@@ -30,9 +30,9 @@
   },
   "inat-302754": {
     "flags": [
-      "bbox-content_subject-too-small",
-      "bbox_correct-subject_clipped",
-      "bbox_correct-subject_clipped"
+      "bug-too-small",
+      "bbox-wrong",
+      "bbox-wrong_correct-subject"
     ],
     "preference": null,
     "unsure": false,
@@ -41,7 +41,8 @@
   },
   "bugwood-5497042": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "bug-too-small",
+      "multi-bug"
     ],
     "preference": null,
     "unsure": false,
@@ -50,7 +51,7 @@
   },
   "inat-5090845": {
     "flags": [
-      "bbox-content_no-bug"
+      "no-bug"
     ],
     "preference": null,
     "unsure": false,
@@ -59,8 +60,8 @@
   },
   "inat-538988": {
     "flags": [
-      "bbox-content_subject-too-small",
-      "bbox_correct-subject_clipped"
+      "bug-too-small",
+      "bbox-wrong"
     ],
     "preference": null,
     "unsure": false,
@@ -69,8 +70,9 @@
   },
   "inat-2719463": {
     "flags": [
-      "bbox-content_subject-too-small",
-      "bbox_wrong-subject"
+      "multi-bug",
+      "bug-too-small",
+      "bbox-wrong_better-subject-other-bbox"
     ],
     "preference": null,
     "unsure": false,
@@ -79,7 +81,7 @@
   },
   "bugwood-5454460": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "bug-too-small"
     ],
     "preference": null,
     "unsure": false,
@@ -88,7 +90,7 @@
   },
   "inat-2476557": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "bug-too-small"
     ],
     "preference": null,
     "unsure": false,
@@ -97,8 +99,8 @@
   },
   "bugwood-5611254": {
     "flags": [
-      "bbox_correct-subject_clipped",
-      "bbox_correct-subject_clipped"
+      "bbox-wrong",
+      "bbox-wrong_correct-subject"
     ],
     "preference": null,
     "unsure": false,
@@ -107,8 +109,9 @@
   },
   "bugwood-5552270": {
     "flags": [
-      "bbox-content_subject-too-small",
-      "mask_blur_unusable"
+      "bug-too-small",
+      "multi-bug",
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -117,7 +120,7 @@
   },
   "bugwood-1233198": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -126,7 +129,8 @@
   },
   "inat-1486053": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "bug-too-small",
+      "multi-bug"
     ],
     "preference": null,
     "unsure": false,
@@ -135,7 +139,7 @@
   },
   "inat-7351899": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "bug-too-small"
     ],
     "preference": null,
     "unsure": false,
@@ -144,8 +148,9 @@
   },
   "inat-2680628": {
     "flags": [
-      "bbox-content_subject-too-small",
-      "mask_blur_unusable"
+      "bug-too-small",
+      "multi-bug",
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -154,9 +159,9 @@
   },
   "inat-5424073": {
     "flags": [
-      "bbox_correct-subject_clipped",
-      "bbox_wrong-subject",
-      "bbox-content_subject-too-small"
+      "bbox-wrong",
+      "bbox-wrong_better-subject-other-bbox",
+      "bug-too-small"
     ],
     "preference": null,
     "unsure": false,
@@ -165,10 +170,10 @@
   },
   "inat-4963204": {
     "flags": [
-      "bbox-content_subject-too-small",
-      "bbox_correct-subject_clipped",
-      "bbox_correct-subject_clipped",
-      "bbox_correct-subject_clipped"
+      "bug-too-small",
+      "bbox-wrong",
+      "bbox-wrong_correct-subject",
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -177,8 +182,8 @@
   },
   "inat-7393453": {
     "flags": [
-      "bbox-content_subject-too-small",
-      "mask_blur_unusable"
+      "bug-too-small",
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -187,8 +192,9 @@
   },
   "bugwood-5341009": {
     "flags": [
-      "bbox-content_subject-too-small",
-      "bbox_wrong-subject"
+      "bug-too-small",
+      "multi-bug",
+      "bbox-wrong_better-subject-other-bbox"
     ],
     "preference": null,
     "unsure": false,
@@ -197,7 +203,8 @@
   },
   "bugwood-1540228": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "multi-bug",
+      "bug-too-small"
     ],
     "preference": null,
     "unsure": false,
@@ -206,7 +213,8 @@
   },
   "inat-9814225": {
     "flags": [
-      "bbox_wrong-subject"
+      "multi-bug",
+      "bbox-wrong_better-subject-other-bbox"
     ],
     "preference": null,
     "unsure": false,
@@ -215,8 +223,8 @@
   },
   "bugwood-5542391": {
     "flags": [
-      "bbox_correct-subject_clipped",
-      "bbox_correct-subject_clipped"
+      "bbox-wrong_correct-subject",
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -225,7 +233,7 @@
   },
   "inat-1801574": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -234,8 +242,8 @@
   },
   "inat-7722704": {
     "flags": [
-      "bbox-content_subject-too-small",
-      "mask_blur_unusable"
+      "bug-too-small",
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -244,9 +252,9 @@
   },
   "inat-1703651": {
     "flags": [
-      "bbox-content_subject-too-small",
-      "mask_poor-contrast",
-      "mask_blur_unusable"
+      "bug-too-small",
+      "poor-contrast",
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -255,8 +263,8 @@
   },
   "bugwood-5614140": {
     "flags": [
-      "bbox_correct-subject_clipped",
-      "mask_blur_usable"
+      "bbox-wrong_correct-subject",
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -265,7 +273,7 @@
   },
   "inat-1929671": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "bug-too-small"
     ],
     "preference": null,
     "unsure": false,
@@ -274,7 +282,8 @@
   },
   "inat-1379330": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "multi-bug",
+      "bug-too-small"
     ],
     "preference": null,
     "unsure": false,
@@ -283,14 +292,14 @@
   },
   "bugwood-5602250": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778877860898,
     "user_edited": true
   },
   "bugwood-1440129": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -299,7 +308,7 @@
   },
   "inat-22992224": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -308,8 +317,9 @@
   },
   "inat-1726555": {
     "flags": [
-      "bbox_correct-subject_clipped",
-      "bbox-content_subject-too-small"
+      "bbox-wrong_correct-subject",
+      "bug-too-small",
+      "multi-bug"
     ],
     "preference": null,
     "unsure": false,
@@ -318,8 +328,8 @@
   },
   "inat-445304": {
     "flags": [
-      "bbox-content_subject-too-small",
-      "mask_blur_unusable"
+      "bug-too-small",
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -327,15 +337,17 @@
     "user_edited": true
   },
   "bugwood-5371089": {
-    "flags": [],
-    "preference": null,
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778877975622,
     "user_edited": true
   },
   "inat-14465072": {
     "flags": [
-      "mask_poor-contrast"
+      "poor-contrast"
     ],
     "preference": null,
     "unsure": false,
@@ -344,9 +356,9 @@
   },
   "inat-552617": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778877993230,
     "user_edited": true
@@ -360,8 +372,8 @@
   },
   "bugwood-1549485": {
     "flags": [
-      "mask_blur_unusable",
-      "mask_poor-contrast"
+      "subject-blurred_unusable",
+      "poor-contrast"
     ],
     "preference": null,
     "unsure": false,
@@ -370,8 +382,8 @@
   },
   "inat-7451316": {
     "flags": [
-      "mask_poor-contrast",
-      "bbox-content_subject-too-small"
+      "poor-contrast",
+      "bug-too-small"
     ],
     "preference": null,
     "unsure": false,
@@ -380,7 +392,8 @@
   },
   "bugwood-5367930": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "bug-too-small",
+      "crop-too-tight"
     ],
     "preference": null,
     "unsure": false,
@@ -389,8 +402,8 @@
   },
   "inat-1417226": {
     "flags": [
-      "bbox-content_subject-too-small",
-      "mask_blur_unusable"
+      "bug-too-small",
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -399,7 +412,7 @@
   },
   "inat-112400": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -408,7 +421,7 @@
   },
   "inat-173971": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -417,7 +430,7 @@
   },
   "inat-6418757": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "bbox-wrong_correct-subject"
     ],
     "preference": null,
     "unsure": false,
@@ -426,7 +439,7 @@
   },
   "inat-384152": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -435,7 +448,8 @@
   },
   "bugwood-5506340": {
     "flags": [
-      "mask_blur_usable"
+      "multi-bug",
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -444,7 +458,7 @@
   },
   "inat-360358": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -452,53 +466,57 @@
     "user_edited": true
   },
   "bugwood-5488968": {
-    "flags": [],
-    "preference": null,
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778878157115,
     "user_edited": true
   },
   "inat-517984": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778878166347,
     "user_edited": true
   },
   "bugwood-5385553": {
-    "flags": [],
-    "preference": null,
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778878169388,
     "user_edited": true
   },
   "inat-261516": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778878178681,
     "user_edited": true
   },
   "inat-456268": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778878191499,
     "user_edited": true
   },
   "inat-17486": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778878202466,
     "user_edited": true
   },
   "inat-2506504": {
     "flags": [
-      "bbox-content_subject-too-small",
-      "mask_blur_unusable"
+      "bug-too-small",
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -507,7 +525,7 @@
   },
   "bugwood-5569183": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -516,7 +534,7 @@
   },
   "bugwood-5540605": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -524,7 +542,10 @@
     "user_edited": true
   },
   "inat-5194505": {
-    "flags": [],
+    "flags": [
+      "multi-bug",
+      "crop-too-loose"
+    ],
     "preference": null,
     "unsure": false,
     "reviewed_at": 1778878280008,
@@ -532,14 +553,14 @@
   },
   "inat-629753": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778878291995,
     "user_edited": true
   },
   "inat-461707": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -548,8 +569,8 @@
   },
   "bugwood-5542835": {
     "flags": [
-      "bbox_correct-subject_clipped",
-      "mask_blur_unusable"
+      "subject-clipped",
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -558,14 +579,15 @@
   },
   "inat-2639649": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778878312057,
     "user_edited": true
   },
   "inat-464590": {
     "flags": [
-      "mask_blur_usable"
+      "crop-too-tight",
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -574,8 +596,9 @@
   },
   "inat-6267717": {
     "flags": [
-      "bbox_wrong-subject",
-      "mask_blur_usable"
+      "multi-bug",
+      "bbox-wrong_better-subject-other-bbox",
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -584,7 +607,7 @@
   },
   "inat-228729940": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -593,14 +616,14 @@
   },
   "inat-2299337": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778878470261,
     "user_edited": true
   },
   "inat-57010669": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "bbox-wrong_correct-subject"
     ],
     "preference": null,
     "unsure": false,
@@ -609,42 +632,44 @@
   },
   "inat-107566552": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778878529349,
     "user_edited": true
   },
   "inat-61030472": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778878553407,
     "user_edited": true
   },
   "bugwood-1435030": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778878562498,
     "user_edited": true
   },
   "inat-2312004": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778878568965,
     "user_edited": true
   },
   "inat-396259": {
-    "flags": [],
-    "preference": null,
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778878578857,
     "user_edited": true
   },
   "inat-1801018": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -652,31 +677,35 @@
     "user_edited": true
   },
   "inat-1647390": {
-    "flags": [],
-    "preference": null,
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778878731627,
     "user_edited": true
   },
   "inat-1481519": {
-    "flags": [],
-    "preference": null,
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778878740883,
     "user_edited": true
   },
   "inat-966628": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778878745156,
     "user_edited": true
   },
   "bugwood-5477308": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "bbox-wrong_correct-subject"
     ],
     "preference": null,
     "unsure": false,
@@ -685,7 +714,7 @@
   },
   "inat-1410777": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -694,8 +723,8 @@
   },
   "inat-1994451": {
     "flags": [
-      "bbox_correct-subject_clipped",
-      "bbox_wrong-subject"
+      "subject-clipped",
+      "bbox-wrong_better-subject-other-bbox"
     ],
     "preference": null,
     "unsure": false,
@@ -704,7 +733,7 @@
   },
   "inat-61691209": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -713,8 +742,8 @@
   },
   "inat-330039": {
     "flags": [
-      "mask_blur_unusable",
-      "mask_poor-contrast"
+      "subject-blurred_unusable",
+      "poor-contrast"
     ],
     "preference": null,
     "unsure": false,
@@ -723,28 +752,30 @@
   },
   "inat-4662758": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778878889343,
     "user_edited": true
   },
   "bugwood-5394434": {
-    "flags": [],
-    "preference": null,
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778878921901,
     "user_edited": true
   },
   "inat-12820955": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778878935176,
     "user_edited": true
   },
   "bugwood-5443489": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -753,7 +784,7 @@
   },
   "inat-6988731": {
     "flags": [
-      "mask_poor-contrast"
+      "poor-contrast"
     ],
     "preference": null,
     "unsure": false,
@@ -762,7 +793,8 @@
   },
   "inat-10325590": {
     "flags": [
-      "bbox_wrong-subject"
+      "multi-bug",
+      "bbox-wrong_better-subject-other-bbox"
     ],
     "preference": null,
     "unsure": false,
@@ -771,7 +803,7 @@
   },
   "bugwood-1236055": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -780,7 +812,7 @@
   },
   "inat-24448492": {
     "flags": [
-      "mask_poor-contrast"
+      "poor-contrast"
     ],
     "preference": null,
     "unsure": false,
@@ -789,35 +821,35 @@
   },
   "inat-2356234": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879003751,
     "user_edited": true
   },
   "bugwood-1546216": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879004926,
     "user_edited": true
   },
   "inat-1403948": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879005767,
     "user_edited": true
   },
   "inat-322381": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879006518,
     "user_edited": true
   },
   "bugwood-1236117": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -826,7 +858,7 @@
   },
   "inat-2162208": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -835,21 +867,21 @@
   },
   "inat-9811080": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879011868,
     "user_edited": true
   },
   "inat-1035104": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879015043,
     "user_edited": true
   },
   "inat-2066609": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -858,20 +890,22 @@
   },
   "inat-1478550": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879024609,
     "user_edited": true
   },
   "bugwood-5386103": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879026001,
     "user_edited": true
   },
   "bugwood-1326013": {
-    "flags": [],
+    "flags": [
+      "multi-bug"
+    ],
     "preference": null,
     "unsure": false,
     "reviewed_at": 1778879027551,
@@ -879,7 +913,7 @@
   },
   "inat-82854386": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -888,21 +922,21 @@
   },
   "inat-1154243": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879031643,
     "user_edited": true
   },
   "inat-581078": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879032901,
     "user_edited": true
   },
   "inat-38850598": {
     "flags": [
-      "mask_poor-contrast"
+      "poor-contrast"
     ],
     "preference": null,
     "unsure": false,
@@ -911,27 +945,31 @@
   },
   "inat-1152092": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879037493,
     "user_edited": true
   },
   "inat-18862546": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879038851,
     "user_edited": true
   },
   "inat-2876350": {
-    "flags": [],
-    "preference": null,
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879046876,
     "user_edited": true
   },
   "inat-1013146": {
-    "flags": [],
+    "flags": [
+      "multi-bug"
+    ],
     "preference": null,
     "unsure": false,
     "reviewed_at": 1778879057143,
@@ -939,14 +977,14 @@
   },
   "bugwood-5385923": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879065768,
     "user_edited": true
   },
   "inat-6101168": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -955,14 +993,14 @@
   },
   "inat-1172044": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879086726,
     "user_edited": true
   },
   "inat-59655344": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "bug-too-small"
     ],
     "preference": null,
     "unsure": false,
@@ -971,14 +1009,15 @@
   },
   "inat-40956495": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879144022,
     "user_edited": true
   },
   "inat-1249247": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "bug-too-small",
+      "multi-bug"
     ],
     "preference": null,
     "unsure": false,
@@ -987,7 +1026,7 @@
   },
   "inat-1289178": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "bug-too-small"
     ],
     "preference": null,
     "unsure": false,
@@ -996,7 +1035,7 @@
   },
   "bugwood-5445190": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1005,8 +1044,8 @@
   },
   "inat-1156424": {
     "flags": [
-      "bbox-content_subject-too-small",
-      "mask_blur_unusable"
+      "bug-too-small",
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1015,7 +1054,8 @@
   },
   "bugwood-5385534": {
     "flags": [
-      "mask_blur_usable"
+      "multi-bug",
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1024,14 +1064,14 @@
   },
   "inat-2867852": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879225784,
     "user_edited": true
   },
   "inat-49988": {
     "flags": [
-      "bbox_wrong-subject"
+      "bbox-wrong_better-subject-other-bbox"
     ],
     "preference": null,
     "unsure": false,
@@ -1040,14 +1080,14 @@
   },
   "inat-15382670": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879241094,
     "user_edited": true
   },
   "inat-4611414": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "bug-too-small"
     ],
     "preference": null,
     "unsure": false,
@@ -1056,7 +1096,7 @@
   },
   "inat-338804": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "bug-too-small"
     ],
     "preference": null,
     "unsure": false,
@@ -1065,14 +1105,14 @@
   },
   "inat-1547836": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879254659,
     "user_edited": true
   },
   "inat-433343": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "bug-too-small"
     ],
     "preference": null,
     "unsure": false,
@@ -1080,15 +1120,17 @@
     "user_edited": true
   },
   "inat-1703289": {
-    "flags": [],
-    "preference": null,
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879309188,
     "user_edited": true
   },
   "inat-3113337": {
     "flags": [
-      "bbox_wrong-subject"
+      "bbox-wrong_better-subject-other-bbox"
     ],
     "preference": null,
     "unsure": false,
@@ -1097,7 +1139,7 @@
   },
   "inat-507104": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1106,7 +1148,7 @@
   },
   "bugwood-1234225": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -1115,37 +1157,39 @@
   },
   "inat-1995761": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879381079,
     "user_edited": true
   },
   "inat-1171990": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778880510010,
     "user_edited": true
   },
   "bugwood-5445334": {
-    "flags": [],
-    "preference": null,
+    "flags": [
+      "multi-bug"
+    ],
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879415294,
     "user_edited": true
   },
   "inat-1239919": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879421334,
     "user_edited": true
   },
   "inat-4863480": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1154,14 +1198,14 @@
   },
   "inat-2450540": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879443373,
     "user_edited": true
   },
   "inat-2428999": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1170,49 +1214,49 @@
   },
   "inat-949552": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879456663,
     "user_edited": true
   },
   "inat-1263824": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879467121,
     "user_edited": true
   },
   "bugwood-1540547": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879468140,
     "user_edited": true
   },
   "inat-1998310": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879479585,
     "user_edited": true
   },
   "bugwood-1226298": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879482976,
     "user_edited": true
   },
   "inat-436864": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879491517,
     "user_edited": true
   },
   "bugwood-5521078": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1221,7 +1265,7 @@
   },
   "inat-314861": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1230,7 +1274,8 @@
   },
   "bugwood-1481029": {
     "flags": [
-      "mask_blur_unusable"
+      "multi-bug",
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1239,13 +1284,15 @@
   },
   "inat-397300": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879523767,
     "user_edited": true
   },
   "inat-2111256": {
-    "flags": [],
+    "flags": [
+      "multi-bug"
+    ],
     "preference": null,
     "unsure": false,
     "reviewed_at": 1778879529292,
@@ -1253,30 +1300,30 @@
   },
   "inat-2741230": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879537042,
     "user_edited": true
   },
   "inat-1961902": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879544284,
     "user_edited": true
   },
   "inat-58562765": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879548417,
     "user_edited": true
   },
   "inat-3421883": {
     "flags": [
-      "bbox_wrong-subject",
-      "mask_blur_unusable",
-      "bbox_correct-subject_clipped"
+      "bbox-wrong_better-subject-other-bbox",
+      "subject-blurred_unusable",
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -1285,7 +1332,7 @@
   },
   "inat-1409164": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1294,7 +1341,7 @@
   },
   "inat-16459222": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1303,7 +1350,7 @@
   },
   "bugwood-5542271": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -1311,7 +1358,9 @@
     "user_edited": true
   },
   "bugwood-5424579": {
-    "flags": [],
+    "flags": [
+      "multi-bug"
+    ],
     "preference": null,
     "unsure": false,
     "reviewed_at": 1778879585100,
@@ -1326,7 +1375,8 @@
   },
   "bugwood-1327132": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "bbox-wrong_correct-subject",
+      "multi-bug"
     ],
     "preference": null,
     "unsure": false,
@@ -1334,7 +1384,9 @@
     "user_edited": true
   },
   "inat-551666": {
-    "flags": [],
+    "flags": [
+      "multi-bug"
+    ],
     "preference": null,
     "unsure": false,
     "reviewed_at": 1778879610350,
@@ -1342,7 +1394,7 @@
   },
   "inat-353541": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1351,7 +1403,7 @@
   },
   "inat-103970": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1360,7 +1412,7 @@
   },
   "inat-2023365": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1369,7 +1421,7 @@
   },
   "bugwood-5614723": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778879653444,
     "user_edited": true
@@ -1383,7 +1435,7 @@
   },
   "bugwood-5613961": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1392,7 +1444,7 @@
   },
   "inat-2173569": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1401,7 +1453,7 @@
   },
   "inat-251861": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1410,14 +1462,14 @@
   },
   "bugwood-5435456": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879710775,
     "user_edited": true
   },
   "inat-1367825": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1426,9 +1478,9 @@
   },
   "bugwood-1242001": {
     "flags": [
-      "mask_poor-contrast",
-      "bbox_correct-subject_clipped",
-      "mask_blur_usable"
+      "poor-contrast",
+      "bbox-wrong_correct-subject",
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1437,28 +1489,28 @@
   },
   "inat-2050074": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879731583,
     "user_edited": true
   },
   "inat-23899394": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879734611,
     "user_edited": true
   },
   "inat-815619": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879737559,
     "user_edited": true
   },
   "inat-193147573": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1466,7 +1518,9 @@
     "user_edited": true
   },
   "inat-2139414": {
-    "flags": [],
+    "flags": [
+      "multi-bug"
+    ],
     "preference": null,
     "unsure": false,
     "reviewed_at": 1778879747714,
@@ -1474,8 +1528,8 @@
   },
   "inat-8254808": {
     "flags": [
-      "mask_blur_unusable",
-      "mask_poor-contrast"
+      "subject-blurred_unusable",
+      "poor-contrast"
     ],
     "preference": null,
     "unsure": false,
@@ -1484,7 +1538,7 @@
   },
   "inat-355325": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1493,7 +1547,7 @@
   },
   "bugwood-5568979": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1502,14 +1556,14 @@
   },
   "inat-1410779": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879760805,
     "user_edited": true
   },
   "inat-405533": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1518,14 +1572,14 @@
   },
   "inat-1933509": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879770422,
     "user_edited": true
   },
   "inat-16207255": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1534,15 +1588,15 @@
   },
   "inat-8570800": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879780164,
     "user_edited": true
   },
   "inat-57107": {
     "flags": [
-      "mask_poor-contrast",
-      "mask_blur_unusable"
+      "poor-contrast",
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1551,8 +1605,8 @@
   },
   "inat-1289882": {
     "flags": [
-      "ml_other-bad",
-      "mask_blur_unusable"
+      "other-bad",
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1561,23 +1615,23 @@
   },
   "bugwood-5584720": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879799930,
     "user_edited": true
   },
   "inat-647903": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879807764,
     "user_edited": true
   },
   "inat-4334674": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "bbox-wrong_correct-subject"
     ],
     "preference": null,
     "unsure": false,
@@ -1586,7 +1640,7 @@
   },
   "inat-2045251": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879818255,
     "user_edited": true
@@ -1600,14 +1654,14 @@
   },
   "inat-8153606": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879850434,
     "user_edited": true
   },
   "inat-121495068": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1616,9 +1670,10 @@
   },
   "inat-7236247": {
     "flags": [
-      "mask_poor-contrast",
-      "bbox_correct-subject_clipped",
-      "mask_blur_usable"
+      "poor-contrast",
+      "multi-bug",
+      "bbox-wrong_correct-subject",
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1627,8 +1682,8 @@
   },
   "inat-25440916": {
     "flags": [
-      "bbox_correct-subject_clipped",
-      "mask_blur_unusable"
+      "bbox-wrong_correct-subject",
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1637,7 +1692,7 @@
   },
   "inat-2696305": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1646,7 +1701,7 @@
   },
   "inat-316943": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1655,14 +1710,14 @@
   },
   "inat-2050071": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879889105,
     "user_edited": true
   },
   "inat-386849": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1671,14 +1726,14 @@
   },
   "bugwood-5439756": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879897397,
     "user_edited": true
   },
   "inat-4770755": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1694,7 +1749,7 @@
   },
   "inat-289589": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1703,7 +1758,7 @@
   },
   "inat-8156900": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1712,20 +1767,25 @@
   },
   "inat-1684736": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879919852,
     "user_edited": true
   },
   "inat-520811": {
-    "flags": [],
+    "flags": [
+      "multi-bug"
+    ],
     "preference": null,
     "unsure": false,
     "reviewed_at": 1778879925758,
     "user_edited": true
   },
   "inat-1465547": {
-    "flags": [],
+    "flags": [
+      "multi-bug",
+      "crop-too-tight"
+    ],
     "preference": null,
     "unsure": false,
     "reviewed_at": 1778879941365,
@@ -1733,7 +1793,7 @@
   },
   "inat-1032257": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1742,14 +1802,14 @@
   },
   "bugwood-1223089": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879956481,
     "user_edited": true
   },
   "bugwood-2167001": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1758,7 +1818,7 @@
   },
   "inat-15225644": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1767,21 +1827,21 @@
   },
   "inat-1519300": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879976264,
     "user_edited": true
   },
   "bugwood-5583200": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879979110,
     "user_edited": true
   },
   "inat-9378052": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1789,7 +1849,10 @@
     "user_edited": true
   },
   "inat-4803515": {
-    "flags": [],
+    "flags": [
+      "multi-bug",
+      "crop-too-tight"
+    ],
     "preference": null,
     "unsure": false,
     "reviewed_at": 1778880922463,
@@ -1797,14 +1860,15 @@
   },
   "inat-6000296": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778879995143,
     "user_edited": true
   },
   "bugwood-5614295": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "multi-bug",
+      "bbox-wrong_correct-subject"
     ],
     "preference": null,
     "unsure": false,
@@ -1813,14 +1877,14 @@
   },
   "inat-1820661": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778880004835,
     "user_edited": true
   },
   "inat-7173758": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1829,7 +1893,7 @@
   },
   "inat-34755113": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1838,7 +1902,7 @@
   },
   "inat-7300784": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1846,7 +1910,9 @@
     "user_edited": true
   },
   "inat-2588925": {
-    "flags": [],
+    "flags": [
+      "multi-bug"
+    ],
     "preference": null,
     "unsure": false,
     "reviewed_at": 1778880025727,
@@ -1854,7 +1920,7 @@
   },
   "inat-779719": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1863,34 +1929,36 @@
   },
   "inat-20828715": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778880039548,
     "user_edited": true
   },
   "inat-22272543": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778880041985,
     "user_edited": true
   },
   "inat-234603": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778880044989,
     "user_edited": true
   },
   "inat-437746": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778880046783,
     "user_edited": true
   },
   "bugwood-5542341": {
-    "flags": [],
+    "flags": [
+      "multi-bug"
+    ],
     "preference": null,
     "unsure": false,
     "reviewed_at": 1778880049882,
@@ -1898,7 +1966,7 @@
   },
   "inat-204531": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1907,7 +1975,8 @@
   },
   "inat-8846347": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "multi-bug",
+      "bbox-wrong_correct-subject"
     ],
     "preference": null,
     "unsure": false,
@@ -1916,7 +1985,7 @@
   },
   "inat-684641": {
     "flags": [
-      "bbox-content_no-bug"
+      "no-bug"
     ],
     "preference": null,
     "unsure": false,
@@ -1925,7 +1994,7 @@
   },
   "inat-1036259": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1934,28 +2003,28 @@
   },
   "inat-263571": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778880184635,
     "user_edited": true
   },
   "inat-4692253": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778880185460,
     "user_edited": true
   },
   "inat-1626973": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778880186718,
     "user_edited": true
   },
   "inat-10819361": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -1964,7 +2033,7 @@
   },
   "inat-8498130": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1973,14 +2042,14 @@
   },
   "inat-423205": {
     "flags": [],
-    "preference": null,
+    "preference": "cropped",
     "unsure": false,
     "reviewed_at": 1778880490510,
     "user_edited": true
   },
   "bugwood-5618903": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -1989,7 +2058,7 @@
   },
   "inat-429212": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -1998,7 +2067,7 @@
   },
   "inat-183564": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -2007,7 +2076,7 @@
   },
   "inat-1575628": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2016,7 +2085,7 @@
   },
   "inat-1568452": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2025,7 +2094,7 @@
   },
   "inat-4681566": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2034,7 +2103,7 @@
   },
   "inat-56778672": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2043,7 +2112,7 @@
   },
   "inat-1140318": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -2052,7 +2121,7 @@
   },
   "bugwood-1402139": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -2061,7 +2130,7 @@
   },
   "inat-11838340": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2070,21 +2139,21 @@
   },
   "inat-8132345": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778880998463,
     "user_edited": true
   },
   "inat-56778962": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881002813,
     "user_edited": true
   },
   "inat-4795968": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2093,14 +2162,14 @@
   },
   "inat-1579714": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881028455,
     "user_edited": true
   },
   "inat-2444539": {
     "flags": [
-      "mask_poor-contrast"
+      "poor-contrast"
     ],
     "preference": null,
     "unsure": false,
@@ -2109,35 +2178,35 @@
   },
   "inat-1385068": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881039192,
     "user_edited": true
   },
   "inat-4883": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881042700,
     "user_edited": true
   },
   "inat-254961055": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881050034,
     "user_edited": true
   },
   "inat-20432301": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881050739,
     "user_edited": true
   },
   "inat-1866498": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2146,7 +2215,7 @@
   },
   "bugwood-5496066": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2155,8 +2224,8 @@
   },
   "inat-8127442": {
     "flags": [
-      "bbox_correct-subject_clipped",
-      "mask_blur_unusable"
+      "subject-clipped",
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -2165,14 +2234,14 @@
   },
   "inat-64586338": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881074125,
     "user_edited": true
   },
   "inat-1115229": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -2181,7 +2250,7 @@
   },
   "inat-11781817": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -2190,14 +2259,14 @@
   },
   "bugwood-5544673": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881089100,
     "user_edited": true
   },
   "inat-4739589": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2213,14 +2282,14 @@
   },
   "inat-3656117": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881107733,
     "user_edited": true
   },
   "bugwood-5401801": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -2229,7 +2298,7 @@
   },
   "inat-1733781": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -2238,7 +2307,7 @@
   },
   "inat-3831266": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2247,7 +2316,7 @@
   },
   "inat-2878705": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2256,15 +2325,15 @@
   },
   "bugwood-1366011": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881136892,
     "user_edited": true
   },
   "inat-1941997": {
     "flags": [
-      "mask_poor-contrast",
-      "mask_blur_usable"
+      "poor-contrast",
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2273,7 +2342,7 @@
   },
   "inat-404977": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2282,7 +2351,7 @@
   },
   "bugwood-5540746": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -2291,35 +2360,35 @@
   },
   "inat-42973459": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881163008,
     "user_edited": true
   },
   "bugwood-5540588": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881163639,
     "user_edited": true
   },
   "bugwood-5423859": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881170611,
     "user_edited": true
   },
   "bugwood-5364324": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881172019,
     "user_edited": true
   },
   "inat-5239296": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -2328,7 +2397,7 @@
   },
   "bugwood-1543869": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -2337,7 +2406,7 @@
   },
   "inat-12524812": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2346,7 +2415,8 @@
   },
   "inat-2714436": {
     "flags": [
-      "mask_blur_usable"
+      "crop-too-tight",
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2354,29 +2424,31 @@
     "user_edited": true
   },
   "inat-3201313": {
-    "flags": [],
-    "preference": null,
+    "flags": [
+      "crop-too-tight"
+    ],
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881214819,
     "user_edited": true
   },
   "inat-289905": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881221711,
     "user_edited": true
   },
   "bugwood-2135003": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881223944,
     "user_edited": true
   },
   "bugwood-5459498": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -2385,7 +2457,7 @@
   },
   "inat-1139095": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2394,7 +2466,7 @@
   },
   "inat-1918555": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -2403,7 +2475,7 @@
   },
   "inat-2227352": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -2412,7 +2484,7 @@
   },
   "inat-2521786": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -2421,7 +2493,7 @@
   },
   "inat-9103162": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -2430,7 +2502,7 @@
   },
   "inat-2628780": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2439,7 +2511,7 @@
   },
   "inat-6180208": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -2448,42 +2520,42 @@
   },
   "bugwood-5542256": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881280444,
     "user_edited": true
   },
   "inat-1960438": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881281956,
     "user_edited": true
   },
   "bugwood-5486349": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881282561,
     "user_edited": true
   },
   "bugwood-5516187": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881285986,
     "user_edited": true
   },
   "inat-5443521": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881292744,
     "user_edited": true
   },
   "inat-3011554": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2492,7 +2564,7 @@
   },
   "bugwood-5498196": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2501,7 +2573,7 @@
   },
   "inat-1467290": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -2510,14 +2582,14 @@
   },
   "inat-11375814": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881329952,
     "user_edited": true
   },
   "inat-11495391": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2526,7 +2598,7 @@
   },
   "inat-6099005": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -2535,7 +2607,7 @@
   },
   "bugwood-5617995": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -2544,7 +2616,7 @@
   },
   "inat-5156067": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
     "preference": null,
     "unsure": false,
@@ -2553,14 +2625,14 @@
   },
   "inat-148029": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881353652,
     "user_edited": true
   },
   "bugwood-5544518": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -2569,37 +2641,37 @@
   },
   "inat-21837403": {
     "flags": [
-      "mask_blur_usable"
+      "subject-blurred_partially-usable"
     ],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881368244,
     "user_edited": true
   },
   "bugwood-5616862": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881372285,
     "user_edited": true
   },
   "inat-2946024": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881373494,
     "user_edited": true
   },
   "bugwood-5610992": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881374485,
     "user_edited": true
   },
   "bugwood-5540717": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -2608,21 +2680,21 @@
   },
   "inat-197453": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881383724,
     "user_edited": true
   },
   "inat-5800529": {
     "flags": [],
-    "preference": null,
+    "preference": "original",
     "unsure": false,
     "reviewed_at": 1778881386982,
     "user_edited": true
   },
   "bugwood-5615766": {
     "flags": [
-      "bbox_correct-subject_clipped"
+      "subject-clipped"
     ],
     "preference": null,
     "unsure": false,
@@ -2631,7 +2703,7 @@
   },
   "inat-53185142": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
@@ -2640,7 +2712,7 @@
   },
   "inat-63635823": {
     "flags": [
-      "mask_blur_unusable"
+      "subject-blurred_unusable"
     ],
     "preference": null,
     "unsure": false,
