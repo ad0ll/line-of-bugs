@@ -9,6 +9,17 @@ export interface ConfirmDeleteButtonProps {
 export function ConfirmDeleteButton({ onConfirm }: ConfirmDeleteButtonProps) {
   const [stage, setStage] = useState<"idle" | "armed" | "loading">("idle");
   const armTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // After a successful delete, the parent's revalidate path unmounts this
+  // button before the `finally` block runs. setStage("idle") on an unmounted
+  // component is a no-op + React warning; skip it when we know we're gone.
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (stage === "armed") {
@@ -29,7 +40,7 @@ export function ConfirmDeleteButton({ onConfirm }: ConfirmDeleteButtonProps) {
       try {
         await onConfirm();
       } finally {
-        setStage("idle");
+        if (mountedRef.current) setStage("idle");
       }
     }
   }
