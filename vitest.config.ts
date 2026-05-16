@@ -2,13 +2,11 @@ import { defineConfig } from "vitest/config";
 import { playwright } from "@vitest/browser-playwright";
 import path from "node:path";
 
-// Three test tiers:
+// Two test tiers:
 //   - node:    pure logic, DB queries, route handlers — fastest, no DOM
 //   - browser: real chromium via @vitest/browser-playwright — DOM behaviour
 //              that happy-dom can't fake faithfully (<dialog>, focus, layout,
-//              real keyboard events)
-//   - legacy-happydom: holding pen for tests not yet migrated; will be
-//                      emptied + removed in a follow-up commit.
+//              real keyboard events, AudioContext)
 //
 // Coverage must live at root level — vitest 4 merges traces across
 // projects automatically.
@@ -55,10 +53,11 @@ export default defineConfig({
         test: {
           name: "browser",
           setupFiles: ["./tests/setup-browser.ts"],
-          // Pilot — Timer + IconBtn. More files migrate in a follow-up.
           include: [
-            "tests/components/Timer.test.tsx",
-            "tests/components/IconBtn.test.tsx",
+            "tests/components/**/*.test.tsx",
+            "tests/lib/audio.test.ts",
+            "tests/lib/preload-manager.test.ts",
+            "tests/lib/useHighResTimer.test.ts",
           ],
           browser: {
             enabled: true,
@@ -66,24 +65,6 @@ export default defineConfig({
             instances: [{ browser: "chromium" }],
             headless: true,
           },
-        },
-      },
-      {
-        extends: true,
-        test: {
-          name: "legacy-happydom",
-          environment: "happy-dom",
-          setupFiles: ["./tests/setup.ts"],
-          include: [
-            "tests/components/Chip.test.tsx",
-            "tests/components/ProgressBar.test.tsx",
-            "tests/components/SessionActionBar.test.tsx",
-            "tests/components/SourceInfoChip.test.tsx",
-            "tests/lib/audio.test.ts",
-            "tests/lib/preload-manager.test.ts",
-            "tests/lib/useHighResTimer.test.ts",
-          ],
-          env: { DATABASE_URL: ":memory:" },
         },
       },
     ],

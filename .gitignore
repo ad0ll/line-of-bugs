@@ -385,3 +385,7 @@ audit/framing-validator/
 .pytest_cache/
 
 palette-*.png
+
+# Vitest browser mode auto-generated attachments
+.vitest-attachments/
+tests/**/__screenshots__/

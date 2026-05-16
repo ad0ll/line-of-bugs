@@ -9,8 +9,9 @@ describe("audio cues", () => {
     expect(typeof a.transition).toBe("function");
   });
 
-  it("calls do not throw in a no-AudioContext environment", () => {
-    // happy-dom has no AudioContext; functions should no-op safely
+  it("invocations do not throw", () => {
+    // Real chromium provides AudioContext; the cue path actually fires
+    // (no audible output in headless mode but the node graph is real).
     const a = makeAudio();
     expect(() => a.ding()).not.toThrow();
     expect(() => a.countdown(0)).not.toThrow();

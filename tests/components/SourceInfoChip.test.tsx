@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render } from "vitest-browser-react";
 import { SourceInfoChip } from "@/app/components/session/SourceInfoChip";
 import type { Image } from "@/db/schema";
 
@@ -18,18 +18,18 @@ const img: Image = {
 };
 
 describe("SourceInfoChip", () => {
-  it("renders order badge + species + photographer + institution", () => {
-    render(<SourceInfoChip image={img} visible />);
+  it("renders order badge + species + photographer + institution", async () => {
+    const screen = await render(<SourceInfoChip image={img} visible />);
     // Common name moved to SessionTitle; chip carries scientific + attribution
-    expect(screen.getByText(/Harmonia axyridis/i)).toBeInTheDocument();
-    expect(screen.getByText(/Coleoptera/i)).toBeInTheDocument();
-    expect(screen.getByText(/Marie Cerda/i)).toBeInTheDocument();
-    expect(screen.getByText(/iNaturalist/i)).toBeInTheDocument();
+    await expect.element(screen.getByText(/Harmonia axyridis/i)).toBeInTheDocument();
+    await expect.element(screen.getByText(/Coleoptera/i)).toBeInTheDocument();
+    await expect.element(screen.getByText(/Marie Cerda/i)).toBeInTheDocument();
+    await expect.element(screen.getByText(/iNaturalist/i)).toBeInTheDocument();
   });
 
-  it("hides via opacity when visible=false", () => {
-    const { container } = render(<SourceInfoChip image={img} visible={false} />);
-    const root = container.firstChild as HTMLElement;
+  it("hides via opacity when visible=false", async () => {
+    const screen = await render(<SourceInfoChip image={img} visible={false} />);
+    const root = screen.container.firstChild as HTMLElement;
     expect(root.style.opacity).toBe("0");
   });
 });
