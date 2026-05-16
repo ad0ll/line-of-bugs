@@ -24,10 +24,8 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
 
+import { DB_PATH } from "../lib/db-path";
 import * as schema from "./schema";
-
-const DB_PATH =
-  process.env.DATABASE_URL ?? path.resolve("data/db/line-of-bugs.db");
 
 fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
 

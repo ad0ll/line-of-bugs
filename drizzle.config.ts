@@ -1,8 +1,6 @@
 import { defineConfig } from "drizzle-kit";
-import path from "node:path";
 
-const DB_PATH =
-  process.env.DATABASE_URL ?? path.resolve("data/db/line-of-bugs.db");
+import { DB_PATH } from "./lib/db-path";
 
 export default defineConfig({
   schema: "./db/schema.ts",
