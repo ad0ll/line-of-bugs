@@ -86,7 +86,10 @@ function runSubjectCounts(filters: FilterState): FacetSnapshot["subject"] {
   };
 }
 
-function runColumnCounts(filters: FilterState, column: string): FacetCount[] {
+function runColumnCounts(
+  filters: FilterState,
+  column: "view_label" | "life_stage" | "sex",
+): FacetCount[] {
   const clauses = buildFilterClauses(filters);
   const whereClause = sql.join(clauses, sql` AND `);
   const colRef = sql.raw(column);
