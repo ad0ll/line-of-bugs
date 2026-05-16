@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { db } from "@/db";
 import { images } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { ReportPageClient } from "./ReportPageClient";
 
 type Params = Promise<{ id: string }>;
@@ -24,7 +24,12 @@ export default function ReportPage({ params }: { params: Params }) {
 async function ReportLoader({ params }: { params: Params }) {
   await connection();
   const { id } = await params;
-  const row = db.select().from(images).where(eq(images.imageId, id)).all();
+  // Hidden images cannot be re-reported via direct URL — they're already out
+  // of the gallery; surfacing a report form just lets bots refile dupes.
+  const row = db.select()
+    .from(images)
+    .where(and(eq(images.imageId, id), eq(images.hidden, false)))
+    .all();
   if (row.length === 0) notFound();
   const img = row[0]!;
 
