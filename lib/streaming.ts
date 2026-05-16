@@ -26,10 +26,14 @@ const MIME_BY_EXT: Record<string, string> = {
 /**
  * Stream a file from a tier directory.
  * Returns a Response with immutable cache headers, or null if missing.
+ *
+ * When `req` is provided, an `If-None-Match` header that matches the
+ * file's strong ETag (`<mtimeMs>:<size>`) short-circuits to a 304.
  */
 export function streamImage(
   tierDir: "images" | "medium" | "thumbnails",
   rawName: string,
+  req?: Request,
 ): Response | null {
   const safe = safeBasename(rawName);
   if (!safe) return null;
@@ -52,6 +56,27 @@ export function streamImage(
   }
   const ext = path.extname(safe).toLowerCase();
   const mime = MIME_BY_EXT[ext] ?? "application/octet-stream";
+
+  // Strong validator built from mtime + size — same shape Nginx emits
+  // by default. Floor the mtime to ms (some FS report sub-ms drift on
+  // copy that would invalidate the cache without the data changing).
+  const etag = `"${Math.floor(stat.mtimeMs)}-${stat.size}"`;
+  const lastModified = new Date(stat.mtimeMs).toUTCString();
+
+  if (req) {
+    const ifNoneMatch = req.headers.get("if-none-match");
+    if (ifNoneMatch && etagMatches(ifNoneMatch, etag)) {
+      return new Response(null, {
+        status: 304,
+        headers: {
+          ETag: etag,
+          "Last-Modified": lastModified,
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
+    }
+  }
+
   // Bridge a Node fs.ReadStream into a Web ReadableStream — the Route Handler
   // contract is Web Streams, and Readable.toWeb is the canonical adapter.
   const nodeStream = fs.createReadStream(realPath);
@@ -61,6 +86,20 @@ export function streamImage(
       "Content-Type": mime,
       "Content-Length": String(stat.size),
       "Cache-Control": "public, max-age=31536000, immutable",
+      ETag: etag,
+      "Last-Modified": lastModified,
     },
   });
+}
+
+/**
+ * Compare an If-None-Match header value against our generated ETag.
+ * Per RFC 7232: the header is a comma-separated list; "*" matches
+ * any existing resource. Weak-prefix is stripped for the comparison.
+ */
+function etagMatches(header: string, etag: string): boolean {
+  if (header.trim() === "*") return true;
+  const normalize = (t: string) => t.trim().replace(/^W\//, "");
+  const ours = normalize(etag);
+  return header.split(",").some((tag) => normalize(tag) === ours);
 }

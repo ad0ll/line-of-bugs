@@ -40,4 +40,44 @@ describe("/api/img/[name]", () => {
     );
     expect(res.status).toBe(404);
   });
+
+  it("sets an ETag and Last-Modified on 200 responses", async () => {
+    const res = await GET(new Request(`http://localhost/api/img/${knownFilename}`), {
+      params: Promise.resolve({ name: knownFilename }),
+    });
+    expect(res.status).toBe(200);
+    expect(res.headers.get("etag")).toMatch(/^"\d+-\d+"$/);
+    expect(res.headers.get("last-modified")).not.toBeNull();
+  });
+
+  it("returns 304 when If-None-Match matches the current ETag", async () => {
+    const first = await GET(new Request(`http://localhost/api/img/${knownFilename}`), {
+      params: Promise.resolve({ name: knownFilename }),
+    });
+    await first.arrayBuffer(); // drain
+    const etag = first.headers.get("etag")!;
+    expect(etag).not.toBeNull();
+
+    const second = await GET(
+      new Request(`http://localhost/api/img/${knownFilename}`, {
+        headers: { "If-None-Match": etag },
+      }),
+      { params: Promise.resolve({ name: knownFilename }) },
+    );
+    expect(second.status).toBe(304);
+    expect(second.headers.get("etag")).toBe(etag);
+    // 304 must carry no body.
+    const body = await second.arrayBuffer();
+    expect(body.byteLength).toBe(0);
+  });
+
+  it("ignores a non-matching If-None-Match header", async () => {
+    const res = await GET(
+      new Request(`http://localhost/api/img/${knownFilename}`, {
+        headers: { "If-None-Match": '"0-0"' },
+      }),
+      { params: Promise.resolve({ name: knownFilename }) },
+    );
+    expect(res.status).toBe(200);
+  });
 });
