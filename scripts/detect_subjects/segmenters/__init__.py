@@ -3,9 +3,11 @@ from __future__ import annotations
 from typing import Any
 
 from scripts.detect_subjects.segmenters.insectsam import InsectSAMSegmenter
+from tests.python._stubs import StubSegmenter
 
 _REGISTRY: dict[str, type] = {
     "insectsam": InsectSAMSegmenter,
+    "_stub": StubSegmenter,
 }
 
 
