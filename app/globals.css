@@ -53,6 +53,9 @@
   --s1: 2px;  --s2: 4px;  --s3: 6px;  --s4: 8px;
   --s5: 10px; --s6: 12px; --s7: 14px; --s8: 16px;
   --s10: 20px; --s12: 24px; --s16: 32px; --s20: 40px;
+  --s24: 48px;
+  /* Tracking — wide letter-spacing for uppercase tags / badges. */
+  --tracking-wider: 0.4em;
   --r-xs: 3px;  --r-sm: 4px;  --r-md: 5px;
   --r-lg: 6px;  --r-xl: 7px;  --r-2xl: 8px;
   --r-3xl: 10px; --r-4xl: 12px; --r-5xl: 14px; --r-pill: 999px;
