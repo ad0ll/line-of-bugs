@@ -61,7 +61,6 @@ export function SketchfabBrowsePanel({ scientific, common, open, onClose }: Prop
     <div ref={ref} className="sketchfab-panel u-backdrop-blur-md" role="dialog" aria-label="Sketchfab models">
       <header className="sketchfab-panel-header">
         <span className="sketchfab-panel-title">Sketchfab models</span>
-        <span className="sketchfab-panel-source">Powered by Sketchfab</span>
         <button
           type="button"
           className="sketchfab-panel-close"
@@ -125,6 +124,8 @@ export function SketchfabBrowsePanel({ scientific, common, open, onClose }: Prop
           ))}
         </ul>
       )}
+
+      <footer className="sketchfab-panel-source-footer">Models from Sketchfab</footer>
     </div>
   );
 }
