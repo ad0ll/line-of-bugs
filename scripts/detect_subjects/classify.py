@@ -40,6 +40,7 @@ from scripts.detect_subjects.schema import (
     row_to_pyarrow_record,
 )
 from scripts.detect_subjects.segmenters import make_segmenter
+from scripts.detect_subjects.prompt_builder import build_insect_prompt
 
 V1_NAME = "grounding_dino__insectsam"   # legacy variant string (re-tagged from v1_dino_insectsam in pre-work T6 to match cfg.variant_tag() format)
 # Future variants use cfg.variant_tag() instead. We keep V1_NAME tied to the
@@ -57,10 +58,19 @@ def _now_ms() -> int:
 
 
 def _flush_records(records: list[dict], parquet_path: Path) -> None:
-    """Append records to the parquet file via read-concat-rewrite."""
+    """Append records to the parquet file via read-concat-rewrite.
+
+    Casts the existing table to SCHEMA before concat to handle string/large_string
+    type mismatches that arise when different PyArrow versions wrote the file.
+    """
     new_table = pa.Table.from_pylist(records, schema=SCHEMA)
     if parquet_path.exists():
         existing = pq.read_table(parquet_path)
+        # Cast existing to SCHEMA to harmonize string vs large_string differences
+        try:
+            existing = existing.cast(SCHEMA)
+        except Exception:
+            pass  # if cast fails, let concat raise for diagnosis
         combined = pa.concat_tables([existing, new_table])
     else:
         combined = new_table
@@ -81,7 +91,12 @@ def run_v1_on_sample(
     print(f"[v1] {len(sample_rows)} total, {len(completed)} cached, "
           f"{len(to_process)} to process")
 
-    detector = make_detector(cfg.DETECTOR_VARIANT, device=device, dtype=dtype)
+    # Build DB-driven prompt phrases (used by Sam3Detector; ignored by GroundingDinoDetector via **kwargs)
+    prompt_phrases, prompt_version = build_insect_prompt(DATA_DIR / "db" / "line-of-bugs.db")
+    print(f"[v1] prompt_builder: {len(prompt_phrases)} phrases, version={prompt_version}")
+
+    detector = make_detector(cfg.DETECTOR_VARIANT, device=device, dtype=dtype,
+                             prompt_phrases=prompt_phrases)
     segmenter = make_segmenter(cfg.SEGMENTER_VARIANT, device=device, dtype=dtype)
 
     CROPS_DIR.joinpath(V1_NAME).mkdir(parents=True, exist_ok=True)

@@ -61,6 +61,30 @@ Anything under `scripts/detect_subjects/` is a WIP ML pipeline. Don't
 modify it for code-review fixes, refactors, or test cleanup unless the
 user explicitly asks.
 
+## Use concurrency in backend code — beefy hardware
+
+The dev machine is an M5 Max MacBook Pro: 16-core CPU, 40-core GPU, 128GB
+unified memory. **Single-threaded backend loops leave significant capacity
+on the floor.** Default to concurrent execution when:
+
+- Processing many images (`concurrent.futures.ThreadPoolExecutor` for I/O
+  + CPU; `ProcessPoolExecutor` if CPU-heavy work needs to bypass the GIL)
+- Multiple independent inferences could batch (call model with batched
+  inputs — most HF processors accept `images=[img1, img2, ...]`)
+- Database queries with independent results (gather via async or threads)
+- Multiple HTTP fetches (gather concurrently, don't await sequentially)
+
+Constraints:
+- GPU memory is shared with system memory (unified) — don't over-batch SAM
+  3 or DINO; ~4 concurrent inference workers is a reasonable cap
+- Parquet writes must be serialized (use a single writer thread or batched
+  flush with a `threading.Lock`)
+- Don't parallelize calls that share mutable state (`Sam3Processor`
+  instances are not thread-safe; use one per worker OR a process pool)
+
+If you're writing a new pipeline loop, ask "could this be a `with
+ThreadPoolExecutor(max_workers=N) as ex: ex.map(...)`?" — usually yes.
+
 ## ML pipeline bbox visual smoke test (Claude responsibility)
 
 **Always visually smoke-test bbox quality before asking the user to review.**

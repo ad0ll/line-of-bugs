@@ -55,7 +55,7 @@ from scripts.detect_subjects.interfaces import DetectionResult
 class GroundingDinoDetector:
     model_id: str = DINO_MODEL_ID  # written to parquet rows; survives variant swaps
 
-    def __init__(self, device: str = "mps", dtype: torch.dtype = torch.float32) -> None:
+    def __init__(self, device: str = "mps", dtype: torch.dtype = torch.float32, **kwargs) -> None:
         self.device = device
         self.dtype = dtype
         self.processor = AutoProcessor.from_pretrained(DINO_MODEL_ID)

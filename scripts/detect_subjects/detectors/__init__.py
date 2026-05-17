@@ -6,10 +6,12 @@ from __future__ import annotations
 from typing import Any
 
 from scripts.detect_subjects.detectors.grounding_dino import GroundingDinoDetector
+from scripts.detect_subjects.detectors.sam3 import Sam3Detector
 from tests.python._stubs import StubDetector
 
 _REGISTRY: dict[str, type] = {
     "grounding_dino": GroundingDinoDetector,
+    "sam3": Sam3Detector,
     "_stub": StubDetector,
 }
 
