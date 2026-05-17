@@ -26,7 +26,7 @@ log = logging.getLogger("sketchfab_enrichment")
 
 INSECT_HINTS = {
     "insect", "insects", "insecta", "bug", "bugs", "beetle", "butterfly",
-    "moth", "bee", "wasp", "ant", "fly", "grasshopper", "cricket", "mantis",
+    "moth", "bee", "wasp", "ant", "spider", "fly", "grasshopper", "cricket", "mantis",
     "ladybug", "ladybird", "weevil", "dragonfly", "caterpillar", "entomology",
     "arthropod", "arthropoda", "pollinator", "pollinators",
 }
@@ -88,9 +88,12 @@ def _is_strict_relevant(hit: dict, scientific: str, common: str) -> bool:
 
 
 def classify_species(scientific: str, common: str, api_key: str) -> SpeciesResult:
-    """Run both queries; return aggregate relevance + raw hit count."""
-    sci_hits = _query(scientific, api_key)
-    com_hits = _query(common, api_key)
+    """Run both queries (in parallel); return aggregate relevance + raw hit count."""
+    with ThreadPoolExecutor(max_workers=2) as inner:
+        f_sci = inner.submit(_query, scientific, api_key)
+        f_com = inner.submit(_query, common, api_key)
+        sci_hits = f_sci.result()
+        com_hits = f_com.result()
     seen_uids: set[str] = set()
     raw = 0
     relevant = 0

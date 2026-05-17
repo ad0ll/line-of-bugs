@@ -50,6 +50,7 @@ export function SketchfabBrowsePanel({ scientific, common, open, onClose }: Prop
     queryFn: ({ signal }) => fetchSketchfab(scientific, common, signal),
     enabled: open && !!scientific && !!common,
     staleTime: 10 * 60_000,
+    gcTime: 20 * 60_000,
   });
 
   if (!open) return null;
@@ -58,7 +59,7 @@ export function SketchfabBrowsePanel({ scientific, common, open, onClose }: Prop
     `https://sketchfab.com/search?type=models&q=${encodeURIComponent(common || scientific)}`;
 
   return (
-    <div ref={ref} className="sketchfab-panel u-backdrop-blur-md" role="dialog" aria-label="Sketchfab models">
+    <div ref={ref} className="sketchfab-panel u-backdrop-blur-md" role="dialog" aria-modal="true" aria-label="Sketchfab models">
       <header className="sketchfab-panel-header">
         <span className="sketchfab-panel-title">Sketchfab models</span>
         <button
@@ -139,6 +140,7 @@ export function useSketchfabAvailability(scientific: string, common: string) {
     queryFn: ({ signal }) => fetchSketchfab(scientific, common, signal),
     enabled: !!scientific && !!common,
     staleTime: 10 * 60_000,
+    gcTime: 20 * 60_000,
   });
   // Tri-state: undefined (loading) | true (has hits or unchecked) | false (precache says none)
   if (!data) return undefined;

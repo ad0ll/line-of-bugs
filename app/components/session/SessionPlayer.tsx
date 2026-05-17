@@ -59,6 +59,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
         queryKey: sketchfabQueryKey(sci, com),
         queryFn: ({ signal }) => fetchSketchfab(sci, com, signal),
         staleTime: 10 * 60_000,
+        gcTime: 20 * 60_000,
       });
     },
     [qc],
