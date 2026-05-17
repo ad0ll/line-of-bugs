@@ -42,6 +42,7 @@ export default defineConfig({
             "tests/lib/order-colors.test.ts",
             "tests/lib/repeat-mode.test.ts",
             "tests/lib/session-pools.test.ts",
+            "tests/lib/sketchfab-search.test.ts",
             "tests/lib/subject.test.ts",
             "tests/lib/text-format.test.ts",
             "tests/lib/tokens.test.ts",
@@ -79,5 +80,10 @@ export default defineConfig({
   },
   resolve: {
     alias: { "@": path.resolve(__dirname) },
+    // Force a single React copy across all dependencies. Without this,
+    // Vite's deps optimizer can pre-bundle @tanstack/react-query with its
+    // own React instance, breaking hook calls inside QueryClientProvider
+    // during browser tests ("Cannot read properties of null (useEffect)").
+    dedupe: ["react", "react-dom"],
   },
 });

@@ -14,4 +14,5 @@
 -- Re-runs are idempotent.
 CREATE INDEX IF NOT EXISTS `idx_images_hidden_taxon_subgroup`
   ON `images` (`hidden`, `taxon_subgroup`);
+--> statement-breakpoint
 ANALYZE;

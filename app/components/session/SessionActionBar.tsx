@@ -22,6 +22,9 @@ interface Props {
   onToggleFullscreen: () => void;
   onReport: () => void;
   onIntervalChange: (s: number) => void;
+  sketchfabOpen: boolean;
+  onToggleSketchfab: () => void;
+  sketchfabDisabled?: boolean;
 }
 
 // R8 (2026-05-16): zoom cluster removed — browser zoom does the same
@@ -54,6 +57,15 @@ export function SessionActionBar(props: Props) {
         </IconBtn>
         <IconBtn label="report" hint="R" onClick={props.onReport}>
           ⚑
+        </IconBtn>
+        <IconBtn
+          label="sketchfab"
+          hint="K"
+          active={props.sketchfabOpen}
+          disabled={props.sketchfabDisabled ?? false}
+          onClick={props.onToggleSketchfab}
+        >
+          ▦
         </IconBtn>
         {props.sourceImageUrl ? (
           <IconBtn label="source" hint=" " as="a" href={props.sourceImageUrl} target="_blank">

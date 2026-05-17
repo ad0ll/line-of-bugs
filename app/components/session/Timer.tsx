@@ -31,6 +31,7 @@ export function Timer({ remainingMs, paused }: Props) {
       <div
         className="session-timer"
         style={{ opacity: paused ? 0.55 : 1 }}
+        data-testid="session-timer"
       >
         {fmt(remainingMs)}
       </div>

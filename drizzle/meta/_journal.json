@@ -78,6 +78,13 @@
       "when": 1779000000000,
       "tag": "0010_facet_perf",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1779000001000,
+      "tag": "0011_species_metadata",
+      "breakpoints": true
     }
   ]
 }
