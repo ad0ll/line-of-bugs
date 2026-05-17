@@ -61,6 +61,7 @@ export default defineConfig({
             "tests/lib/audio.test.ts",
             "tests/lib/fetch-with-timeout.test.ts",
             "tests/lib/preload-manager.test.ts",
+            "tests/lib/sketchfab-preload-utils.test.ts",
             "tests/lib/useHighResTimer.test.ts",
             "tests/lib/useRequestIdleCallback.test.ts",
           ],
