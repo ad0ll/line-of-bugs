@@ -33,7 +33,14 @@ export function SketchfabBrowsePanel({ scientific, common, open, onClose }: Prop
   // Escape + outside-click dismiss
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        // Stop bubble to SessionPlayer's window listener so Escape closes
+        // just the panel, not the whole session (which would push to "/").
+        e.stopPropagation();
+        onClose();
+      }
+    };
     const onDown = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) onClose();
     };

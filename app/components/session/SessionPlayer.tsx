@@ -271,6 +271,9 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
           toggleSketchfab();
           break;
         case "Escape":
+          // When the Sketchfab panel is open, let it handle dismissal —
+          // don't navigate away from the session.
+          if (sketchfabOpen) return;
           if (!pathname.startsWith("/report/")) {
             router.push("/");
           }
@@ -279,7 +282,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [goPrev, goNext, idx, items, router, pathname, toggleFullscreen, toggleSketchfab]);
+  }, [goPrev, goNext, idx, items, router, pathname, toggleFullscreen, toggleSketchfab, sketchfabOpen]);
 
   // Cursor hide when chrome hidden
   useEffect(() => {
