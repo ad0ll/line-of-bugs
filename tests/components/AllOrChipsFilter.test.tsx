@@ -41,3 +41,80 @@ describe("AllOrChipsFilter empty state", () => {
     expect(screen.getByRole("option").elements()).toHaveLength(3);
   });
 });
+
+describe("AllOrChipsFilter selected state", () => {
+  it("renders one chip per selected value", async () => {
+    const screen = await render(
+      <AllOrChipsFilter
+        label="bug type"
+        emptyLabel="all bug types"
+        options={OPTS}
+        selected={["butterflies", "beetles"]}
+        onChange={vi.fn()}
+      />,
+    );
+    await expect.element(screen.getByText(/butterflies · 2,855/)).toBeInTheDocument();
+    await expect.element(screen.getByText(/beetles · 6,404/)).toBeInTheDocument();
+    await expect.element(screen.getByRole("button", { name: /add bug type/i })).toBeInTheDocument();
+  });
+
+  it("removing a chip calls onChange without that value", async () => {
+    const onChange = vi.fn();
+    const screen = await render(
+      <AllOrChipsFilter
+        label="bug type"
+        emptyLabel="all bug types"
+        options={OPTS}
+        selected={["butterflies", "beetles"]}
+        onChange={onChange}
+      />,
+    );
+    await screen.getByLabelText(/remove butterflies/i).click();
+    expect(onChange).toHaveBeenCalledWith(["beetles"]);
+  });
+
+  it("clicking + opens the picker", async () => {
+    const screen = await render(
+      <AllOrChipsFilter
+        label="bug type"
+        emptyLabel="all bug types"
+        options={OPTS}
+        selected={["butterflies"]}
+        onChange={vi.fn()}
+      />,
+    );
+    await screen.getByRole("button", { name: /add bug type/i }).click();
+    await expect.element(screen.getByRole("listbox")).toBeVisible();
+  });
+
+  it("clicking option in picker calls onChange with appended value", async () => {
+    const onChange = vi.fn();
+    const screen = await render(
+      <AllOrChipsFilter
+        label="bug type"
+        emptyLabel="all bug types"
+        options={OPTS}
+        selected={["butterflies"]}
+        onChange={onChange}
+      />,
+    );
+    await screen.getByRole("button", { name: /add bug type/i }).click();
+    await screen.getByRole("option", { name: /beetles/i }).click();
+    expect(onChange).toHaveBeenCalledWith(["butterflies", "beetles"]);
+  });
+
+  it("already-selected rows in picker are aria-disabled", async () => {
+    const screen = await render(
+      <AllOrChipsFilter
+        label="bug type"
+        emptyLabel="all bug types"
+        options={OPTS}
+        selected={["butterflies"]}
+        onChange={vi.fn()}
+      />,
+    );
+    await screen.getByRole("button", { name: /add bug type/i }).click();
+    const butterfliesRow = screen.getByRole("option", { name: /butterflies/i });
+    await expect.element(butterfliesRow).toHaveAttribute("aria-disabled", "true");
+  });
+});
