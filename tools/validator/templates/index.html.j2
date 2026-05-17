@@ -112,6 +112,9 @@
   .col.col2 button.suggested { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.10); }
   .col.col4 button.suggested { border-color: #FF6EC7; color: #FF6EC7; background: rgba(255,110,199,0.10); }
   .col button.informational { font-style: italic; opacity: 0.75; }
+  /* No-bbox cards: dim bbox-derived buttons (col1 except wrong-subject, col2 except no-bug, all col3, all col2_flags) */
+  .col button.nobbox-dim { opacity: 0.25; cursor: not-allowed; }
+  .col button.nobbox-dim:hover { color: inherit; border-color: inherit; }
   /* Bbox-only mode: de-emphasize col2-4 */
   body.bbox-only-mode .col.col2,
   body.bbox-only-mode .col.col3,
@@ -518,13 +521,20 @@ function render() {
         '</div>';
     }
 
-    // 4-column buttons
+    // 4-column buttons. When the card has no bbox, the bbox-derived buttons
+    // (col1 correct/clipped, col2 single/multibug/too-small, all of col3)
+    // don't apply — dim them so the user knows only wrong-subject / no-bug /
+    // unsure are meaningful.
     const suggested = r.suggested_labels || [];
     const userEdited = isUserEdited(lbl);
+    const hasBbox = r.bbox_x !== null;
+    const NOBBOX_ENABLED_COL1 = new Set(["bbox_wrong-subject"]);
+    const NOBBOX_ENABLED_COL2 = new Set(["bbox-content_no-bug"]);
 
     const col1Active = lbl.col1 || null;
     const col1HTML = COL1_BUTTONS.map(b => {
-      const cls = col1Active === b.id ? "active" : "";
+      const dim = !hasBbox && !NOBBOX_ENABLED_COL1.has(b.id);
+      const cls = [(col1Active === b.id ? "active" : ""), (dim ? "nobbox-dim" : "")].filter(Boolean).join(' ');
       return '<button class="' + cls + '" title="' + b.tip + '" onclick="setCol1(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
     }).join('');
 
@@ -532,7 +542,8 @@ function render() {
     const col2CountHTML = COL2_COUNT_BUTTONS.map(b => {
       const isSug = !userEdited && suggested.includes(b.id);
       const isAct = userEdited && col2CountActive === b.id;
-      const cls = isAct ? "active" : (isSug ? "suggested" : "");
+      const dim = !hasBbox && !NOBBOX_ENABLED_COL2.has(b.id);
+      const cls = [(isAct ? "active" : (isSug ? "suggested" : "")), (dim ? "nobbox-dim" : "")].filter(Boolean).join(' ');
       return '<button class="' + cls + '" title="' + b.tip + '" onclick="setCol2Count(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
     }).join('');
 
@@ -540,7 +551,8 @@ function render() {
     const col2FlagHTML = COL2_FLAG_BUTTONS.map(b => {
       const isSug = !userEdited && suggested.includes(b.id);
       const isAct = userEdited && col2FlagsActive.includes(b.id);
-      const cls = [(isAct ? "active" : (isSug ? "suggested" : "")), (b.informational ? "informational" : "")].filter(Boolean).join(' ');
+      const dim = !hasBbox;
+      const cls = [(isAct ? "active" : (isSug ? "suggested" : "")), (b.informational ? "informational" : ""), (dim ? "nobbox-dim" : "")].filter(Boolean).join(' ');
       return '<button class="' + cls + '" title="' + b.tip + '" onclick="toggleCol2Flag(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
     }).join('');
 
@@ -548,7 +560,8 @@ function render() {
     const col3HTML = COL3_BUTTONS.map(b => {
       const isSug = !userEdited && suggested.includes(b.id);
       const isAct = userEdited && col3Active.includes(b.id);
-      const cls = isAct ? "active" : (isSug ? "suggested" : "");
+      const dim = !hasBbox;
+      const cls = [(isAct ? "active" : (isSug ? "suggested" : "")), (dim ? "nobbox-dim" : "")].filter(Boolean).join(' ');
       return '<button class="' + cls + '" title="' + b.tip + '" onclick="toggleCol3(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
     }).join('');
 
