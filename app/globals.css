@@ -1086,8 +1086,9 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   font-style: italic;
   margin: 0 auto;
   opacity: 0.85;
-  max-width: 28rem;
+  max-width: 40rem;        /* was 28rem — fits "...with 39,631 insects, tenderly photographed" on one line at desktop */
   line-height: 1.45;
+  text-wrap: balance;       /* graceful wrap when forced (mobile) */
 }
 .home-tagline-count {
   font-variant-numeric: tabular-nums;
