@@ -1,0 +1,64 @@
+.wrap { position: relative; display: inline-block; width: 100%; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--surface-2);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-size: 0.95rem; font-family: inherit;
+  cursor: pointer;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1),
+              background 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.chip:hover { transform: translateY(-1px); box-shadow: 0 0 12px 2px color-mix(in srgb, var(--accent-pink) 35%, transparent); }
+.chip.empty { background: color-mix(in srgb, var(--accent-pink) 18%, transparent); border-color: color-mix(in srgb, var(--accent-pink) 35%, transparent); }
+.chip.open  { background: color-mix(in srgb, var(--accent-pink) 28%, transparent); }
+.chip.selectedGroup   { background: color-mix(in srgb, var(--accent-pink) 22%, transparent); }
+.chip.selectedSpecies { background: color-mix(in srgb, var(--accent-lilac) 22%, transparent); }
+.chip.addBtn          { border-style: dashed; }
+
+.chipWall { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.kindBadge {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, currentColor 15%, transparent);
+  font-size: 0.7rem;
+  font-style: italic;
+  opacity: 0.75;
+  text-transform: lowercase;
+}
+
+.removeBtn { appearance: none; background: none; border: 0; color: inherit; cursor: pointer; padding: 0 0.1rem; font-size: 1rem; line-height: 1; opacity: 0.7; border-radius: 999px; }
+.removeBtn:hover { opacity: 1; }
+.removeBtn:focus-visible { outline: 2px solid var(--accent-pink); outline-offset: 2px; }
+
+.picker {
+  position: absolute; top: calc(100% + 0.5rem); left: 0; z-index: 50;
+  min-width: 22rem; max-width: 32rem;
+  background: var(--surface-1); border: 1px solid var(--surface-2); border-radius: 1rem; padding: 0.5rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  animation: pickerIn 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes pickerIn { from { transform: translateY(-4px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.search {
+  width: 100%; box-sizing: border-box; padding: 0.5rem 0.75rem;
+  background: var(--surface-0); border: 1px solid var(--surface-2); border-radius: 0.5rem;
+  color: inherit; font-family: inherit; font-size: 0.9rem; margin-bottom: 0.5rem;
+}
+
+.list { list-style: none; margin: 0; padding: 0; max-height: 22rem; overflow-y: auto; }
+.row {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.9rem;
+}
+.row:hover { background: color-mix(in srgb, var(--accent-pink) 12%, transparent); }
+.rowLabel { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rowCount { font-variant-numeric: tabular-nums; opacity: 0.7; font-size: 0.85rem; }
+
+.empty { padding: 0.75rem; text-align: center; opacity: 0.6; font-size: 0.85rem; }
