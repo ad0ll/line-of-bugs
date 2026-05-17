@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Image } from "@/db/schema";
 import { useHighResTimer } from "@/lib/hooks/useHighResTimer";
 import { makeAudio, type AudioCues } from "@/lib/audio";
@@ -15,7 +16,7 @@ import { EdgePrevNext } from "./EdgePrevNext";
 import { Magnifier } from "./Magnifier";
 import { EndOfSessionOverlay } from "./EndOfSessionOverlay";
 import { SessionTitle } from "./SessionTitle";
-import { SketchfabBrowsePanel } from "./SketchfabBrowsePanel";
+import { SketchfabBrowsePanel, sketchfabQueryKey } from "./SketchfabBrowsePanel";
 
 interface Props {
   items: Image[];
@@ -44,6 +45,29 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
     // Only flip true when the panel can actually render; always allow closing.
     setSketchfabOpen((open) => (open ? false : canBrowseSketchfab));
   }, [canBrowseSketchfab]);
+
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    const sci = items[idx]?.taxonSpecies;
+    const com = items[idx]?.commonName;
+    if (!sci || !com) return;
+    // Fire-and-forget; React Query dedupes if the panel later opens with
+    // the same key. prefetchQuery caches the result without subscribing,
+    // so a successful prefetch doesn't re-render this component.
+    void qc.prefetchQuery({
+      queryKey: sketchfabQueryKey(sci, com),
+      queryFn: async ({ signal }) => {
+        const u = new URL("/api/sketchfab/search", window.location.origin);
+        u.searchParams.set("scientific", sci);
+        u.searchParams.set("common", com);
+        const r = await fetch(u.toString(), { signal });
+        if (!r.ok) throw new Error("prefetch failed");
+        return r.json();
+      },
+      staleTime: 10 * 60_000,
+    });
+  }, [items, idx, qc]);
 
   // Track fullscreen state — user may exit via Escape (handled by browser, not us)
   useEffect(() => {
