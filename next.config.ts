@@ -30,7 +30,9 @@ const config: NextConfig = {
             // nonces later if we audit out the inline usages.
             value: [
               "default-src 'self'",
-              "img-src 'self' data:",
+              // media.sketchfab.com hosts the Sketchfab Browse Panel thumbnails
+              // (256x144 JPEGs, year-long CDN cache). Required for SketchfabBrowsePanel.
+              "img-src 'self' data: https://media.sketchfab.com",
               "style-src 'self' 'unsafe-inline'",
               scriptSrc,
               "connect-src 'self'",
