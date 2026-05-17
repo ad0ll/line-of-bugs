@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, patch
 from scripts.sketchfab_enrichment import SpeciesResult
 from scripts.sketchfab_enrichment_remote import (
     fetch_species_list,
+    main,
     post_batch,
     result_to_row,
 )
@@ -90,3 +91,58 @@ def test_result_to_row_no_models_sets_hits_json_null():
     assert row["hits_json"] is None
     assert row["has_models"] is False
     assert row["hit_count"] == 3
+
+
+# ---------------------------------------------------------------------------
+# main() exit-code gate: fail when most species got rate-limited / WAF-blocked
+# ---------------------------------------------------------------------------
+
+def _run_main_with_skip_pct(
+    *, n_total: int, n_skipped: int, fail_pct: int = 50, min_sample: int = 100
+) -> int:
+    """Helper: stub fetch + classify so main() sees n_total species, of which
+    n_skipped come back rate_limited, and return its exit code."""
+    pairs = [(f"S{i}", f"c{i}") for i in range(n_total)]
+    results = (
+        [SpeciesResult(has_models=False, hit_count=0, hits=[], rate_limited=True)] * n_skipped
+        + [SpeciesResult(has_models=True, hit_count=1, hits=[{"uid": "u", "matchedBy": "scientific"}])]
+        * (n_total - n_skipped)
+    )
+
+    env = {
+        "LINE_OF_BUGS_PROD_URL": "https://prod",
+        "LINE_OF_BUGS_ADMIN_USER": "admin",
+        "LINE_OF_BUGS_ADMIN_PASSWORD": "pw",
+        "SKETCHFAB_API_KEY": "k",
+    }
+
+    with patch.dict("os.environ", env, clear=False), \
+         patch("scripts.sketchfab_enrichment_remote.fetch_species_list", return_value=pairs), \
+         patch("scripts.sketchfab_enrichment_remote.classify_species", side_effect=results), \
+         patch("scripts.sketchfab_enrichment_remote.post_batch", return_value=n_total - n_skipped):
+        return main(
+            ["--max-age-days", "1",
+             "--fail-skipped-pct", str(fail_pct),
+             "--fail-skipped-min-sample", str(min_sample)]
+        )
+
+
+def test_main_exits_nonzero_when_skip_rate_exceeds_threshold():
+    # 60 of 100 skipped = 60% > 50% threshold → exit 2 (triggers TG alert)
+    assert _run_main_with_skip_pct(n_total=100, n_skipped=60) == 2
+
+
+def test_main_exits_zero_when_skip_rate_below_threshold():
+    # 30 of 100 skipped = 30% < 50% threshold → exit 0
+    assert _run_main_with_skip_pct(n_total=100, n_skipped=30) == 0
+
+
+def test_main_skip_threshold_ignored_for_small_samples():
+    # 5 of 5 skipped = 100% but below min-sample of 10 → exit 0
+    # (smoke tests with --limit 5 must not trip the gate)
+    assert _run_main_with_skip_pct(n_total=5, n_skipped=5, min_sample=10) == 0
+
+
+def test_main_skip_threshold_at_exactly_boundary_fails():
+    # Exactly 50% with --fail-skipped-pct 50 should fail (>= comparison).
+    assert _run_main_with_skip_pct(n_total=100, n_skipped=50) == 2

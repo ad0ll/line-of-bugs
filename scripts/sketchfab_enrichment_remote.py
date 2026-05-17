@@ -99,10 +99,26 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--limit", type=int, default=None)
     parser.add_argument("--batch-size", type=int, default=200)
     parser.add_argument("--workers", type=int, default=8)
+    parser.add_argument(
+        "--fail-skipped-pct", type=int, default=50,
+        help=("Exit non-zero if >=N%% of attempted species were skipped "
+              "(rate-limited / WAF-blocked). Defaults to 50. The xyOps "
+              "general-category default action turns non-zero exits into a "
+              "Telegram alert, surfacing silent regressions where Sketchfab "
+              "is rejecting most of our queries."),
+    )
+    parser.add_argument(
+        "--fail-skipped-min-sample", type=int, default=100,
+        help=("Minimum attempted-species count before --fail-skipped-pct is "
+              "enforced. Stops smoke tests (--limit 5) from spuriously "
+              "failing on a couple of unlucky 429s."),
+    )
     args = parser.parse_args(argv)
 
     if args.batch_size < 1 or args.batch_size > UPSERT_MAX_BATCH:
         parser.error(f"--batch-size must be 1..{UPSERT_MAX_BATCH}")
+    if not (0 <= args.fail_skipped_pct <= 100):
+        parser.error("--fail-skipped-pct must be in 0..100")
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
@@ -182,7 +198,22 @@ def main(argv: list[str] | None = None) -> int:
     elapsed = time.time() - t0
     log.info("done in %.1fs — %d classified, %d upserted, %d rate-limited (skipped), %d failures",
              elapsed, classified, upserted_total, skipped, failures)
-    return 0 if failures == 0 else 2
+
+    if failures > 0:
+        return 2
+
+    attempted = classified + skipped
+    if attempted >= args.fail_skipped_min_sample:
+        skipped_pct = 100 * skipped / attempted
+        if skipped_pct >= args.fail_skipped_pct:
+            log.error(
+                "HIGH SKIP RATE: %d/%d (%.1f%%) species were rate-limited or "
+                "WAF-blocked (threshold: %d%%). Sketchfab is rejecting most "
+                "queries — investigate before next run.",
+                skipped, attempted, skipped_pct, args.fail_skipped_pct,
+            )
+            return 2
+    return 0
 
 
 if __name__ == "__main__":
