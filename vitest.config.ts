@@ -62,6 +62,7 @@ export default defineConfig({
             "tests/lib/fetch-with-timeout.test.ts",
             "tests/lib/preload-manager.test.ts",
             "tests/lib/useHighResTimer.test.ts",
+            "tests/lib/useRequestIdleCallback.test.ts",
           ],
           browser: {
             enabled: true,
