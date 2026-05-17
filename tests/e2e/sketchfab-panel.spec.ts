@@ -58,6 +58,14 @@ test("sketchfab panel opens, shows thumbnails, click opens new tab, timer pauses
   expect(popup.url()).toContain("sketchfab.com/3d-models/test-uid");
   await popup.close();
 
+  // Capture the session URL before Escape — the regression we're
+  // guarding against here is SessionPlayer's Escape handler
+  // router.push("/")-ing the user out of the session when the panel
+  // is open. The panel should close, but the session URL must NOT
+  // change. (Pre-fix, both happened: panel closed AND we left.)
+  const sessionUrl = page.url();
+  expect(sessionUrl).toMatch(/\/session\?session=/);
+
   // Closing the panel resumes the timer.
   // SketchfabBrowsePanel attaches its Escape handler via
   // `document.addEventListener("keydown", ...)`, so dispatching on
@@ -70,6 +78,8 @@ test("sketchfab panel opens, shows thumbnails, click opens new tab, timer pauses
     );
   });
   await expect(page.getByRole("dialog", { name: /sketchfab models/i })).toBeHidden();
+  // URL must be unchanged — Escape closed the panel, not the session.
+  expect(page.url()).toBe(sessionUrl);
 
   // Wait briefly for the timer to advance after resume
   await page.waitForTimeout(1500);
