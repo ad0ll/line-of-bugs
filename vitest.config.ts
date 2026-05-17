@@ -72,5 +72,10 @@ export default defineConfig({
   },
   resolve: {
     alias: { "@": path.resolve(__dirname) },
+    // Force a single React copy across all dependencies. Without this,
+    // Vite's deps optimizer can pre-bundle @tanstack/react-query with its
+    // own React instance, breaking hook calls inside QueryClientProvider
+    // during browser tests ("Cannot read properties of null (useEffect)").
+    dedupe: ["react", "react-dom"],
   },
 });
