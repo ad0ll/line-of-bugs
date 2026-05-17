@@ -42,6 +42,11 @@ export function GridTile({ row }: { row: GalleryRow }) {
           sourceHref={row.image_url}
           sourceName={sourceName(row.source)}
         />
+        {row.license && (
+          <span className="grid-item-license" aria-label={`license ${row.license}`}>
+            {row.license}
+          </span>
+        )}
       </div>
       <div className="grid-item-meta">
         {commonName && (

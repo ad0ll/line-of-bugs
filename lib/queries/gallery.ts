@@ -24,6 +24,10 @@ export type GalleryRow = {
   common_name: string | null;
   subject_state: string;
   institution: string | null;
+  /** License code (e.g., "CC-BY", "CC-BY-NC", "public-domain"). Rendered
+   *  bottom-left of every tile per Phase E — required attribution stays
+   *  visible without hover-gating. */
+  license: string;
   collection_index: number;
   collection_size: number;
 };
@@ -88,7 +92,7 @@ export async function searchGallery(args: SearchGalleryArgs): Promise<SearchGall
       image_id, collection_id, source, source_page_url, image_url,
       thumbnail_filename, medium_filename, filename,
       width, height, taxon_order, taxon_species, common_name,
-      subject_state, institution,
+      subject_state, institution, license,
       ROW_NUMBER() OVER (PARTITION BY collection_id ORDER BY image_id) AS collection_index,
       COUNT(*) OVER (PARTITION BY collection_id) AS collection_size
     FROM visible

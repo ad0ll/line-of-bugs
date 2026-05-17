@@ -18,6 +18,7 @@ const BASE_ROW = {
   common_name: "monarch",
   subject_state: "wild",
   institution: null,
+  license: "CC-BY-NC",
   collection_index: 1,
   collection_size: 1,
 };
@@ -47,5 +48,18 @@ describe("GridTile", () => {
     // The order-badge / taxon-group chip should be gone regardless.
     const chip = screen.container.querySelector(".order-badge");
     expect(chip).toBeNull();
+  });
+
+  it("renders the license badge bottom-left when license is present", async () => {
+    const screen = await render(<GridTile row={BASE_ROW as any} />);
+    const badge = screen.container.querySelector(".grid-item-license");
+    expect(badge?.textContent).toBe("CC-BY-NC");
+    expect(badge?.getAttribute("aria-label")).toBe("license CC-BY-NC");
+  });
+
+  it("omits the license badge when the row has no license string", async () => {
+    const row = { ...BASE_ROW, license: "" };
+    const screen = await render(<GridTile row={row as any} />);
+    expect(screen.container.querySelector(".grid-item-license")).toBeNull();
   });
 });

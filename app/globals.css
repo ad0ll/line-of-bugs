@@ -658,6 +658,22 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 }
 .grid-item-name { display: block; font-family: var(--font-sans), system-ui, sans-serif; font-size: 0.9rem; color: var(--text-primary); }
 .grid-item-species { display: block; font-family: var(--font-display), serif; font-style: italic; font-size: 0.8rem; color: var(--text-tertiary); }
+/* Phase E (2026-05-17) — license pill, bottom-left of every tile.
+   Always visible (not hover-gated) because attribution is required.
+   Bottom-left so it doesn't fight TileActions' bottom-right hover row. */
+.grid-item-license {
+  position: absolute;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  font-size: 0.65rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-0) 80%, transparent);
+  color: var(--text-tertiary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  backdrop-filter: blur(6px);
+}
 .grid-item.skeleton-tile {
   aspect-ratio: 1 / 1;
   background: var(--surface-1);
