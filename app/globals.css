@@ -991,7 +991,37 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 }
 .home-header {
   text-align: center;
-  margin-bottom: var(--s4);
+  margin: 3rem auto 2rem;
+  max-width: 36rem;
+}
+.home-title {
+  font-family: var(--font-serif), serif;
+  font-style: italic;
+  font-size: clamp(2.4rem, 5vw, 3.5rem);
+  color: var(--accent-pink);
+  margin: 0 0 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.home-title-icon {
+  color: color-mix(in srgb, var(--accent-lilac) 80%, var(--accent-pink));
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.home-title:hover .home-title-icon {
+  transform: translate(2px, -2px) rotate(-5deg);
+}
+.home-tagline {
+  font-family: var(--font-serif), serif;
+  font-style: italic;
+  margin: 0 auto;
+  opacity: 0.85;
+  max-width: 28rem;
+  line-height: 1.45;
+}
+.home-tagline-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-pink);
 }
 .home-ctas {
   display: flex;
@@ -1000,38 +1030,6 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   gap: var(--s8);
   margin-top: var(--s6);
   flex-wrap: wrap;
-}
-
-.home-title {
-  font-family: var(--font-display), serif;
-  font-weight: 500;
-  font-style: italic;
-  font-size: clamp(48px, 8vw, 72px);
-  color: var(--accent-pink);
-  letter-spacing: -0.02em;
-  margin: 0;
-  line-height: 1;
-  position: relative;
-  display: inline-block;
-}
-/* Real <span aria-hidden> rather than a ::after pseudo-element so screen
-   readers don't announce the decorative flower character as part of the
-   title. */
-.home-title-flower {
-  position: absolute;
-  top: -10px;
-  right: -28px;
-  font-size: 0.45em;
-  color: var(--accent-lilac);
-  animation: wobble 6s ease-in-out infinite;
-}
-.home-tagline {
-  margin: var(--s4) 0 0 0;
-  color: var(--text-secondary);
-  font-size: 1rem;
-  font-style: italic;
-  font-family: var(--font-display), serif;
-  max-width: 32ch;
 }
 
 .home-section { display: flex; flex-direction: column; gap: var(--s4); }
