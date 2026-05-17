@@ -73,6 +73,8 @@ test.describe("session player polish (Phase B)", () => {
   test("muting via keyboard M persists across reload and surfaces the timer icon", async ({ page }) => {
     const sessionId = await startSession(page);
     await page.goto(`/session?session=${sessionId}&interval=60`);
+    // Wait for the timer pill to mount so the keydown handler is wired.
+    await expect(page.locator(".session-timer")).toBeVisible();
     // No muted icon by default
     await expect(page.locator(".session-timer-muted-icon")).toHaveCount(0);
     // Toggle mute via keyboard
@@ -93,10 +95,12 @@ test.describe("session player polish (Phase B)", () => {
     });
     const s1 = (await res.json()).sessionId;
     await page.goto(`/session?session=${s1}&interval=60`);
+    // Wait for the image frame so the SessionPlayer keydown handler is mounted.
+    await expect(page.locator(".session-image-frame img")).toBeVisible();
     // Toggle B&W via keyboard
     await page.keyboard.press("b");
-    let bw = await page.locator(".session-image-frame img").evaluate((el) => getComputedStyle(el).filter);
-    expect(bw).toContain("grayscale");
+    await expect(page.locator(".session-image-frame img"))
+      .toHaveCSS("filter", /grayscale/);
     // Start session 2
     await page.goto("/");
     res = await page.request.post("http://localhost:3000/api/session/start", {
@@ -105,7 +109,8 @@ test.describe("session player polish (Phase B)", () => {
     const s2 = (await res.json()).sessionId;
     await page.goto(`/session?session=${s2}&interval=60`);
     // B&W should be off
-    bw = await page.locator(".session-image-frame img").evaluate((el) => getComputedStyle(el).filter);
+    await expect(page.locator(".session-image-frame img")).toBeVisible();
+    const bw = await page.locator(".session-image-frame img").evaluate((el) => getComputedStyle(el).filter);
     expect(bw).not.toContain("grayscale");
   });
 });

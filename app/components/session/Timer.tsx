@@ -38,7 +38,7 @@ export function Timer({ remainingMs, paused, muted = false }: Props) {
       >
         {paused && <span aria-hidden className="session-timer-paused-icon">⏸</span>}
         {fmt(remainingMs)}
-        {muted && <span aria-hidden className="session-timer-muted-icon">🔇</span>}
+        {muted && <span aria-hidden className="session-timer-muted-icon">⊘</span>}
       </div>
       {announcement ? (
         <span className="u-sr-only" role="status" aria-live="polite" aria-atomic="true">

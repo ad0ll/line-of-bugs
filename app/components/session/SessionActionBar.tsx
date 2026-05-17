@@ -60,7 +60,10 @@ export function SessionActionBar(props: Props) {
             active={props.muted ?? false}
             onClick={props.onToggleMute}
           >
-            {props.muted ? "🔇" : "🔊"}
+            {/* Plain unicode (not emoji) keeps the glyph weight aligned
+                with neighbours (◐ ⊙ ⛶ ⚑ ▦); emoji rendered ~30px and
+                pushed the slot past its 100px min-width. */}
+            {props.muted ? "⊘" : "♪"}
           </IconBtn>
         ) : null}
         <IconBtn label="magnifier" hint={props.magnifier === "off" ? "Z" : props.magnifier} active={props.magnifier !== "off"} onClick={props.onMagnifier}>

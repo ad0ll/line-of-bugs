@@ -48,7 +48,7 @@ describe("Timer", () => {
   it("appends a muted icon when muted=true", async () => {
     const screen = await render(<Timer remainingMs={60_000} paused={false} muted />);
     const icon = screen.container.querySelector(".session-timer-muted-icon");
-    expect(icon?.textContent).toBe("🔇");
+    expect(icon?.textContent).toBe("⊘");
   });
 
   it("omits the muted icon when muted is false", async () => {
