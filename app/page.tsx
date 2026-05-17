@@ -16,11 +16,11 @@ async function HomeShell({ searchParams }: { searchParams: SearchParams }) {
   const sp = await searchParams;
   const subject = parseSubject(readArg(sp.subject, "all"));
   const interval = Math.max(10, Math.min(3600, parseInt(readArg(sp.interval, "60"), 10) || 60));
-  const repeatRaw = readArg(sp.repeat, "default");
+  const repeatRaw = readArg(sp.repeat, "never-repeat-animals");
   const repeat: "default" | "never-repeat-animals" | "allow-different-angles" =
-    repeatRaw === "never-repeat-animals" || repeatRaw === "allow-different-angles"
+    repeatRaw === "default" || repeatRaw === "allow-different-angles"
       ? repeatRaw
-      : "default";
+      : "never-repeat-animals";
   // Initial render uses the *unfiltered* facets — they double as both
   // "filtered" and "total" at render time (count === total → single
   // number). The client refreshes filtered counts via /api/facets on

@@ -2,11 +2,19 @@
 import { useId } from "react";
 import type { RepeatMode } from "@/lib/repeat-mode";
 
-const OPTIONS: { value: RepeatMode; label: string; hint: string }[] = [
-  { value: "default", label: "show everything", hint: "every photo, repeats included" },
-  { value: "never-repeat-animals", label: "never repeat species", hint: "never see the same species twice" },
-  { value: "allow-different-angles", label: "same species, different angles", hint: "multi-angle specimen sets" },
+// Order: high variety → low variety. (high) is the default — most users
+// want unique-species sessions; (low) "everything" is escape hatch.
+const OPTIONS: { value: RepeatMode; label: string; level: "high" | "med" | "low" }[] = [
+  { value: "never-repeat-animals", label: "never repeat the same species", level: "high" },
+  { value: "allow-different-angles", label: "same species, different angles only", level: "med" },
+  { value: "default", label: "include all photos of your chosen bugs", level: "low" },
 ];
+
+const LEVEL_TEXT: Record<"high" | "med" | "low", string> = {
+  high: "high",
+  med: "medium",
+  low: "low",
+};
 
 interface Props {
   value: RepeatMode;
@@ -16,7 +24,7 @@ interface Props {
 export function RepeatModeToggle({ value, onChange }: Props) {
   const baseId = useId();
   return (
-    <div className="home-radio-list" role="radiogroup" aria-label="repeat behavior">
+    <div className="home-radio-list" role="radiogroup" aria-label="novelty">
       {OPTIONS.map((opt) => {
         const optId = `${baseId}-${opt.value}`;
         return (
@@ -34,8 +42,8 @@ export function RepeatModeToggle({ value, onChange }: Props) {
               onChange={() => onChange(opt.value)}
             />
             <span className="home-radio-card-text">
+              <span className="home-radio-level">({LEVEL_TEXT[opt.level]})</span>{" "}
               <span className="home-radio-label">{opt.label}</span>
-              <span className="home-radio-hint">{opt.hint}</span>
             </span>
           </label>
         );

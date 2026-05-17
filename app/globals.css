@@ -1289,7 +1289,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   align-items: flex-start;
   gap: var(--s4);
   cursor: pointer;
-  padding: var(--s3) var(--s4);
+  padding: 0.55rem 0.85rem;
   border-radius: var(--r-3xl);
   border: 1px solid transparent;
   background: transparent;
@@ -1309,9 +1309,20 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   accent-color: var(--accent-pink);
   width: 16px; height: 16px;
 }
-.home-radio-card .home-radio-label { color: var(--text-primary); font-weight: 500; }
-.home-radio-card .home-radio-hint { color: var(--text-tertiary); font-size: 0.85rem; }
-.home-radio-card-text { display: flex; flex-direction: column; gap: var(--s1); }
+/* Phase D — single-line rows. The (level) prefix carries the verbose hint
+   the old second line used to. Each row is ~36px tall instead of ~64px. */
+.home-radio-card-text {
+  display: inline;
+}
+.home-radio-level {
+  color: var(--text-tertiary);
+  font-size: 0.85em;
+  margin-right: 0.25rem;
+}
+.home-radio-card .home-radio-label {
+  color: var(--text-primary);
+  font-weight: 500;
+}
 
 /* Paired CTAs — same pill shape, distinguished by fill vs outline so they
    read as one decision instead of "primary + afterthought." */

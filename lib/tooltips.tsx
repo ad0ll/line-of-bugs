@@ -56,11 +56,11 @@ export const TOOLTIPS = {
     label: "repeat behavior",
     content: (
       <>
-        <p>How sessions handle repeated subjects:</p>
+        <p>How sessions handle repeated species:</p>
         <ul>
-          <li><strong>show everything</strong> — every photo, repeats included</li>
-          <li><strong>never repeat species</strong> — never see the same species twice</li>
-          <li><strong>same species, different angles</strong> — multi-angle specimen sets</li>
+          <li><strong>(high)</strong> never repeat the same species</li>
+          <li><strong>(medium)</strong> same species, different angles only</li>
+          <li><strong>(low)</strong> include all photos of your chosen bugs</li>
         </ul>
       </>
     ),
