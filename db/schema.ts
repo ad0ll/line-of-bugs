@@ -236,6 +236,7 @@ export const speciesMetadata = sqliteTable(
   {
     taxonSpecies: text("taxon_species").primaryKey(),
     hasSketchfabModels: integer("has_sketchfab_models", { mode: "boolean" }),
+    // null = never checked; 0 = checked, found nothing; >0 = raw API hit count.
     sketchfabHitCount: integer("sketchfab_hit_count"),
     sketchfabLastCheckedAt: integer("sketchfab_last_checked_at", { mode: "timestamp" }),
   },
