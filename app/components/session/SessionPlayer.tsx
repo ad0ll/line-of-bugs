@@ -16,7 +16,7 @@ import { EdgePrevNext } from "./EdgePrevNext";
 import { Magnifier } from "./Magnifier";
 import { EndOfSessionOverlay } from "./EndOfSessionOverlay";
 import { SessionTitle } from "./SessionTitle";
-import { SketchfabBrowsePanel, sketchfabQueryKey } from "./SketchfabBrowsePanel";
+import { SketchfabBrowsePanel, fetchSketchfab, sketchfabQueryKey } from "./SketchfabBrowsePanel";
 
 interface Props {
   items: Image[];
@@ -48,26 +48,25 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
 
   const qc = useQueryClient();
 
+  const prefetchSketchfab = useCallback(
+    (sci: string | null | undefined, com: string | null | undefined) => {
+      if (!sci || !com) return;
+      void qc.prefetchQuery({
+        queryKey: sketchfabQueryKey(sci, com),
+        queryFn: ({ signal }) => fetchSketchfab(sci, com, signal),
+        staleTime: 10 * 60_000,
+      });
+    },
+    [qc],
+  );
+
   useEffect(() => {
-    const sci = items[idx]?.taxonSpecies;
-    const com = items[idx]?.commonName;
-    if (!sci || !com) return;
-    // Fire-and-forget; React Query dedupes if the panel later opens with
-    // the same key. prefetchQuery caches the result without subscribing,
-    // so a successful prefetch doesn't re-render this component.
-    void qc.prefetchQuery({
-      queryKey: sketchfabQueryKey(sci, com),
-      queryFn: async ({ signal }) => {
-        const u = new URL("/api/sketchfab/search", window.location.origin);
-        u.searchParams.set("scientific", sci);
-        u.searchParams.set("common", com);
-        const r = await fetch(u.toString(), { signal });
-        if (!r.ok) throw new Error("prefetch failed");
-        return r.json();
-      },
-      staleTime: 10 * 60_000,
-    });
-  }, [items, idx, qc]);
+    prefetchSketchfab(items[idx]?.taxonSpecies, items[idx]?.commonName);
+  }, [items, idx, prefetchSketchfab]);
+
+  useEffect(() => {
+    prefetchSketchfab(items[idx + 1]?.taxonSpecies, items[idx + 1]?.commonName);
+  }, [items, idx, prefetchSketchfab]);
 
   // Track fullscreen state — user may exit via Escape (handled by browser, not us)
   useEffect(() => {

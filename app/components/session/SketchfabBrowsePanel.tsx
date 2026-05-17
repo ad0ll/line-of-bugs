@@ -10,7 +10,7 @@ interface Props {
   onClose: () => void;
 }
 
-async function fetchSketchfab(
+export async function fetchSketchfab(
   scientific: string,
   common: string,
   signal: AbortSignal,
