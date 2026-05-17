@@ -5,8 +5,10 @@ import {
   CuteButterfly,
   CuteClock,
   CuteBug,
+  CuteLadybug,
   CuteRefresh,
   SadBug,
+  WiltedFlower,
 } from "@/app/components/icons";
 
 describe("cute icons", () => {
@@ -15,8 +17,10 @@ describe("cute icons", () => {
     ["CuteButterfly", CuteButterfly],
     ["CuteClock", CuteClock],
     ["CuteBug", CuteBug],
+    ["CuteLadybug", CuteLadybug],
     ["CuteRefresh", CuteRefresh],
     ["SadBug", SadBug],
+    ["WiltedFlower", WiltedFlower],
   ] as const)("renders %s as an img with aria-hidden + size", async (name, Cmp) => {
     const screen = await render(<Cmp size={24} data-testid={`icon-${name}`} />);
     const el = screen.getByTestId(`icon-${name}`);

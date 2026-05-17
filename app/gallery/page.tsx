@@ -3,7 +3,7 @@ import { FilterChipsBar } from './_components/FilterChipsBar';
 import { GalleryGrid } from './_components/GalleryGrid';
 import { HoverZoomMount } from './_components/HoverZoomMount';
 import { parseSubject } from '@/lib/subject';
-import { CuteButterfly } from '@/app/components/icons';
+import { CuteLadybug } from '@/app/components/icons';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -52,7 +52,7 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
     <main className="gallery-page">
       <header className="gallery-header">
         <h1 className="gallery-title">
-          gallery <CuteButterfly size={36} className="gallery-title-icon" loading="eager" />
+          gallery <CuteLadybug size={36} className="gallery-title-icon" loading="eager" />
         </h1>
         {/* Species search lives inside FilterBar (species mode); no
             separate SearchBar — the two were writing to the same `?q=`

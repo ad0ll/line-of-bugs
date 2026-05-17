@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { searchGallery } from '@/lib/queries/gallery';
 import { InfiniteScroller } from './InfiniteScroller';
 import type { SubjectType } from '@/lib/subject';
-import { SadBug } from '@/app/components/icons';
+import { WiltedFlower } from '@/app/components/icons';
 
 export interface GalleryGridProps {
   q: string[];
@@ -25,7 +25,7 @@ export async function GalleryGrid({
   if (initial.totalCount === 0) {
     return (
       <div className="gallery-empty">
-        <SadBug size={56} className="gallery-empty-icon" />
+        <WiltedFlower size={56} className="gallery-empty-icon" />
         <p className="gallery-empty-title">no insects match — try broadening the filters</p>
         <Link href="/gallery" className="gallery-load-more is-inline">
           clear filters

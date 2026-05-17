@@ -10,7 +10,7 @@ import { SocialRow } from "@/app/components/home/SocialRow";
 import { AllOrChipsFilter, type AllOrChipsOption } from "@/app/components/filters/AllOrChipsFilter";
 import { SpeciesAutocomplete } from "@/app/gallery/_components/SpeciesAutocomplete";
 import { Tooltip } from "@/app/components/ui/Tooltip";
-import { CuteClock, CuteBug, CuteRefresh, CuteButterfly, SadBug } from "@/app/components/icons";
+import { CuteLadybug, WiltedFlower } from "@/app/components/icons";
 import { TOOLTIPS } from "@/lib/tooltips";
 import type { RepeatMode } from "@/lib/repeat-mode";
 import { type SubjectType } from "@/lib/subject";
@@ -160,7 +160,6 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
         <div className="home-setup-area">
           <section className="home-section">
             <h2 className="home-section-title">
-              <CuteClock size={26} />
               <Tooltip content={TOOLTIPS.interval.content}>
                 <span>interval per slide</span>
               </Tooltip>
@@ -170,7 +169,6 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
 
           <section className="home-section">
             <h2 className="home-section-title">
-              <CuteBug size={26} />
               <span>filters</span>
               {/* No tooltip — nothing meaningful to explain. */}
             </h2>
@@ -232,7 +230,6 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
 
           <section className="home-section">
             <h2 className="home-section-title">
-              <CuteRefresh size={26} />
               <Tooltip content={TOOLTIPS.repeatMode.content}>
                 <span>novelty</span>
               </Tooltip>
@@ -246,7 +243,7 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
             "counting…"
           ) : poolCount === 0 ? (
             <span className="home-pool-empty">
-              <SadBug size={22} /> no insects match — try broadening the filters
+              <WiltedFlower size={22} /> no insects match — try broadening the filters
             </span>
           ) : (() => {
             const [before, after] = poolCopyTemplate.current.split("{n}");
@@ -273,7 +270,7 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
             disabled={poolCount === 0}
           />
           <a href="/gallery" className="home-gallery-link">
-            <CuteButterfly size={22} className="home-gallery-link-icon" />
+            <CuteLadybug size={22} className="home-gallery-link-icon" />
             browse the gallery <span aria-hidden>→</span>
           </a>
         </div>

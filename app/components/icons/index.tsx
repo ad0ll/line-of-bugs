@@ -36,8 +36,13 @@ function makeIcon(file: string, alt: string) {
 }
 
 export const CuteFlower = makeIcon("cherry_blossom.svg", "cherry blossom");
+export const CuteLadybug = makeIcon("lady_beetle.svg", "ladybug");
+export const WiltedFlower = makeIcon("wilted_flower.svg", "wilted flower");
+
+// Deprecated — kept exporting temporarily so callers can migrate; remove
+// in a follow-up commit once HomeClient + GalleryGrid stop importing them.
 export const CuteButterfly = makeIcon("butterfly.svg", "butterfly");
 export const CuteClock = makeIcon("alarm_clock.svg", "alarm clock");
-export const CuteBug = makeIcon("lady_beetle.svg", "lady beetle");
 export const CuteRefresh = makeIcon("counterclockwise_arrows_button.svg", "refresh");
-export const SadBug = makeIcon("pensive_face.svg", "pensive face");
+export const CuteBug = CuteLadybug;       // backwards-compat alias
+export const SadBug = WiltedFlower;       // backwards-compat alias
