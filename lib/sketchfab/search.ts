@@ -79,7 +79,9 @@ async function runQuery(
   const r = await fetchImpl(url.toString(), {
     headers: { Authorization: `Token ${apiKey}` },
   });
-  if (!r.ok) return [];
+  if (!r.ok) {
+    throw new Error(`Sketchfab search failed: ${r.status} ${r.statusText}`);
+  }
   const data = await r.json() as { results?: RawSketchfabHit[] };
   return data.results ?? [];
 }
@@ -117,8 +119,9 @@ export async function searchSketchfab(opts: SearchOpts): Promise<SketchfabSearch
     });
   }
 
-  // Stable ordering: scientific matches first, then both, then common.
-  const rank = { scientific: 0, both: 1, common: 2 } as const;
+  // Stable ordering: "both" is the strongest signal (matched in both queries),
+  // then scientific-only, then common-only.
+  const rank = { both: 0, scientific: 1, common: 2 } as const;
   hits.sort((a, b) => rank[a.matchedBy] - rank[b.matchedBy]);
 
   return { hits, rawHadResults };

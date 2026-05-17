@@ -47,10 +47,20 @@ describe("searchSketchfab", () => {
     });
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(out.hits.map(h => h.uid).sort()).toEqual(["com456", "sci123"]);
-    expect(out.hits.find(h => h.uid === "sci123")?.matchedBy).toBe("scientific");
-    expect(out.hits.find(h => h.uid === "com456")?.matchedBy).toBe("both");
+    expect(out.hits.map(h => h.uid)).toEqual(["com456", "sci123"]);
+    // com456 has matchedBy="both" (appeared in both queries), so it should be first
+    expect(out.hits[0]?.matchedBy).toBe("both");
+    expect(out.hits[1]?.matchedBy).toBe("scientific");
     expect(out.rawHadResults).toBe(true);
+  });
+
+  it("propagates HTTP errors from Sketchfab", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () =>
+      new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 })
+    ));
+    await expect(
+      searchSketchfab({ scientific: "Apis mellifera", common: "honey bee", apiKey: "bad" })
+    ).rejects.toThrow(/401/);
   });
 
   it("returns empty hits + rawHadResults=false when both queries miss", async () => {
