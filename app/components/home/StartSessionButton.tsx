@@ -16,10 +16,12 @@ interface Props {
    *  filter is in "species" mode, selected tags flow through here
    *  so the session pool respects them. */
   species: string[];
+  /** Externally-driven disabled state (e.g. empty session pool). */
+  disabled?: boolean;
 }
 
 export function StartSessionButton({
-  intervalSec, subjectType, repeatMode, views, lifeStages, sexes, groups, species,
+  intervalSec, subjectType, repeatMode, views, lifeStages, sexes, groups, species, disabled = false,
 }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -56,7 +58,7 @@ export function StartSessionButton({
 
   return (
     <div className="home-start-stack">
-      <button type="button" onClick={start} disabled={pending} className="home-start">
+      <button type="button" onClick={start} disabled={pending || disabled} className="home-start">
         {pending ? "starting…" : "start session"}
       </button>
       {error ? <p className="home-start-error">{error}</p> : null}

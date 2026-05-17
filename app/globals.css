@@ -565,14 +565,7 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   margin-top: var(--s4);
 }
 
-/* Home pool count — live "N bugs in your session pool" caption. */
-.home-pool-count {
-  margin: var(--s3) 0 0 0;
-  font-family: var(--font-mono), monospace;
-  font-size: 0.85rem;
-  color: var(--text-tertiary);
-  font-variant-numeric: tabular-nums;
-}
+/* Home pool count — moved below; canonical rules live further down. */
 
 .gallery-grid {
   display: grid;
@@ -1023,27 +1016,92 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   font-variant-numeric: tabular-nums;
   color: var(--accent-pink);
 }
-.home-ctas {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--s8);
-  margin-top: var(--s6);
-  flex-wrap: wrap;
+/* Home setup area — soft ambient card wrapping the three setup sections
+   (interval, filters, novelty). Two radial gradients give it a subtle
+   pink/lilac glow without a hard box border. */
+.home-setup-area {
+  position: relative;
+  padding: 2rem 1.5rem;
+  margin: 0 auto;
+  max-width: 40rem;
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(ellipse at top, color-mix(in srgb, var(--accent-pink) 5%, transparent), transparent 60%),
+    radial-gradient(ellipse at bottom right, color-mix(in srgb, var(--accent-lilac) 5%, transparent), transparent 60%);
 }
 
-.home-section { display: flex; flex-direction: column; gap: var(--s4); }
-/* Section titles use LILAC to signal structure (not primary action) */
+.home-section {
+  margin: 0 0 1.75rem;
+}
+.home-section:last-child { margin-bottom: 0; }
+
 .home-section-title {
-  font-family: var(--font-display), serif;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-family: var(--font-serif), serif;
   font-style: italic;
-  font-size: 1.15rem;
-  color: var(--accent-lilac);
-  margin: 0;
+  font-size: 1.1rem;
   font-weight: 500;
+  color: var(--accent-lilac);
+  margin: 0 0 0.75rem;
+}
+
+.home-section-title > svg {
+  align-self: center;
+  color: var(--accent-pink);
+  opacity: 0.85;
+}
+
+.home-filter-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.home-filter-row {
   display: flex;
   align-items: center;
-  gap: var(--s3);
+  gap: 0.75rem;
+  min-height: 2.5rem;
+}
+
+.home-filter-row-label {
+  flex: 0 0 5.5rem;
+  font-size: 0.9rem;
+  opacity: 0.75;
+  text-align: right;
+}
+
+.home-filter-row-control {
+  flex: 1;
+  min-width: 0;
+}
+
+.home-pool-count {
+  text-align: center;
+  margin: 1.5rem 0 1rem;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+.home-pool-count-num {
+  color: var(--accent-pink);
+  font-weight: 600;
+}
+.home-pool-empty {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.home-ctas {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem auto 0;
+  flex-wrap: wrap;
 }
 
 /* Home form chips (interval, subject) — touch-friendly variant of .chip.
@@ -1126,28 +1184,36 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 .home-radio-card .home-radio-hint { color: var(--text-tertiary); font-size: 0.85rem; }
 .home-radio-card-text { display: flex; flex-direction: column; gap: var(--s1); }
 
+/* Paired CTAs — same pill shape, distinguished by fill vs outline so they
+   read as one decision instead of "primary + afterthought." */
+.home-start,
+.home-gallery-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.85rem 1.75rem;
+  font-family: var(--font-serif), serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  font-weight: 500;
+  border-radius: 999px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  border: 2px solid var(--accent-pink);
+}
+
 .home-start {
   background: var(--accent-pink);
-  color: var(--text-on-accent);
-  border: none;
-  border-radius: var(--r-pill);
-  padding: var(--s7) var(--s16);
-  font-family: var(--font-display), serif;
-  font-style: italic;
-  font-size: 1.7rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  cursor: pointer;
-  box-shadow: var(--shadow-pink-soft);
-  transition: transform var(--timing-base) var(--ease-out),
-              box-shadow var(--timing-base) var(--ease-out);
-  align-self: center;
+  color: var(--surface-0);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent-pink) 50%, transparent);
 }
-.home-start:hover {
+.home-start:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 14px 32px var(--accent-pink-glow);
+  box-shadow: 0 0 32px color-mix(in srgb, var(--accent-pink) 70%, transparent);
 }
-.home-start:disabled { opacity: 0.55; cursor: default; transform: none; }
+.home-start:disabled { opacity: 0.5; cursor: not-allowed; }
 .home-start-error { color: var(--accent-danger); font-size: 0.9rem; margin: var(--s2) 0 0 0; text-align: center; }
 /* CTA wrapper inside .home-ctas — keeps the error message hugged under
    the button instead of joining the row's flex-baseline. */
@@ -1158,29 +1224,13 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   gap: var(--s4);
 }
 
-/* Secondary CTA — sibling to .home-start in .home-ctas. Same visual
-   weight family (rounded pill, generous tap area) but lilac-outlined
-   so it reads as "the other option," not "afterthought link." */
 .home-gallery-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s2);
-  padding: var(--s5) var(--s10);
-  border-radius: var(--r-pill);
-  border: 1.5px solid var(--accent-pink-border);
-  color: var(--text-primary);
   background: transparent;
-  font-family: var(--font-display), serif;
-  font-style: italic;
-  font-size: 1.05rem;
-  letter-spacing: 0.01em;
-  text-decoration: none;
-  transition: background var(--timing-base), border-color var(--timing-base);
+  color: var(--accent-pink);
 }
 .home-gallery-link:hover {
-  background: var(--accent-pink-soft);
-  border-color: var(--accent-pink);
-  color: var(--accent-pink);
+  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--accent-pink) 12%, transparent);
 }
 
 /* ════════════════════════════════════════════════════════════
