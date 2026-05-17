@@ -10,7 +10,7 @@ import { SocialRow } from "@/app/components/home/SocialRow";
 import { AllOrChipsFilter, type AllOrChipsOption } from "@/app/components/filters/AllOrChipsFilter";
 import { SpeciesAutocomplete } from "@/app/gallery/_components/SpeciesAutocomplete";
 import { Tooltip } from "@/app/components/ui/Tooltip";
-import { CuteClock, CuteBug, CuteRefresh, SadBug } from "@/app/components/icons";
+import { CuteClock, CuteBug, CuteRefresh, CuteButterfly, SadBug } from "@/app/components/icons";
 import { TOOLTIPS } from "@/lib/tooltips";
 import type { RepeatMode } from "@/lib/repeat-mode";
 import { type SubjectType } from "@/lib/subject";
@@ -71,6 +71,16 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
       router.replace(target, { scroll: false });
     });
   }, [intervalSec, novelty, subjects, views, life, sexes, groups, species, pathname, router]);
+
+  // Console message for the curious — only runs once per mount in production.
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log(
+      "%c🐞 line of bugs %c· thanks for poking around. prs welcome → github.com/ad0ll/line-of-bugs",
+      "color:#FF6EC7;font-weight:bold;font-size:14px",
+      "color:#A78BFA",
+    );
+  }, []);
 
   // Faceted snapshot, novelty-aware.
   const [facets, setFacets] = useState<FacetSnapshot>(initialFacets);
@@ -137,7 +147,7 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
         <div className="home-setup-area">
           <section className="home-section">
             <h2 className="home-section-title">
-              <CuteClock size={18} />
+              <CuteClock size={26} />
               <Tooltip content={TOOLTIPS.interval.content}>
                 <span>interval per slide</span>
               </Tooltip>
@@ -147,7 +157,7 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
 
           <section className="home-section">
             <h2 className="home-section-title">
-              <CuteBug size={18} />
+              <CuteBug size={26} />
               <span>filters</span>
               {/* No tooltip — nothing meaningful to explain. */}
             </h2>
@@ -209,7 +219,7 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
 
           <section className="home-section">
             <h2 className="home-section-title">
-              <CuteRefresh size={18} />
+              <CuteRefresh size={26} />
               <Tooltip content={TOOLTIPS.repeatMode.content}>
                 <span>novelty</span>
               </Tooltip>
@@ -227,7 +237,7 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
             </span>
           ) : (
             <>
-              <span className="home-pool-count-num">{poolCount.toLocaleString()}</span> bugs in your session pool
+              <span key={poolCount} className="home-pool-count-num">{poolCount.toLocaleString()}</span> bugs in your session pool
             </>
           )}
         </p>
@@ -245,6 +255,7 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
             disabled={poolCount === 0}
           />
           <a href="/gallery" className="home-gallery-link">
+            <CuteButterfly size={22} className="home-gallery-link-icon" />
             browse the gallery <span aria-hidden>→</span>
           </a>
         </div>

@@ -42,8 +42,17 @@
 }
 
 @keyframes softPulse {
-  0%, 100% { box-shadow: 0 0 0 0 transparent; }
-  50% { box-shadow: 0 0 16px 2px color-mix(in srgb, var(--accent-pink) 40%, transparent); }
+  /* No transform — geometry changes break Playwright stability checks and
+     can interfere with click targeting. Glow + brightness give the
+     "breathing" feeling without moving the chip's bounding box. */
+  0%, 100% {
+    box-shadow: 0 0 0 0 transparent;
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 22px 3px color-mix(in srgb, var(--accent-pink) 55%, transparent);
+    filter: brightness(1.08);
+  }
 }
 
 .chip.open {
