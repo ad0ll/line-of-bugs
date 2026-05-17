@@ -641,7 +641,45 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 }
 .grid-item-name { display: block; font-family: var(--font-sans), system-ui, sans-serif; font-size: 0.9rem; color: var(--text-primary); }
 .grid-item-species { display: block; font-family: var(--font-display), serif; font-style: italic; font-size: 0.8rem; color: var(--text-tertiary); }
-.grid-item.skeleton-tile { aspect-ratio: 1 / 1; background: var(--surface-1); animation: pulse 1.4s ease-in-out infinite; }
+.grid-item.skeleton-tile {
+  aspect-ratio: 1 / 1;
+  background: var(--surface-1);
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+}
+.grid-item.skeleton-tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--accent-pink) 10%, transparent) 50%,
+    transparent 100%
+  );
+  animation: shimmerSweep 1.6s ease-in-out infinite;
+}
+@keyframes shimmerSweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .grid-item.skeleton-tile::after { animation: none; opacity: 0.5; }
+}
+
+/* Gallery title — cute butterfly icon next to "gallery" */
+.gallery-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.gallery-title-icon {
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.gallery-title:hover .gallery-title-icon {
+  transform: translateY(-2px) rotate(-8deg);
+}
 
 /* Order badge — inline in meta area, no overlay */
 .order-badge {
