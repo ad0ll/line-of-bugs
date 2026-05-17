@@ -58,51 +58,6 @@
   .badge.poor_contrast { background: #2d3a4a; color: #a8c8e6; }
   .metrics { font-size: 11px; color: #888; font-family: 'JetBrains Mono', monospace; margin: 4px 0; line-height: 1.5; }
 
-  /* Flag buttons — multi-select. Each describes a property of the image.
-     Fixed grid-auto-rows so every button is the same height regardless of
-     whether its text wraps to 2-3 lines or fits on one. */
-  .flags { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 52px; gap: 4px; margin-top: 8px; }
-  .flags button {
-    padding: 4px; border: 1px solid #444; background: #1a1820;
-    color: #aaa; border-radius: 4px; cursor: pointer;
-    font-size: 11px; font-weight: 400;
-    /* Some flag names (bbox-wrong_*, subject-blurred_*) wrap to 2-3 lines.
-       overflow-wrap:anywhere lets the browser break at hyphens / underscores. */
-    overflow-wrap: anywhere; line-height: 1.25;
-    /* Center the (possibly multi-line) label inside the fixed-height cell. */
-    display: flex; align-items: center; justify-content: center; text-align: center;
-    transition: background 0.08s, border-color 0.08s, color 0.08s;
-  }
-  .flags button:hover { color: #f5f5f5; border-color: #666; }
-  /* System-suggested (pre-selected, unconfirmed): sky-blue. */
-  .flags button.suggested {
-    border-color: #67D4E6;
-    color: #67D4E6;
-    background: rgba(103, 212, 230, 0.10);
-    font-weight: 600;
-  }
-  /* User-confirmed / user-toggled-on: amber. */
-  .flags button.active { background: #f59e0b; color: #0d0c10; border-color: #f59e0b; font-weight: 600; }
-  .flags button.unsure-button.active { background: #28252e; color: #aaa; border-color: #666; }
-
-  /* Mutually-exclusive original-good / cropped-good row.
-     Each can be system-suggested (sky-blue) or user-confirmed (amber). */
-  .prefs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-top: 4px; }
-  .prefs button {
-    padding: 5px 4px; border: 1px solid #444; background: #1a1820;
-    color: #aaa; border-radius: 4px; cursor: pointer;
-    font-size: 11px; font-weight: 400; white-space: nowrap;
-    transition: background 0.08s, border-color 0.08s, color 0.08s;
-  }
-  .prefs button:hover { color: #f5f5f5; border-color: #666; }
-  .prefs button.suggested {
-    border-color: #67D4E6;
-    color: #67D4E6;
-    background: rgba(103, 212, 230, 0.10);
-    font-weight: 600;
-  }
-  .prefs button.active { background: #f59e0b; color: #0d0c10; border-color: #f59e0b; font-weight: 600; }
-
   /* Review-row: mark-reviewed + unsure. Mark-reviewed gets full width. */
   .review-row { display: grid; grid-template-columns: 3fr 1fr; gap: 4px; margin-top: 8px; }
   .review-row button {
@@ -114,6 +69,53 @@
   .review-row button:hover { color: #f5f5f5; border-color: #666; }
   .review-row button.mark-reviewed.active { background: #2d4a2d; color: #a8e6a8; border-color: #4a7a4a; }
   .review-row button.unsure-button.active { background: #28252e; color: #aaa; border-color: #666; }
+
+  /* 4-column label grid (Phase 2a) */
+  .label-columns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+  .col { border: 1px solid #28252e; border-radius: 6px; padding: 6px; display: flex; flex-direction: column; gap: 3px; }
+  .col-header { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #aaa; margin-bottom: 2px; }
+  .col.col1 { border-color: rgba(74,198,74,0.3); }
+  .col.col1 .col-header { color: #4ac64a; }
+  .col.col1 button.active { background: #4ac64a; color: #0d0c10; border-color: #4ac64a; }
+  .col.col2 { border-color: rgba(245,158,11,0.3); }
+  .col.col2 .col-header { color: #f59e0b; }
+  .col.col2 button.active { background: #f59e0b; color: #0d0c10; border-color: #f59e0b; }
+  .col.col3 { border-color: rgba(103,212,230,0.3); }
+  .col.col3 .col-header { color: #67D4E6; }
+  .col.col3 button.active { background: #67D4E6; color: #0d0c10; border-color: #67D4E6; }
+  .col.col4 { border-color: rgba(255,110,199,0.3); }
+  .col.col4 .col-header { color: #FF6EC7; }
+  .col.col4 button.active { background: #FF6EC7; color: #0d0c10; border-color: #FF6EC7; }
+  .col button {
+    padding: 4px; border: 1px solid #444; background: #1a1820;
+    color: #aaa; border-radius: 4px; cursor: pointer;
+    font-size: 10px; font-weight: 400; overflow-wrap: anywhere; line-height: 1.25;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    min-height: 36px;
+    transition: background 0.08s, border-color 0.08s, color 0.08s;
+  }
+  .col button:hover { color: #f5f5f5; border-color: #666; }
+  .col button.suggested { border-color: #67D4E6; color: #67D4E6; background: rgba(103,212,230,0.10); font-weight: 600; }
+  .col.col1 button.suggested { border-color: #4ac64a; color: #4ac64a; background: rgba(74,198,74,0.10); }
+  .col.col2 button.suggested { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.10); }
+  .col.col4 button.suggested { border-color: #FF6EC7; color: #FF6EC7; background: rgba(255,110,199,0.10); }
+  .col button.informational { font-style: italic; opacity: 0.75; }
+  /* Bbox-only mode: de-emphasize col2-4 */
+  body.bbox-only-mode .col.col2,
+  body.bbox-only-mode .col.col3,
+  body.bbox-only-mode .col.col4 { opacity: 0.4; pointer-events: none; }
+  /* Stale label warning */
+  .stale-warning { background: rgba(245,158,11,0.15); border: 1px solid #f59e0b; border-radius: 4px;
+    color: #f59e0b; font-size: 11px; padding: 4px 8px; margin-bottom: 6px; display: none; }
+  .stale-warning.visible { display: block; }
+  /* Per-bbox text-label badge */
+  .bbox-overlay .box-label { position: absolute; top: 0; left: 0;
+    background: rgba(0,0,0,0.7); color: #f5f5f5;
+    font: 600 9px/1 'JetBrains Mono', monospace;
+    padding: 2px 4px; border-radius: 0 0 3px 0; pointer-events: none;
+    white-space: nowrap; max-width: 90%; overflow: hidden; text-overflow: ellipsis; }
+  .bbox-overlay .box.box-negative { border-color: #ef4444; }
+  .bbox-overlay .box-secondary.box-negative { border-color: #f97316; }
 
   /* Zoom popup */
   #zoomPopup {
@@ -159,76 +161,58 @@
   <label>Variant <select id="variant"><option>{{ variant }}</option></select></label>
   <label>Source <select id="source"><option value="all">all</option>{% for s in sources %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></label>
   <label>Predicted <select id="quality"><option value="all">all</option><option value="good">good</option><option value="tight">tight</option><option value="wide">wide</option><option value="no_bug">no_bug</option><option value="bug_too_small">bug_too_small</option><option value="multi_bug">multi_bug</option><option value="poor_contrast">poor_contrast</option></select></label>
-  <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="agreed">agreed with system</option><option value="edited">user edited labels</option><option value="flagged">any flag</option>
-        <option value="pref-original">marked original-good</option>
-        <option value="pref-cropped">marked cropped-good</option></select></label>
+  <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="flagged">any flag</option></select></label>
   <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="random">random</option></select></label>
+  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+    <input type="checkbox" id="bboxOnlyMode" style="width:14px;height:14px;">
+    <span style="font-size:13px;color:#f59e0b;font-weight:600;">Bbox-Only Mode</span>
+  </label>
   <span class="totals" id="totals">{{ total }} images</span>
   <span id="saveStatus" title="Each click is saved to data/cache/labels.json on the server"></span>
 </header>
 
 <div class="help">
-  <b>What to do:</b> the system pre-selects the labels it thinks apply (outlined in <span style="color:#67D4E6">sky blue</span>). If they look right, click <code>✓ mark reviewed</code>. If not, toggle labels to correct — any edit auto-marks the image reviewed. Labels describe <em>properties</em>, not actions; they're multi-select.
-  <br><b>Detection issues:</b>
-  <code>bbox-wrong_correct-subject</code> right bug, wrong box position ·
-  <code>bbox-wrong_better-subject-other-bbox</code> one of the cyan secondaries is a better choice ·
-  <code>no-bug</code> no insect in the image at all ·
-  <code>bug-too-small</code> bug is correctly boxed but too tiny for drawing
-  <br><b>Image properties:</b>
-  <code>subject-blurred_partially-usable</code> some blur but still drawable ·
-  <code>subject-blurred_unusable</code> too blurred to use (blurred background alone doesn't count) ·
-  <code>poor-contrast</code> bug nearly indistinguishable from background ·
-  <code>multi-bug</code> more than one insect ·
-  <code>subject-clipped</code> body runs off the frame edge ·
-  <code>other-bad</code> some other reason this image is unusable
-  <br><b>Crop quality:</b>
-  <code>crop-too-tight</code> proposed crop clips the bug ·
-  <code>crop-too-loose</code> too much background in proposed crop
-  <br><b>Positive labels</b> (mutually exclusive, applies when nothing else does):
-  <code>★ original-good</code> bug fills enough of the original frame to draw at full size ·
-  <code>★ cropped-good</code> bug is small in the original but the crop rescues it.
-  <br><b>Skip:</b> <code>? unsure</code> can't decide — comes back later.
-  <br><span style="color:#666">Hover any image to zoom. Every click writes to <code>data/cache/labels.json</code> on the server — refresh-safe, port-change-safe.</span>
+  <b>4-column label vocabulary:</b>
+  <span style="color:#4ac64a">Col 1 BBox:</span> Did the detector pick the right region? (human-only) ·
+  <span style="color:#f59e0b">Col 2 BBox Content:</span> What is inside the bbox? (rule labeler pre-fills) ·
+  <span style="color:#67D4E6">Col 3 Mask Rule:</span> Mask-derived quality (rule labeler pre-fills) ·
+  <span style="color:#FF6EC7">Col 4 ML Label:</span> Catch-all (human-only today)
+  <br><b>System-suggested</b> (rule labeler): shown outlined in column color. <b>Confirmed</b>: filled amber/green/cyan/pink. Click to toggle.
+  <br><span style="color:#666">Bbox-Only Mode: focus Col 1 — N/Enter commits Col 1 and auto-accepts rule suggestions for Cols 2-4. Hover any image to zoom. Every click writes to <code>data/cache/labels.json</code>.</span>
 </div>
 
 <div class="grid" id="grid"></div>
 
 <script>
 const DATA = {{ data_json }};
-// Flag buttons (multi-select). original-good / cropped-good live in their own
-// mutually-exclusive row and aren't in this list.
-const FLAGS = [
-  "bbox-wrong_correct-subject", "bbox-wrong_better-subject-other-bbox",
-  "no-bug", "bug-too-small",
-  "subject-blurred_partially-usable", "subject-blurred_unusable",
-  "poor-contrast", "multi-bug",
-  "subject-clipped", "other-bad",
-  "crop-too-tight", "crop-too-loose",
+
+// 4-column label vocabulary (Phase 2a)
+const COL1_BUTTONS = [
+  { id: "bbox_correct-subject_not-clipped", label: "Correct\u00a0Not\u00a0Clipped", tip: "Bbox on right bug, full body. DEFAULT \u2014 gate-pass." },
+  { id: "bbox_correct-subject_clipped",     label: "Correct\u00a0Clipped",          tip: "Right bug but body cut off by frame or bbox edge." },
+  { id: "bbox_wrong-subject",               label: "Wrong\u00a0Subject",            tip: "Bbox on wrong subject (flower, leaf, different bug)." },
 ];
-
-const FLAG_TITLES = {
-  "bbox-wrong_correct-subject":          "Pink primary bbox is on the right bug but positioned wrong (clipped, off-center, too tight/loose around the body)",
-  "bbox-wrong_better-subject-other-bbox": "One of the CYAN secondary boxes is on a better subject than the pink primary — system picked the wrong detection",
-  "no-bug":           "There's no insect in this image at all",
-  "bug-too-small":    "Bug is correctly identified but too tiny for drawing (even after crop)",
-  "subject-blurred_partially-usable": "Some blur on the subject, but enough is in focus to be drawable. Blurred background alone doesn't count.",
-  "subject-blurred_unusable":         "Subject is too blurred to draw — out of focus / camera shake on the bug body. Blurred background alone doesn't count.",
-  "poor-contrast":    "Bug nearly indistinguishable from background (camouflaged, dim)",
-  "multi-bug":        "More than one insect in the image",
-  "subject-clipped":  "Bug's body is cut off by the frame edge",
-  "other-bad":        "Bad for drawing for some other reason",
-  "crop-too-tight":   "Proposed crop cuts off part of the bug",
-  "crop-too-loose":   "Proposed crop has too much background",
-};
-
-// Suggested-label → preference key for the mutually-exclusive pref row.
-const PREF_LABELS = { "original-good": "original", "cropped-good": "cropped" };
-
-// Groups of flags where picking one clears the others. Used for the two
-// subject-blurred severities (partially-usable vs unusable can't both apply).
-const FLAG_MUTEX_GROUPS = [
-  ["subject-blurred_partially-usable", "subject-blurred_unusable"],
+const COL2_COUNT_BUTTONS = [
+  { id: "bbox-content_single",                  label: "Single",              tip: "One bug inside bbox. DEFAULT." },
+  { id: "bbox-content_no-bug",                  label: "No\u00a0Bug",         tip: "No insect in bbox at all." },
+  { id: "bbox-content_bbox-multibug_unusable",  label: "Multibug\u00a0Unusable", tip: ">=2 bug centers inside bbox \u2014 system auto-set." },
+  { id: "bbox-content_bbox-multibug_usable",    label: "Multibug\u00a0Usable",   tip: ">=2 bugs but still drawable (human override)." },
 ];
+const COL2_FLAG_BUTTONS = [
+  { id: "bbox-content_subject-too-small", label: "Too\u00a0Small",   tip: "Bug bbox long-edge < 512px.", informational: false },
+  { id: "bbox-content_image-multi-bug",   label: "Image\u00a0Multi", tip: ">=2 distinct detections in image \u2014 informational, not a gate signal.", informational: true },
+];
+const COL3_BUTTONS = [
+  { id: "mask_poor-contrast", label: "Poor\u00a0Contrast", tip: "Bug nearly indistinguishable from background." },
+  { id: "mask_blur_unusable", label: "Blur\u00a0Unusable",  tip: "Subject too blurred to draw. Mutex with Blur Usable." },
+  { id: "mask_blur_usable",   label: "Blur\u00a0Usable",    tip: "Some blur, still drawable. Mutex with Blur Unusable." },
+];
+const COL4_BUTTONS = [
+  { id: "ml_other-bad", label: "Other\u00a0Bad", tip: "Bad for drawing for some other reason." },
+];
+const COL2_COUNT_IDS = new Set(COL2_COUNT_BUTTONS.map(b => b.id));
+const COL3_BLUR_MUTEX = ["mask_blur_unusable", "mask_blur_usable"];
+const NEGATIVE_CLASSES = new Set(["flower", "leaf", "stem", "rock"]);
 
 // Source of truth: server-owned `data/cache/labels.json`. We mirror it
 // in-memory here; every mutation POSTs the full dict back. localStorage
@@ -237,7 +221,8 @@ let LABELS = {};
 let savePending = 0;
 
 function _emptyLabel() {
-  return { flags: [], preference: null, unsure: false, reviewed_at: null };
+  return { col1: null, col2_count: null, col2_flags: [], col3: [], col4: [],
+           unsure: false, reviewed_at: null, user_edited: false, variant_tag: null };
 }
 
 function notifySaveError(msg) {
@@ -297,31 +282,41 @@ async function saveLabelsToServer() {
   updateSaveStatus();
 }
 
-// Has the user actually started editing this image? Decides whether the
-// card shows the system suggestion (sky-blue) or the user's choices (amber).
+// Has the user actually started editing this image?
 function isUserEdited(lbl) {
-  return !!(lbl && (lbl.user_edited || (lbl.flags && lbl.flags.length > 0) || lbl.preference || lbl.unsure));
+  return !!(lbl && (lbl.user_edited || lbl.col1 || lbl.col2_count ||
+    (lbl.col2_flags && lbl.col2_flags.length > 0) ||
+    (lbl.col3 && lbl.col3.length > 0) ||
+    (lbl.col4 && lbl.col4.length > 0) || lbl.unsure));
 }
 
 // On first user interaction, "materialize" the system suggestion into the
-// user's flags / preference. After this, the suggestion is no longer shown
-// in sky-blue; the user is editing their own copy.
-function _ensureMaterialized(cur, suggested) {
+// user's fields. After this, the suggestion is no longer shown in outlined
+// column color; the user is editing their own copy.
+function _ensureMaterialized(cur, r) {
   if (cur.user_edited) return;
-  if ((cur.flags && cur.flags.length > 0) || cur.preference || cur.unsure) {
-    cur.user_edited = true;
-    return;
-  }
-  for (const s of (suggested || [])) {
-    if (s in PREF_LABELS) cur.preference = PREF_LABELS[s];
-    else if (!cur.flags.includes(s)) cur.flags.push(s);
+  for (const s of (r.suggested_labels || [])) {
+    if (COL2_COUNT_IDS.has(s)) { cur.col2_count = cur.col2_count || s; }
+    else if (COL2_FLAG_BUTTONS.some(b => b.id === s)) {
+      if (!cur.col2_flags.includes(s)) cur.col2_flags.push(s);
+    } else if (COL3_BUTTONS.some(b => b.id === s)) {
+      if (!cur.col3.includes(s)) cur.col3.push(s);
+    }
   }
   cur.user_edited = true;
 }
 
+function _rowFor(id) {
+  for (const r of DATA) if (r.image_id === id) return r;
+  return { suggested_labels: [], variant: null };
+}
+
 function _persist(id, cur) {
   cur.reviewed_at = Date.now();
-  if (!cur.user_edited && cur.flags.length === 0 && !cur.preference && !cur.unsure) {
+  cur.variant_tag = (_rowFor(id).variant) || "grounding_dino__insectsam";
+  if (!cur.user_edited && !cur.col1 && !cur.col2_count &&
+      cur.col2_flags.length === 0 && cur.col3.length === 0 &&
+      cur.col4.length === 0 && !cur.unsure) {
     delete LABELS[id];
   } else {
     LABELS[id] = cur;
@@ -330,75 +325,73 @@ function _persist(id, cur) {
   saveLabelsToServer();
 }
 
-function _suggestedFor(id) {
-  for (const r of DATA) if (r.image_id === id) return r.suggested_labels || [];
-  return [];
-}
-
-function toggleFlag(id, flag) {
+function setCol1(id, btnId) {
   const cur = LABELS[id] || _emptyLabel();
-  _ensureMaterialized(cur, _suggestedFor(id));
-  const i = cur.flags.indexOf(flag);
-  if (i >= 0) {
-    cur.flags.splice(i, 1);
-  } else {
-    // If this flag is in a mutex group, clear the others before adding.
-    for (const group of FLAG_MUTEX_GROUPS) {
-      if (group.includes(flag)) {
-        cur.flags = cur.flags.filter(f => !group.includes(f) || f === flag);
-        break;
-      }
-    }
-    cur.flags.push(flag);
-  }
+  _ensureMaterialized(cur, _rowFor(id));
+  cur.col1 = (cur.col1 === btnId) ? null : btnId;
   cur.unsure = false;
   _persist(id, cur);
 }
-
-function togglePreference(id, kind) {
+function setCol2Count(id, btnId) {
   const cur = LABELS[id] || _emptyLabel();
-  _ensureMaterialized(cur, _suggestedFor(id));
-  cur.preference = (cur.preference === kind) ? null : kind;
+  _ensureMaterialized(cur, _rowFor(id));
+  cur.col2_count = (cur.col2_count === btnId) ? null : btnId;
   cur.unsure = false;
   _persist(id, cur);
 }
-
+function toggleCol2Flag(id, flagId) {
+  const cur = LABELS[id] || _emptyLabel();
+  _ensureMaterialized(cur, _rowFor(id));
+  const i = cur.col2_flags.indexOf(flagId);
+  if (i >= 0) cur.col2_flags.splice(i, 1); else cur.col2_flags.push(flagId);
+  cur.unsure = false;
+  _persist(id, cur);
+}
+function toggleCol3(id, flagId) {
+  const cur = LABELS[id] || _emptyLabel();
+  _ensureMaterialized(cur, _rowFor(id));
+  if (COL3_BLUR_MUTEX.includes(flagId))
+    cur.col3 = cur.col3.filter(f => !COL3_BLUR_MUTEX.includes(f));
+  const i = cur.col3.indexOf(flagId);
+  if (i >= 0) cur.col3.splice(i, 1); else cur.col3.push(flagId);
+  cur.unsure = false;
+  _persist(id, cur);
+}
+function toggleCol4(id, flagId) {
+  const cur = LABELS[id] || _emptyLabel();
+  _ensureMaterialized(cur, _rowFor(id));
+  const i = cur.col4.indexOf(flagId);
+  if (i >= 0) cur.col4.splice(i, 1); else cur.col4.push(flagId);
+  cur.unsure = false;
+  _persist(id, cur);
+}
 function setUnsure(id) {
   const cur = LABELS[id] || _emptyLabel();
   cur.user_edited = true;
   cur.unsure = !cur.unsure;
-  if (cur.unsure) { cur.flags = []; cur.preference = null; }
+  if (cur.unsure) { cur.col1 = null; cur.col2_count = null; cur.col2_flags = []; cur.col3 = []; cur.col4 = []; }
   _persist(id, cur);
 }
-
 function markReviewed(id) {
   const cur = LABELS[id] || _emptyLabel();
-  if (cur.reviewed_at && cur.user_edited) {
-    delete LABELS[id];
-    render();
-    saveLabelsToServer();
-    return;
-  }
-  _ensureMaterialized(cur, _suggestedFor(id));
+  if (cur.reviewed_at && cur.user_edited) { delete LABELS[id]; render(); saveLabelsToServer(); return; }
+  _ensureMaterialized(cur, _rowFor(id));
   _persist(id, cur);
 }
 
-function fmtPct(n) { return n === null || n === undefined ? "—" : (n * 100).toFixed(1) + "%"; }
-function fmtNum(n, d) { return n === null || n === undefined ? "—" : n.toFixed(d); }
+function fmtPct(n) { return n === null || n === undefined ? "\u2014" : (n * 100).toFixed(1) + "%"; }
+function fmtNum(n, d) { return n === null || n === undefined ? "\u2014" : n.toFixed(d); }
 
-// Effective view for rendering: if user edited, use their data; else use the
-// system suggestion. Returned object has {flags, preference, fromSuggestion}.
-function effectiveLabels(r, lbl) {
-  if (isUserEdited(lbl)) {
-    return { flags: lbl.flags || [], preference: lbl.preference || null, fromSuggestion: false };
-  }
-  const flags = [];
-  let preference = null;
-  for (const s of (r.suggested_labels || [])) {
-    if (s in PREF_LABELS) preference = PREF_LABELS[s];
-    else flags.push(s);
-  }
-  return { flags, preference, fromSuggestion: true };
+// Per-bbox phrase helpers
+function _isNegativePhrase(phrase) {
+  if (!phrase) return false;
+  const s = phrase.startsWith("a ") ? phrase.slice(2) : phrase.startsWith("an ") ? phrase.slice(3) : phrase;
+  return NEGATIVE_CLASSES.has(s.toLowerCase());
+}
+function _phraseBadge(phrase, conf) {
+  if (!phrase && conf == null) return "";
+  const parts = [phrase, (conf != null ? conf.toFixed(2) : null)].filter(Boolean);
+  return '<div class="box-label">' + parts.join("\u00b7") + '</div>';
 }
 
 function render() {
@@ -414,11 +407,12 @@ function render() {
       const lbl = labels[r.image_id];
       if (rf === "unreviewed") return !lbl || !lbl.reviewed_at;
       if (rf === "reviewed")   return lbl && lbl.reviewed_at;
-      if (rf === "agreed")     return lbl && lbl.reviewed_at && !lbl.user_edited;
-      if (rf === "edited")     return lbl && lbl.user_edited;
-      if (rf === "flagged")    return lbl && lbl.flags && lbl.flags.length > 0;
-      if (rf === "pref-original") return lbl && lbl.preference === "original";
-      if (rf === "pref-cropped")  return lbl && lbl.preference === "cropped";
+      if (rf === "flagged")    return lbl && (
+        lbl.col1 || lbl.col2_count ||
+        (lbl.col2_flags && lbl.col2_flags.length > 0) ||
+        (lbl.col3 && lbl.col3.length > 0) ||
+        (lbl.col4 && lbl.col4.length > 0)
+      );
       return true;
     });
   }
@@ -433,76 +427,131 @@ function render() {
   document.getElementById("totals").textContent = rows.length + " of " + DATA.length + " images";
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
+
+  const IMPLICIT_VARIANT = "grounding_dino__insectsam";
+
   for (const r of rows) {
     const lbl = labels[r.image_id] || _emptyLabel();
-    const eff = effectiveLabels(r, lbl);
     const reviewed = !!lbl.reviewed_at;
-    const flagged = eff.flags.length > 0;
+    const hasAnyFlag = !!(lbl.col1 || lbl.col2_count ||
+      (lbl.col2_flags && lbl.col2_flags.length > 0) ||
+      (lbl.col3 && lbl.col3.length > 0) ||
+      (lbl.col4 && lbl.col4.length > 0));
     const div = document.createElement("div");
-    div.className = "card" + (reviewed ? " reviewed" : "") + (flagged ? " flagged" : "");
+    div.className = "card" + (reviewed ? " reviewed" : "") + (hasAnyFlag ? " flagged" : "");
+    div.dataset.imageId = r.image_id;
 
+    // Stale-label warning
+    const rowVariant = r.variant || IMPLICIT_VARIANT;
+    const lblVariant = lbl.variant_tag || IMPLICIT_VARIANT;
+    const isStale = !!(lbl.reviewed_at && lblVariant !== rowVariant);
+    const staleHTML = isStale
+      ? '<div class="stale-warning visible">\u26a0 Label set against variant <b>' + lblVariant + '</b>; current is <b>' + rowVariant + '</b> \u2014 re-review recommended.</div>'
+      : '<div class="stale-warning"></div>';
+
+    // Build primary bbox with phrase overlay
+    const primaryPhrase = r.text_label || null;
+    const primaryConf = r.text_label_score != null ? r.text_label_score : null;
+    const primaryNegCls = _isNegativePhrase(primaryPhrase) ? " box-negative" : "";
     const primaryBoxHTML = r.bbox_x !== null
-      ? '<div class="box" style="left:' + (r.bbox_x*100) + '%;top:' + (r.bbox_y*100) + '%;width:' + (r.bbox_w*100) + '%;height:' + (r.bbox_h*100) + '%"></div>'
+      ? '<div class="box' + primaryNegCls + '" style="left:' + (r.bbox_x*100) + '%;top:' + (r.bbox_y*100) + '%;width:' + (r.bbox_w*100) + '%;height:' + (r.bbox_h*100) + '%">' +
+        _phraseBadge(primaryPhrase, primaryConf) + '</div>'
       : '';
-    // Secondary bbox tuple is [x, y, w, h, conf?]. conf added 2026-05-15;
-    // older sidecars without conf still render (badge just shows empty).
-    const secondaryBoxHTML = (r.secondary_bboxes || []).map(b => {
-      const conf = (b.length >= 5 && b[4] != null) ? b[4].toFixed(2) : '';
-      return '<div class="box-secondary" data-conf="' + conf + '" style="left:' + (b[0]*100) + '%;top:' + (b[1]*100) + '%;width:' + (b[2]*100) + '%;height:' + (b[3]*100) + '%"></div>';
+
+    // Secondary bboxes: [x, y, w, h, conf] format from build_html.py
+    // secondary_phrases: parallel list of phrase strings
+    const secPhrases = r.secondary_phrases || [];
+    const secondaryBoxHTML = (r.secondary_bboxes || []).map((b, i) => {
+      const conf = (b.length >= 5 && b[4] != null) ? b[4] : null;
+      const phrase = secPhrases[i] || null;
+      const negCls = _isNegativePhrase(phrase) ? " box-negative" : "";
+      const confStr = conf != null ? conf.toFixed(2) : '';
+      return '<div class="box-secondary' + negCls + '" data-conf="' + confStr + '" style="left:' + (b[0]*100) + '%;top:' + (b[1]*100) + '%;width:' + (b[2]*100) + '%;height:' + (b[3]*100) + '%">' +
+        _phraseBadge(phrase, conf) + '</div>';
     }).join('');
+
     const boxHTML = primaryBoxHTML + secondaryBoxHTML;
     const cropHTML = r.crop_path
       ? '<img src="' + r.crop_path + '" alt="">'
-      : '<div class="nocrop">no crop · ' + r.framing_quality + '</div>';
+      : '<div class="nocrop">no crop \u00b7 ' + r.framing_quality + '</div>';
 
-    // Flag buttons. Pre-selected (system) → sky-blue. User-confirmed → amber.
-    const flagButtons = FLAGS.map(f => {
-      const isOn = eff.flags.indexOf(f) >= 0;
-      const cls = !isOn ? "" : (eff.fromSuggestion ? "suggested" : "active");
-      const title = FLAG_TITLES[f] + (cls === "suggested" ? " · system suggests this — already selected, click to remove" : "");
-      return '<button title="' + title + '" class="' + cls + '" onclick="toggleFlag(\'' + r.image_id + '\',\'' + f + '\')">' + f + '</button>';
+    // 4-column buttons
+    const suggested = r.suggested_labels || [];
+    const userEdited = isUserEdited(lbl);
+
+    const col1Active = lbl.col1 || null;
+    const col1HTML = COL1_BUTTONS.map(b => {
+      const cls = col1Active === b.id ? "active" : "";
+      return '<button class="' + cls + '" title="' + b.tip + '" onclick="setCol1(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
     }).join('');
 
-    // Preference row — mutually exclusive original-good / cropped-good.
-    const prefBtn = (kind, label, tip) => {
-      const on = eff.preference === kind;
-      const cls = !on ? "" : (eff.fromSuggestion ? "suggested" : "active");
-      const fullTip = tip + (cls === "suggested" ? " · system suggests this — already selected" : "");
-      return '<button title="' + fullTip + '" class="' + cls + '" onclick="togglePreference(\'' + r.image_id + '\', \'' + kind + '\')">★ ' + label + '</button>';
-    };
-    const prefHTML =
-      prefBtn("original", "original-good", "Bug fills enough of the original frame to draw at full size. Mutually exclusive with cropped-good.") +
-      prefBtn("cropped",  "cropped-good",  "Bug is small in original but the crop rescues it. Mutually exclusive with original-good.");
+    const col2CountActive = lbl.col2_count || null;
+    const col2CountHTML = COL2_COUNT_BUTTONS.map(b => {
+      const isSug = !userEdited && suggested.includes(b.id);
+      const isAct = userEdited && col2CountActive === b.id;
+      const cls = isAct ? "active" : (isSug ? "suggested" : "");
+      return '<button class="' + cls + '" title="' + b.tip + '" onclick="setCol2Count(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
+    }).join('');
+
+    const col2FlagsActive = lbl.col2_flags || [];
+    const col2FlagHTML = COL2_FLAG_BUTTONS.map(b => {
+      const isSug = !userEdited && suggested.includes(b.id);
+      const isAct = userEdited && col2FlagsActive.includes(b.id);
+      const cls = [(isAct ? "active" : (isSug ? "suggested" : "")), (b.informational ? "informational" : "")].filter(Boolean).join(' ');
+      return '<button class="' + cls + '" title="' + b.tip + '" onclick="toggleCol2Flag(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
+    }).join('');
+
+    const col3Active = lbl.col3 || [];
+    const col3HTML = COL3_BUTTONS.map(b => {
+      const isSug = !userEdited && suggested.includes(b.id);
+      const isAct = userEdited && col3Active.includes(b.id);
+      const cls = isAct ? "active" : (isSug ? "suggested" : "");
+      return '<button class="' + cls + '" title="' + b.tip + '" onclick="toggleCol3(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
+    }).join('');
+
+    const col4Active = lbl.col4 || [];
+    const col4HTML = COL4_BUTTONS.map(b => {
+      const cls = col4Active.includes(b.id) ? "active" : "";
+      return '<button class="' + cls + '" title="' + b.tip + '" onclick="toggleCol4(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
+    }).join('');
+
+    const columnsHTML =
+      '<div class="label-columns">' +
+        '<div class="col col1"><div class="col-header">BBox</div>' + col1HTML + '</div>' +
+        '<div class="col col2"><div class="col-header">BBox Content</div>' + col2CountHTML + col2FlagHTML + '</div>' +
+        '<div class="col col3"><div class="col-header">Mask Rule</div>' + col3HTML + '</div>' +
+        '<div class="col col4"><div class="col-header">ML Label</div>' + col4HTML + '</div>' +
+      '</div>';
 
     div.innerHTML =
       '<div class="imgs">' +
         '<figure>' +
           '<div class="bbox-overlay"><img src="' + r.original_path + '" alt="">' + boxHTML + '</div>' +
-          '<figcaption>original · primary <span style="color:#FF6EC7">pink</span>' +
-            ((r.secondary_bboxes && r.secondary_bboxes.length) ? ' · <span style="color:#67D4E6">cyan</span> = ' + r.secondary_bboxes.length + ' other detection' + (r.secondary_bboxes.length === 1 ? '' : 's') : '') +
+          '<figcaption>original \u00b7 primary <span style="color:#FF6EC7">pink</span>' +
+            ((r.secondary_bboxes && r.secondary_bboxes.length) ? ' \u00b7 <span style="color:#67D4E6">cyan</span> = ' + r.secondary_bboxes.length + ' other detection' + (r.secondary_bboxes.length === 1 ? '' : 's') : '') +
           '</figcaption>' +
         '</figure>' +
-        '<figure>' + cropHTML + '<figcaption>proposed crop · what users see</figcaption></figure>' +
+        '<figure>' + cropHTML + '<figcaption>proposed crop \u00b7 what users see</figcaption></figure>' +
       '</div>' +
-      '<div class="name">' + (r.common_name || r.taxon_species || "?") + ' <code>· ' + r.image_id + '</code></div>' +
+      '<div class="name">' + (r.common_name || r.taxon_species || "?") + ' <code>\u00b7 ' + r.image_id + '</code></div>' +
       '<span class="badge ' + r.framing_quality + '">' + r.framing_quality + '</span>' +
       '<div class="metrics">' +
         'bbox: ' + fmtPct(r.bbox_area_ratio) + ' (' +
-          (r.bbox_long_edge_px !== null && r.bbox_long_edge_px !== undefined ? r.bbox_long_edge_px.toFixed(0) + 'px long' : '—') + ' / ' +
-          (r.bbox_min_edge_px !== null && r.bbox_min_edge_px !== undefined ? r.bbox_min_edge_px.toFixed(0) + 'px short' : '—') +
-        ') · crop fills: ' + fmtPct(r.post_crop_subject_area) + '<br>' +
-        'conf: ' + fmtNum(r.confidence, 2) + ' · ΔE: ' + fmtNum(r.lab_delta_e, 1) + ' · sharpness: ' + fmtNum(r.subject_sharpness, 0) + '<br>' +
+          (r.bbox_long_edge_px !== null && r.bbox_long_edge_px !== undefined ? r.bbox_long_edge_px.toFixed(0) + 'px long' : '\u2014') + ' / ' +
+          (r.bbox_min_edge_px !== null && r.bbox_min_edge_px !== undefined ? r.bbox_min_edge_px.toFixed(0) + 'px short' : '\u2014') +
+        ') \u00b7 crop fills: ' + fmtPct(r.post_crop_subject_area) + '<br>' +
+        'conf: ' + fmtNum(r.confidence, 2) + ' \u00b7 \u0394E: ' + fmtNum(r.lab_delta_e, 1) + ' \u00b7 sharpness: ' + fmtNum(r.subject_sharpness, 0) + '<br>' +
         'detected: ' + r.n_distinct_detections + ' bug' + (r.n_distinct_detections === 1 ? '' : 's') +
-        (r.bbox_touches_edge ? ' · ⚠ bbox touches frame edge' : '') +
-        (r.gt_iou !== null ? ' · gt_iou: ' + r.gt_iou.toFixed(2) : '') +
+        (r.bbox_touches_edge ? ' \u00b7 \u26a0 bbox touches frame edge' : '') +
+        (r.gt_iou !== null ? ' \u00b7 gt_iou: ' + r.gt_iou.toFixed(2) : '') +
       '</div>' +
-      '<div class="flags">' + flagButtons + '</div>' +
-      '<div class="prefs">' + prefHTML + '</div>' +
+      staleHTML +
+      columnsHTML +
       '<div class="review-row">' +
         '<button class="mark-reviewed ' + (reviewed ? 'active' : '') + '" onclick="markReviewed(\'' + r.image_id + '\')" title="Confirms the current labels (accepts the system suggestion if you haven\'t changed anything). Any label edit auto-marks reviewed.">' +
-          (reviewed ? '✓ reviewed' : '✓ mark reviewed') +
+          (reviewed ? '\u2713 reviewed' : '\u2713 mark reviewed') +
         '</button>' +
-        '<button class="unsure-button ' + (lbl.unsure ? 'active' : '') + '" onclick="setUnsure(\'' + r.image_id + '\')" title="Ambiguous — come back later">? unsure</button>' +
+        '<button class="unsure-button ' + (lbl.unsure ? 'active' : '') + '" onclick="setUnsure(\'' + r.image_id + '\')" title="Ambiguous \u2014 come back later">? unsure</button>' +
       '</div>';
     grid.appendChild(div);
   }
@@ -512,6 +561,39 @@ document.getElementById("source").addEventListener("change", render);
 document.getElementById("quality").addEventListener("change", render);
 document.getElementById("reviewStatus").addEventListener("change", render);
 document.getElementById("sort").addEventListener("change", render);
+
+// Bbox-only mode toggle
+document.getElementById("bboxOnlyMode").addEventListener("change", function() {
+  document.body.classList.toggle("bbox-only-mode", this.checked);
+});
+
+// Bbox-only mode: Enter / N commits Col 1 + auto-accepts rule suggestions for Cols 2-4
+function _commitBboxOnly(id) {
+  const r = _rowFor(id);
+  const cur = LABELS[id] ? Object.assign({}, LABELS[id]) : _emptyLabel();
+  if (!cur.col2_flags) cur.col2_flags = [];
+  if (!cur.col3) cur.col3 = [];
+  cur.col2_count = null; cur.col2_flags = []; cur.col3 = [];
+  for (const s of (r.suggested_labels || [])) {
+    if (COL2_COUNT_IDS.has(s)) { cur.col2_count = cur.col2_count || s; }
+    else if (COL2_FLAG_BUTTONS.some(b => b.id === s)) {
+      if (!cur.col2_flags.includes(s)) cur.col2_flags.push(s);
+    } else if (COL3_BUTTONS.some(b => b.id === s)) {
+      if (!cur.col3.includes(s)) cur.col3.push(s);
+    }
+  }
+  cur.user_edited = true;
+  _persist(id, cur);
+}
+
+document.addEventListener("keydown", function(e) {
+  if (e.key !== "Enter" && e.key !== "n" && e.key !== "N") return;
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+  if (!document.getElementById("bboxOnlyMode").checked) return;
+  const card = document.querySelector(".card:not(.reviewed)");
+  if (!card || !card.dataset.imageId) return;
+  _commitBboxOnly(card.dataset.imageId);
+});
 
 // Initial paint with empty LABELS so the grid is up immediately; then fetch
 // from server and re-render. The fetch is fast (single file read) and keeps
