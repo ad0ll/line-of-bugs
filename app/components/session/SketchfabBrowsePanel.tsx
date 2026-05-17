@@ -129,3 +129,20 @@ export function SketchfabBrowsePanel({ scientific, common, open, onClose }: Prop
     </div>
   );
 }
+
+/** Lightweight precheck: hits the same endpoint as the panel but reads only
+ *  precachedHasModels. Cached identically (same sketchfabQueryKey) so when
+ *  the panel opens it reuses the cached result rather than re-fetching. */
+export function useSketchfabAvailability(scientific: string, common: string) {
+  const { data } = useQuery({
+    queryKey: sketchfabQueryKey(scientific, common),
+    queryFn: ({ signal }) => fetchSketchfab(scientific, common, signal),
+    enabled: !!scientific && !!common,
+    staleTime: 10 * 60_000,
+  });
+  // Tri-state: undefined (loading) | true (has hits or unchecked) | false (precache says none)
+  if (!data) return undefined;
+  if (data.hits.length > 0) return true;
+  // If precachedHasModels is explicitly false, no models. Otherwise treat as unknown.
+  return (data as { precachedHasModels?: boolean | null }).precachedHasModels !== false;
+}

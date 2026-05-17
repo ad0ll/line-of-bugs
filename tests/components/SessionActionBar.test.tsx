@@ -22,6 +22,7 @@ const baseProps = {
   onIntervalChange: noop,
   sketchfabOpen: false,
   onToggleSketchfab: noop,
+  sketchfabDisabled: false,
 };
 
 describe("SessionActionBar", () => {
@@ -68,5 +69,23 @@ describe("SessionActionBar", () => {
       <SessionActionBar {...baseProps} sketchfabOpen={true} onToggleSketchfab={() => {}} />,
     );
     await expect.element(screen.getByRole("button", { name: /sketchfab/i })).toHaveClass("is-active");
+  });
+
+  it("disables the Sketchfab button when sketchfabDisabled=true", async () => {
+    const onToggle = vi.fn();
+    const screen = await render(
+      <SessionActionBar
+        {...baseProps}
+        sketchfabOpen={false}
+        sketchfabDisabled={true}
+        onToggleSketchfab={onToggle}
+      />,
+    );
+    const btn = screen.getByRole("button", { name: /sketchfab/i });
+    await expect.element(btn).toBeDisabled();
+    // force: true bypasses the actionability check so the click resolves;
+    // the browser still drops the event because the button is disabled.
+    await btn.click({ force: true });
+    expect(onToggle).not.toHaveBeenCalled();
   });
 });

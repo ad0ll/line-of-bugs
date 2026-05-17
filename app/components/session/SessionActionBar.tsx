@@ -24,6 +24,7 @@ interface Props {
   onIntervalChange: (s: number) => void;
   sketchfabOpen: boolean;
   onToggleSketchfab: () => void;
+  sketchfabDisabled?: boolean;
 }
 
 // R8 (2026-05-16): zoom cluster removed — browser zoom does the same
@@ -59,7 +60,9 @@ export function SessionActionBar(props: Props) {
         </IconBtn>
         <IconBtn
           label="sketchfab"
+          hint="K"
           active={props.sketchfabOpen}
+          disabled={props.sketchfabDisabled ?? false}
           onClick={props.onToggleSketchfab}
         >
           ▦

@@ -16,7 +16,7 @@ import { EdgePrevNext } from "./EdgePrevNext";
 import { Magnifier } from "./Magnifier";
 import { EndOfSessionOverlay } from "./EndOfSessionOverlay";
 import { SessionTitle } from "./SessionTitle";
-import { SketchfabBrowsePanel, fetchSketchfab, sketchfabQueryKey } from "./SketchfabBrowsePanel";
+import { SketchfabBrowsePanel, fetchSketchfab, sketchfabQueryKey, useSketchfabAvailability } from "./SketchfabBrowsePanel";
 
 interface Props {
   items: Image[];
@@ -45,6 +45,10 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
     // Only flip true when the panel can actually render; always allow closing.
     setSketchfabOpen((open) => (open ? false : canBrowseSketchfab));
   }, [canBrowseSketchfab]);
+  const sketchfabAvailable = useSketchfabAvailability(
+    items[idx]?.taxonSpecies ?? "",
+    items[idx]?.commonName ?? "",
+  );
 
   const qc = useQueryClient();
 
@@ -328,6 +332,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
         onIntervalChange={(s) => setIntervalSec(s)}
         sketchfabOpen={sketchfabOpen}
         onToggleSketchfab={toggleSketchfab}
+        sketchfabDisabled={sketchfabAvailable === false}
       />
       <Magnifier image={current} size={magnifier} bw={bw} />
       <EndOfSessionOverlay
