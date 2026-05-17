@@ -4,6 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Image } from "@/db/schema";
 import { useHighResTimer } from "@/lib/hooks/useHighResTimer";
+import { useMuted } from "@/lib/hooks/useMuted";
 import { makeAudio, type AudioCues } from "@/lib/audio";
 import { createPreloadManager, type PreloadManager } from "@/lib/preload-manager";
 import { T } from "@/lib/tokens";
@@ -38,6 +39,11 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
   const [done, setDone] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sketchfabOpen, setSketchfabOpen] = useState(false);
+  const [muted, setMuted] = useMuted();
+  // Ref-mirror so the audio module's isMuted callback reads the current value
+  // without forcing us to rebuild AudioCues every render.
+  const mutedRef = useRef(muted);
+  mutedRef.current = muted;
 
   const canBrowseSketchfab =
     !!items[idx]?.taxonSpecies && !!items[idx]?.commonName;
@@ -101,7 +107,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
 
   // Initialize audio + preload once
   useEffect(() => {
-    audioRef.current = makeAudio();
+    audioRef.current = makeAudio({ isMuted: () => mutedRef.current });
     // Preload the medium tier (1024px) — same tier SessionImage actually
     // displays. Using full-res here would warm the wrong cache and we'd
     // still wait on /api/medium for the visible <img>.
@@ -273,6 +279,10 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
           e.preventDefault();
           toggleSketchfab();
           break;
+        case "m":
+        case "M":
+          setMuted(!mutedRef.current);
+          break;
         case "Escape":
           // When the Sketchfab panel is open, let it handle dismissal —
           // don't navigate away from the session.
@@ -285,7 +295,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [goPrev, goNext, idx, items, router, pathname, toggleFullscreen, toggleSketchfab, sketchfabOpen]);
+  }, [goPrev, goNext, idx, items, router, pathname, toggleFullscreen, toggleSketchfab, sketchfabOpen, setMuted]);
 
   // Cursor hide when chrome hidden
   useEffect(() => {
@@ -335,7 +345,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
       <h1 className="u-sr-only">{currentName}</h1>
       <ProgressBar percent={elapsedMs / durationMs} playing={!paused && !done} />
       <SessionTitle image={current} />
-      <Timer remainingMs={durationMs - elapsedMs} paused={paused} />
+      <Timer remainingMs={durationMs - elapsedMs} paused={paused} muted={muted} />
       <SessionImage image={current} bw={bw} chromeVisible={chromeVisible} />
       {paused && (
         <div className="session-paused-overlay" role="status" aria-live="polite">
@@ -361,6 +371,8 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
         total={items.length}
         intervalSec={intervalSec}
         sourceImageUrl={current.imageUrl}
+        muted={muted}
+        onToggleMute={() => setMuted(!muted)}
         onPause={() => setPaused((p) => !p)}
         onToggleBw={() => setBw((v) => !v)}
         onMagnifier={() =>

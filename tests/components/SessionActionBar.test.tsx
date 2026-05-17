@@ -96,6 +96,32 @@ describe("SessionActionBar", () => {
     await expect.element(screen.getByRole("button", { name: /sketchfab/i })).toHaveClass("is-active");
   });
 
+  it("renders a mute toggle button when onToggleMute is supplied", async () => {
+    const onToggleMute = vi.fn();
+    const screen = await render(
+      <SessionActionBar {...baseProps} muted={false} onToggleMute={onToggleMute} />,
+    );
+    const btn = screen.getByRole("button", { name: /sound/i });
+    await expect.element(btn).not.toHaveClass("is-active");
+    await btn.click();
+    expect(onToggleMute).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows muted glyph + active state when muted=true", async () => {
+    const screen = await render(
+      <SessionActionBar {...baseProps} muted={true} onToggleMute={() => {}} />,
+    );
+    const btn = screen.getByRole("button", { name: /muted/i });
+    await expect.element(btn).toHaveClass("is-active");
+  });
+
+  it("omits the mute button when onToggleMute is not supplied", async () => {
+    const screen = await render(<SessionActionBar {...baseProps} />);
+    // No button labeled mute/sound when the optional handler is missing.
+    expect(screen.getByRole("button", { name: /^sound/i }).query()).toBeNull();
+    expect(screen.getByRole("button", { name: /^muted/i }).query()).toBeNull();
+  });
+
   it("formats counter total with thousands separators", async () => {
     const screen = await render(
       <SessionActionBar {...baseProps} currentIdx={28} total={39631} />,

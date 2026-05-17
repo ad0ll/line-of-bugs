@@ -16,6 +16,10 @@ interface Props {
   /** Direct URL to the image file (preferred — the user wanted source
    *  to open the actual image, not the source page). */
   sourceImageUrl: string | null | undefined;
+  /** Mute state — surfaced as a toggle button between b.w and magnifier so
+   *  the keyboard 'M' shortcut and the action bar stay in sync. */
+  muted?: boolean;
+  onToggleMute?: () => void;
   onPause: () => void;
   onToggleBw: () => void;
   onMagnifier: () => void;
@@ -49,6 +53,16 @@ export function SessionActionBar(props: Props) {
         <IconBtn label="b.w" hint="B" active={props.bw} onClick={props.onToggleBw}>
           ◐
         </IconBtn>
+        {props.onToggleMute ? (
+          <IconBtn
+            label={props.muted ? "muted" : "sound"}
+            hint="M"
+            active={props.muted ?? false}
+            onClick={props.onToggleMute}
+          >
+            {props.muted ? "🔇" : "🔊"}
+          </IconBtn>
+        ) : null}
         <IconBtn label="magnifier" hint={props.magnifier === "off" ? "Z" : props.magnifier} active={props.magnifier !== "off"} onClick={props.onMagnifier}>
           ⊙
         </IconBtn>

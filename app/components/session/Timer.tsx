@@ -3,6 +3,9 @@
 interface Props {
   remainingMs: number;
   paused: boolean;
+  /** When true, a 🔇 glyph is appended to the timer pill so users always
+   *  see at a glance whether audio cues will fire. Persisted via useMuted. */
+  muted?: boolean;
 }
 
 function fmt(ms: number): string {
@@ -23,7 +26,7 @@ function announce(seconds: number): string {
   return "";
 }
 
-export function Timer({ remainingMs, paused }: Props) {
+export function Timer({ remainingMs, paused, muted = false }: Props) {
   const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
   const announcement = announce(seconds);
   return (
@@ -35,6 +38,7 @@ export function Timer({ remainingMs, paused }: Props) {
       >
         {paused && <span aria-hidden className="session-timer-paused-icon">⏸</span>}
         {fmt(remainingMs)}
+        {muted && <span aria-hidden className="session-timer-muted-icon">🔇</span>}
       </div>
       {announcement ? (
         <span className="u-sr-only" role="status" aria-live="polite" aria-atomic="true">

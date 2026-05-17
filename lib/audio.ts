@@ -75,10 +75,21 @@ function bell(freq: number, durationS: number, volume: number): void {
   playToneAt(t, freq * 2, durationS * 0.7, volume * 0.3, "sine");
 }
 
-export function makeAudio(): AudioCues {
+export interface MakeAudioOpts {
+  /** Callback consulted at each cue. Lets the caller share live state
+   *  (e.g., a useMuted hook) without rebuilding the AudioCues object. */
+  isMuted?: () => boolean;
+}
+
+export function makeAudio(opts?: MakeAudioOpts): AudioCues {
+  const isMuted = opts?.isMuted ?? (() => false);
   return {
-    ding: () => bell(880, 0.55, 0.55),
+    ding: () => {
+      if (isMuted()) return;
+      bell(880, 0.55, 0.55);
+    },
     countdown: (step) => {
+      if (isMuted()) return;
       const freqs = [660, 784, 988] as const;
       if (step === 2) {
         bell(freqs[2], 0.35, 0.6);
@@ -87,6 +98,7 @@ export function makeAudio(): AudioCues {
       }
     },
     transition: () => {
+      if (isMuted()) return;
       // Both tones scheduled on the audio clock, 0.09s apart, so layering is
       // sample-accurate even under heavy main-thread load.
       const t = now();

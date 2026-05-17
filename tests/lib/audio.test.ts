@@ -18,4 +18,16 @@ describe("audio cues", () => {
     expect(() => a.countdown(2)).not.toThrow();
     expect(() => a.transition()).not.toThrow();
   });
+
+  it("consults isMuted before firing each cue", () => {
+    // We can't introspect audible output here; we can verify the callback
+    // is consulted every cue. That's enough to guarantee mute short-circuits.
+    let calls = 0;
+    const a = makeAudio({ isMuted: () => { calls++; return true; } });
+    a.ding();
+    a.countdown(0);
+    a.countdown(2);
+    a.transition();
+    expect(calls).toBe(4);
+  });
 });

@@ -44,4 +44,15 @@ describe("Timer", () => {
     const screen = await render(<Timer remainingMs={15_000} paused={false} />);
     await expect.element(screen.getByRole("status")).not.toBeInTheDocument();
   });
+
+  it("appends a muted icon when muted=true", async () => {
+    const screen = await render(<Timer remainingMs={60_000} paused={false} muted />);
+    const icon = screen.container.querySelector(".session-timer-muted-icon");
+    expect(icon?.textContent).toBe("🔇");
+  });
+
+  it("omits the muted icon when muted is false", async () => {
+    const screen = await render(<Timer remainingMs={60_000} paused={false} />);
+    expect(screen.container.querySelector(".session-timer-muted-icon")).toBeNull();
+  });
 });

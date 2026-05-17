@@ -70,6 +70,22 @@ test.describe("session player polish (Phase B)", () => {
     await ctx.close();
   });
 
+  test("muting via keyboard M persists across reload and surfaces the timer icon", async ({ page }) => {
+    const sessionId = await startSession(page);
+    await page.goto(`/session?session=${sessionId}&interval=60`);
+    // No muted icon by default
+    await expect(page.locator(".session-timer-muted-icon")).toHaveCount(0);
+    // Toggle mute via keyboard
+    await page.keyboard.press("m");
+    await expect(page.locator(".session-timer-muted-icon")).toBeVisible();
+    // Reload and verify the state persists from localStorage
+    await page.reload();
+    await expect(page.locator(".session-timer-muted-icon")).toBeVisible();
+    // Toggle back off and confirm icon vanishes
+    await page.keyboard.press("m");
+    await expect(page.locator(".session-timer-muted-icon")).toHaveCount(0);
+  });
+
   test("session state resets when starting a new session", async ({ page }) => {
     // Start session 1
     let res = await page.request.post("http://localhost:3000/api/session/start", {

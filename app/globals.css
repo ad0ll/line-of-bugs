@@ -2366,6 +2366,10 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   margin-right: 0.3rem;
   color: var(--accent-pink);
 }
+.session-timer-muted-icon {
+  margin-left: 0.3rem;
+  opacity: 0.85;
+}
 
 /* Phase E (2026-05-17) — session loading screen.
    Shown by app/session/loading.tsx during the Suspense boundary while the
