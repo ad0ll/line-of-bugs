@@ -43,6 +43,7 @@ export default defineConfig({
             "tests/lib/repeat-mode.test.ts",
             "tests/lib/session-pools.test.ts",
             "tests/lib/subject.test.ts",
+            "tests/lib/text-format.test.ts",
             "tests/lib/tokens.test.ts",
           ],
           env: { DATABASE_URL: ":memory:" },

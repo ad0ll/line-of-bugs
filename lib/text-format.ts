@@ -8,6 +8,26 @@
  * Linnaean convention (Genus capitalized, species lowercase) and must
  * stay as the DB stores them — don't pipe them through this.
  */
+/**
+ * iNaturalist observations identified only to the order level surface with
+ * `taxon_species` == `taxon_order` (e.g., both "Lepidoptera"). The common
+ * name in that case is the order's common name ("Butterflies, Moths or
+ * Skippers"). Detecting this lets the UI collapse a 3-way duplicate
+ * (common, scientific, chip) into a single display with an "(order)" hint.
+ *
+ * All three inputs must be present: if `commonName` is missing there's no
+ * duplicate to collapse, and species/order are needed to detect the
+ * order-level identification at all.
+ */
+export function isOrderOnlyId(
+  commonName: string | null | undefined,
+  taxonSpecies: string | null | undefined,
+  taxonOrder: string | null | undefined,
+): boolean {
+  if (!commonName || !taxonSpecies || !taxonOrder) return false;
+  return taxonSpecies.toLowerCase() === taxonOrder.toLowerCase();
+}
+
 export function titleCaseCommonName(name: string | null | undefined): string {
   if (!name) return "";
   return name
