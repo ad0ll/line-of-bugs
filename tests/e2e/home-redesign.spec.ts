@@ -73,12 +73,15 @@ test.describe("home redesign", () => {
     expect(Math.abs((startBox?.height ?? 0) - (galleryBox?.height ?? 0))).toBeLessThan(2);
   });
 
-  test("social row has four links opening in new tabs", async ({ page }) => {
+  test("social row has three external links + ethereum copy button", async ({ page }) => {
     await page.goto("/");
-    const links = page.locator(".home-social-link");
-    await expect(links).toHaveCount(4);
-    for (let i = 0; i < 4; i++) {
-      await expect(links.nth(i)).toHaveAttribute("target", "_blank");
+    // Three external <a class="home-social-link">
+    const anchors = page.locator("a.home-social-link");
+    await expect(anchors).toHaveCount(3);
+    for (let i = 0; i < 3; i++) {
+      await expect(anchors.nth(i)).toHaveAttribute("target", "_blank");
     }
+    // Plus one Ethereum copy <button>
+    await expect(page.locator("button.home-social-eth")).toBeVisible();
   });
 });

@@ -1,4 +1,6 @@
-import type { SVGProps } from "react";
+"use client";
+
+import { useState, type SVGProps } from "react";
 
 const SIZE = 22;
 
@@ -20,20 +22,26 @@ function BMCMark(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-// Official Instagram glyph — about.instagram.com/brand
-function InstagramMark(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg viewBox="0 0 24 24" width={SIZE} height={SIZE} fill="currentColor" aria-hidden="true" {...props}>
-      <path d="M12 2.2c3.2 0 3.6 0 4.8.1 1.2.1 1.8.2 2.2.4.5.2.9.5 1.3.9.4.4.7.8.9 1.3.2.4.3 1 .4 2.2.1 1.2.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 1.2-.2 1.8-.4 2.2-.2.5-.5.9-.9 1.3-.4.4-.8.7-1.3.9-.4.2-1 .3-2.2.4-1.2.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-1.2-.1-1.8-.2-2.2-.4-.5-.2-.9-.5-1.3-.9-.4-.4-.7-.8-.9-1.3-.2-.4-.3-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.8c.1-1.2.2-1.8.4-2.2.2-.5.5-.9.9-1.3.4-.4.8-.7 1.3-.9.4-.2 1-.3 2.2-.4 1.2-.1 1.6-.1 4.8-.1zm0 5.4a4.4 4.4 0 100 8.8 4.4 4.4 0 000-8.8zm0 7.2a2.8 2.8 0 110-5.6 2.8 2.8 0 010 5.6zm4.6-7.4a1 1 0 100-2 1 1 0 000 2z" />
-    </svg>
-  );
-}
-
 // Official Bluesky butterfly — bsky.app/brand
 function BlueskyMark(props: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 600 530" width={SIZE} height={SIZE} fill="currentColor" aria-hidden="true" {...props}>
       <path d="M135.7 44.5C211.4 99.3 293 211 322.5 271.1c29.4-60.1 111-171.8 186.8-226.6 54.7-39.6 143.4-70.2 143.4 31.1 0 20.2-11.6 169.7-18.4 194-23.7 84.4-109.7 105.9-186.2 92.8 133.9 22.8 168 98.3 94.4 173.8-139.8 143.5-200.9-36-216.6-82-2.9-8.4-4.2-12.4-4.3-9-.1-3.4-1.4.6-4.3 9-15.7 46-76.8 225.5-216.6 82-73.6-75.5-39.5-151 94.4-173.8C148.6 376.3 62.6 354.8 38.9 270.5 32.1 246.2 20.5 96.7 20.5 76.5 20.5-24.8 109.2 5.8 163.9 45.4l-28.2-.9z" />
+    </svg>
+  );
+}
+
+function EthMark(props: SVGProps<SVGSVGElement>) {
+  // Official Ethereum diamond logo (simplified — public-domain shape, two
+  // stacked triangles forming an octahedron silhouette).
+  return (
+    <svg viewBox="0 0 256 417" width={SIZE} height={SIZE} fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M127.961 0l-2.795 9.5v275.668l2.795 2.79 127.962-75.638z" opacity="0.6"/>
+      <path d="M127.962 0L0 212.32l127.962 75.639V154.158z"/>
+      <path d="M127.961 312.187l-1.575 1.92v98.199l1.575 4.6L256 236.587z" opacity="0.6"/>
+      <path d="M127.962 416.905v-104.72L0 236.585z"/>
+      <path d="M127.961 287.958l127.96-75.637-127.96-58.162z" opacity="0.2"/>
+      <path d="M0 212.32l127.96 75.638V154.159z" opacity="0.45"/>
     </svg>
   );
 }
@@ -44,30 +52,45 @@ interface SocialLink {
   Icon: React.ComponentType<SVGProps<SVGSVGElement>>;
 }
 
-// Links to user's actual handles. Empty string means "not yet linked";
-// the icon still renders but the link is omitted (renders as a quiet placeholder).
+const ETH_ADDRESS = "ad0ll.eth"; // ENS name; resolves to mainnet ETH. Update if a different address is preferred.
+
+// Links to user's actual handles. Instagram dropped 2026-05-17 (not used).
 const LINKS: SocialLink[] = [
   { name: "GitHub", href: "https://github.com/ad0ll/line-of-bugs", Icon: GitHubMark },
   { name: "Buy Me a Coffee", href: "https://www.buymeacoffee.com/ad0ll", Icon: BMCMark },
-  { name: "Instagram", href: "https://www.instagram.com/", Icon: InstagramMark },
   { name: "Bluesky", href: "https://bsky.app/", Icon: BlueskyMark },
 ];
 
 export function SocialRow() {
+  const [copied, setCopied] = useState(false);
+  async function copyEth() {
+    try {
+      await navigator.clipboard.writeText(ETH_ADDRESS);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // Clipboard unavailable (insecure context, denied permission, etc.)
+      // No fallback — the user can hover to read the address from the title attribute below.
+    }
+  }
   return (
     <nav aria-label="social links" className="home-social">
       {LINKS.map(({ name, href, Icon }) => (
-        <a
-          key={name}
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={name}
-          className="home-social-link"
-        >
+        <a key={name} href={href} target="_blank" rel="noopener noreferrer" aria-label={name} className="home-social-link">
           <Icon />
         </a>
       ))}
+      <button
+        type="button"
+        aria-label={`copy Ethereum address ${ETH_ADDRESS}`}
+        title={`copy Ethereum address ${ETH_ADDRESS}`}
+        className="home-social-link home-social-eth"
+        onClick={copyEth}
+        data-copied={copied || undefined}
+      >
+        <EthMark />
+        {copied && <span className="home-social-eth-toast" role="status" aria-live="polite">copied ✿</span>}
+      </button>
     </nav>
   );
 }
