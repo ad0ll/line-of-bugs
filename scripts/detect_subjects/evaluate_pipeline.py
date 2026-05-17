@@ -60,10 +60,28 @@ def _load_labels() -> dict[str, dict]:
 
 
 def _user_label_set(record: dict | None) -> set[str]:
-    """Flatten a new-vocab user label record into the set of label names."""
+    """Flatten a new-vocab user label record into the set of label names.
+
+    The 4-column UI writes Col 1 to `col1`, Col 2 mutex to `col2_count`, and
+    multi-flags to col2_flags/col3/col4. Legacy records keep `flags`. Union
+    all of them so downstream comparisons see every label the user set.
+    """
     if not record:
         return set()
-    return set(record.get("flags") or [])
+    out: set[str] = set()
+    if record.get("col1"):
+        out.add(record["col1"])
+    if record.get("col2_count"):
+        out.add(record["col2_count"])
+    for f in record.get("col2_flags") or []:
+        out.add(f)
+    for f in record.get("col3") or []:
+        out.add(f)
+    for f in record.get("col4") or []:
+        out.add(f)
+    for f in record.get("flags") or []:
+        out.add(f)
+    return out
 
 
 # ─── Phase 0: confusion ────────────────────────────────────────────

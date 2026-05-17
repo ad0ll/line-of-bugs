@@ -77,15 +77,24 @@ def _bbox_area(bb) -> float:
     return bb[2] * bb[3] if bb else 0.0
 
 
-def _label_is_correct(flags: list[str]) -> bool:
-    """User considered the bbox correct? True if no bbox-rejection flag is set."""
-    bbox_flags = {f for f in (flags or []) if f.startswith("bbox_") or f == "bbox-content_no-bug"}
+def _label_is_correct(record: dict) -> bool:
+    """User considered the bbox correct? True if no bbox-rejection signal is set.
+
+    The 4-column UI writes Col 1 (bbox accept/clipped/wrong) to `col1` and
+    Col 2 mutex (no-bug etc.) to `col2_count`; legacy records keep these as
+    entries in `flags`. Check all three.
+    """
     rejecting = {
         "bbox_wrong-subject",
         "bbox_correct-subject_clipped",
         "bbox-content_no-bug",
     }
-    return not (bbox_flags & rejecting)
+    if record.get("col1") in rejecting:
+        return False
+    if record.get("col2_count") in rejecting:
+        return False
+    flags = record.get("flags") or []
+    return not (set(flags) & rejecting)
 
 
 def classify_transfer(iou: float | None, v1_bbox, v2_bbox, label_record: dict) -> tuple[str, str]:
@@ -105,8 +114,7 @@ def classify_transfer(iou: float | None, v1_bbox, v2_bbox, label_record: dict) -
         return "auto_strong", f"iou={iou:.3f} ≥ {STRONG_IOU}"
 
     if iou >= WEAK_IOU:
-        flags = label_record.get("flags") or []
-        if not _label_is_correct(flags):
+        if not _label_is_correct(label_record):
             return "review", f"iou={iou:.3f} in soft band but label was bbox-rejecting"
         if _bbox_area(v2_bbox) < 0.9 * _bbox_area(v1_bbox):
             return "review", f"iou={iou:.3f} but new bbox smaller than 0.9x old"
@@ -146,6 +154,11 @@ def plan_transfer(
             "reason": reason,
             "iou": iou,
             "label_flags": rec.get("flags") or [],
+            "col1": rec.get("col1"),
+            "col2_count": rec.get("col2_count"),
+            "col2_flags": rec.get("col2_flags") or [],
+            "col3": rec.get("col3") or [],
+            "col4": rec.get("col4") or [],
         }
     return {
         "n_labels": len(labels),
@@ -179,6 +192,11 @@ def apply_transfer(plan: dict, labels_path: Path, v2_variant: str) -> dict:
                 "reason": action["reason"],
                 "iou": action["iou"],
                 "existing_flags": action["label_flags"],
+                "existing_col1": action["col1"],
+                "existing_col2_count": action["col2_count"],
+                "existing_col2_flags": action["col2_flags"],
+                "existing_col3": action["col3"],
+                "existing_col4": action["col4"],
             }
 
     tmp = labels_path.with_suffix(".json.tmp")

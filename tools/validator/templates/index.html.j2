@@ -342,6 +342,7 @@ function setCol2Count(id, btnId) {
 function toggleCol2Flag(id, flagId) {
   const cur = LABELS[id] || _emptyLabel();
   _ensureMaterialized(cur, _rowFor(id));
+  if (!Array.isArray(cur.col2_flags)) cur.col2_flags = [];  // legacy records lack col2_flags
   const i = cur.col2_flags.indexOf(flagId);
   if (i >= 0) cur.col2_flags.splice(i, 1); else cur.col2_flags.push(flagId);
   cur.unsure = false;
@@ -350,6 +351,7 @@ function toggleCol2Flag(id, flagId) {
 function toggleCol3(id, flagId) {
   const cur = LABELS[id] || _emptyLabel();
   _ensureMaterialized(cur, _rowFor(id));
+  if (!Array.isArray(cur.col3)) cur.col3 = [];  // legacy records lack col3
   if (COL3_BLUR_MUTEX.includes(flagId))
     cur.col3 = cur.col3.filter(f => !COL3_BLUR_MUTEX.includes(f));
   const i = cur.col3.indexOf(flagId);
@@ -360,6 +362,7 @@ function toggleCol3(id, flagId) {
 function toggleCol4(id, flagId) {
   const cur = LABELS[id] || _emptyLabel();
   _ensureMaterialized(cur, _rowFor(id));
+  if (!Array.isArray(cur.col4)) cur.col4 = [];  // legacy records lack col4
   const i = cur.col4.indexOf(flagId);
   if (i >= 0) cur.col4.splice(i, 1); else cur.col4.push(flagId);
   cur.unsure = false;
@@ -571,8 +574,7 @@ document.getElementById("bboxOnlyMode").addEventListener("change", function() {
 function _commitBboxOnly(id) {
   const r = _rowFor(id);
   const cur = LABELS[id] ? Object.assign({}, LABELS[id]) : _emptyLabel();
-  if (!cur.col2_flags) cur.col2_flags = [];
-  if (!cur.col3) cur.col3 = [];
+  cur.col1 = cur.col1 || "bbox_correct-subject_not-clipped";
   cur.col2_count = null; cur.col2_flags = []; cur.col3 = [];
   for (const s of (r.suggested_labels || [])) {
     if (COL2_COUNT_IDS.has(s)) { cur.col2_count = cur.col2_count || s; }
@@ -582,6 +584,7 @@ function _commitBboxOnly(id) {
       if (!cur.col3.includes(s)) cur.col3.push(s);
     }
   }
+  if (!cur.col2_count) cur.col2_count = "bbox-content_single";
   cur.user_edited = true;
   _persist(id, cur);
 }
