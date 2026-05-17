@@ -2221,3 +2221,36 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   outline-offset: 2px;
   opacity: 1;
 }
+
+/* ════════════════════════════════════════════════════════════
+   TILE HOVER ACTIONS — Phase D
+   "view full" + "go to source" chips revealed on hover/focus.
+   ════════════════════════════════════════════════════════════ */
+.tile-actions {
+  position: absolute;
+  inset: auto 0.6rem 0.6rem auto;
+  display: flex;
+  gap: 0.4rem;
+  opacity: 0;
+  transition: opacity 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.grid-item:hover .tile-actions,
+.grid-item:focus-within .tile-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+.tile-action {
+  display: inline-flex; align-items: center; gap: 0.25rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-0) 90%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-pink) 35%, transparent);
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  text-decoration: none;
+  backdrop-filter: blur(8px);
+}
+.tile-action:hover {
+  background: color-mix(in srgb, var(--accent-pink) 25%, var(--surface-0));
+}
