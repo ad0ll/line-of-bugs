@@ -24,6 +24,17 @@ describe("Timer", () => {
     expect(root.style.opacity).toBe("0.55");
   });
 
+  it("shows a pause icon prefix when paused", async () => {
+    const screen = await render(<Timer remainingMs={60_000} paused />);
+    const icon = screen.container.querySelector(".session-timer-paused-icon");
+    expect(icon?.textContent).toBe("⏸");
+  });
+
+  it("omits the pause icon prefix when not paused", async () => {
+    const screen = await render(<Timer remainingMs={60_000} paused={false} />);
+    expect(screen.container.querySelector(".session-timer-paused-icon")).toBeNull();
+  });
+
   it("renders SR status when announcement threshold is hit (30s)", async () => {
     const screen = await render(<Timer remainingMs={30_000} paused={false} />);
     await expect.element(screen.getByRole("status")).toHaveTextContent("30 seconds remaining");

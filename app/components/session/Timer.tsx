@@ -33,6 +33,7 @@ export function Timer({ remainingMs, paused }: Props) {
         style={{ opacity: paused ? 0.55 : 1 }}
         data-testid="session-timer"
       >
+        {paused && <span aria-hidden className="session-timer-paused-icon">⏸</span>}
         {fmt(remainingMs)}
       </div>
       {announcement ? (

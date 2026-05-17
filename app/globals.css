@@ -2332,6 +2332,41 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   color: var(--accent-pink);
 }
 
+/* Phase E (2026-05-17) — paused-state visual feedback.
+   Center overlay reads as a "pause card" pinned to the viewport, dimming
+   the image without hiding it entirely so the user knows what they're
+   paused on. Backdrop-blur softens detail so the eye relaxes during pause. */
+.session-paused-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: color-mix(in srgb, var(--surface-0) 55%, transparent);
+  backdrop-filter: blur(3px);
+  pointer-events: none;
+  z-index: 30;
+  animation: pausedFadeIn 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes pausedFadeIn { from { opacity: 0; } to { opacity: 1; } }
+.session-paused-glyph {
+  font-size: 4rem;
+  color: var(--accent-pink);
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent-pink) 50%, transparent));
+}
+.session-paused-label {
+  font-family: var(--font-serif), serif;
+  font-style: italic;
+  font-size: 1.2rem;
+  color: var(--text-primary);
+}
+.session-timer-paused-icon {
+  margin-right: 0.3rem;
+  color: var(--accent-pink);
+}
+
 /* Phase E (2026-05-17) — session loading screen.
    Shown by app/session/loading.tsx during the Suspense boundary while the
    in-memory session pool resolves. Prevents the brief blank flash between

@@ -308,6 +308,12 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
       <SessionTitle image={current} />
       <Timer remainingMs={durationMs - elapsedMs} paused={paused} />
       <SessionImage image={current} bw={bw} chromeVisible={chromeVisible} />
+      {paused && (
+        <div className="session-paused-overlay" role="status" aria-live="polite">
+          <span className="session-paused-glyph" aria-hidden>⏸</span>
+          <span className="session-paused-label">paused</span>
+        </div>
+      )}
       <SourceInfoChip image={current} visible={chromeVisible} />
       <EdgePrevNext
         visible={chromeVisible}
