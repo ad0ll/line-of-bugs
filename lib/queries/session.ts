@@ -27,13 +27,15 @@ export async function buildSessionPool(
   opts: BuildSessionPoolOpts,
 ): Promise<Image[]> {
   const conditions = buildFilterClauses(opts, "images");
-  const all = await db
+  // No LIMIT — the in-memory pool map handles arbitrarily large pools
+  // and deliverable-count = displayed-count is a load-bearing principle
+  // (see docs/superpowers/specs/2026-05-16-design-pass-v2-design.md).
+  const query = db
     .select(IMAGE_COLS_NO_RAW)
     .from(schema.images)
     .where(and(...conditions))
-    .orderBy(sql`RANDOM()`)
-    .limit(opts.limit ?? 500);
-
+    .orderBy(sql`RANDOM()`);
+  const all = opts.limit !== undefined ? await query.limit(opts.limit) : await query;
   return applyRepeatMode(all as unknown as Image[], opts.repeatMode);
 }
 

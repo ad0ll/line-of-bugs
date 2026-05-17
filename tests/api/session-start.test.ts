@@ -1,7 +1,9 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, beforeAll } from "vitest";
 import type { Image } from "@/db/schema";
 import { POST } from "@/app/api/session/start/route";
+import { buildSessionPool } from "@/lib/queries/session";
 import { getPool, setPool, _clearAll } from "@/lib/session-pools";
+import { sqlite } from "@/db";
 
 const fakeImg = (id: string): Image => ({
   imageId: id, collectionId: "c", source: "inaturalist", sourceId: id,
@@ -16,6 +18,36 @@ const fakeImg = (id: string): Image => ({
 });
 
 describe("/api/session/start", () => {
+  // Seed enough rows that the no-implicit-cap test can prove the
+  // LIMIT 500 is gone. The base in-memory fixture (tests/fixtures/init-db.ts)
+  // has only 32 images; we add 600 wild-butterfly dummies here so the
+  // worker-local DB has > 500 selectable rows without affecting other
+  // test files (each test file gets its own worker + in-memory DB).
+  beforeAll(() => {
+    const insert = sqlite.prepare(`
+      INSERT OR IGNORE INTO images (
+        image_id, collection_id, source, source_id, source_page_url, image_url,
+        filename, thumbnail_filename, medium_filename, file_sha256, license,
+        subject_state, taxon_subgroup
+      ) VALUES (
+        @id, @id, 'inaturalist', @id, 'https://example.test/seed', 'https://example.test/seed.jpg',
+        @file, @thumb, @medium, @id, 'CC0', 'wild', 'butterfly'
+      )
+    `);
+    const tx = sqlite.transaction(() => {
+      for (let i = 0; i < 600; i++) {
+        const id = `bulk-${String(i).padStart(4, "0")}`;
+        insert.run({
+          id,
+          file: `images/${id}.jpg`,
+          thumb: `thumbnails/${id}.jpg`,
+          medium: `medium/${id}.jpg`,
+        });
+      }
+    });
+    tx();
+  });
+
   beforeEach(() => _clearAll());
 
   it("returns a sessionId and stores the pool", async () => {
@@ -105,5 +137,15 @@ describe("/api/session/start", () => {
       }),
     );
     expect(res.status).toBe(503);
+  });
+
+  it("returns full pool with no implicit cap", async () => {
+    const items = await buildSessionPool({
+      subjectType: "all",
+      repeatMode: "default",
+      views: [], lifeStages: [], sexes: [], groups: [],
+    });
+    // Pool should reflect the full filtered count, no 500 ceiling
+    expect(items.length).toBeGreaterThan(500);
   });
 });
