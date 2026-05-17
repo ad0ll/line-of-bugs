@@ -53,7 +53,7 @@ export function ReportForm({ imageId, onSubmit, onClose, headingId }: ReportForm
       <h2 id={headingId}>report this image</h2>
       <p className="report-form-help" id={helpId}>
         why should the admin take another look?
-        <span aria-hidden="true" style={{ color: "var(--accent-pink)" }}> *</span>
+        <span aria-hidden="true" style={{ color: "var(--accent-danger)" }}> *</span>
         <span className="u-sr-only">required</span>
       </p>
       <ReportCategoryChips

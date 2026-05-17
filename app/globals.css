@@ -407,12 +407,29 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   flex: 1 1 18rem;
   min-width: 16rem;
 }
+/* Mobile: horizontal scroll strip instead of a 6-chip vertical stack that
+   ate the entire viewport before any thumbnail (audit 2026-05-17 H1).
+   Chips stay tappable, the wall doesn't dominate the page, and the
+   bottom-sheet picker (audit C1) means tapping any chip never obscures
+   its neighbors regardless of stacking. */
 @media (max-width: 720px) {
   .gallery-filter-row {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    overflow-x: auto;
+    overflow-y: visible;
+    scroll-snap-type: x proximity;
+    padding: var(--s4) var(--s2);
+    margin: 0 calc(var(--s2) * -1) var(--s4);
+    /* Hide native scrollbar — chip overflow at the right edge plus a
+       subtle fade (below) communicates scrollability. */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
-  .gallery-filter-row-species { flex: none; }
+  .gallery-filter-row::-webkit-scrollbar { display: none; }
+  .gallery-filter-row > * { scroll-snap-align: start; flex-shrink: 0; }
+  .gallery-filter-row-species { flex: 0 0 auto; min-width: 0; }
 }
 .chip {
   background: var(--surface-1);
@@ -665,23 +682,28 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   flex-direction: column;
   gap: var(--s2);
 }
-.grid-item-name { display: block; font-family: var(--font-sans), system-ui, sans-serif; font-size: 0.9rem; color: var(--text-primary); }
-.grid-item-species { display: block; font-family: var(--font-display), serif; font-style: italic; font-size: 0.8rem; color: var(--text-tertiary); }
-/* Phase E (2026-05-17) — license pill, bottom-left of every tile.
-   Always visible (not hover-gated) because attribution is required.
-   Bottom-left so it doesn't fight TileActions' bottom-right hover row. */
+.grid-item-name { display: block; font-family: var(--font-sans), system-ui, sans-serif; font-size: var(--text-md); color: var(--text-primary); }
+.grid-item-species { display: block; font-family: var(--font-display), serif; font-style: italic; font-size: var(--text-sm); color: var(--text-tertiary); }
+/* Meta row holds order badge + license badge below the photo, off the
+   photo face. Attribution is still required and visible; just no longer
+   competing with the bug for the eye (audit 2026-05-17 M4 / L4). */
+.grid-item-meta-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  flex-wrap: wrap;
+  margin-top: var(--s1);
+}
 .grid-item-license {
-  position: absolute;
-  left: 0.5rem;
-  bottom: 0.5rem;
-  font-size: 0.65rem;
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-0) 80%, transparent);
+  font-family: var(--font-mono), monospace;
+  font-size: var(--text-xs);
+  padding: 1px var(--s3);
+  border-radius: var(--r-pill);
+  background: transparent;
   color: var(--text-tertiary);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  backdrop-filter: blur(6px);
+  border: 1px solid var(--border-medium);
 }
 .grid-item.skeleton-tile {
   aspect-ratio: 1 / 1;
@@ -816,7 +838,12 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
    home pill; .modal-close is the dialog close affordance). The
    any-hover:none branch picks up hybrid touch devices that report
    fine pointers but no hover (Surface, some Chromebooks). */
-@media (pointer: coarse), (any-hover: none) {
+/* Touch-target sizing. `pointer: coarse` / `any-hover: none` covers real
+   touch devices. The second media query (max-width: 640px) covers
+   resized desktop windows + device emulators that don't change pointer
+   media, so testing at iPhone/Android widths in DevTools still surfaces
+   touch-friendly hit areas (audit 2026-05-17). */
+@media (pointer: coarse), (any-hover: none), (max-width: 640px) {
   .chip { min-height: 44px; padding: var(--s4) var(--s8); }
   .home-pill { min-height: 44px; padding: var(--s4) var(--s8); }
   .modal-close { width: 44px; height: 44px; }
@@ -895,7 +922,14 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   padding: var(--s8);
   display: flex; flex-direction: column; gap: var(--s6);
 }
-.report-form h2 { margin: 0; font-family: var(--font-display), serif; font-style: italic; color: var(--accent-pink); }
+.report-form h2 {
+  margin: 0;
+  font-family: var(--font-display), serif;
+  font-style: italic;
+  /* Lilac (structure) per docs/design-system.md — not pink, which is
+     reserved for primary actions. Audit 2026-05-17 H2. */
+  color: var(--accent-lilac);
+}
 .report-form-help { margin: 0; color: var(--text-secondary); font-size: 0.9rem; }
 .report-category-chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
 .report-form textarea {
@@ -930,7 +964,15 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   border-color: var(--accent-pink);
   box-shadow: var(--shadow-pink-soft);
 }
-.report-form-actions button:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+.report-form-actions button:disabled {
+  /* Disabled state: drop the pink fill entirely so the button reads as
+     "not yet" rather than "muted pink". Audit 2026-05-17 L2. */
+  background: var(--surface-2);
+  color: var(--text-disabled);
+  border-color: var(--border-medium);
+  cursor: not-allowed;
+  box-shadow: none;
+}
 
 .report-modal-content { display: flex; gap: var(--s8); padding: var(--s8); }
 .report-modal-preview img { width: 160px; height: 160px; object-fit: cover; border-radius: var(--r-2xl); display: block; }
@@ -945,11 +987,53 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   .report-modal-preview .preview-name { margin: 0; font-size: 0.95rem; }
 }
 
-.report-page { max-width: 720px; margin: 0 auto; padding: var(--s8); }
+/* Single-column layout, centered preview, form pulled in to align with
+   image (audit 2026-05-17 M2 — direct-URL fallback used to look broken
+   because the form was full-width while the image stayed 320px max). */
+.report-page { max-width: 560px; margin: 0 auto; padding: var(--s8) var(--s6); }
 .report-page-header { margin-bottom: var(--s6); }
 .report-page-back { color: var(--text-secondary); text-decoration: none; }
-.report-page-content { display: flex; flex-direction: column; gap: var(--s8); }
-.report-page-preview img { width: 100%; max-width: 320px; border-radius: var(--r-3xl); }
+.report-page-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s8);
+}
+.report-page-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s3);
+  text-align: center;
+}
+.report-page-preview-img {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  border-radius: var(--r-3xl);
+}
+.report-page-preview .preview-name {
+  margin: 0;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: var(--text-md);
+  color: var(--text-primary);
+}
+.report-page-preview .preview-species {
+  margin: 0;
+  font-family: var(--font-display), serif;
+  font-style: italic;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+.report-page-preview .preview-source {
+  margin: 0;
+  font-family: var(--font-mono), monospace;
+  font-size: var(--text-xs);
+  color: var(--accent-sky);
+  text-decoration: none;
+}
+.report-page-preview .preview-source:hover { text-decoration: underline; }
+.report-page .report-form { width: 100%; padding: 0; }
 
 .toast-host {
   position: fixed;
@@ -1393,13 +1477,17 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 }
 
 .home-gallery-link {
+  /* Secondary CTA — ghost treatment so the pink "start session" stays the
+     unambiguous primary action (audit 2026-05-17, H2 pink discipline). */
   background: transparent;
-  color: var(--accent-pink);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-emphasis);
   gap: 0.4rem;
 }
 .home-gallery-link:hover {
   transform: translateY(-2px);
-  background: color-mix(in srgb, var(--accent-pink) 12%, transparent);
+  border-color: var(--accent-lilac-border);
+  background: var(--accent-lilac-soft);
 }
 .home-gallery-link-icon {
   transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -1953,19 +2041,17 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   margin: 0;
 }
 
-/* Responsive collapse — at narrow widths, the action bar's stacked
-   buttons hide everything except the glyph to fit. */
+/* Responsive collapse for the action bar's stacked buttons.
+   ≤720: drop the keyboard-shortcut hint (irrelevant on touch, recovers
+   vertical space). Labels stay visible at 600-720 (tablets) so users
+   see what each icon does (audit M3).
+   <600: hide the label too — at this width the 9-button bar can't fit
+   labels in one row without overflow; wrap to 2 rows glyph-only. */
 @media (max-width: 720px) {
-  .u-icon-btn-stacked-label,
-  .u-icon-btn-stacked-hint {
-    display: none;
-  }
+  .u-icon-btn-stacked-hint { display: none; }
 }
-
-/* Phone-narrow: even with labels hidden the 9-button action bar at
-   54px each overflows a 375px viewport. Let it wrap to two rows
-   instead of overflowing horizontally; tap targets stay 44px. */
-@media (max-width: 480px) {
+@media (max-width: 599px) {
+  .u-icon-btn-stacked-label { display: none; }
   .session-action-bar-wrap { padding: 0 var(--s4) calc(var(--s4) + 2px); }
   .session-action-bar-panel {
     flex-wrap: wrap;

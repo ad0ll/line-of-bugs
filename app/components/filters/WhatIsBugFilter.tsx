@@ -3,6 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 import styles from "./WhatIsBugFilter.module.css";
 
+function ChevronDown() {
+  return (
+    <svg
+      aria-hidden="true"
+      width="10"
+      height="10"
+      viewBox="0 0 10 10"
+      fill="none"
+      className={styles.chevron}
+    >
+      <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 interface SearchResult {
   kind: "group" | "species";
   value: string;
@@ -17,8 +32,6 @@ export interface WhatIsBugFilterProps {
   selectedSpecies: string[];
   onGroupsChange: (next: string[]) => void;
   onSpeciesChange: (next: string[]) => void;
-  /** Total image count when no filter set — shown in the empty chip. */
-  totalCount: number;
 }
 
 export function WhatIsBugFilter({
@@ -26,7 +39,6 @@ export function WhatIsBugFilter({
   selectedSpecies,
   onGroupsChange,
   onSpeciesChange,
-  totalCount,
 }: WhatIsBugFilterProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -42,6 +54,17 @@ export function WhatIsBugFilter({
     }
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
+
+  // Lock body scroll on the mobile bottom sheet (audit re-check). Gated on
+  // ≤640px so desktop hover-popover usage is unaffected.
+  useEffect(() => {
+    if (!open) return;
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia("(max-width: 640px)").matches) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
   }, [open]);
 
   // Fetch search results, debounced
@@ -88,11 +111,12 @@ export function WhatIsBugFilter({
           role="combobox"
           aria-expanded={open}
           aria-haspopup="listbox"
-          aria-label={`all bug types · ${totalCount.toLocaleString()}`}
+          aria-label="all bug types"
           className={`${styles.chip} ${styles.empty} ${open ? styles.open : ""}`}
           onClick={() => setOpen((o) => !o)}
         >
-          all bug types · {totalCount.toLocaleString()} <span aria-hidden>⌄</span>
+          all bug types
+          <ChevronDown />
         </button>
       ) : (
         <div className={styles.chipWall}>
@@ -117,35 +141,39 @@ export function WhatIsBugFilter({
       )}
 
       {open && (
-        <div className={styles.picker}>
-          <input
-            ref={inputRef}
-            type="text"
-            autoFocus
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="type a bug type or species…"
-            className={styles.search}
-            onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
-          />
-          <ul role="listbox" className={styles.list}>
-            {results.map((r) => (
-              <li
-                key={`${r.kind}-${r.value}`}
-                role="option"
-                aria-selected={false}
-                className={styles.row}
-                onClick={() => pickResult(r)}
-              >
-                <span className={styles.kindBadge}>{r.kind}</span>
-                <span className={styles.rowLabel}>{r.label}</span>
-                <span className={styles.rowCount}>{r.count.toLocaleString()}</span>
-              </li>
-            ))}
-            {query && results.length === 0 && <li className={styles.empty}>no matches</li>}
-            {!query && <li className={styles.empty}>start typing to see suggestions</li>}
-          </ul>
-        </div>
+        <>
+          <div className={styles.scrim} onClick={() => setOpen(false)} aria-hidden="true" />
+          <div className={styles.picker} role="dialog">
+            <div className={styles.sheetHandle} aria-hidden="true" />
+            <input
+              ref={inputRef}
+              type="text"
+              autoFocus
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="type a bug type or species…"
+              className={styles.search}
+              onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
+            />
+            <ul role="listbox" className={styles.list}>
+              {results.map((r) => (
+                <li
+                  key={`${r.kind}-${r.value}`}
+                  role="option"
+                  aria-selected={false}
+                  className={styles.row}
+                  onClick={() => pickResult(r)}
+                >
+                  <span className={styles.kindBadge}>{r.kind}</span>
+                  <span className={styles.rowLabel}>{r.label}</span>
+                  <span className={styles.rowCount}>{r.count.toLocaleString()}</span>
+                </li>
+              ))}
+              {query && results.length === 0 && <li className={styles.empty}>no matches</li>}
+              {!query && <li className={styles.empty}>start typing to see suggestions</li>}
+            </ul>
+          </div>
+        </>
       )}
     </div>
   );

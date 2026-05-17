@@ -10,7 +10,6 @@ describe("WhatIsBugFilter empty state", () => {
         selectedSpecies={[]}
         onGroupsChange={vi.fn()}
         onSpeciesChange={vi.fn()}
-        totalCount={39632}
       />,
     );
     const chip = screen.getByRole("combobox", { name: /all bug types/i });
@@ -24,7 +23,6 @@ describe("WhatIsBugFilter empty state", () => {
         selectedSpecies={[]}
         onGroupsChange={vi.fn()}
         onSpeciesChange={vi.fn()}
-        totalCount={39632}
       />,
     );
     await screen.getByRole("combobox").click();

@@ -10,7 +10,7 @@ const OPTS = [
 ];
 
 describe("AllOrChipsFilter empty state", () => {
-  it("renders 'all X · total ⌄' chip when nothing selected", async () => {
+  it("renders 'all X' chip when nothing selected (no inline total — audit L1)", async () => {
     const onChange = vi.fn();
     const screen = await render(
       <AllOrChipsFilter
@@ -23,7 +23,9 @@ describe("AllOrChipsFilter empty state", () => {
     );
     const chip = screen.getByRole("combobox", { name: /all bug types/i });
     await expect.element(chip).toBeInTheDocument();
-    await expect.element(chip).toHaveTextContent("12,389"); // 2855 + 6404 + 3130
+    // L1: the redundant "· 12,389" total was removed (it duplicated the
+    // page-level "you have N bugs" count five times across the filter row).
+    await expect.element(chip).not.toHaveTextContent("12,389");
   });
 
   it("clicking the empty chip opens the picker", async () => {

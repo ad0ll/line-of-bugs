@@ -2,6 +2,7 @@ import Image from 'next/image';
 import type { GalleryRow } from '@/lib/queries/gallery';
 import { isOrderOnlyId, titleCaseCommonName } from '@/lib/text-format';
 import { TileActions } from '@/app/components/gallery/TileActions';
+import { OrderBadge } from '@/app/components/ui/OrderBadge';
 
 function basename(p: string): string {
   return p.split('/').pop() ?? p;
@@ -42,11 +43,6 @@ export function GridTile({ row }: { row: GalleryRow }) {
           sourceHref={row.image_url}
           sourceName={sourceName(row.source)}
         />
-        {row.license && (
-          <span className="grid-item-license" aria-label={`license ${row.license}`}>
-            {row.license}
-          </span>
-        )}
       </div>
       <div className="grid-item-meta">
         {commonName && (
@@ -58,6 +54,14 @@ export function GridTile({ row }: { row: GalleryRow }) {
         {row.taxon_species && !orderOnly && (
           <span className="grid-item-species">{row.taxon_species}</span>
         )}
+        <div className="grid-item-meta-row">
+          {row.taxon_order && !orderOnly && <OrderBadge order={row.taxon_order} />}
+          {row.license && (
+            <span className="grid-item-license" aria-label={`license ${row.license}`}>
+              {row.license}
+            </span>
+          )}
+        </div>
       </div>
     </article>
   );

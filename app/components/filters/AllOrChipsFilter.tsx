@@ -3,6 +3,21 @@
 import { useId, useRef, useState, useEffect } from "react";
 import styles from "./AllOrChipsFilter.module.css";
 
+function ChevronDown() {
+  return (
+    <svg
+      aria-hidden="true"
+      width="10"
+      height="10"
+      viewBox="0 0 10 10"
+      fill="none"
+      className={styles.chevron}
+    >
+      <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export interface AllOrChipsOption {
   value: string;
   label: string;
@@ -45,7 +60,18 @@ export function AllOrChipsFilter({
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [open]);
 
-  const totalCount = options.reduce((a, o) => a + o.count, 0);
+  // Lock body scroll when the mobile bottom sheet is open so the page
+  // behind the sheet doesn't scroll under finger drags (audit re-check).
+  // Gated on ≤640px to avoid locking desktop hover-popover usage.
+  useEffect(() => {
+    if (!open) return;
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia("(max-width: 640px)").matches) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
+
   const visibleOptions = options
     .slice()
     .sort((a, b) => b.count - a.count)
@@ -72,7 +98,8 @@ export function AllOrChipsFilter({
           className={`${styles.chip} ${styles.empty} ${open ? styles.open : ""}`}
           onClick={() => setOpen((o) => !o)}
         >
-          {emptyLabel} · {totalCount.toLocaleString()} <span aria-hidden>⌄</span>
+          {emptyLabel}
+          <ChevronDown />
         </button>
       ) : (
         <SelectedChips
@@ -85,16 +112,20 @@ export function AllOrChipsFilter({
       )}
 
       {open && (
-        <Picker
-          id={pickerId}
-          options={visibleOptions}
-          selected={selected}
-          onPick={toggleOption}
-          search={search}
-          onSearch={setSearch}
-          searchable={searchable}
-          onClose={() => setOpen(false)}
-        />
+        <>
+          {/* Scrim is mobile-only via CSS; on desktop it renders nothing. */}
+          <div className={styles.scrim} onClick={() => setOpen(false)} aria-hidden="true" />
+          <Picker
+            id={pickerId}
+            options={visibleOptions}
+            selected={selected}
+            onPick={toggleOption}
+            search={search}
+            onSearch={setSearch}
+            searchable={searchable}
+            onClose={() => setOpen(false)}
+          />
+        </>
       )}
     </div>
   );
@@ -181,7 +212,8 @@ function Picker({
   }
 
   return (
-    <div className={styles.picker} id={id} onKeyDown={onKeyDown}>
+    <div className={styles.picker} id={id} onKeyDown={onKeyDown} role="dialog">
+      <div className={styles.sheetHandle} aria-hidden="true" />
       {searchable && (
         <input
           type="text"

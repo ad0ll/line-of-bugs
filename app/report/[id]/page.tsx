@@ -44,6 +44,8 @@ async function ReportLoader({ params }: { params: Params }) {
       height={img.height ?? 1}
       commonName={img.commonName}
       speciesName={img.taxonSpecies}
+      sourcePageUrl={img.sourcePageUrl}
+      source={img.source}
     />
   );
 }

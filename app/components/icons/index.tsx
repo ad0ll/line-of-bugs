@@ -16,13 +16,12 @@ interface IconProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "width" | 
   size?: number;
 }
 
-function makeIcon(file: string, alt: string) {
+function makeIcon(file: string, _alt: string) {
   return function Icon({ size = 20, ...rest }: IconProps) {
     return (
       <img
         src={`/icons/${file}`}
         alt=""
-        aria-label={alt}
         aria-hidden="true"
         width={size}
         height={size}

@@ -13,6 +13,14 @@ interface ReportPageClientProps {
   height: number;
   commonName: string | null;
   speciesName: string | null;
+  sourcePageUrl: string;
+  source: string;
+}
+
+function sourceName(src: string): string {
+  if (src === "inaturalist") return "iNaturalist";
+  if (src === "bugwood") return "Bugwood";
+  return src;
 }
 
 export function ReportPageClient({
@@ -22,6 +30,8 @@ export function ReportPageClient({
   height,
   commonName,
   speciesName,
+  sourcePageUrl,
+  source,
 }: ReportPageClientProps) {
   const router = useRouter();
   return (
@@ -35,6 +45,19 @@ export function ReportPageClient({
           className="report-page-preview-img"
         />
         <p className="preview-name">{commonName ?? speciesName ?? imageId}</p>
+        {commonName && speciesName && (
+          <p className="preview-species">{speciesName}</p>
+        )}
+        {sourcePageUrl && (
+          <a
+            className="preview-source"
+            href={sourcePageUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            view on {sourceName(source)} ↗
+          </a>
+        )}
       </div>
       <ReportForm
         imageId={imageId}

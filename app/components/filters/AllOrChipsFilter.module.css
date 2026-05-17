@@ -1,3 +1,7 @@
+/* Tokens per docs/design-system.md.
+   `--s*` for spacing, `--r-*` for radius, `--text-*` for type.
+   Audit 2026-05-17 M1. */
+
 .wrap {
   position: relative;
   display: inline-block;
@@ -6,13 +10,13 @@
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 999px;
+  gap: var(--s4);
+  padding: var(--s4) var(--s8);
+  border-radius: var(--r-pill);
   border: 1px solid var(--surface-2);
   background: var(--surface-1);
   color: var(--text-primary);
-  font-size: 0.95rem;
+  font-size: var(--text-md);
   font-family: inherit;
   cursor: pointer;
   transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -22,12 +26,16 @@
 
 .chip:hover {
   transform: translateY(-1px);
-  box-shadow: 0 0 12px 2px color-mix(in srgb, var(--accent-pink) 35%, transparent);
+  border-color: var(--border-emphasis);
 }
+/* Selected chips hover in their own accent (lilac structure) so the
+   hover doesn't fight the chip's selected color (audit H2 polish). */
+.chip.selected:hover { border-color: var(--accent-lilac); }
+.chip.empty:hover { border-color: var(--accent-pink-border); }
 
 .chip.empty {
-  background: color-mix(in srgb, var(--accent-pink) 18%, transparent);
-  border-color: color-mix(in srgb, var(--accent-pink) 35%, transparent);
+  background: color-mix(in srgb, var(--accent-pink) 12%, transparent);
+  border-color: color-mix(in srgb, var(--accent-pink) 28%, transparent);
 }
 
 .chip.empty:focus-visible {
@@ -35,39 +43,25 @@
   outline-offset: 2px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .chip.empty {
-    animation: softPulse 2.4s ease-in-out infinite;
-  }
-}
-
-@keyframes softPulse {
-  /* No transform — geometry changes break Playwright stability checks and
-     can interfere with click targeting. Glow + brightness give the
-     "breathing" feeling without moving the chip's bounding box. */
-  0%, 100% {
-    box-shadow: 0 0 0 0 transparent;
-    filter: brightness(1);
-  }
-  50% {
-    box-shadow: 0 0 22px 3px color-mix(in srgb, var(--accent-pink) 55%, transparent);
-    filter: brightness(1.08);
-  }
-}
-
 .chip.open {
-  background: color-mix(in srgb, var(--accent-pink) 28%, transparent);
+  background: color-mix(in srgb, var(--accent-pink) 22%, transparent);
+}
+
+.chevron {
+  opacity: 0.6;
+  flex-shrink: 0;
 }
 
 .chipWall {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--s4);
 }
 
 .chip.selected {
-  background: color-mix(in srgb, var(--accent-pink) 22%, transparent);
-  border-color: color-mix(in srgb, var(--accent-pink) 45%, transparent);
+  /* Lilac = "structure / selection" per docs/design-system.md. Audit H2. */
+  background: var(--accent-lilac-soft);
+  border-color: var(--accent-lilac-border);
   animation: chipIn 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -82,11 +76,11 @@
   border: 0;
   color: inherit;
   cursor: pointer;
-  padding: 0 0.25rem;
-  font-size: 1rem;
+  padding: 0 var(--s2);
+  font-size: var(--text-lg);
   line-height: 1;
   opacity: 0.7;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
 }
 .removeBtn:hover { opacity: 1; }
 .removeBtn:focus-visible {
@@ -104,18 +98,21 @@
   border-style: dashed;
 }
 
+/* Desktop: absolute popover anchored to the chip.
+   ≤640px: full-width bottom sheet so it doesn't obscure the next filter
+   row (audit C1 — verified popover hid 2-3 adjacent filters at 390px). */
 .picker {
   position: absolute;
-  top: calc(100% + 0.5rem);
+  top: calc(100% + var(--s4));
   left: 0;
   z-index: 50;
   min-width: 16rem;
   max-width: 24rem;
   background: var(--surface-1);
   border: 1px solid var(--surface-2);
-  border-radius: 1rem;
-  padding: 0.5rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  border-radius: var(--r-3xl);
+  padding: var(--s4);
+  box-shadow: var(--shadow-panel);
   animation: pickerIn 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -127,14 +124,14 @@
 .search {
   width: 100%;
   box-sizing: border-box;
-  padding: 0.5rem 0.75rem;
+  padding: var(--s4) var(--s6);
   background: var(--surface-0);
   border: 1px solid var(--surface-2);
-  border-radius: 0.5rem;
+  border-radius: var(--r-md);
   color: inherit;
   font-family: inherit;
-  font-size: 0.9rem;
-  margin-bottom: 0.5rem;
+  font-size: var(--text-md);
+  margin-bottom: var(--s4);
 }
 
 .list {
@@ -149,14 +146,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
+  gap: var(--s4);
+  padding: var(--s4) var(--s6);
+  border-radius: var(--r-md);
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: var(--text-md);
 }
 
-.row:hover { background: color-mix(in srgb, var(--accent-pink) 12%, transparent); }
+.row:hover { background: color-mix(in srgb, var(--accent-lilac) 14%, transparent); }
 
 .rowDisabled {
   opacity: 0.45;
@@ -167,23 +164,87 @@
 .rowCount {
   font-variant-numeric: tabular-nums;
   opacity: 0.7;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 }
 
 .addedBadge {
-  font-size: 0.7rem;
-  padding: 0.1rem 0.4rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent-pink) 22%, transparent);
+  font-size: var(--text-xs);
+  padding: var(--s1) var(--s3);
+  border-radius: var(--r-pill);
+  background: var(--accent-lilac-soft);
 }
 
 .empty {
-  padding: 0.75rem;
+  padding: var(--s6);
   text-align: center;
   opacity: 0.6;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 }
 
 .rowActive {
-  background: color-mix(in srgb, var(--accent-pink) 18%, transparent);
+  background: color-mix(in srgb, var(--accent-lilac) 18%, transparent);
+}
+
+/* Bottom-sheet mode for narrow viewports — fixed at viewport bottom so the
+   sheet never obscures the adjacent filter row. The scrim is a separate
+   element rendered via React; this rule just repositions the picker panel. */
+@media (max-width: 640px) {
+  .picker {
+    position: fixed;
+    inset: auto 0 0 0;
+    top: auto;
+    left: 0;
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+    border-radius: var(--r-4xl) var(--r-4xl) 0 0;
+    padding: var(--s6) var(--s6) calc(var(--s8) + env(safe-area-inset-bottom, 0px));
+    max-height: 70vh;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45);
+    animation: sheetIn 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .list { max-height: calc(70vh - 6rem); }
+  .row { min-height: 44px; padding: var(--s4) var(--s6); }
+}
+
+@keyframes sheetIn {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0);    }
+}
+
+/* Sheet scrim — only rendered on mobile by the component. Dims the page
+   behind the sheet and catches outside-clicks for dismissal. */
+.scrim {
+  display: none;
+}
+@media (max-width: 640px) {
+  .scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 49;
+    background: var(--surface-backdrop);
+    backdrop-filter: blur(2px);
+    animation: scrimIn 200ms ease-out;
+  }
+}
+
+@keyframes scrimIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Sheet handle — visual grip at top of mobile sheet for affordance. */
+.sheetHandle {
+  display: none;
+}
+@media (max-width: 640px) {
+  .sheetHandle {
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: var(--r-pill);
+    background: var(--text-disabled);
+    margin: 0 auto var(--s4);
+  }
 }

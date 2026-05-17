@@ -45,9 +45,10 @@ describe("GridTile", () => {
     const screen = await render(<GridTile row={BASE_ROW as any} />);
     await expect.element(screen.getByText(/Monarch/i)).toBeInTheDocument();
     await expect.element(screen.getByText(/Danaus plexippus/i)).toBeInTheDocument();
-    // The order-badge / taxon-group chip should be gone regardless.
+    // L4: order badge appears in the meta row for normal (non-order-only)
+    // species per docs/design-system.md gallery info hierarchy.
     const chip = screen.container.querySelector(".order-badge");
-    expect(chip).toBeNull();
+    expect(chip?.textContent).toBe("Lepidoptera");
   });
 
   it("renders the license badge bottom-left when license is present", async () => {

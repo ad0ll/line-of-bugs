@@ -178,7 +178,6 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
                   selectedSpecies={species}
                   onGroupsChange={setGroups}
                   onSpeciesChange={setSpecies}
-                  totalCount={initialFacetsRef.current.total}
                 />
               </FilterRow>
               <FilterRow label="view">

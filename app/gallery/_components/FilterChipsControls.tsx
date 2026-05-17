@@ -100,7 +100,6 @@ export function FilterChipsControls({ initialSubject, initialFacets, institution
         selectedSpecies={species}
         onGroupsChange={setGroups}
         onSpeciesChange={setSpecies}
-        totalCount={initialFacets.total}
       />
       <AllOrChipsFilter
         label="view"
