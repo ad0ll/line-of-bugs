@@ -29,11 +29,6 @@ export function StartSessionButton({
     setPending(true);
     setError(null);
     try {
-      try {
-        await document.documentElement.requestFullscreen?.();
-      } catch {
-        // ignore — permission denied or unsupported
-      }
       const res = await fetch("/api/session/start", {
         method: "POST",
         headers: { "content-type": "application/json" },
