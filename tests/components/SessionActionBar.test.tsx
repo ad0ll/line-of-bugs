@@ -96,6 +96,15 @@ describe("SessionActionBar", () => {
     await expect.element(screen.getByRole("button", { name: /sketchfab/i })).toHaveClass("is-active");
   });
 
+  it("formats counter total with thousands separators", async () => {
+    const screen = await render(
+      <SessionActionBar {...baseProps} currentIdx={28} total={39631} />,
+    );
+    const counter = screen.container.querySelector(".session-counter");
+    // "29 of 39,631" — locale-formatted; toLocaleString in en-US uses a comma.
+    expect(counter?.textContent).toMatch(/29\s*of\s*39,631/);
+  });
+
   it("disables the Sketchfab button when sketchfabDisabled=true", async () => {
     const onToggle = vi.fn();
     const screen = await render(

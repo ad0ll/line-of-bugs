@@ -1822,19 +1822,26 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   text-wrap: balance;
 }
 
+/* Phase E (2026-05-17) — counter is plain serif italic text, matching the
+   gallery count copy. Was a sky-blue mono chip; user found it unclear and
+   visually inconsistent with the rest of the chrome's friendly serif. */
 .session-counter {
-  padding: var(--s2) var(--s4);
-  font-family: var(--font-mono), monospace;
-  font-size: 13px;
-  color: var(--accent-sky);
-  min-width: 100px;
-  text-align: center;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-serif), serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
-  display: inline-flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 4px;
+  gap: 0.25rem;
+  white-space: nowrap;
+  min-width: 76px; /* matches stacked-button slot from Phase B */
 }
+.session-counter-current {
+  color: var(--accent-pink);
+  font-weight: 500;
+}
+.session-counter-sep { opacity: 0.7; font-style: italic; }
+.session-counter-total { color: var(--text-secondary); }
 
 /* When labels are hidden on narrow viewports (≤720px), drop the slot
    width back to the glyph-only footprint so the bar fits. */
@@ -1843,11 +1850,6 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   .session-action-bar-panel .session-counter {
     min-width: 54px;
   }
-}
-.session-counter-sep {
-  color: var(--text-tertiary);
-  font-size: 0.8em;
-  text-transform: lowercase;
 }
 
 .session-timer-dropdown {

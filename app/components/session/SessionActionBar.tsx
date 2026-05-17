@@ -73,9 +73,9 @@ export function SessionActionBar(props: Props) {
           </IconBtn>
         ) : null}
         <div className="session-counter">
-          <span className="session-counter-current">{props.currentIdx + 1}</span>
+          <span className="session-counter-current">{(props.currentIdx + 1).toLocaleString()}</span>
           <span className="session-counter-sep">of</span>
-          <span className="session-counter-total">{props.total}</span>
+          <span className="session-counter-total">{props.total.toLocaleString()}</span>
         </div>
       </div>
     </div>
