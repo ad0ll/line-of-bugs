@@ -59,7 +59,7 @@ export const TOOLTIPS = {
         <p>How sessions handle repeated species:</p>
         <ul>
           <li><strong>(high)</strong> never repeat the same species</li>
-          <li><strong>(medium)</strong> same species, different angles only</li>
+          <li><strong>(medium)</strong> include same species from different angles</li>
           <li><strong>(low)</strong> include all photos of your chosen bugs</li>
         </ul>
       </>

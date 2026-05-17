@@ -6,7 +6,7 @@ import type { RepeatMode } from "@/lib/repeat-mode";
 // want unique-species sessions; (low) "everything" is escape hatch.
 const OPTIONS: { value: RepeatMode; label: string; level: "high" | "med" | "low" }[] = [
   { value: "never-repeat-animals", label: "never repeat the same species", level: "high" },
-  { value: "allow-different-angles", label: "same species, different angles only", level: "med" },
+  { value: "allow-different-angles", label: "include same species from different angles", level: "med" },
   { value: "default", label: "include all photos of your chosen bugs", level: "low" },
 ];
 
