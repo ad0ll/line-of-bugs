@@ -42,16 +42,17 @@ export function StartSessionButton({
       });
       if (!res.ok) {
         setError(await res.text());
+        setPending(false);
         return;
       }
       const data = (await res.json()) as { sessionId: string };
       router.push(`/session?session=${encodeURIComponent(data.sessionId)}&interval=${intervalSec}`);
+      // Intentionally do NOT clear pending here — the component unmounts on
+      // successful navigation. If the user back-navigates before /session
+      // renders, React Suspense will re-render this component with pending=true
+      // which is harmless (button is just disabled; user can click again).
     } catch (e) {
       setError(String(e));
-    } finally {
-      // Always clear pending — covers cancelled navigation (router.push
-      // throws on user back-nav under React Suspense), network errors,
-      // and the happy path equally.
       setPending(false);
     }
   }
