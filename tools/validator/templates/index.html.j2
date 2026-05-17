@@ -70,6 +70,12 @@
   .review-row button.mark-reviewed.active { background: #2d4a2d; color: #a8e6a8; border-color: #4a7a4a; }
   .review-row button.unsure-button.active { background: #28252e; color: #aaa; border-color: #666; }
 
+  /* Rule labeler hint — informational only, not auto-applied (sam3 miscalibrated) */
+  .rule-hint { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #bbb; background: rgba(245,158,11,0.06); border-left: 2px solid rgba(245,158,11,0.4); padding: 4px 8px; margin: 6px 0; }
+  .rule-hint code { background: rgba(245,158,11,0.15); color: #f59e0b; padding: 1px 4px; border-radius: 3px; margin-right: 4px; font-size: 10px; }
+  .rule-hint.rule-hint-empty { color: #666; background: none; border-left-color: #2a2a2a; }
+  .rule-hint.rule-hint-empty em { color: #555; }
+
   /* 4-column label grid (Phase 2a) */
   .label-columns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
   .col { border: 1px solid #28252e; border-radius: 6px; padding: 6px; display: flex; flex-direction: column; gap: 3px; }
@@ -290,19 +296,14 @@ function isUserEdited(lbl) {
     (lbl.col4 && lbl.col4.length > 0) || lbl.unsure));
 }
 
-// On first user interaction, "materialize" the system suggestion into the
-// user's fields. After this, the suggestion is no longer shown in outlined
-// column color; the user is editing their own copy.
+// Mark the record as user-edited on first interaction. Rule-suggested
+// labels are NOT pre-filled — the sam3 rule_labeler is miscalibrated
+// (no-bug over-fires 33vs2, multibug_unusable 54vs0, mask_poor-contrast
+// 18vs15 w/ only 3 agreeing) and silently endorsing them would
+// contaminate the very ground truth needed to re-tune the rule.
+// Re-enable pre-fill after threshold sweep produces sam3-tuned values.
 function _ensureMaterialized(cur, r) {
   if (cur.user_edited) return;
-  for (const s of (r.suggested_labels || [])) {
-    if (COL2_COUNT_IDS.has(s)) { cur.col2_count = cur.col2_count || s; }
-    else if (COL2_FLAG_BUTTONS.some(b => b.id === s)) {
-      if (!cur.col2_flags.includes(s)) cur.col2_flags.push(s);
-    } else if (COL3_BUTTONS.some(b => b.id === s)) {
-      if (!cur.col3.includes(s)) cur.col3.push(s);
-    }
-  }
   cur.user_edited = true;
 }
 
@@ -518,6 +519,12 @@ function render() {
       return '<button class="' + cls + '" title="' + b.tip + '" onclick="toggleCol4(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
     }).join('');
 
+    const suggestedHintHTML = suggested.length
+      ? '<div class="rule-hint" title="Rule labeler\'s guess. Currently miscalibrated for sam3 — verify before clicking.">rule says: ' +
+        suggested.map(s => '<code>' + s + '</code>').join(' ') +
+        '</div>'
+      : '<div class="rule-hint rule-hint-empty">rule says: <em>(nothing — clean single-bug card)</em></div>';
+
     const columnsHTML =
       '<div class="label-columns">' +
         '<div class="col col1"><div class="col-header">BBox</div>' + col1HTML + '</div>' +
@@ -549,6 +556,7 @@ function render() {
         (r.gt_iou !== null ? ' \u00b7 gt_iou: ' + r.gt_iou.toFixed(2) : '') +
       '</div>' +
       staleHTML +
+      suggestedHintHTML +
       columnsHTML +
       '<div class="review-row">' +
         '<button class="mark-reviewed ' + (reviewed ? 'active' : '') + '" onclick="markReviewed(\'' + r.image_id + '\')" title="Confirms the current labels (accepts the system suggestion if you haven\'t changed anything). Any label edit auto-marks reviewed.">' +
@@ -570,21 +578,18 @@ document.getElementById("bboxOnlyMode").addEventListener("change", function() {
   document.body.classList.toggle("bbox-only-mode", this.checked);
 });
 
-// Bbox-only mode: Enter / N commits Col 1 + auto-accepts rule suggestions for Cols 2-4
+// Bbox-only mode: Enter / N commits the safe defaults (bbox accept + single
+// bug) and nothing else. Rule suggestions for cols 2-4 are NOT auto-applied
+// — see _ensureMaterialized note above on rule miscalibration. For anything
+// other than a typical single-bug card, click the relevant col2/col3
+// buttons explicitly after pressing Enter.
 function _commitBboxOnly(id) {
-  const r = _rowFor(id);
   const cur = LABELS[id] ? Object.assign({}, LABELS[id]) : _emptyLabel();
   cur.col1 = cur.col1 || "bbox_correct-subject_not-clipped";
-  cur.col2_count = null; cur.col2_flags = []; cur.col3 = [];
-  for (const s of (r.suggested_labels || [])) {
-    if (COL2_COUNT_IDS.has(s)) { cur.col2_count = cur.col2_count || s; }
-    else if (COL2_FLAG_BUTTONS.some(b => b.id === s)) {
-      if (!cur.col2_flags.includes(s)) cur.col2_flags.push(s);
-    } else if (COL3_BUTTONS.some(b => b.id === s)) {
-      if (!cur.col3.includes(s)) cur.col3.push(s);
-    }
-  }
   if (!cur.col2_count) cur.col2_count = "bbox-content_single";
+  if (!Array.isArray(cur.col2_flags)) cur.col2_flags = [];
+  if (!Array.isArray(cur.col3)) cur.col3 = [];
+  if (!Array.isArray(cur.col4)) cur.col4 = [];
   cur.user_edited = true;
   _persist(id, cur);
 }
