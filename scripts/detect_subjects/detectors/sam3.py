@@ -40,6 +40,16 @@ def _sam3_cache_key(prompt: str, model_id: str) -> str:
 class Sam3Detector:
     model_id: str = "facebook/sam3"
 
+    # Empirical finding (2026-05-17): multi-phrase prompts dilute SAM 3's
+    # presence_logits.sigmoid() — the scene-level gate that determines whether
+    # ANY query gets a high score. Adding 8 phrases drops presence from 0.98 to
+    # 0.08 on the same dragonfly image. Per-taxon single phrases ("a dragonfly")
+    # beat "an insect" on clean taxa but regress on damselflies / larvae where
+    # the CLIP concept doesn't include the subject. A/B over 87 images:
+    # "an insect" alone produced 34 new detections + 0 regressions vs the
+    # 9-phrase prompt. See docs/sam3_prompt_investigation.md.
+    DEFAULT_PROMPT_PHRASES = ["an insect"]
+
     def __init__(
         self,
         device: str = "mps",
@@ -50,7 +60,11 @@ class Sam3Detector:
     ) -> None:
         self.device = device
         self.dtype = dtype
-        self.prompt_phrases = prompt_phrases or ["an insect"]
+        self.prompt_phrases = prompt_phrases or list(self.DEFAULT_PROMPT_PHRASES)
+        if prompt_phrases and prompt_phrases != self.DEFAULT_PROMPT_PHRASES:
+            print(f"[Sam3Detector] WARN: caller passed {len(prompt_phrases)} prompt phrases; "
+                  f"empirical evidence says single 'an insect' wins (see "
+                  f"docs/sam3_prompt_investigation.md). Honoring caller's choice anyway.")
         self.box_threshold = box_threshold
         self.model, self.processor = get_shared_sam3(device=device, dtype=dtype)
         # Build and cache the text query at init time (token-budget trimming is O(phrases))

@@ -91,9 +91,20 @@ def run_v1_on_sample(
     print(f"[v1] {len(sample_rows)} total, {len(completed)} cached, "
           f"{len(to_process)} to process")
 
-    # Build DB-driven prompt phrases (used by Sam3Detector; ignored by GroundingDinoDetector via **kwargs)
-    prompt_phrases, prompt_version = build_insect_prompt(DATA_DIR / "db" / "line-of-bugs.db")
-    print(f"[v1] prompt_builder: {len(prompt_phrases)} phrases, version={prompt_version}")
+    # Build DB-driven prompt phrases. The full ordered list is kept for lineage /
+    # GroundingDINO use, but for sam3 we override with ["an insect"] because
+    # multi-phrase prompts dilute SAM 3's scene-level presence gate (see
+    # docs/sam3_prompt_investigation.md). Sam3Detector also enforces this as
+    # its default, but we override here explicitly so the prompt version we
+    # log matches what the model actually sees.
+    full_prompt_phrases, prompt_version = build_insect_prompt(DATA_DIR / "db" / "line-of-bugs.db")
+    if cfg.DETECTOR_VARIANT == "sam3":
+        prompt_phrases = ["an insect"]
+        print(f"[v1] sam3 prompt: 1 phrase ('an insect'); full lookup had "
+              f"{len(full_prompt_phrases)} phrases, version={prompt_version}")
+    else:
+        prompt_phrases = full_prompt_phrases
+        print(f"[v1] prompt_builder: {len(prompt_phrases)} phrases, version={prompt_version}")
 
     detector = make_detector(cfg.DETECTOR_VARIANT, device=device, dtype=dtype,
                              prompt_phrases=prompt_phrases)
