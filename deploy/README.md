@@ -79,9 +79,39 @@ ssh bawler@195.201.8.147 'journalctl -u haproxy -f'
 
 ## Rotate admin password
 
+Set `ADMIN_PASSWORD_HASH_B64` (base64 of the bcrypt hash) on both local
+`.env.local` and the server's `/srv/line-of-bugs/shared/.env`. **Do not
+use the raw `ADMIN_PASSWORD_HASH` env var** — Next.js's dotenv-expand
+treats `$2b` / `$10` / `$<salt>` segments as variable references and
+silently corrupts the hash. Base64 has no `$` chars and survives intact.
+`lib/auth.ts:getAdminPasswordHash` reads `_B64` preferentially.
+
 ```bash
-# Locally
-node -e "const b=require('./node_modules/bcryptjs'); const pw='NEW_PASSWORD_HERE'; console.log(b.hashSync(pw,10))"
-# Edit /srv/line-of-bugs/shared/.env on the server with the new hash
-ssh bawler@195.201.8.147 'sudo systemctl restart line-of-bugs'
+# Generate both the plain hash (for the comment in .env.local) and its
+# base64 form (the actual env value).
+node -e "
+const bcrypt = require('bcrypt');
+const pw = 'NEW_PASSWORD_HERE';
+const hash = bcrypt.hashSync(pw, 10);
+console.log('plain:', pw);
+console.log('hash :', hash);
+console.log('b64  :', Buffer.from(hash).toString('base64'));
+"
+
+# Update local .env.local — keep plaintext in a comment, set B64 only.
+# Update prod via:
+ssh bawler@195.201.8.147 "
+  grep -v '^ADMIN_PASSWORD' /srv/line-of-bugs/shared/.env > /tmp/env.new
+  echo 'ADMIN_PASSWORD_HASH_B64=<paste-b64-here>' >> /tmp/env.new
+  mv /tmp/env.new /srv/line-of-bugs/shared/.env
+  cp /srv/line-of-bugs/shared/.env /srv/line-of-bugs/current/.next/standalone/.env
+  sudo systemctl restart line-of-bugs
+"
 ```
+
+Note: prod's standalone build copies `.env` into `.next/standalone/` at
+build time. Updating just `/srv/line-of-bugs/shared/.env` without also
+copying to the standalone path leaves the standalone server reading a
+stale value — a redeploy (`./deploy/scripts/deploy.sh main`) handles
+this naturally because it re-copies the symlink, but ad-hoc env updates
+must touch both files.
