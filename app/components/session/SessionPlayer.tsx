@@ -38,6 +38,13 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sketchfabOpen, setSketchfabOpen] = useState(false);
 
+  const canBrowseSketchfab =
+    !!items[idx]?.taxonSpecies && !!items[idx]?.commonName;
+  const toggleSketchfab = useCallback(() => {
+    // Only flip true when the panel can actually render; always allow closing.
+    setSketchfabOpen((open) => (open ? false : canBrowseSketchfab));
+  }, [canBrowseSketchfab]);
+
   // Track fullscreen state — user may exit via Escape (handled by browser, not us)
   useEffect(() => {
     const onChange = () => setIsFullscreen(!!document.fullscreenElement);
@@ -233,7 +240,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
         case "k":
         case "K":
           e.preventDefault();
-          setSketchfabOpen((o) => !o);
+          toggleSketchfab();
           break;
         case "Escape":
           if (!pathname.startsWith("/report/")) {
@@ -244,7 +251,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [goPrev, goNext, idx, items, router, pathname, toggleFullscreen]);
+  }, [goPrev, goNext, idx, items, router, pathname, toggleFullscreen, toggleSketchfab]);
 
   // Cursor hide when chrome hidden
   useEffect(() => {
@@ -297,7 +304,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
         onReport={() => router.push(`/report/${encodeURIComponent(current.imageId)}`)}
         onIntervalChange={(s) => setIntervalSec(s)}
         sketchfabOpen={sketchfabOpen}
-        onToggleSketchfab={() => setSketchfabOpen((o) => !o)}
+        onToggleSketchfab={toggleSketchfab}
       />
       <Magnifier image={current} size={magnifier} bw={bw} />
       <EndOfSessionOverlay
@@ -308,7 +315,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
       <SketchfabBrowsePanel
         scientific={current.taxonSpecies ?? ""}
         common={current.commonName ?? ""}
-        open={sketchfabOpen && !!current.taxonSpecies && !!current.commonName}
+        open={sketchfabOpen}
         onClose={() => setSketchfabOpen(false)}
       />
     </main>
