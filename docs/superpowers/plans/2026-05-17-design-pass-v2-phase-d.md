@@ -1510,6 +1510,155 @@ git commit --no-gpg-sign -m "feat(branding): favicon — cherry blossom on dark 
 
 ---
 
+## Task 13: SocialRow — drop Instagram, add Ethereum click-to-copy
+
+**Files:**
+- Modify: `app/components/home/SocialRow.tsx`
+- Modify: `app/globals.css`
+- Test: `tests/components/SocialRow.test.tsx` — update list count + new ETH behavior
+
+Per-user request: drop Instagram (user doesn't use it), add an Ethereum icon at the bottom that copies a wallet address to clipboard on click (no link navigation). The Ethereum brand mark is the official diamond/octahedron — easily recognizable, doesn't collide with the other icons' silhouettes.
+
+- [ ] **Step 1: Update SocialRow.tsx**
+
+Replace the `LINKS` array. Remove Instagram. Add an Ethereum entry. The Ethereum entry uses `onClick` instead of `href` because it copies an address rather than navigating.
+
+```tsx
+// At the top of the file, add:
+const ETH_ADDRESS = "ad0ll.eth"; // ENS name; resolves to mainnet ETH. Update if a different address is preferred.
+
+// In LINKS, drop the Instagram entry and add nothing here (ETH renders separately because its action differs).
+
+// Add an EthMark icon component:
+function EthMark(props: SVGProps<SVGSVGElement>) {
+  // Official Ethereum diamond logo (simplified — public-domain shape, two
+  // stacked triangles forming an octahedron silhouette).
+  return (
+    <svg viewBox="0 0 256 417" width={SIZE} height={SIZE} fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M127.961 0l-2.795 9.5v275.668l2.795 2.79 127.962-75.638z" opacity="0.6"/>
+      <path d="M127.962 0L0 212.32l127.962 75.639V154.158z"/>
+      <path d="M127.961 312.187l-1.575 1.92v98.199l1.575 4.6L256 236.587z" opacity="0.6"/>
+      <path d="M127.962 416.905v-104.72L0 236.585z"/>
+      <path d="M127.961 287.958l127.96-75.637-127.96-58.162z" opacity="0.2"/>
+      <path d="M0 212.32l127.96 75.638V154.159z" opacity="0.45"/>
+    </svg>
+  );
+}
+```
+
+Replace the `SocialRow` body so the existing LINKS map and the new ETH button render in the same row:
+
+```tsx
+export function SocialRow() {
+  const [copied, setCopied] = useState(false);
+  async function copyEth() {
+    try {
+      await navigator.clipboard.writeText(ETH_ADDRESS);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      // Clipboard unavailable (insecure context, denied permission, etc.)
+      // No fallback — the user can hover to read the address from the title attribute below.
+    }
+  }
+  return (
+    <nav aria-label="social links" className="home-social">
+      {LINKS.map(({ name, href, Icon }) => (
+        <a key={name} href={href} target="_blank" rel="noopener noreferrer" aria-label={name} className="home-social-link">
+          <Icon />
+        </a>
+      ))}
+      <button
+        type="button"
+        aria-label={`copy Ethereum address ${ETH_ADDRESS}`}
+        title={`copy Ethereum address ${ETH_ADDRESS}`}
+        className="home-social-link home-social-eth"
+        onClick={copyEth}
+        data-copied={copied || undefined}
+      >
+        <EthMark />
+        {copied && <span className="home-social-eth-toast" role="status" aria-live="polite">copied ✿</span>}
+      </button>
+    </nav>
+  );
+}
+```
+
+Drop the `Instagram` entry from `LINKS` and the `InstagramMark` component. Update the imports (`useState` from React).
+
+- [ ] **Step 2: Update SocialRow.test.tsx**
+
+The test currently expects 4 links and Instagram. Update:
+
+```ts
+it("renders three external links + one ethereum copy button", async () => {
+  const screen = await render(<SocialRow />);
+  // GitHub, BMC, Bluesky as links
+  const links = screen.container().querySelectorAll("a.home-social-link");
+  expect(links.length).toBe(3);
+  // Ethereum as a button (not a link)
+  const ethBtn = screen.container().querySelector("button.home-social-eth");
+  expect(ethBtn).not.toBeNull();
+});
+```
+
+Drop the explicit instagram-link assertion. Replace with a github/bmc/bluesky-only assertion.
+
+- [ ] **Step 3: Style the ETH button + toast**
+
+Append to `app/globals.css`:
+
+```css
+.home-social-link.home-social-eth {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  position: relative;
+  /* Match the existing .home-social-link reset (no underline, same 44×44 target). */
+}
+.home-social-eth-toast {
+  position: absolute;
+  top: -1.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-pink) 90%, transparent);
+  color: var(--surface-0);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  animation: copiedToastIn 200ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+@keyframes copiedToastIn {
+  from { transform: translate(-50%, 6px); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+.home-social-link.home-social-eth[data-copied] {
+  color: var(--accent-pink);
+}
+```
+
+- [ ] **Step 4: Visual verify**
+
+Playwright MCP:
+1. `/` desktop — social row shows three icons (GitHub, BMC, Bluesky) + Ethereum diamond, in that order.
+2. Click Ethereum → toast "copied ✿" appears above; clipboard contains `ad0ll.eth`.
+3. Hover the ETH icon — same pink-glow as other social icons.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add app/components/home/SocialRow.tsx app/globals.css tests/components/SocialRow.test.tsx
+git commit --no-gpg-sign -m "feat(social): drop instagram + add ethereum click-to-copy chip
+
+ETH address copies to clipboard with a 'copied ✿' toast. Default is
+'ad0ll.eth' — placeholder; update if a different address is preferred.
+Instagram dropped (user-confirmed not in use)."
+```
+
+---
+
 ## Final verification
 
 - [ ] **Step 1: tsc + unit + e2e**
