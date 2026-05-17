@@ -1247,10 +1247,13 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 
 .home-start,
 .home-gallery-link {
-  /* Equal-width pair — drives off the wider of the two labels. */
-  min-width: 16rem;
-  width: 16rem;
+  /* Equal-width pair — drives off the wider of the two labels.
+     18rem fits "browse the gallery →" + cute ladybug icon on one
+     line without overflow. */
+  min-width: 18rem;
+  width: 18rem;
   max-width: 90vw;
+  white-space: nowrap;
 }
 
 /* Home form chips (interval, subject) — touch-friendly variant of .chip.
