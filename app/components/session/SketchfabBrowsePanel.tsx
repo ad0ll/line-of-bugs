@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { SketchfabHit, SketchfabSearchResponse } from "@/lib/sketchfab/types";
+import { sketchfabQueryKey } from "@/lib/sketchfab/query-keys";
 
 interface Props {
   scientific: string;
@@ -23,9 +24,7 @@ export async function fetchSketchfab(
   return r.json();
 }
 
-export function sketchfabQueryKey(scientific: string, common: string) {
-  return ["sketchfab", scientific, common] as const;
-}
+export { sketchfabQueryKey } from "@/lib/sketchfab/query-keys";
 
 /** Match the CSS exit animation duration (--timing-base = 0.15s). Kept in
  *  sync manually since CSS custom props can't be read reliably at module load. */
