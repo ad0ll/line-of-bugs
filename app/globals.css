@@ -1813,6 +1813,14 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 .session-action-bar-panel .u-icon-btn-stacked:focus-visible {
   text-decoration: none;
 }
+/* Phase D — "go to source" wraps to two lines so its vertical extent
+   matches the (pause space, magnifier z, ...) two-line peers. */
+.session-action-bar-panel .u-icon-btn-stacked-label {
+  white-space: normal;
+  text-align: center;
+  line-height: 1.05;
+  text-wrap: balance;
+}
 
 .session-counter {
   padding: var(--s2) var(--s4);

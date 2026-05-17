@@ -68,7 +68,7 @@ export function SessionActionBar(props: Props) {
           ▦
         </IconBtn>
         {props.sourceImageUrl ? (
-          <IconBtn label="source" hint=" " as="a" href={props.sourceImageUrl} target="_blank">
+          <IconBtn label="go to source" hint=" " as="a" href={props.sourceImageUrl} target="_blank">
             ↗
           </IconBtn>
         ) : null}
