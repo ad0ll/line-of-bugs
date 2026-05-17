@@ -27,6 +27,12 @@
   .imgs img { width: 100%; height: auto; background: #0d0c10; border-radius: 4px; display: block; }
   .bbox-overlay { position: relative; display: block; line-height: 0; }
   .bbox-overlay .box { position: absolute; border: 0.2vw solid #FF6EC7; pointer-events: none; box-sizing: border-box; }
+
+  /* Bug zoom: zooms into bbox region so the user can see bbox quality at thumbnail scale */
+  .bug-zoom { position: relative; width: 100%; aspect-ratio: 1 / 1; background-color: #0d0c10; background-repeat: no-repeat; border-radius: 4px; border: 1px solid #28252e; }
+  .bug-zoom-box { position: absolute; border: 2px solid #FF6EC7; box-sizing: border-box; pointer-events: none; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.8); }
+  .bug-zoom-nobbox { background-size: contain; background-position: center; }
+  .bug-zoom-missed { position: absolute; top: 0; left: 0; right: 0; padding: 4px 6px; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: #fbbf24; background: rgba(0,0,0,0.75); text-align: center; }
   /* Secondary detections — other distinct subjects the system clustered.
      Cyan so they contrast against both pink primary and any photo background.
      The ::after pseudo-element shows the DINO confidence as a corner badge —
@@ -475,9 +481,42 @@ function render() {
     }).join('');
 
     const boxHTML = primaryBoxHTML + secondaryBoxHTML;
-    const cropHTML = r.crop_path
-      ? '<img src="' + r.crop_path + '" alt="">'
-      : '<div class="nocrop">no crop \u00b7 ' + r.framing_quality + '</div>';
+
+    // Bug-zoom panel: zoom into the bbox + ~30% padding so the user can judge
+    // bbox edges without hover. Background-image w/ background-size/position
+    // lets CSS do the zoom math; small aspect distortion is acceptable.
+    // For no-bbox images, show the original full image so the user can see what
+    // SAM 3 missed (often a dragonfly / mantis — Phase 3 prompt-budget fix).
+    let bugZoomHTML;
+    if (r.bbox_x !== null) {
+      const PAD = 0.3;
+      const pbw = Math.min(1, r.bbox_w * (1 + 2 * PAD));
+      const pbh = Math.min(1, r.bbox_h * (1 + 2 * PAD));
+      const pbx = Math.max(0, Math.min(1 - pbw, r.bbox_x - r.bbox_w * PAD));
+      const pby = Math.max(0, Math.min(1 - pbh, r.bbox_y - r.bbox_h * PAD));
+      const bgSizeX = 100 / pbw;
+      const bgSizeY = 100 / pbh;
+      const bgPosX = pbw < 1 ? (pbx / (1 - pbw)) * 100 : 0;
+      const bgPosY = pbh < 1 ? (pby / (1 - pbh)) * 100 : 0;
+      // Bbox rectangle inside the zoomed view
+      const innerLeft = ((r.bbox_x - pbx) / pbw) * 100;
+      const innerTop = ((r.bbox_y - pby) / pbh) * 100;
+      const innerW = (r.bbox_w / pbw) * 100;
+      const innerH = (r.bbox_h / pbh) * 100;
+      bugZoomHTML =
+        '<div class="bug-zoom" style="background-image:url(' + r.original_path + ');' +
+          'background-size:' + bgSizeX + '% ' + bgSizeY + '%;' +
+          'background-position:' + bgPosX + '% ' + bgPosY + '%;">' +
+          '<div class="bug-zoom-box" style="left:' + innerLeft + '%;top:' + innerTop + '%;' +
+            'width:' + innerW + '%;height:' + innerH + '%;"></div>' +
+        '</div>';
+    } else {
+      // No bbox: full image with a "missed" overlay tag — Phase 3 candidate
+      bugZoomHTML =
+        '<div class="bug-zoom bug-zoom-nobbox" style="background-image:url(' + r.original_path + ');">' +
+          '<div class="bug-zoom-missed">no bbox \u2014 mark col2 no-bug if no insect visible, or unsure if SAM 3 missed it</div>' +
+        '</div>';
+    }
 
     // 4-column buttons
     const suggested = r.suggested_labels || [];
@@ -541,7 +580,7 @@ function render() {
             ((r.secondary_bboxes && r.secondary_bboxes.length) ? ' \u00b7 <span style="color:#67D4E6">cyan</span> = ' + r.secondary_bboxes.length + ' other detection' + (r.secondary_bboxes.length === 1 ? '' : 's') : '') +
           '</figcaption>' +
         '</figure>' +
-        '<figure>' + cropHTML + '<figcaption>proposed crop \u00b7 what users see</figcaption></figure>' +
+        '<figure>' + bugZoomHTML + '<figcaption>bug zoom \u00b7 bbox + 30% padding</figcaption></figure>' +
       '</div>' +
       '<div class="name">' + (r.common_name || r.taxon_species || "?") + ' <code>\u00b7 ' + r.image_id + '</code></div>' +
       '<span class="badge ' + r.framing_quality + '">' + r.framing_quality + '</span>' +
