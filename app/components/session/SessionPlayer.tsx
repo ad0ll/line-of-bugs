@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Image } from "@/db/schema";
 import { useHighResTimer } from "@/lib/hooks/useHighResTimer";
 import { useMuted } from "@/lib/hooks/useMuted";
+import { useSketchfabPreloader } from "@/lib/hooks/useSketchfabPreloader";
 import { makeAudio, type AudioCues } from "@/lib/audio";
 import { createPreloadManager, type PreloadManager } from "@/lib/preload-manager";
 import { T } from "@/lib/tokens";
@@ -75,9 +76,9 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
     prefetchSketchfab(items[idx]?.taxonSpecies, items[idx]?.commonName);
   }, [items, idx, prefetchSketchfab]);
 
-  useEffect(() => {
-    prefetchSketchfab(items[idx + 1]?.taxonSpecies, items[idx + 1]?.commonName);
-  }, [items, idx, prefetchSketchfab]);
+  // Next 3 slides: prefetch JSON + thumbnails via requestIdleCallback so we
+  // don't compete with drawing input. See lib/hooks/useSketchfabPreloader.ts.
+  useSketchfabPreloader(items, idx);
 
   // Track fullscreen state — user may exit via Escape (handled by browser, not us)
   useEffect(() => {
