@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import bcrypt from "bcrypt";
-import { ADMIN_USER, constantTimeEq, parseBasicAuth } from "./lib/auth";
+import { ADMIN_USER, constantTimeEq, getAdminPasswordHash, parseBasicAuth } from "./lib/auth";
 
 export const config = {
   matcher: ["/admin/:path*", "/api/admin/:path*"],
@@ -16,7 +16,7 @@ function unauthorized() {
 }
 
 export async function proxy(req: NextRequest): Promise<NextResponse> {
-  const hash = process.env.ADMIN_PASSWORD_HASH;
+  const hash = getAdminPasswordHash();
   if (!hash) return unauthorized();
   const creds = parseBasicAuth(req.headers.get("authorization"));
   if (!creds || !constantTimeEq(creds.user, ADMIN_USER)) return unauthorized();

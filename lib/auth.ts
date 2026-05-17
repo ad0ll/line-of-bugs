@@ -39,9 +39,34 @@ export class UnauthorizedError extends Error {
   }
 }
 
+/**
+ * Resolves the bcrypt admin hash from env. Prefers ADMIN_PASSWORD_HASH_B64
+ * (base64 of the hash) over ADMIN_PASSWORD_HASH (raw).
+ *
+ * Why two vars: dotenv-expand (used by Next.js's runtime env loader) treats
+ * the bcrypt-hash's `$2b` / `$10` / `$<salt>` segments as variable references
+ * and silently substitutes them out, corrupting the hash to a 10-char tail.
+ * Backslash-escapes in the .env file get un-escaped then re-expanded (double
+ * processing). Base64 has no `$` chars so it survives untouched.
+ *
+ * Set the B64 var via:
+ *   echo -n '$2b$10$...' | base64
+ */
+export function getAdminPasswordHash(): string | undefined {
+  const b64 = process.env.ADMIN_PASSWORD_HASH_B64;
+  if (b64) {
+    try {
+      return Buffer.from(b64, "base64").toString("utf8");
+    } catch {
+      return undefined;
+    }
+  }
+  return process.env.ADMIN_PASSWORD_HASH;
+}
+
 export async function requireAdmin(): Promise<void> {
-  const hash = process.env.ADMIN_PASSWORD_HASH;
-  if (!hash) throw new Error("ADMIN_PASSWORD_HASH is not configured");
+  const hash = getAdminPasswordHash();
+  if (!hash) throw new Error("ADMIN_PASSWORD_HASH(_B64) is not configured");
 
   const hs = await headers();
   const auth = hs.get("authorization");
