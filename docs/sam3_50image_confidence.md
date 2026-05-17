@@ -86,3 +86,50 @@ Phase 3 without re-running Phase 2.
 The 30-image iterative sample done earlier in Phase 2b and this 50-image
 fresh-seed final check agree: ~85-90 % detection, ~98 % precision when
 detected, 0 negative-class FPs.
+
+## Verification supplement (post-hoc confidence checks)
+
+After the initial QA pass, three follow-up checks closed gaps in the
+original confidence story:
+
+**1. 30-vs-50 sample overlap.** Re-ran the deterministic sample logic for
+both seeds against the current 299-row sam3 pool. Overlap is 6 / 50
+(12 %) — well under the "drop and re-render" 30 % threshold. The 44
+distinct images in the 50-check (including all 5 misses) are genuinely
+new data, so the recall/precision numbers above reflect generalization,
+not re-confirmation of what the 30-check already showed.
+
+**2. `recompute_parquet` for new-vocab `suggested_labels`.** Existing
+parquet rows for both v1 and sam3 carried OLD-vocab labels emitted by
+the pre-Phase-2 rule labeler, so `evaluate_pipeline` couldn't compare
+system-vs-user. Re-ran rule_labeler over all 360 v1 rows + 299 sam3 rows.
+After recompute, evaluate_pipeline produces real Phase 0 F1 numbers
+(backup at `framing_detections.parquet.bak-*`).
+
+| label                             | v1 F1 | sam3 F1 | reading |
+|---|---:|---:|---|
+| bbox-content_subject-too-small    | 0.90  | 0.74    | rule strong on v1; weaker on sam3 (different bbox-size dist) |
+| mask_poor-contrast                | 0.39  | 0.18    | over-predicts on both; thresholds need re-tune on sam3 |
+| bbox-content_no-bug               | 0.67  | 0.11    | sam3 over-fires (33 FPs); confidence threshold needs re-cal |
+| bbox-content_bbox-multibug_unusable | 0.00 | 0.00   | sam3 emits 54 FPs (many secondaries) — not in user vocab |
+
+Rule_labeler thresholds were tuned for v1 detector distributions; they
+don't transfer cleanly to sam3. **Re-tuning is a Phase 3 item, not a
+regression from Phase 2b.** Plus, the user labels themselves were
+assigned looking at v1 bboxes — `transfer_labels` projects 293/318 of
+those need re-review under sam3 bboxes, so the user-side ground truth
+itself shifts after re-labeling.
+
+**3. `_commitBboxOnly` against diverse suggested_labels.** Tested 5
+records with different rule outputs (single / no-bug / multibug_unusable /
+subject-too-small / [single+mask_poor-contrast]) by deleting them from
+labels.json, filtering the UI to unreviewed-only, pressing N five times,
+and inspecting the disk JSON. All 5 wrote correctly:
+
+- col1 = `bbox_correct-subject_not-clipped` (the default)
+- col2_count = the matching COL2_COUNT_ID, or fallback to `single`
+- col2_flags / col3 populated from suggested_labels via the right
+  bucket
+
+The fix handles count vs flag vs mask routing correctly across all
+combinations seen in production data.
