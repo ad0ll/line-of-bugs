@@ -1429,6 +1429,87 @@ git commit --no-gpg-sign -m "feat(gallery): back-to-home link in header"
 
 ---
 
+## Task 11: Session action bar — source label becomes "go to source"
+
+**Files:**
+- Modify: `app/components/session/SessionActionBar.tsx`
+- Modify: `app/globals.css`
+
+The source button currently has a one-word label `source` with an empty hint slot, making it visually shorter than peers (e.g. `pause space`, `magnifier z`). Change the label to **go to source** so it wraps to two lines, matching the vertical height of the others.
+
+- [ ] **Step 1: Update the label in SessionActionBar.tsx**
+
+Find the source IconBtn (it's an `<a>` with label `source` and an empty hint). Change the label prop / inner text to `go to source`. Keep the hint blank — the wrap itself gives the second line.
+
+- [ ] **Step 2: Allow the label slot to wrap to two lines**
+
+In `app/globals.css`, find the IconBtn stacked label selector (likely `.u-icon-btn-stacked-label`) and ensure two-line wrap is allowed at the action-bar size:
+
+```css
+.session-action-bar-panel .u-icon-btn-stacked-label {
+  white-space: normal;
+  text-align: center;
+  line-height: 1.05;
+}
+```
+
+If the existing rule already permits wrap, no change needed.
+
+- [ ] **Step 3: Verify all 8 stack columns are the same height**
+
+Playwright MCP: navigate to session, surface chrome (mousemove keepalive), screenshot the action bar. Confirm every column (pause/timer/b.w/magnifier/fullscreen/report/source/counter) has the same vertical extent.
+
+If "go to source" wraps awkwardly (e.g., orphans the word "to"), set the IconBtn label to render with an explicit `<br>` between "go to" and "source", or use CSS `text-wrap: balance`.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add app/components/session/SessionActionBar.tsx app/globals.css
+git commit --no-gpg-sign -m "fix(session): source label = 'go to source' — two-line wrap matches peers"
+```
+
+---
+
+## Task 12: Favicon replacement
+
+**Files:**
+- Modify: `app/icon.svg`
+
+Current `app/icon.svg` is a hand-drawn ladybug-ish shape that doesn't match the new aesthetic (the title uses the Fluent cherry blossom, not a custom ladybug). Replace with the cherry blossom on a dark rounded-square background so the favicon reads at a glance in browser tabs and matches the brand identity.
+
+- [ ] **Step 1: Compose a favicon-sized cherry blossom SVG**
+
+Replace `app/icon.svg` with a compact 32×32 SVG that embeds a simplified cherry blossom shape on the dark surface color. Inline because Next.js serves `app/icon.svg` as the favicon for the whole site — keeping it self-contained avoids a separate fetch.
+
+```xml
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="8" fill="#0d0c10"/>
+  <g transform="translate(16 16)" fill="#FF6EC7" fill-opacity="0.95">
+    <ellipse cx="0" cy="-7" rx="3.4" ry="4.6"/>
+    <ellipse cx="0" cy="-7" rx="3.4" ry="4.6" transform="rotate(72)"/>
+    <ellipse cx="0" cy="-7" rx="3.4" ry="4.6" transform="rotate(144)"/>
+    <ellipse cx="0" cy="-7" rx="3.4" ry="4.6" transform="rotate(216)"/>
+    <ellipse cx="0" cy="-7" rx="3.4" ry="4.6" transform="rotate(288)"/>
+  </g>
+  <circle cx="16" cy="16" r="3.6" fill="#FFE066"/>
+</svg>
+```
+
+(Five-petal flower rotated around center, yellow disc. Subtle, fits at 16-32px tab sizes.)
+
+- [ ] **Step 2: Verify in browser**
+
+Hard-reload `localhost:3000` and confirm the browser tab favicon updates. Check at multiple zoom levels.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add app/icon.svg
+git commit --no-gpg-sign -m "feat(branding): favicon — cherry blossom on dark to match new identity"
+```
+
+---
+
 ## Final verification
 
 - [ ] **Step 1: tsc + unit + e2e**
