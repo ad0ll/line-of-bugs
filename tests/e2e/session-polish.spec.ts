@@ -49,6 +49,27 @@ test.describe("session player polish (Phase B)", () => {
     expect(td).toBe("none");
   });
 
+  test("mobile tap pauses; second tap unpauses", async ({ browser }) => {
+    // Force a mobile-like context with touch enabled
+    const ctx = await browser.newContext({
+      viewport: { width: 414, height: 896 },
+      hasTouch: true,
+      isMobile: true,
+    });
+    const page = await ctx.newPage();
+    const res = await page.request.post("http://localhost:3000/api/session/start", {
+      data: { intervalSec: 60, subjectType: "all", repeatMode: "default", views: [], lifeStages: [], sexes: [], groups: [], q: [] },
+    });
+    const sessionId = (await res.json()).sessionId;
+    await page.goto(`/session?session=${sessionId}&interval=60`);
+    // Tap in image area (avoid action bar at bottom)
+    await page.touchscreen.tap(207, 300);
+    await expect(page.locator(".session-paused-overlay")).toBeVisible();
+    await page.touchscreen.tap(207, 300);
+    await expect(page.locator(".session-paused-overlay")).toHaveCount(0);
+    await ctx.close();
+  });
+
   test("session state resets when starting a new session", async ({ page }) => {
     // Start session 1
     let res = await page.request.post("http://localhost:3000/api/session/start", {

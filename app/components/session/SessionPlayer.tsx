@@ -298,10 +298,39 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
   const current = items[idx]!;
   const currentName = current.commonName || current.taxonSpecies || current.imageId;
 
+  // Mobile tap-to-pause: distinguish tap from swipe via <10px movement and
+  // <250ms duration. Don't fire on touches that started inside the action
+  // bar (those buttons handle their own clicks) or the magnifier loupe.
+  // Touch-only — desktop clicks never reach these handlers.
+  const touchStartRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    if (!t) return;
+    touchStartRef.current = { x: t.clientX, y: t.clientY, t: Date.now() };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const start = touchStartRef.current;
+    touchStartRef.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    if (!t) return;
+    const dx = Math.abs(t.clientX - start.x);
+    const dy = Math.abs(t.clientY - start.y);
+    const dt = Date.now() - start.t;
+    if (dx < 10 && dy < 10 && dt < 250) {
+      const target = e.target as HTMLElement;
+      if (target.closest(".session-action-bar-panel")) return;
+      if (target.closest(".session-magnifier")) return;
+      setPaused((p) => !p);
+    }
+  };
+
   return (
     <main
       aria-label="drawing session"
       style={{ position: "fixed", inset: 0, background: T.surface0 }}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
     >
       <h1 className="u-sr-only">{currentName}</h1>
       <ProgressBar percent={elapsedMs / durationMs} playing={!paused && !done} />
