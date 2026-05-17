@@ -26,7 +26,8 @@ describe("SketchfabBrowsePanel", () => {
       <SketchfabBrowsePanel scientific="Apis mellifera" common="honey bee" open onClose={() => {}} />,
     );
     const skeletons = screen.container.querySelectorAll('[data-testid="sketchfab-skeleton"]');
-    expect(skeletons).toHaveLength(3);
+    // 6 = LCM(1,2,3) so every breakpoint shows complete rows.
+    expect(skeletons).toHaveLength(6);
   });
 
   it("renders thumbnails when results arrive", async () => {

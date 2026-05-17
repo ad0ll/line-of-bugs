@@ -1990,8 +1990,8 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   gap: var(--s3);
   padding: var(--s4);
   background: var(--surface-panel);
-  /* Soft lilac border — see --accent-lilac-border note. Reserves the solid
-     lilac for "selected card" usage per docs/design-system.md. */
+  /* Soft lilac border — keeps solid --accent-lilac reserved for the
+     "selected card" semantic per docs/design-system.md. */
   border: 1px solid var(--accent-lilac-border);
   border-radius: var(--r-4xl);
   box-shadow: var(--shadow-panel);
@@ -2127,8 +2127,8 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
     0 6px 16px rgba(0, 0, 0, 0.45);
 }
 .sketchfab-card-link:focus-visible {
-  /* Real outline (not removed) — was a 1px transparent→cyan border swap,
-     too easy to lose on busy thumbnails. */
+  /* Real outline (not removed) — prior 1px transparent→cyan border swap
+     was easy to lose on busy thumbnails. */
   outline: 2px solid var(--accent-sky);
   outline-offset: 2px;
   border-color: transparent;
@@ -2215,8 +2215,8 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 .sketchfab-card-skeleton-line-title-2 { width: 55%; }
 .sketchfab-card-skeleton-line-author  { width: 38%; margin-top: var(--s1); }
 
-/* Shimmer — adds a subtle lilac flare through the sweep to read as
-   active rather than dead. Same animation drives thumb + lines. */
+/* Shimmer — subtle lilac flare through the sweep reads as active rather
+   than dead. Same animation drives thumb + lines. */
 .sketchfab-card-skeleton-thumb,
 .sketchfab-card-skeleton-line {
   background: linear-gradient(

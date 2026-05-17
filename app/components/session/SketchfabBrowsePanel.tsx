@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { SketchfabHit, SketchfabSearchResponse } from "@/lib/sketchfab/types";
 
@@ -27,30 +27,50 @@ export function sketchfabQueryKey(scientific: string, common: string) {
   return ["sketchfab", scientific, common] as const;
 }
 
-export function SketchfabBrowsePanel({ scientific, common, open, onClose }: Props) {
-  const ref = useRef<HTMLDivElement>(null);
+/** Match the CSS exit animation duration (--timing-base = 0.15s). Kept in
+ *  sync manually since CSS custom props can't be read reliably at module load. */
+const EXIT_ANIMATION_MS = 150;
 
-  // Escape + outside-click dismiss
+/** Skeleton count: 6 = LCM(1,2,3) so every breakpoint shows complete rows.
+ *  At 3 cols → 2 rows; at 2 cols → 3 rows. */
+const SKELETON_COUNT = 6;
+
+type RenderState = "closed" | "open" | "closing";
+
+export function SketchfabBrowsePanel({ scientific, common, open, onClose }: Props) {
+  // Internal state machine: `closing` keeps the DOM mounted briefly so the
+  // exit animation can play. `closed` unmounts. Initial state mirrors `open`
+  // so the "open=false from mount" case (no DOM, no fetch) still holds.
+  const [renderState, setRenderState] = useState<RenderState>(open ? "open" : "closed");
+
   useEffect(() => {
-    if (!open) return;
+    if (open) {
+      setRenderState("open");
+      return;
+    }
+    // Only animate-out if we were actually open; if we were already closed,
+    // stay closed (avoids a phantom closing frame on initial mount).
+    setRenderState((prev) => (prev === "open" ? "closing" : "closed"));
+    const t = setTimeout(() => setRenderState("closed"), EXIT_ANIMATION_MS);
+    return () => clearTimeout(t);
+  }, [open]);
+
+  // Escape closes the panel. Stop bubble so it doesn't escape to
+  // SessionPlayer's window-level handler (which would push to "/").
+  // (Click-outside removed in /audit 2026-05-17 — closes via Escape, the
+  //  close button, or the action-bar Sketchfab toggle. Stops accidental
+  //  dismissal when the student touches the canvas to look at the photo.)
+  useEffect(() => {
+    if (renderState !== "open") return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        // Stop bubble to SessionPlayer's window listener so Escape closes
-        // just the panel, not the whole session (which would push to "/").
         e.stopPropagation();
         onClose();
       }
     };
-    const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    };
     document.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onDown);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onDown);
-    };
-  }, [open, onClose]);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [renderState, onClose]);
 
   const { data, isPending, isError } = useQuery({
     queryKey: sketchfabQueryKey(scientific, common),
@@ -60,33 +80,47 @@ export function SketchfabBrowsePanel({ scientific, common, open, onClose }: Prop
     gcTime: 20 * 60_000,
   });
 
-  if (!open) return null;
+  if (renderState === "closed") return null;
 
   const manualSearchUrl =
     `https://sketchfab.com/search?type=models&q=${encodeURIComponent(common || scientific)}`;
 
   return (
-    <div ref={ref} className="sketchfab-panel u-backdrop-blur-md" role="dialog" aria-modal="true" aria-label="Sketchfab models">
+    <div
+      className="sketchfab-panel u-backdrop-blur-md"
+      data-state={renderState}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="sketchfab-panel-title"
+    >
       <header className="sketchfab-panel-header">
-        <span className="sketchfab-panel-title">Sketchfab models</span>
+        <span className="sketchfab-panel-title" id="sketchfab-panel-title">
+          Sketchfab models
+        </span>
         <button
           type="button"
           className="sketchfab-panel-close"
           aria-label="Close Sketchfab panel"
           onClick={onClose}
-        >×</button>
+        >✕</button>
       </header>
 
       {isPending && (
-        <div className="sketchfab-panel-grid" aria-busy="true">
-          {[0, 1, 2].map(i => (
-            <div key={i} className="sketchfab-card-skeleton" data-testid="sketchfab-skeleton" />
+        <ul className="sketchfab-panel-grid" aria-busy="true">
+          {Array.from({ length: SKELETON_COUNT }, (_, i) => (
+            <li key={i} className="sketchfab-card-skeleton" data-testid="sketchfab-skeleton">
+              <div className="sketchfab-card-skeleton-thumb" />
+              <div className="sketchfab-card-skeleton-line sketchfab-card-skeleton-line-title-1" />
+              <div className="sketchfab-card-skeleton-line sketchfab-card-skeleton-line-title-2" />
+              <div className="sketchfab-card-skeleton-line sketchfab-card-skeleton-line-author" />
+            </li>
           ))}
-        </div>
+        </ul>
       )}
 
       {!isPending && isError && (
-        <div className="sketchfab-panel-empty">
+        <div className="sketchfab-panel-empty is-error" role="alert">
+          <span className="sketchfab-panel-empty-glyph" aria-hidden="true">⚠</span>
           <p>Couldn't reach Sketchfab right now.</p>
           <a className="sketchfab-empty-link" href={manualSearchUrl} target="_blank" rel="noopener noreferrer">
             Search Sketchfab in a new tab ↗
@@ -96,6 +130,7 @@ export function SketchfabBrowsePanel({ scientific, common, open, onClose }: Prop
 
       {!isPending && !isError && data && data.hits.length === 0 && (
         <div className="sketchfab-panel-empty">
+          <span className="sketchfab-panel-empty-glyph" aria-hidden="true">◌</span>
           <p>No 3D models found for this species.</p>
           <a className="sketchfab-empty-link" href={manualSearchUrl} target="_blank" rel="noopener noreferrer">
             Search Sketchfab anyway ↗
@@ -123,10 +158,15 @@ export function SketchfabBrowsePanel({ scientific, common, open, onClose }: Prop
                   decoding="async"
                 />
                 <span className="sketchfab-card-title">{h.name}</span>
-                <span
-                  className="sketchfab-card-author"
-                  title={h.licenseSlug ? `License: ${h.licenseSlug.toUpperCase()}` : undefined}
-                >@{h.authorUsername}</span>
+                <span className="sketchfab-card-meta">
+                  <span className="sketchfab-card-author">@{h.authorUsername}</span>
+                  {h.licenseSlug && (
+                    <span
+                      className="sketchfab-card-license"
+                      aria-label={`License: ${h.licenseSlug.toUpperCase()}`}
+                    >{h.licenseSlug}</span>
+                  )}
+                </span>
               </a>
             </li>
           ))}
