@@ -54,10 +54,16 @@ export const TOOLTIPS = {
   },
   repeatMode: {
     label: "repeat behavior",
-    content: <>
-      Controls whether the same species can show up twice in your session.{" "}
-      <strong>one per species</strong> is the strict mode for "I want variety."
-    </>,
+    content: (
+      <>
+        <p>How sessions handle repeated subjects:</p>
+        <ul>
+          <li><strong>show everything</strong> — every photo, repeats included</li>
+          <li><strong>never repeat species</strong> — never see the same species twice</li>
+          <li><strong>same species, different angles</strong> — multi-angle specimen sets</li>
+        </ul>
+      </>
+    ),
   },
   institution: {
     label: "institution",

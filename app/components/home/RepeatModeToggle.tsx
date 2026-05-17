@@ -4,7 +4,7 @@ import type { RepeatMode } from "@/lib/repeat-mode";
 
 const OPTIONS: { value: RepeatMode; label: string; hint: string }[] = [
   { value: "default", label: "show everything", hint: "every photo, repeats included" },
-  { value: "never-repeat-animals", label: "one per species", hint: "never see the same species twice" },
+  { value: "never-repeat-animals", label: "never repeat species", hint: "never see the same species twice" },
   { value: "allow-different-angles", label: "same species, different angles", hint: "multi-angle specimen sets" },
 ];
 
