@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { FilterChipsBar } from './_components/FilterChipsBar';
 import { GalleryGrid } from './_components/GalleryGrid';
 import { HoverZoomMount } from './_components/HoverZoomMount';
@@ -51,6 +52,9 @@ export default async function GalleryPage({ searchParams }: { searchParams: Sear
   return (
     <main className="gallery-page">
       <header className="gallery-header">
+        <Link href="/" className="gallery-back-link" aria-label="back to home">
+          <span aria-hidden>←</span> back
+        </Link>
         <h1 className="gallery-title">
           gallery <CuteLadybug size={36} className="gallery-title-icon" loading="eager" />
         </h1>
