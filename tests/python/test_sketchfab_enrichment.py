@@ -156,11 +156,12 @@ def test_classify_trims_and_sorts_hits():
     assert result.hits[1]["licenseSlug"] == "by"
 
 
-@pytest.mark.parametrize("status", [408, 429, 502, 503, 504])
+@pytest.mark.parametrize("status", [405, 408, 429, 502, 503, 504])
 def test_query_raises_rate_limited_on_transient_status(status):
-    """408 (CloudFront origin timeout), 429 (edge rate-limit), 502/503/504
-    (origin unreachable) must skip the species rather than poison the cache
-    with `has_models=False` from a non-answer."""
+    """405 (CloudFront bot-filter for some query shapes), 408 (origin timeout),
+    429 (edge rate-limit), 502/503/504 (origin unreachable) must skip the
+    species rather than poison the cache with `has_models=False` from a
+    non-answer."""
     fake_resp = MagicMock(status_code=status)
     with patch("scripts.sketchfab_enrichment.requests.get", return_value=fake_resp):
         with pytest.raises(RateLimitedError):

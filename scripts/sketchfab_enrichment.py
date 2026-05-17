@@ -77,14 +77,20 @@ def _load_api_key() -> str:
     )
 
 
-# Sketchfab fronts on CloudFront. 429 = edge rate-limit (no Retry-After
-# header — body is `{"detail":"Too many requests."}`). 408/502/503/504 =
-# `x-cache: Error from cloudfront`, i.e. CloudFront couldn't reach gunicorn
-# in time. All five are transient — the caller SKIPS the species rather
-# than upserting `has_models=False` from an incomplete answer. Previously
-# 408 fell through to the warning branch and poisoned the cache on
-# every origin-timeout.
-RATE_LIMIT_STATUSES = {408, 429, 502, 503, 504}
+# Sketchfab fronts on CloudFront (NOT Akamai despite older comments).
+#   429 — edge rate-limit (no Retry-After header; body is `{"detail":"Too many requests."}`)
+#   408/502/503/504 — `x-cache: Error from cloudfront`, origin-fetch failure
+#   405 — observed on certain multi-word queries (e.g. "Cactopinus desertus
+#         bark beetle"). The `Allow: GET, HEAD, OPTIONS` header makes it
+#         look like a wrong-method error, but we send GET — so this is
+#         almost certainly the CloudFront/WAF bot-filter on certain query
+#         shapes. Whatever the mechanism, the empty body means we have
+#         no real answer and MUST skip rather than upserting has_models=False.
+# All five are transient — the caller SKIPS the species so last_checked_at
+# stays old and the next run retries. Previously the script only treated
+# 429/503 as rate-limited and let 408/405 fall through to a "zero hits"
+# upsert, silently poisoning the cache.
+RATE_LIMIT_STATUSES = {405, 408, 429, 502, 503, 504}
 
 
 class RateLimitedError(Exception):
