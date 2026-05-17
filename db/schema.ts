@@ -219,9 +219,36 @@ export const reports = sqliteTable(
   ],
 );
 
+// ──────────────────────────── species_metadata ─────────────
+
+/**
+ * Per-species cache for expensive external lookups. Currently holds a
+ * "does Sketchfab have any 3D models for this species?" flag populated by
+ * scripts/sketchfab_enrichment.py (cron). Keyed on the same taxon_species
+ * string used in the images table; one row per distinct species.
+ *
+ * Nullable booleans:
+ *   - hasSketchfabModels: null = never checked; true/false = checked result.
+ *     UI treats null as "unknown — show button optimistically".
+ */
+export const speciesMetadata = sqliteTable(
+  "species_metadata",
+  {
+    taxonSpecies: text("taxon_species").primaryKey(),
+    hasSketchfabModels: integer("has_sketchfab_models", { mode: "boolean" }),
+    sketchfabHitCount: integer("sketchfab_hit_count"),
+    sketchfabLastCheckedAt: integer("sketchfab_last_checked_at", { mode: "timestamp" }),
+  },
+  (t) => [
+    index("idx_species_metadata_sketchfab_checked").on(t.sketchfabLastCheckedAt),
+  ],
+);
+
 // ──────────────────────────── generated types ──────────────────
 
 export type Image = typeof images.$inferSelect;
 export type NewImage = typeof images.$inferInsert;
 export type Report = typeof reports.$inferSelect;
 export type NewReport = typeof reports.$inferInsert;
+export type SpeciesMetadata = typeof speciesMetadata.$inferSelect;
+export type NewSpeciesMetadata = typeof speciesMetadata.$inferInsert;
