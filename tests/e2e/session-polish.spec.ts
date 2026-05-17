@@ -48,4 +48,27 @@ test.describe("session player polish (Phase B)", () => {
     const td = await source.evaluate((el) => getComputedStyle(el).textDecorationLine);
     expect(td).toBe("none");
   });
+
+  test("session state resets when starting a new session", async ({ page }) => {
+    // Start session 1
+    let res = await page.request.post("http://localhost:3000/api/session/start", {
+      data: { intervalSec: 60, subjectType: "all", repeatMode: "default", views: [], lifeStages: [], sexes: [], groups: [], q: [] },
+    });
+    const s1 = (await res.json()).sessionId;
+    await page.goto(`/session?session=${s1}&interval=60`);
+    // Toggle B&W via keyboard
+    await page.keyboard.press("b");
+    let bw = await page.locator(".session-image-frame img").evaluate((el) => getComputedStyle(el).filter);
+    expect(bw).toContain("grayscale");
+    // Start session 2
+    await page.goto("/");
+    res = await page.request.post("http://localhost:3000/api/session/start", {
+      data: { intervalSec: 60, subjectType: "all", repeatMode: "default", views: [], lifeStages: [], sexes: [], groups: [], q: [] },
+    });
+    const s2 = (await res.json()).sessionId;
+    await page.goto(`/session?session=${s2}&interval=60`);
+    // B&W should be off
+    bw = await page.locator(".session-image-frame img").evaluate((el) => getComputedStyle(el).filter);
+    expect(bw).not.toContain("grayscale");
+  });
 });

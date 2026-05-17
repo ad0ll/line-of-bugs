@@ -34,5 +34,14 @@ async function SessionLoader({ searchParams }: PageProps) {
   if (!pool || pool.items.length === 0) {
     redirect("/");
   }
-  return <SessionPlayer items={pool.items} initialIntervalSec={intervalSec} />;
+  // key={sessionId} forces a fresh component instance for each new session
+  // so per-slide state (bw, magnifier, paused, idx, ...) doesn't leak between
+  // sessions when the route stays mounted across /session?session=A → ...=B.
+  return (
+    <SessionPlayer
+      key={sessionId}
+      items={pool.items}
+      initialIntervalSec={intervalSec}
+    />
+  );
 }
