@@ -59,6 +59,7 @@ export default defineConfig({
             "tests/lib/abort-helpers.test.ts",
             "tests/components/**/*.test.tsx",
             "tests/lib/audio.test.ts",
+            "tests/lib/fetch-with-timeout.test.ts",
             "tests/lib/preload-manager.test.ts",
             "tests/lib/useHighResTimer.test.ts",
           ],
