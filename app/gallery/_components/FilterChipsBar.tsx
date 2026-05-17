@@ -1,46 +1,36 @@
 import { listInstitutions } from '@/lib/queries/gallery';
-import { getFacetCounts, getUnfilteredFacets, type FacetCount } from '@/lib/queries/facets';
+import { getFacetCounts } from '@/lib/queries/facets';
 import type { FilterState } from '@/lib/queries/filter-clauses';
-import { FilterChipsControls, type SubjectCountPair } from './FilterChipsControls';
-import type { FilterOption } from '@/app/components/filters/FilterPopover';
+import type { AllOrChipsOption } from '@/app/components/filters/AllOrChipsFilter';
+import { FilterChipsControls } from './FilterChipsControls';
 
 /**
- * Server component — receives the parsed filter state from the URL
- * via the gallery page, fetches the facet snapshot for it (with
- * own-axis exclusion), and the unfiltered "totals" snapshot, then
- * passes both shapes to the client controls.
+ * Server component — receives the parsed filter state from the URL via
+ * the gallery page, fetches the facet snapshot for it (with own-axis
+ * exclusion) plus the institution enum, then hands both to the client
+ * controls. Phase C replaced the FilterBar stack with a horizontal row
+ * of AllOrChipsFilters; institutions now ride on the same AllOrChips
+ * pattern, so we adapt the list into option shape here.
  */
 export async function FilterChipsBar({ filters }: { filters: FilterState }) {
-  const [filtered, totals, institutions] = await Promise.all([
+  const [snapshot, institutions] = await Promise.all([
     getFacetCounts(filters),
-    getUnfilteredFacets(),
     listInstitutions(),
   ]);
 
-  const subject: SubjectCountPair = {
-    filtered: filtered.subject,
-    totals: totals.subject,
-  };
+  const institutionOptions: AllOrChipsOption[] = institutions.map((i) => ({
+    value: i.name,
+    label: i.name,
+    count: i.count,
+  }));
 
   return (
     <div className="filter-chips-bar">
       <FilterChipsControls
-        subject={subject}
-        institutions={institutions}
-        viewCounts={mergeFacet(filtered.views, totals.views)}
-        lifeStageCounts={mergeFacet(filtered.lifeStages, totals.lifeStages)}
-        sexCounts={mergeFacet(filtered.sexes, totals.sexes)}
-        taxonGroupCounts={mergeFacet(filtered.taxonGroups, totals.taxonGroups)}
+        initialSubject={filters.subjectType}
+        initialFacets={snapshot}
+        institutionOptions={institutionOptions}
       />
     </div>
   );
-}
-
-function mergeFacet(filtered: FacetCount[], totals: FacetCount[]): FilterOption[] {
-  const byName = new Map(filtered.map((f) => [f.name, f.count]));
-  return totals.map((t) => ({
-    name: t.name,
-    count: byName.get(t.name) ?? 0,
-    total: t.count,
-  }));
 }

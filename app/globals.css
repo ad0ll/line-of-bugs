@@ -368,6 +368,26 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 }
 
 .filter-chips-bar { display: flex; gap: var(--s4); flex-wrap: wrap; align-items: center; }
+
+.gallery-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.75rem;
+  padding: 0.75rem 0;
+  margin-bottom: 1rem;
+}
+.gallery-filter-row-species {
+  flex: 1 1 18rem;
+  min-width: 16rem;
+}
+@media (max-width: 720px) {
+  .gallery-filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .gallery-filter-row-species { flex: none; }
+}
 .chip {
   background: var(--surface-1);
   border: 1.5px solid var(--border-medium);

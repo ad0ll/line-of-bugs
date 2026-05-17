@@ -1,123 +1,141 @@
-'use client';
+"use client";
 
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useCallback } from 'react';
-import { FilterBar, defaultMode, parseMode, type FilterBarState } from '@/app/components/filters/FilterBar';
-import type { FilterOption } from '@/app/components/filters/FilterPopover';
-import { parseSubject, type SubjectType } from '@/lib/subject';
+import { useEffect, useState, useTransition } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { AllOrChipsFilter, type AllOrChipsOption } from "@/app/components/filters/AllOrChipsFilter";
+import { SpeciesAutocomplete } from "@/app/gallery/_components/SpeciesAutocomplete";
+import type { FacetCount, FacetSnapshot } from "@/lib/queries/facets";
+import type { SubjectType } from "@/lib/subject";
 
-export interface SubjectCountPair {
-  filtered: { wild: number; captive: number; specimen: number };
-  totals:   { wild: number; captive: number; specimen: number };
+interface Props {
+  initialSubject: SubjectType;
+  initialFacets: FacetSnapshot;
+  // institutions are gallery-only and loaded SSR (large enum; we don't
+  // recompute counts per filter — see gallery/page.tsx)
+  institutionOptions: AllOrChipsOption[];
 }
 
-export interface FilterChipsControlsProps {
-  subject: SubjectCountPair;
-  institutions: { name: string; count: number }[];
-  viewCounts: FilterOption[];
-  lifeStageCounts: FilterOption[];
-  sexCounts: FilterOption[];
-  taxonGroupCounts: FilterOption[];
+function asOptions(items: FacetCount[]): AllOrChipsOption[] {
+  return items.map((i) => ({ value: i.name, label: i.name, count: i.count }));
 }
 
 function parseList(v: string | null): string[] {
-  return v ? v.split(',').filter(Boolean) : [];
+  return v ? v.split(",").filter(Boolean) : [];
 }
 
-function withAll(s: { wild: number; captive: number; specimen: number }) {
-  return { ...s, all: s.wild + s.captive + s.specimen };
-}
+const SUBJECT_BASE = [
+  { value: "wild", label: "wild" },
+  { value: "specimen", label: "specimen" },
+  { value: "captive", label: "captive" },
+];
 
-export function FilterChipsControls({
-  subject: subjectPair,
-  institutions,
-  viewCounts,
-  lifeStageCounts,
-  sexCounts,
-  taxonGroupCounts,
-}: FilterChipsControlsProps) {
+export function FilterChipsControls({ initialSubject, initialFacets, institutionOptions }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
+  const [, startTransition] = useTransition();
 
-  const speciesTags = parseList(params.get('q'));
-  const state: FilterBarState = {
-    subject: parseSubject(params.get('subject')),
-    groups: parseList(params.get('type')),
-    species: speciesTags,
-    views: parseList(params.get('view')),
-    lifeStages: parseList(params.get('life')),
-    sexes: parseList(params.get('sex')),
-    institutions: parseList(params.get('inst')),
-    mode: parseMode(params.get('mode'), speciesTags),
-  };
+  const initialSubjectList = initialSubject === "all" ? [] : [initialSubject];
+  const [subjects, setSubjects] = useState<string[]>(initialSubjectList);
+  const [groups, setGroups] = useState<string[]>(parseList(params.get("type")));
+  const [views, setViews] = useState<string[]>(parseList(params.get("view")));
+  const [life, setLife] = useState<string[]>(parseList(params.get("life")));
+  const [sexes, setSexes] = useState<string[]>(parseList(params.get("sex")));
+  const [insts, setInsts] = useState<string[]>(parseList(params.get("inst")));
+  const [species, setSpecies] = useState<string[]>(parseList(params.get("q")));
 
-  const pushNext = useCallback(
-    (mut: (next: URLSearchParams) => void) => {
-      const next = new URLSearchParams(params);
-      mut(next);
-      next.delete('page');
-      router.push(`${pathname}?${next.toString()}`);
-    },
-    [params, router, pathname],
-  );
+  // Live facet refresh — same pattern as home
+  const [facets, setFacets] = useState<FacetSnapshot>(initialFacets);
 
-  function handleChange(next: Partial<FilterBarState>) {
-    pushNext((url) => {
-      if (next.subject !== undefined) {
-        if (next.subject === 'all') url.delete('subject');
-        else url.set('subject', next.subject);
-      }
-      if (next.groups !== undefined) {
-        if (next.groups.length === 0) url.delete('type');
-        else url.set('type', next.groups.join(','));
-      }
-      if (next.species !== undefined) {
-        if (next.species.length === 0) url.delete('q');
-        else url.set('q', next.species.join(','));
-      }
-      if (next.views !== undefined) {
-        if (next.views.length === 0) url.delete('view');
-        else url.set('view', next.views.join(','));
-      }
-      if (next.lifeStages !== undefined) {
-        if (next.lifeStages.length === 0) url.delete('life');
-        else url.set('life', next.lifeStages.join(','));
-      }
-      if (next.sexes !== undefined) {
-        if (next.sexes.length === 0) url.delete('sex');
-        else url.set('sex', next.sexes.join(','));
-      }
-      if (next.institutions !== undefined) {
-        if (next.institutions.length === 0) url.delete('inst');
-        else url.set('inst', next.institutions.join(','));
-      }
-      // Mode is only serialized when it overrides the species-driven
-      // default (chips with tags / species without tags). Compute the
-      // post-mutation species so a same-call tag change picks the right
-      // default.
-      const nextSpecies = next.species ?? speciesTags;
-      const nextMode = next.mode ?? state.mode;
-      if (nextMode === defaultMode(nextSpecies)) url.delete('mode');
-      else url.set('mode', nextMode);
-    });
-  }
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (subjects.length === 1) next.set("subject", subjects[0]!);
+    if (groups.length) next.set("type", groups.join(","));
+    if (views.length) next.set("view", views.join(","));
+    if (life.length) next.set("life", life.join(","));
+    if (sexes.length) next.set("sex", sexes.join(","));
+    if (insts.length) next.set("inst", insts.join(","));
+    if (species.length) next.set("q", species.join(","));
+    const qs = next.toString();
+    const target = qs ? `${pathname}?${qs}` : pathname;
+    startTransition(() => router.replace(target, { scroll: false }));
+  }, [subjects, groups, views, life, sexes, insts, species, pathname, router]);
+
+  // Refetch facets on filter change
+  useEffect(() => {
+    const q = new URLSearchParams();
+    q.set("subject", subjects.length === 1 ? subjects[0]! : "all");
+    if (views.length) q.set("view", views.join(","));
+    if (life.length) q.set("life", life.join(","));
+    if (sexes.length) q.set("sex", sexes.join(","));
+    if (groups.length) q.set("type", groups.join(","));
+    if (insts.length) q.set("inst", insts.join(","));
+    if (species.length) q.set("q", species.join(","));
+    const controller = new AbortController();
+    const handle = setTimeout(() => {
+      fetch(`/api/facets?${q.toString()}`, { signal: controller.signal })
+        .then((r) => r.json())
+        .then((d: FacetSnapshot) => setFacets(d))
+        .catch(() => { /* leave last-known facets */ });
+    }, 80);
+    return () => { clearTimeout(handle); controller.abort(); };
+  }, [subjects, groups, views, life, sexes, insts, species]);
+
+  const subjectOpts: AllOrChipsOption[] = SUBJECT_BASE.map((s) => ({
+    ...s,
+    count: facets.subject[s.value as "wild" | "specimen" | "captive"] ?? 0,
+  }));
+
+  function addSpecies(t: string) { if (!species.includes(t)) setSpecies([...species, t]); }
+  function removeSpecies(t: string) { setSpecies(species.filter((s) => s !== t)); }
 
   return (
-    <FilterBar
-      state={state}
-      options={{
-        taxonGroups: taxonGroupCounts,
-        views: viewCounts,
-        lifeStages: lifeStageCounts,
-        sexes: sexCounts,
-        institutions,
-        subjectCounts: {
-          filtered: withAll(subjectPair.filtered),
-          totals: withAll(subjectPair.totals),
-        },
-      }}
-      onChange={handleChange}
-    />
+    <div className="gallery-filter-row">
+      <AllOrChipsFilter
+        label="photo type"
+        emptyLabel="all photo types"
+        options={subjectOpts}
+        selected={subjects}
+        onChange={setSubjects}
+      />
+      <AllOrChipsFilter
+        label="bug type"
+        emptyLabel="all bug types"
+        options={asOptions(facets.taxonGroups)}
+        selected={groups}
+        onChange={setGroups}
+      />
+      <AllOrChipsFilter
+        label="view"
+        emptyLabel="all views"
+        options={asOptions(facets.views)}
+        selected={views}
+        onChange={setViews}
+      />
+      <AllOrChipsFilter
+        label="life stage"
+        emptyLabel="all life stages"
+        options={asOptions(facets.lifeStages)}
+        selected={life}
+        onChange={setLife}
+      />
+      <AllOrChipsFilter
+        label="sex"
+        emptyLabel="all sexes"
+        options={asOptions(facets.sexes)}
+        selected={sexes}
+        onChange={setSexes}
+      />
+      <AllOrChipsFilter
+        label="institution"
+        emptyLabel="all institutions"
+        options={institutionOptions}
+        selected={insts}
+        onChange={setInsts}
+      />
+      <div className="gallery-filter-row-species">
+        <SpeciesAutocomplete selected={species} onAdd={addSpecies} onRemove={removeSpecies} />
+      </div>
+    </div>
   );
 }
