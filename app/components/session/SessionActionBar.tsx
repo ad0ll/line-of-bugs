@@ -59,7 +59,6 @@ export function SessionActionBar(props: Props) {
         </IconBtn>
         <IconBtn
           label="sketchfab"
-          hint="K"
           active={props.sketchfabOpen}
           onClick={props.onToggleSketchfab}
         >
