@@ -56,6 +56,8 @@ def _query(q: str, api_key: str) -> list[dict]:
             timeout=20,
         )
         if r.status_code != 200:
+            log.warning("query %r → HTTP %d (treating as zero hits — cache may be poisoned)",
+                        q, r.status_code)
             return []
         return r.json().get("results", []) or []
     except Exception as e:
@@ -66,6 +68,7 @@ def _query(q: str, api_key: str) -> list[dict]:
 def _is_strict_relevant(hit: dict, scientific: str, common: str) -> bool:
     text_parts = [
         hit.get("name", "") or "",
+        hit.get("description", "") or "",
         " ".join(t.get("name", "") for t in hit.get("tags", [])),
         " ".join(c.get("name", "") for c in hit.get("categories", [])),
     ]
