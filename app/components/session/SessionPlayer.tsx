@@ -15,6 +15,7 @@ import { EdgePrevNext } from "./EdgePrevNext";
 import { Magnifier } from "./Magnifier";
 import { EndOfSessionOverlay } from "./EndOfSessionOverlay";
 import { SessionTitle } from "./SessionTitle";
+import { SketchfabBrowsePanel } from "./SketchfabBrowsePanel";
 
 interface Props {
   items: Image[];
@@ -35,6 +36,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
   const [magnifier, setMagnifier] = useState<MagnifierSize>("off");
   const [done, setDone] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [sketchfabOpen, setSketchfabOpen] = useState(false);
 
   // Track fullscreen state — user may exit via Escape (handled by browser, not us)
   useEffect(() => {
@@ -144,7 +146,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
   const reportModalOpen = pathname.startsWith("/report/");
   useHighResTimer(
     durationMs,
-    !paused && !done && !reportModalOpen,
+    !paused && !done && !reportModalOpen && !sketchfabOpen,
     onTick,
     advance,
     `${idx}-${intervalSec}`,
@@ -154,9 +156,9 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
   const bumpChrome = useCallback(() => {
     setChromeVisible(true);
     if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current);
-    if (reportModalOpen) return;
+    if (reportModalOpen || sketchfabOpen) return;
     chromeTimerRef.current = setTimeout(() => setChromeVisible(false), T.durationChromeHide);
-  }, [reportModalOpen]);
+  }, [reportModalOpen, sketchfabOpen]);
 
   useEffect(() => {
     if (reportModalOpen) {
@@ -164,6 +166,13 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
       if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current);
     }
   }, [reportModalOpen]);
+
+  useEffect(() => {
+    if (sketchfabOpen) {
+      setChromeVisible(true);
+      if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current);
+    }
+  }, [sketchfabOpen]);
 
   useEffect(() => {
     bumpChrome();
@@ -220,6 +229,11 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
           if (!pathname.startsWith("/report/")) {
             router.push(`/report/${encodeURIComponent(items[idx]!.imageId)}`);
           }
+          break;
+        case "k":
+        case "K":
+          e.preventDefault();
+          setSketchfabOpen((o) => !o);
           break;
         case "Escape":
           if (!pathname.startsWith("/report/")) {
@@ -282,14 +296,20 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
         onToggleFullscreen={toggleFullscreen}
         onReport={() => router.push(`/report/${encodeURIComponent(current.imageId)}`)}
         onIntervalChange={(s) => setIntervalSec(s)}
-        sketchfabOpen={/* T6 will replace these with useState + panel mount + timer pause. */ false}
-        onToggleSketchfab={() => {}}
+        sketchfabOpen={sketchfabOpen}
+        onToggleSketchfab={() => setSketchfabOpen((o) => !o)}
       />
       <Magnifier image={current} size={magnifier} bw={bw} />
       <EndOfSessionOverlay
         visible={done}
         count={items.length}
         onNewSession={() => router.push("/")}
+      />
+      <SketchfabBrowsePanel
+        scientific={current.taxonSpecies ?? ""}
+        common={current.commonName ?? ""}
+        open={sketchfabOpen && !!current.taxonSpecies && !!current.commonName}
+        onClose={() => setSketchfabOpen(false)}
       />
     </main>
   );
