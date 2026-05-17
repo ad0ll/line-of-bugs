@@ -31,6 +31,8 @@ from scripts.detect_subjects.features import (
     compute_geometric_features,
     compute_mask_features,
     compute_subject_sharpness,
+    compute_top10pct_lap_masked,
+    compute_edge_density_mask_vs_bg,
 )
 from scripts.detect_subjects.ground_truth import GroundTruthIndex, lookup_gt_bbox
 from scripts.detect_subjects.metrics import iou_xywh_normalized
@@ -155,10 +157,18 @@ def run_v1_on_sample(
                     mask_area = mf["mask_area_ratio"]
                     d_e = mf["lab_delta_e"]
                     sharp = mf["boundary_sharpness"]
-                # Subject sharpness over the bbox region (Laplacian variance).
-                # Unreliable on uniform-textured subjects — stored for future training data.
+                # Subject sharpness — schema v2: mask-restricted Laplacian variance
+                # (was bbox-only). Mask-restriction empirically beats bbox-only
+                # at separating user-labeled blur (Youden-J 0.43 vs 0.37) by
+                # excluding blurred-DOF background pixels. Falls back to bbox-
+                # only when no mask is available.
                 subj_sharp = compute_subject_sharpness(
-                    rgb_np, det.bbox_xywh_normalized, W, H,
+                    rgb_np, det.bbox_xywh_normalized, W, H, mask=mask,
+                )
+                # Additional ML labeler training inputs (schema v2)
+                top10_lap_mask = compute_top10pct_lap_masked(rgb_np, mask)
+                edge_dens_ratio = compute_edge_density_mask_vs_bg(
+                    rgb_np, mask, det.bbox_xywh_normalized, W, H,
                 )
 
                 crop_x = crop_y = crop_w = crop_h = None
@@ -271,6 +281,8 @@ def run_v1_on_sample(
                     mask_area_ratio=mask_area, mask_iou_score=mask_iou,
                     lab_delta_e=d_e, boundary_sharpness=sharp,
                     subject_sharpness=subj_sharp,
+                    top10pct_lap_mask=top10_lap_mask,
+                    edge_density_mask_vs_bg=edge_dens_ratio,
                     bbox_min_edge_px=bbox_min_edge_px,
                     bbox_long_edge_px=bbox_long_edge_px,
                     bbox_touches_edge=bbox_touches_edge,

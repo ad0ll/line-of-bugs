@@ -1,216 +1,319 @@
 {
-  "bugwood-1223047": {
-    "flags": [
-      "bbox-content_subject-too-small"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778876334151,
-    "user_edited": true
-  },
-  "bugwood-5611038": {
-    "flags": [
-      "bbox_correct-subject_clipped",
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877330952,
-    "user_edited": true
-  },
-  "inat-313993": {
-    "flags": [
-      "bbox-content_subject-too-small",
-      "mask_poor-contrast"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778876347876,
-    "user_edited": true
-  },
-  "inat-302754": {
-    "flags": [
-      "bbox-content_subject-too-small",
-      "bbox_correct-subject_clipped",
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877313419,
-    "user_edited": true
-  },
-  "bugwood-5497042": {
-    "flags": [
-      "bbox-content_subject-too-small"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778876367030,
-    "user_edited": true
-  },
-  "inat-5090845": {
-    "flags": [
-      "bbox-content_no-bug"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877150328,
-    "user_edited": true
-  },
-  "inat-538988": {
-    "flags": [
-      "bbox-content_subject-too-small",
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778876371389,
-    "user_edited": true
-  },
-  "inat-2719463": {
-    "flags": [
-      "bbox-content_subject-too-small",
-      "bbox_wrong-subject"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877308752,
-    "user_edited": true
-  },
-  "bugwood-5454460": {
-    "flags": [
-      "bbox-content_subject-too-small"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778876409448,
-    "user_edited": true
-  },
-  "inat-2476557": {
-    "flags": [
-      "bbox-content_subject-too-small"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778876412313,
-    "user_edited": true
-  },
-  "bugwood-5611254": {
-    "flags": [
-      "bbox_correct-subject_clipped",
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877370314,
-    "user_edited": true
-  },
-  "bugwood-5552270": {
-    "flags": [
-      "bbox-content_subject-too-small",
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778876480155,
-    "user_edited": true
-  },
   "bugwood-1233198": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877384922,
-    "user_edited": true
-  },
-  "inat-1486053": {
-    "flags": [
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
       "bbox-content_subject-too-small"
     ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778876509446,
-    "user_edited": true
-  },
-  "inat-7351899": {
-    "flags": [
-      "bbox-content_subject-too-small"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778876512796,
-    "user_edited": true
-  },
-  "inat-2680628": {
-    "flags": [
-      "bbox-content_subject-too-small",
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": 1779042369208,
     "unsure": false,
-    "reviewed_at": 1778876615133,
-    "user_edited": true
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-5424073": {
-    "flags": [
-      "bbox_correct-subject_clipped",
-      "bbox_wrong-subject",
-      "bbox-content_subject-too-small"
+  "bugwood-1236055": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778879167393,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-4963204": {
-    "flags": [
-      "bbox-content_subject-too-small",
-      "bbox_correct-subject_clipped",
-      "bbox_correct-subject_clipped",
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879156126,
-    "user_edited": true
-  },
-  "inat-7393453": {
-    "flags": [
-      "bbox-content_subject-too-small",
+  "bugwood-1236117": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778877268892,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-1242001": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_poor-contrast",
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-1327132": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779039122211,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-1402139": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-1440129": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042193736,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-1481029": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-1543869": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-1549485": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable",
+      "mask_poor-contrast",
+      "mask_bad-photo-quality"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042245361,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-2167001": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
   "bugwood-5341009": {
+    "col1": "bbox_wrong-subject",
+    "col2_count": "bbox-content_bbox-multibug_usable",
     "flags": [
       "bbox-content_subject-too-small",
       "bbox_wrong-subject"
     ],
     "preference": null,
+    "reviewed_at": 1779039472229,
     "unsure": false,
-    "reviewed_at": 1778877334413,
-    "user_edited": true
-  },
-  "bugwood-1540228": {
-    "flags": [
+    "user_edited": true,
+    "variant_tag": "sam3__sam3",
+    "col2_flags": [
       "bbox-content_subject-too-small"
+    ]
+  },
+  "bugwood-5385534": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042382589,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5389243": {
+    "col2_count": "bbox-content_single",
+    "flags": [],
+    "preference": null,
+    "reviewed_at": 1779041980221,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3",
+    "col3": [
+      "mask_poor-contrast"
+    ],
+    "col1": "bbox_correct-subject_not-clipped"
+  },
+  "bugwood-5394434": {
+    "col1": "bbox_wrong-subject",
+    "flags": [],
+    "preference": null,
+    "reviewed_at": 1779039053826,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3",
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col2_count": "bbox-content_single"
+  },
+  "bugwood-5401801": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5445190": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042185162,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5496066": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5497042": {
+    "col1": "bbox_wrong-subject",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779039126774,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5498196": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5506340": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042307615,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5521078": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5540605": {
+    "flags": [
+      "bbox_correct-subject_clipped"
     ],
     "preference": null,
+    "reviewed_at": 1778878251466,
     "unsure": false,
-    "reviewed_at": 1778877357873,
     "user_edited": true
   },
-  "inat-9814225": {
+  "bugwood-5542271": {
     "flags": [
-      "bbox_wrong-subject"
+      "bbox_correct-subject_clipped"
     ],
     "preference": null,
+    "reviewed_at": 1778879580642,
     "unsure": false,
-    "reviewed_at": 1778877476504,
     "user_edited": true
   },
   "bugwood-5542391": {
@@ -219,1939 +322,1641 @@
       "bbox_correct-subject_clipped"
     ],
     "preference": null,
-    "unsure": false,
     "reviewed_at": 1778880293224,
-    "user_edited": true
-  },
-  "inat-1801574": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
     "unsure": false,
-    "reviewed_at": 1778877546833,
-    "user_edited": true
-  },
-  "inat-7722704": {
-    "flags": [
-      "bbox-content_subject-too-small",
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877590349,
-    "user_edited": true
-  },
-  "inat-1703651": {
-    "flags": [
-      "bbox-content_subject-too-small",
-      "mask_poor-contrast",
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880299570,
-    "user_edited": true
-  },
-  "bugwood-5614140": {
-    "flags": [
-      "bbox_correct-subject_clipped",
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880316028,
-    "user_edited": true
-  },
-  "inat-1929671": {
-    "flags": [
-      "bbox-content_subject-too-small"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877814131,
-    "user_edited": true
-  },
-  "inat-1379330": {
-    "flags": [
-      "bbox-content_subject-too-small"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877821508,
-    "user_edited": true
-  },
-  "bugwood-5602250": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877860898,
-    "user_edited": true
-  },
-  "bugwood-1440129": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877878581,
-    "user_edited": true
-  },
-  "inat-22992224": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880358361,
-    "user_edited": true
-  },
-  "inat-1726555": {
-    "flags": [
-      "bbox_correct-subject_clipped",
-      "bbox-content_subject-too-small"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877956676,
-    "user_edited": true
-  },
-  "inat-445304": {
-    "flags": [
-      "bbox-content_subject-too-small",
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877969465,
-    "user_edited": true
-  },
-  "bugwood-5371089": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877975622,
-    "user_edited": true
-  },
-  "inat-14465072": {
-    "flags": [
-      "mask_poor-contrast"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877983123,
-    "user_edited": true
-  },
-  "inat-552617": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778877993230,
-    "user_edited": true
-  },
-  "inat-67537407": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878022431,
-    "user_edited": true
-  },
-  "bugwood-1549485": {
-    "flags": [
-      "mask_blur_unusable",
-      "mask_poor-contrast"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878056195,
-    "user_edited": true
-  },
-  "inat-7451316": {
-    "flags": [
-      "mask_poor-contrast",
-      "bbox-content_subject-too-small"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879272843,
-    "user_edited": true
-  },
-  "bugwood-5367930": {
-    "flags": [
-      "bbox-content_subject-too-small"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879264668,
-    "user_edited": true
-  },
-  "inat-1417226": {
-    "flags": [
-      "bbox-content_subject-too-small",
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878085787,
-    "user_edited": true
-  },
-  "inat-112400": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878091212,
-    "user_edited": true
-  },
-  "inat-173971": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879283401,
-    "user_edited": true
-  },
-  "inat-6418757": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878119468,
-    "user_edited": true
-  },
-  "inat-384152": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878124266,
-    "user_edited": true
-  },
-  "bugwood-5506340": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880435094,
-    "user_edited": true
-  },
-  "inat-360358": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879337051,
-    "user_edited": true
-  },
-  "bugwood-5488968": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878157115,
-    "user_edited": true
-  },
-  "inat-517984": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878166347,
-    "user_edited": true
-  },
-  "bugwood-5385553": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878169388,
-    "user_edited": true
-  },
-  "inat-261516": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878178681,
-    "user_edited": true
-  },
-  "inat-456268": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878191499,
-    "user_edited": true
-  },
-  "inat-17486": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878202466,
-    "user_edited": true
-  },
-  "inat-2506504": {
-    "flags": [
-      "bbox-content_subject-too-small",
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878210249,
-    "user_edited": true
-  },
-  "bugwood-5569183": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880455361,
-    "user_edited": true
-  },
-  "bugwood-5540605": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878251466,
-    "user_edited": true
-  },
-  "inat-5194505": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878280008,
-    "user_edited": true
-  },
-  "inat-629753": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878291995,
-    "user_edited": true
-  },
-  "inat-461707": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878298975,
     "user_edited": true
   },
   "bugwood-5542835": {
-    "flags": [
-      "bbox_correct-subject_clipped",
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778878309037,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-2639649": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878312057,
-    "user_edited": true
-  },
-  "inat-464590": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880485886,
-    "user_edited": true
-  },
-  "inat-6267717": {
-    "flags": [
-      "bbox_wrong-subject",
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880498953,
-    "user_edited": true
-  },
-  "inat-228729940": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878462178,
-    "user_edited": true
-  },
-  "inat-2299337": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878470261,
-    "user_edited": true
-  },
-  "inat-57010669": {
+  "bugwood-5544518": {
     "flags": [
       "bbox_correct-subject_clipped"
     ],
     "preference": null,
+    "reviewed_at": 1778881356002,
     "unsure": false,
-    "reviewed_at": 1778880526769,
     "user_edited": true
   },
-  "inat-107566552": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878529349,
-    "user_edited": true
-  },
-  "inat-61030472": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878553407,
-    "user_edited": true
-  },
-  "bugwood-1435030": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878562498,
-    "user_edited": true
-  },
-  "inat-2312004": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878568965,
-    "user_edited": true
-  },
-  "inat-396259": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878578857,
-    "user_edited": true
-  },
-  "inat-1801018": {
-    "flags": [
+  "bugwood-5552270": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": 1779052231739,
     "unsure": false,
-    "reviewed_at": 1778878724102,
-    "user_edited": true
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-1647390": {
-    "flags": [],
-    "preference": null,
+  "bugwood-5568979": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778878731627,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-1481519": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878740883,
-    "user_edited": true
-  },
-  "inat-966628": {
+  "bugwood-5569183": {
+    "col1": "bbox_correct-subject_not-clipped",
     "flags": [
-      "mask_blur_unusable"
+      "mask_blur_usable"
     ],
     "preference": null,
+    "reviewed_at": 1778994762841,
     "unsure": false,
-    "reviewed_at": 1778878745156,
-    "user_edited": true
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
   },
-  "bugwood-5477308": {
+  "bugwood-5613961": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5614140": {
+    "col1": "bbox_correct-subject_clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042095870,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5617995": {
     "flags": [
       "bbox_correct-subject_clipped"
     ],
     "preference": null,
+    "reviewed_at": 1778881341011,
     "unsure": false,
-    "reviewed_at": 1778878770797,
     "user_edited": true
+  },
+  "bugwood-5618903": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1013146": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779036489189,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1032257": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1036259": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-103970": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042443924,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1115229": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-112400": {
+    "col1": "bbox_correct-subject_clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042006454,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1139095": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1140318": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-11495391": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1156424": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [
+      "mask_blur_unusable",
+      "mask_bad-photo-quality"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042047723,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1171990": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-11781817": {
+    "flags": [
+      "mask_blur_unusable"
+    ],
+    "preference": null,
+    "reviewed_at": 1778881085975,
+    "unsure": false,
+    "user_edited": true
+  },
+  "inat-11838340": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-121495068": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-12524812": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1289882": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [
+      "ml_other-bad"
+    ],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1367825": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1409164": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
   "inat-1410777": {
     "flags": [
       "mask_blur_usable"
     ],
     "preference": null,
-    "unsure": false,
     "reviewed_at": 1778880645669,
-    "user_edited": true
-  },
-  "inat-1994451": {
-    "flags": [
-      "bbox_correct-subject_clipped",
-      "bbox_wrong-subject"
-    ],
-    "preference": null,
     "unsure": false,
-    "reviewed_at": 1778878855626,
     "user_edited": true
   },
-  "inat-61691209": {
-    "flags": [
+  "inat-1417226": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": 1779042449264,
     "unsure": false,
-    "reviewed_at": 1778878861810,
-    "user_edited": true
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-330039": {
-    "flags": [
-      "mask_blur_unusable",
+  "inat-14465072": {
+    "col1": "bbox_should-have-bbox",
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_poor-contrast"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": 1779039087314,
     "unsure": false,
-    "reviewed_at": 1778878871135,
-    "user_edited": true
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-4662758": {
+  "inat-148029": {
     "flags": [],
     "preference": null,
+    "reviewed_at": 1778881353652,
     "unsure": false,
-    "reviewed_at": 1778878889343,
     "user_edited": true
   },
-  "bugwood-5394434": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878921901,
-    "user_edited": true
-  },
-  "inat-12820955": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878935176,
-    "user_edited": true
-  },
-  "bugwood-5443489": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878940301,
-    "user_edited": true
-  },
-  "inat-6988731": {
-    "flags": [
+  "inat-1486053": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col3": [
       "mask_poor-contrast"
     ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878957176,
-    "user_edited": true
-  },
-  "inat-10325590": {
-    "flags": [
-      "bbox_wrong-subject"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778878968093,
-    "user_edited": true
-  },
-  "bugwood-1236055": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880692155,
-    "user_edited": true
-  },
-  "inat-24448492": {
-    "flags": [
-      "mask_poor-contrast"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879000418,
-    "user_edited": true
-  },
-  "inat-2356234": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879003751,
-    "user_edited": true
-  },
-  "bugwood-1546216": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879004926,
-    "user_edited": true
-  },
-  "inat-1403948": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879005767,
-    "user_edited": true
-  },
-  "inat-322381": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879006518,
-    "user_edited": true
-  },
-  "bugwood-1236117": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880684997,
-    "user_edited": true
-  },
-  "inat-2162208": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880696505,
-    "user_edited": true
-  },
-  "inat-9811080": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879011868,
-    "user_edited": true
-  },
-  "inat-1035104": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879015043,
-    "user_edited": true
-  },
-  "inat-2066609": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880667023,
-    "user_edited": true
-  },
-  "inat-1478550": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879024609,
-    "user_edited": true
-  },
-  "bugwood-5386103": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879026001,
-    "user_edited": true
-  },
-  "bugwood-1326013": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879027551,
-    "user_edited": true
-  },
-  "inat-82854386": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880654102,
-    "user_edited": true
-  },
-  "inat-1154243": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879031643,
-    "user_edited": true
-  },
-  "inat-581078": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879032901,
-    "user_edited": true
-  },
-  "inat-38850598": {
-    "flags": [
-      "mask_poor-contrast"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880635077,
-    "user_edited": true
-  },
-  "inat-1152092": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879037493,
-    "user_edited": true
-  },
-  "inat-18862546": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879038851,
-    "user_edited": true
-  },
-  "inat-2876350": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879046876,
-    "user_edited": true
-  },
-  "inat-1013146": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879057143,
-    "user_edited": true
-  },
-  "bugwood-5385923": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879065768,
-    "user_edited": true
-  },
-  "inat-6101168": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879074493,
-    "user_edited": true
-  },
-  "inat-1172044": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879086726,
-    "user_edited": true
-  },
-  "inat-59655344": {
     "flags": [
       "bbox-content_subject-too-small"
     ],
     "preference": null,
+    "reviewed_at": 1779039477852,
     "unsure": false,
-    "reviewed_at": 1778879136122,
-    "user_edited": true
-  },
-  "inat-40956495": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879144022,
-    "user_edited": true
-  },
-  "inat-1249247": {
-    "flags": [
+    "user_edited": true,
+    "variant_tag": "sam3__sam3",
+    "col2_flags": [
       "bbox-content_subject-too-small"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879172043,
-    "user_edited": true
+    ]
   },
-  "inat-1289178": {
-    "flags": [
-      "bbox-content_subject-too-small"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879177593,
-    "user_edited": true
-  },
-  "bugwood-5445190": {
-    "flags": [
+  "inat-15225644": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778879186984,
-    "user_edited": true
-  },
-  "inat-1156424": {
-    "flags": [
-      "bbox-content_subject-too-small",
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879205768,
-    "user_edited": true
-  },
-  "bugwood-5385534": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880319286,
-    "user_edited": true
-  },
-  "inat-2867852": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879225784,
-    "user_edited": true
-  },
-  "inat-49988": {
-    "flags": [
-      "bbox_wrong-subject"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880383678,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
   "inat-15382670": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779036792836,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-155196": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [],
+    "col4": [],
+    "reviewed_at": 1779039083747,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1568452": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1575628": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-16207255": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1626973": {
     "flags": [],
     "preference": null,
+    "reviewed_at": 1778880186718,
     "unsure": false,
-    "reviewed_at": 1778879241094,
     "user_edited": true
   },
-  "inat-4611414": {
-    "flags": [
+  "inat-16459222": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1703651": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
       "bbox-content_subject-too-small"
     ],
-    "preference": null,
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779039368862,
     "unsure": false,
-    "reviewed_at": 1778879247360,
-    "user_edited": true
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-338804": {
+  "inat-1733781": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-173971": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1801018": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1801574": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042349237,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-183564": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1866498": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1918555": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "bbox_correct-subject_clipped"
     ],
     "preference": null,
+    "reviewed_at": 1778881240836,
     "unsure": false,
-    "reviewed_at": 1778879250493,
     "user_edited": true
   },
-  "inat-1547836": {
-    "flags": [],
-    "preference": null,
+  "inat-193147573": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778879254659,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-433343": {
+  "inat-1941997": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_poor-contrast",
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2023365": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-204531": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2066609": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2162208": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2173569": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-21837403": {
     "flags": [
-      "bbox-content_subject-too-small"
+      "mask_blur_usable"
     ],
     "preference": null,
+    "reviewed_at": 1778881368244,
     "unsure": false,
-    "reviewed_at": 1778879297093,
     "user_edited": true
   },
-  "inat-1703289": {
-    "flags": [],
-    "preference": null,
+  "inat-2227352": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778879309188,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-228729940": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042678469,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-22992224": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_bad-photo-quality",
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042199465,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2428999": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2444539": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_poor-contrast"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-24448492": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_poor-contrast"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2506504": {
+    "col1": "bbox_correct-subject_clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779038015812,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-251861": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2521786": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-25440916": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2628780": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2680628": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779039694981,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2696305": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2714436": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2719463": {
+    "col1": "bbox_correct-subject_clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [],
+    "col4": [],
+    "reviewed_at": 1779037997176,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-28524405": {
+    "col1": "bbox_should-have-bbox",
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [],
+    "col4": [],
+    "reviewed_at": 1779039074696,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2878705": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-289589": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-3011554": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
   "inat-3113337": {
     "flags": [
       "bbox_wrong-subject"
     ],
     "preference": null,
-    "unsure": false,
     "reviewed_at": 1778879326301,
+    "unsure": false,
     "user_edited": true
   },
-  "inat-507104": {
-    "flags": [
+  "inat-313993": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": 1779036484637,
     "unsure": false,
-    "reviewed_at": 1778879348151,
-    "user_edited": true
-  },
-  "bugwood-1234225": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880476611,
-    "user_edited": true
-  },
-  "inat-1995761": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879381079,
-    "user_edited": true
-  },
-  "inat-1171990": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880510010,
-    "user_edited": true
-  },
-  "bugwood-5445334": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879415294,
-    "user_edited": true
-  },
-  "inat-1239919": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879421334,
-    "user_edited": true
-  },
-  "inat-4863480": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879430701,
-    "user_edited": true
-  },
-  "inat-2450540": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879443373,
-    "user_edited": true
-  },
-  "inat-2428999": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879454430,
-    "user_edited": true
-  },
-  "inat-949552": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879456663,
-    "user_edited": true
-  },
-  "inat-1263824": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879467121,
-    "user_edited": true
-  },
-  "bugwood-1540547": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879468140,
-    "user_edited": true
-  },
-  "inat-1998310": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879479585,
-    "user_edited": true
-  },
-  "bugwood-1226298": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879482976,
-    "user_edited": true
-  },
-  "inat-436864": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879491517,
-    "user_edited": true
-  },
-  "bugwood-5521078": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879496786,
-    "user_edited": true
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
   },
   "inat-314861": {
-    "flags": [
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778879510784,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "bugwood-1481029": {
-    "flags": [
+  "inat-316943": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778879516267,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-397300": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879523767,
-    "user_edited": true
-  },
-  "inat-2111256": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879529292,
-    "user_edited": true
-  },
-  "inat-2741230": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879537042,
-    "user_edited": true
-  },
-  "inat-1961902": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879544284,
-    "user_edited": true
-  },
-  "inat-58562765": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879548417,
-    "user_edited": true
-  },
-  "inat-3421883": {
-    "flags": [
-      "bbox_wrong-subject",
-      "mask_blur_unusable",
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879560567,
-    "user_edited": true
-  },
-  "inat-1409164": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880556352,
-    "user_edited": true
-  },
-  "inat-16459222": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879576934,
-    "user_edited": true
-  },
-  "bugwood-5542271": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879580642,
-    "user_edited": true
-  },
-  "bugwood-5424579": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879585100,
-    "user_edited": true
-  },
-  "inat-28524405": {
-    "flags": [],
-    "preference": null,
-    "unsure": true,
-    "reviewed_at": 1778879593375,
-    "user_edited": true
-  },
-  "bugwood-1327132": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879600709,
-    "user_edited": true
-  },
-  "inat-551666": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879610350,
-    "user_edited": true
-  },
-  "inat-353541": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880564498,
-    "user_edited": true
-  },
-  "inat-103970": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879638344,
-    "user_edited": true
-  },
-  "inat-2023365": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880571794,
-    "user_edited": true
-  },
-  "bugwood-5614723": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879653444,
-    "user_edited": true
-  },
-  "bugwood-5389243": {
-    "flags": [],
-    "preference": null,
-    "unsure": true,
-    "reviewed_at": 1778880753306,
-    "user_edited": true
-  },
-  "bugwood-5613961": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880747147,
-    "user_edited": true
-  },
-  "inat-2173569": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880743580,
-    "user_edited": true
-  },
-  "inat-251861": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880759364,
-    "user_edited": true
-  },
-  "bugwood-5435456": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879710775,
-    "user_edited": true
-  },
-  "inat-1367825": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879715566,
-    "user_edited": true
-  },
-  "bugwood-1242001": {
-    "flags": [
-      "mask_poor-contrast",
-      "bbox_correct-subject_clipped",
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880772801,
-    "user_edited": true
-  },
-  "inat-2050074": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879731583,
-    "user_edited": true
-  },
-  "inat-23899394": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879734611,
-    "user_edited": true
-  },
-  "inat-815619": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879737559,
-    "user_edited": true
-  },
-  "inat-193147573": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879740592,
-    "user_edited": true
-  },
-  "inat-2139414": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879747714,
-    "user_edited": true
-  },
-  "inat-8254808": {
-    "flags": [
+  "inat-330039": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_unusable",
       "mask_poor-contrast"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778880788652,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-355325": {
-    "flags": [
+  "inat-3421883": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": 1779042400263,
     "unsure": false,
-    "reviewed_at": 1778879754039,
-    "user_edited": true
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
   },
-  "bugwood-5568979": {
-    "flags": [
+  "inat-34755113": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_usable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778880797072,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-1410779": {
-    "flags": [],
-    "preference": null,
+  "inat-353541": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778879760805,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-355325": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-360358": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042366068,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-3831266": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-384152": {
+    "col1": "bbox_correct-subject_clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [
+      "mask_blur_unusable",
+      "mask_bad-photo-quality"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042221369,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-386849": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-38850598": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_poor-contrast"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-404977": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
   "inat-405533": {
-    "flags": [
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778879765464,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-1933509": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879770422,
-    "user_edited": true
-  },
-  "inat-16207255": {
-    "flags": [
-      "mask_blur_unusable"
+  "inat-429212": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778879775622,
-    "user_edited": true
-  },
-  "inat-8570800": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879780164,
-    "user_edited": true
-  },
-  "inat-57107": {
-    "flags": [
-      "mask_poor-contrast",
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879791297,
-    "user_edited": true
-  },
-  "inat-1289882": {
-    "flags": [
-      "ml_other-bad",
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880814788,
-    "user_edited": true
-  },
-  "bugwood-5584720": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879799930,
-    "user_edited": true
-  },
-  "inat-647903": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879807764,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
   "inat-4334674": {
     "flags": [
       "bbox_correct-subject_clipped"
     ],
     "preference": null,
-    "unsure": false,
     "reviewed_at": 1778879812972,
-    "user_edited": true
-  },
-  "inat-2045251": {
-    "flags": [],
-    "preference": null,
     "unsure": false,
-    "reviewed_at": 1778879818255,
     "user_edited": true
   },
-  "inat-1850359": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879820788,
-    "user_edited": true
-  },
-  "inat-8153606": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879850434,
-    "user_edited": true
-  },
-  "inat-121495068": {
-    "flags": [
+  "inat-445304": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778879855418,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-7236247": {
-    "flags": [
-      "mask_poor-contrast",
-      "bbox_correct-subject_clipped",
+  "inat-461707": {
+    "col1": "bbox_correct-subject_clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042432906,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-464590": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_usable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778880849309,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-25440916": {
-    "flags": [
-      "bbox_correct-subject_clipped",
-      "mask_blur_unusable"
+  "inat-4681566": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778880835805,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-2696305": {
-    "flags": [
-      "mask_blur_unusable"
+  "inat-4739589": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778879876110,
-    "user_edited": true
-  },
-  "inat-316943": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880856826,
-    "user_edited": true
-  },
-  "inat-2050071": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879889105,
-    "user_edited": true
-  },
-  "inat-386849": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879893189,
-    "user_edited": true
-  },
-  "bugwood-5439756": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879897397,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
   "inat-4770755": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-4795968": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-4863480": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-4883": {
+    "flags": [],
+    "preference": null,
+    "reviewed_at": 1778881042700,
+    "unsure": false,
+    "user_edited": true
+  },
+  "inat-507104": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable",
+      "mask_bad-photo-quality"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042664519,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-5090845": {
+    "col1": "bbox_should-have-bbox",
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [],
+    "col4": [],
+    "reviewed_at": 1779036436560,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-5156067": {
     "flags": [
       "mask_blur_usable"
     ],
     "preference": null,
+    "reviewed_at": 1778881349369,
     "unsure": false,
-    "reviewed_at": 1778880870322,
     "user_edited": true
   },
-  "bugwood-1267032": {
-    "flags": [],
-    "preference": null,
-    "unsure": true,
-    "reviewed_at": 1778880873222,
-    "user_edited": true
-  },
-  "inat-289589": {
-    "flags": [
-      "mask_blur_usable"
+  "inat-517984": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": 1779042435914,
     "unsure": false,
-    "reviewed_at": 1778880878105,
-    "user_edited": true
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-8156900": {
-    "flags": [
-      "mask_blur_usable"
+  "inat-5239296": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778880887005,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-1684736": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879919852,
-    "user_edited": true
-  },
-  "inat-520811": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879925758,
-    "user_edited": true
-  },
-  "inat-1465547": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879941365,
-    "user_edited": true
-  },
-  "inat-1032257": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880897372,
-    "user_edited": true
-  },
-  "bugwood-1223089": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778879956481,
-    "user_edited": true
-  },
-  "bugwood-2167001": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880908130,
-    "user_edited": true
-  },
-  "inat-15225644": {
+  "inat-53185142": {
     "flags": [
       "mask_blur_unusable"
     ],
     "preference": null,
+    "reviewed_at": 1778881400060,
     "unsure": false,
-    "reviewed_at": 1778879972718,
     "user_edited": true
   },
-  "inat-1519300": {
-    "flags": [],
-    "preference": null,
+  "inat-552617": {
+    "col1": "bbox_correct-subject_clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable",
+      "mask_bad-photo-quality"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042233782,
     "unsure": false,
-    "reviewed_at": 1778879976264,
-    "user_edited": true
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
   },
-  "bugwood-5583200": {
-    "flags": [],
-    "preference": null,
+  "inat-56778672": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778879979110,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-9378052": {
-    "flags": [
+  "inat-57107": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_poor-contrast",
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778879983043,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-4803515": {
+  "inat-5800529": {
     "flags": [],
     "preference": null,
+    "reviewed_at": 1778881386982,
     "unsure": false,
-    "reviewed_at": 1778880922463,
     "user_edited": true
   },
-  "inat-6000296": {
-    "flags": [],
-    "preference": null,
+  "inat-61691209": {
+    "col1": "bbox_correct-subject_clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": 1779042226676,
     "unsure": false,
-    "reviewed_at": 1778879995143,
-    "user_edited": true
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
   },
-  "bugwood-5614295": {
+  "inat-6180208": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-6267717": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-63635823": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-6418757": {
     "flags": [
       "bbox_correct-subject_clipped"
     ],
     "preference": null,
+    "reviewed_at": 1778878119468,
     "unsure": false,
-    "reviewed_at": 1778880002531,
     "user_edited": true
   },
-  "inat-1820661": {
+  "inat-64586338": {
+    "col1": "bbox_should-have-bbox",
+    "col2_count": null,
     "flags": [],
     "preference": null,
+    "reviewed_at": 1779036439584,
     "unsure": false,
-    "reviewed_at": 1778880004835,
-    "user_edited": true
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-647903": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-684641": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [],
+    "col4": [],
+    "reviewed_at": 1779041898475,
+    "unsure": false,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-6988731": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_poor-contrast"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
   "inat-7173758": {
     "flags": [
       "mask_blur_unusable"
     ],
     "preference": null,
-    "unsure": false,
     "reviewed_at": 1778880008460,
+    "unsure": false,
     "user_edited": true
   },
-  "inat-34755113": {
-    "flags": [
+  "inat-7236247": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_poor-contrast",
       "mask_blur_usable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778880934196,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
   "inat-7300784": {
-    "flags": [
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778880021876,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-2588925": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880025727,
-    "user_edited": true
-  },
-  "inat-779719": {
-    "flags": [
+  "inat-7393453": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": 1779042386366,
     "unsure": false,
-    "reviewed_at": 1778880032035,
-    "user_edited": true
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-20828715": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880039548,
-    "user_edited": true
-  },
-  "inat-22272543": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880041985,
-    "user_edited": true
-  },
-  "inat-234603": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880044989,
-    "user_edited": true
-  },
-  "inat-437746": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880046783,
-    "user_edited": true
-  },
-  "bugwood-5542341": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880049882,
-    "user_edited": true
-  },
-  "inat-204531": {
-    "flags": [
-      "mask_blur_usable"
+  "inat-7451316": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
     ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880954271,
-    "user_edited": true
-  },
-  "inat-8846347": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880066802,
-    "user_edited": true
-  },
-  "inat-684641": {
-    "flags": [
-      "bbox-content_no-bug"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880160001,
-    "user_edited": true
-  },
-  "inat-1036259": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880178272,
-    "user_edited": true
-  },
-  "inat-263571": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880184635,
-    "user_edited": true
-  },
-  "inat-4692253": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880185460,
-    "user_edited": true
-  },
-  "inat-1626973": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880186718,
-    "user_edited": true
-  },
-  "inat-10819361": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880190664,
-    "user_edited": true
-  },
-  "inat-8498130": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880199482,
-    "user_edited": true
-  },
-  "inat-423205": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880490510,
-    "user_edited": true
-  },
-  "bugwood-5618903": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880705913,
-    "user_edited": true
-  },
-  "inat-429212": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880731756,
-    "user_edited": true
-  },
-  "inat-183564": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880738930,
-    "user_edited": true
-  },
-  "inat-1575628": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880845114,
-    "user_edited": true
-  },
-  "inat-1568452": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880927455,
-    "user_edited": true
-  },
-  "inat-4681566": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880957081,
-    "user_edited": true
-  },
-  "inat-56778672": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880965671,
-    "user_edited": true
-  },
-  "inat-1140318": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880972013,
-    "user_edited": true
-  },
-  "bugwood-1402139": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880983821,
-    "user_edited": true
-  },
-  "inat-11838340": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880996063,
-    "user_edited": true
-  },
-  "inat-8132345": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778880998463,
-    "user_edited": true
-  },
-  "inat-56778962": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881002813,
-    "user_edited": true
-  },
-  "inat-4795968": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881008563,
-    "user_edited": true
-  },
-  "inat-1579714": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881028455,
-    "user_edited": true
-  },
-  "inat-2444539": {
-    "flags": [
+    "col3": [
       "mask_poor-contrast"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": 1779042370525,
     "unsure": false,
-    "reviewed_at": 1778881033505,
-    "user_edited": true
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-1385068": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881039192,
-    "user_edited": true
-  },
-  "inat-4883": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881042700,
-    "user_edited": true
-  },
-  "inat-254961055": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881050034,
-    "user_edited": true
-  },
-  "inat-20432301": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881050739,
-    "user_edited": true
-  },
-  "inat-1866498": {
-    "flags": [
-      "mask_blur_usable"
+  "inat-7722704": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
     ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881058167,
-    "user_edited": true
-  },
-  "bugwood-5496066": {
-    "flags": [
-      "mask_blur_usable"
+    "col3": [
+      "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": 1779042136893,
     "unsure": false,
-    "reviewed_at": 1778881064392,
-    "user_edited": true
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-779719": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
   "inat-8127442": {
     "flags": [
@@ -2159,492 +1964,657 @@
       "mask_blur_unusable"
     ],
     "preference": null,
-    "unsure": false,
     "reviewed_at": 1778881067800,
+    "unsure": false,
     "user_edited": true
   },
-  "inat-64586338": {
+  "inat-8132345": {
     "flags": [],
     "preference": null,
+    "reviewed_at": 1778880998463,
     "unsure": false,
-    "reviewed_at": 1778881074125,
     "user_edited": true
   },
-  "inat-1115229": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881082725,
-    "user_edited": true
-  },
-  "inat-11781817": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881085975,
-    "user_edited": true
-  },
-  "bugwood-5544673": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881089100,
-    "user_edited": true
-  },
-  "inat-4739589": {
-    "flags": [
+  "inat-8156900": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_usable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778881094617,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-155196": {
-    "flags": [],
-    "preference": null,
-    "unsure": true,
-    "reviewed_at": 1778881100183,
-    "user_edited": true
-  },
-  "inat-3656117": {
-    "flags": [],
-    "preference": null,
+  "inat-8254808": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable",
+      "mask_poor-contrast"
+    ],
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778881107733,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "bugwood-5401801": {
-    "flags": [
+  "inat-82854386": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "reviewed_at": null,
+    "unsure": false,
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-8498130": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778881119575,
-    "user_edited": true
-  },
-  "inat-1733781": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881125900,
-    "user_edited": true
-  },
-  "inat-3831266": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881130458,
-    "user_edited": true
-  },
-  "inat-2878705": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881133800,
-    "user_edited": true
-  },
-  "bugwood-1366011": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881136892,
-    "user_edited": true
-  },
-  "inat-1941997": {
-    "flags": [
-      "mask_poor-contrast",
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881147342,
-    "user_edited": true
-  },
-  "inat-404977": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881152500,
-    "user_edited": true
-  },
-  "bugwood-5540746": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881162253,
-    "user_edited": true
-  },
-  "inat-42973459": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881163008,
-    "user_edited": true
-  },
-  "bugwood-5540588": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881163639,
-    "user_edited": true
-  },
-  "bugwood-5423859": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881170611,
-    "user_edited": true
-  },
-  "bugwood-5364324": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881172019,
-    "user_edited": true
-  },
-  "inat-5239296": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881178494,
-    "user_edited": true
-  },
-  "bugwood-1543869": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881184903,
-    "user_edited": true
-  },
-  "inat-12524812": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881189994,
-    "user_edited": true
-  },
-  "inat-2714436": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881206903,
-    "user_edited": true
-  },
-  "inat-3201313": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881214819,
-    "user_edited": true
-  },
-  "inat-289905": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881221711,
-    "user_edited": true
-  },
-  "bugwood-2135003": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881223944,
-    "user_edited": true
-  },
-  "bugwood-5459498": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881226578,
-    "user_edited": true
-  },
-  "inat-1139095": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881236586,
-    "user_edited": true
-  },
-  "inat-1918555": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881240836,
-    "user_edited": true
-  },
-  "inat-2227352": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881244819,
-    "user_edited": true
-  },
-  "inat-2521786": {
-    "flags": [
-      "mask_blur_unusable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881248694,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
   "inat-9103162": {
-    "flags": [
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778881261444,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-2628780": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881268340,
-    "user_edited": true
-  },
-  "inat-6180208": {
-    "flags": [
+  "inat-9378052": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778881277802,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "bugwood-5542256": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881280444,
-    "user_edited": true
-  },
-  "inat-1960438": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881281956,
-    "user_edited": true
-  },
-  "bugwood-5486349": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881282561,
-    "user_edited": true
-  },
-  "bugwood-5516187": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881285986,
-    "user_edited": true
-  },
-  "inat-5443521": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881292744,
-    "user_edited": true
-  },
-  "inat-3011554": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881300619,
-    "user_edited": true
-  },
-  "bugwood-5498196": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881305919,
-    "user_edited": true
-  },
-  "inat-1467290": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881324085,
-    "user_edited": true
-  },
-  "inat-11375814": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881329952,
-    "user_edited": true
-  },
-  "inat-11495391": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881335552,
-    "user_edited": true
-  },
-  "inat-6099005": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881338686,
-    "user_edited": true
-  },
-  "bugwood-5617995": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881341011,
-    "user_edited": true
-  },
-  "inat-5156067": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881349369,
-    "user_edited": true
-  },
-  "inat-148029": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881353652,
-    "user_edited": true
-  },
-  "bugwood-5544518": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881356002,
-    "user_edited": true
-  },
-  "inat-21837403": {
-    "flags": [
-      "mask_blur_usable"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881368244,
-    "user_edited": true
-  },
-  "bugwood-5616862": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881372285,
-    "user_edited": true
-  },
-  "inat-2946024": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881373494,
-    "user_edited": true
-  },
-  "bugwood-5610992": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881374485,
-    "user_edited": true
-  },
-  "bugwood-5540717": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881377177,
-    "user_edited": true
-  },
-  "inat-197453": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881383724,
-    "user_edited": true
-  },
-  "inat-5800529": {
-    "flags": [],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881386982,
-    "user_edited": true
-  },
-  "bugwood-5615766": {
-    "flags": [
-      "bbox_correct-subject_clipped"
-    ],
-    "preference": null,
-    "unsure": false,
-    "reviewed_at": 1778881389094,
-    "user_edited": true
-  },
-  "inat-53185142": {
-    "flags": [
+  "inat-966628": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
+    "reviewed_at": null,
     "unsure": false,
-    "reviewed_at": 1778881400060,
-    "user_edited": true
+    "user_edited": false,
+    "variant_tag": "sam3__sam3"
   },
-  "inat-63635823": {
-    "flags": [
+  "bugwood-1540228": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [
+      "mask_poor-contrast",
       "mask_blur_unusable"
     ],
-    "preference": null,
+    "col4": [],
     "unsure": false,
-    "reviewed_at": 1778881399077,
-    "user_edited": true
+    "reviewed_at": 1779039207743,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-59655344": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779041909940,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-1267032": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [],
+    "col4": [],
+    "unsure": true,
+    "reviewed_at": 1779041914909,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-538988": {
+    "col1": "bbox_wrong-subject",
+    "col2_count": "bbox-content_no-bug",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779039297458,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5614295": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779039309850,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1726555": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_bbox-multibug_unusable",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [
+      "mask_poor-contrast"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779039314266,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1249247": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779039482369,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-7351899": {
+    "col1": "bbox_wrong-subject",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779039522706,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1289178": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [
+      "mask_blur_unusable",
+      "mask_bad-photo-quality"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042100902,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-302754": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779039690018,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-4963204": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_partially-concealed"
+    ],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779041996113,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-10325590": {
+    "col1": null,
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042063603,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5602250": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042086265,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5371089": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042152462,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-8912": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042181165,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5614723": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042262127,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-67537407": {
+    "col1": "bbox_correct-subject_clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042278164,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5367930": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042285489,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1547836": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042315555,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-4611414": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042318658,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1703289": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042320330,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-338804": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042323137,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2867852": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042332737,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1379330": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [
+      "mask_bad-photo-quality"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042344300,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-40956495": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042356586,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-49988": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_partially-concealed"
+    ],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042378378,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1929671": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042396403,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-2476557": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small",
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042398253,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-1223047": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [
+      "mask_bad-photo-quality",
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042405201,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-456268": {
+    "col1": "bbox_correct-subject_clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042459105,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-1234225": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042472438,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5385553": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042497626,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-261516": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042509185,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-629753": {
+    "col1": "bbox_correct-subject_clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042597782,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5445334": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042592224,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-5424073": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [
+      "mask_blur_usable",
+      "mask_bad-photo-quality"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042611957,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-17486": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042696476,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-5194505": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042712022,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-1995761": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_image-multi-bug"
+    ],
+    "col3": [
+      "mask_blur_usable"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779042784237,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-433343": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [
+      "bbox-content_subject-too-small"
+    ],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779052263673,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
   }
 }

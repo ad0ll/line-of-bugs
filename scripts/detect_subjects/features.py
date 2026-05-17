@@ -85,14 +85,21 @@ def compute_subject_sharpness(
     rgb: Optional[np.ndarray],
     bbox_xywh_normalized: Optional[tuple[float, float, float, float]],
     img_w: int, img_h: int,
+    mask: Optional[np.ndarray] = None,
 ) -> Optional[float]:
-    """Laplacian variance over the bbox region. Higher = sharper.
+    """Laplacian variance over the subject. Higher = sharper.
 
-    Returns None if no bbox or bbox is too small (< 5px in either dimension).
-    `rgb` must be a uint8 HxWx3 numpy array in RGB order — call `np.array(im)`
-    on a PIL Image before passing.
-    Note: known unreliable on uniform-textured subjects (e.g., smooth bug bodies).
-    Stored as a feature for ML labelers to use, not for hard rules.
+    When `mask` is provided (preferred): variance is computed ONLY over pixels
+    where mask==True. This is empirically better at separating user-labeled
+    blur_unusable from blur_ok (Youden-J 0.43 vs 0.37 for bbox-only) because
+    blurred-DOF backgrounds inside the bbox no longer pollute the score.
+    See experiments/blur_mask_features.py for the calibration. SCHEMA_VERSION
+    bumped to 2 to mark this meaning change.
+
+    When `mask` is None: falls back to bbox-region Laplacian variance (the
+    old definition). Returned for callers that don't have a mask.
+
+    Returns None if no bbox, bbox is too small (< 5px), or mask is empty.
     """
     if bbox_xywh_normalized is None or rgb is None:
         return None
@@ -101,6 +108,70 @@ def compute_subject_sharpness(
     x2 = int((x + w) * img_w); y2 = int((y + h) * img_h)
     if x2 - x1 < 5 or y2 - y1 < 5:
         return None
-    crop = rgb[y1:y2, x1:x2]
-    gray = cv2.cvtColor(crop, cv2.COLOR_RGB2GRAY)
-    return float(cv2.Laplacian(gray, cv2.CV_64F).var())
+    gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+    lap = cv2.Laplacian(gray, cv2.CV_64F)
+    if mask is not None and mask.any():
+        bbox_mask = mask[y1:y2, x1:x2] if mask.shape == gray.shape else None
+        if bbox_mask is not None and bbox_mask.any():
+            return float(lap[y1:y2, x1:x2][bbox_mask].var())
+        if mask.any():
+            return float(lap[mask].var())
+    return float(lap[y1:y2, x1:x2].var())
+
+
+def compute_top10pct_lap_masked(
+    rgb: Optional[np.ndarray],
+    mask: Optional[np.ndarray],
+) -> Optional[float]:
+    """Mean of the top-decile per-pixel |Laplacian| values within the mask.
+
+    Captures "eyes/edges sharp even if body smooth" — handles uniform-textured
+    insects (beetles, hornets) better than plain variance. Per the blur
+    experiment, slightly stronger than variance (Youden-J 0.46 vs 0.43)
+    though within noise at n=78.
+    """
+    if rgb is None or mask is None or not mask.any():
+        return None
+    gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+    lap = np.abs(cv2.Laplacian(gray, cv2.CV_64F))
+    vals = lap[mask]
+    if vals.size < 10:
+        return None
+    k = max(1, vals.size // 10)
+    return float(np.partition(vals, -k)[-k:].mean())
+
+
+def compute_edge_density_mask_vs_bg(
+    rgb: Optional[np.ndarray],
+    mask: Optional[np.ndarray],
+    bbox_xywh_normalized: Optional[tuple[float, float, float, float]],
+    img_w: int, img_h: int,
+) -> Optional[float]:
+    """Canny edge density inside the mask divided by edge density of the
+    bbox-background (pixels in bbox but outside mask). Values > 1 mean the
+    subject is sharper than its surroundings — useful for distinguishing
+    intentional shallow DOF (sharp subject, blurred bg) from genuine subject
+    blur. None if either region is empty or too small.
+    """
+    if rgb is None or mask is None or bbox_xywh_normalized is None:
+        return None
+    x, y, w, h = bbox_xywh_normalized
+    x1 = int(x * img_w); y1 = int(y * img_h)
+    x2 = int((x + w) * img_w); y2 = int((y + h) * img_h)
+    if x2 - x1 < 5 or y2 - y1 < 5:
+        return None
+    if mask.shape != rgb.shape[:2]:
+        return None
+    gray = cv2.cvtColor(rgb, cv2.COLOR_RGB2GRAY)
+    edges = cv2.Canny(gray, 50, 150)
+    bbox_crop = edges[y1:y2, x1:x2]
+    bbox_mask = mask[y1:y2, x1:x2]
+    inside = int(bbox_mask.sum())
+    outside = int(bbox_crop.size - inside)
+    if inside < 50 or outside < 50:
+        return None
+    inside_density = float(bbox_crop[bbox_mask].sum()) / inside
+    outside_density = float(bbox_crop[~bbox_mask].sum()) / outside
+    if outside_density == 0:
+        return None
+    return inside_density / outside_density

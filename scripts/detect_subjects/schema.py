@@ -27,7 +27,9 @@ class DetectionRow:
     mask_iou_score: Optional[float]
     lab_delta_e: Optional[float]
     boundary_sharpness: Optional[float]
-    subject_sharpness: Optional[float]
+    subject_sharpness: Optional[float]  # schema_version >= 2: mask-restricted Laplacian variance
+    top10pct_lap_mask: Optional[float]   # schema_version >= 2: ML labeler input
+    edge_density_mask_vs_bg: Optional[float]  # schema_version >= 2: ML labeler input
     bbox_min_edge_px: Optional[float]
     bbox_long_edge_px: Optional[float]
     bbox_touches_edge: Optional[bool]
@@ -77,6 +79,8 @@ SCHEMA = pa.schema([
     ("lab_delta_e", pa.float32()),
     ("boundary_sharpness", pa.float32()),
     ("subject_sharpness", pa.float32()),
+    ("top10pct_lap_mask", pa.float32()),
+    ("edge_density_mask_vs_bg", pa.float32()),
     ("bbox_min_edge_px", pa.float32()),
     ("bbox_long_edge_px", pa.float32()),
     ("bbox_touches_edge", pa.bool_()),

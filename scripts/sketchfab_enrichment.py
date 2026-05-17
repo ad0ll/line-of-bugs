@@ -2,13 +2,16 @@
 every distinct taxon_species in the images table.
 
 The hits_json column is what the prod route handler serves from — prod's
-Hetzner egress IP is bot-blocked by Akamai (Sketchfab's CDN), so the
+Hetzner egress IP is rate-limited by Sketchfab's CDN (CloudFront), so the
 route cannot call Sketchfab live and depends entirely on this precache.
 
 Run: .venv/bin/python -m scripts.sketchfab_enrichment [--limit N] [--max-age-days D]
 
-Concurrency: 8 outer workers × 2 inner (sci+common queries) = 16 in-flight
-Sketchfab requests at a time. Within fair-use observed ≤70 req/s.
+Each species costs ONE Sketchfab request — `q="<scientific> <common>"`
+with count=24. The combined query returns models scoring high on either
+axis; `matchedBy` is computed per-hit from the model's text (name +
+description + tags + categories), not from which query returned it.
+At --workers=8 that's 8 in-flight requests, half the prior 16.
 """
 from __future__ import annotations
 
@@ -52,10 +55,10 @@ class SpeciesResult:
     has_models: bool
     hit_count: int  # raw, pre-filter
     hits: list[dict] = field(default_factory=list)  # trimmed, post-filter, sorted
-    # True when ANY of the queries got rate-limited / Akamai-gated. Callers
-    # should NOT upsert this result (would poison the cache with a false
-    # negative). The next run picks the species up automatically because
-    # last_checked_at didn't get updated.
+    # True when the Sketchfab query hit a transient failure (429 edge
+    # rate-limit, or 408/502/503/504 CloudFront-origin error). Callers should
+    # NOT upsert the result — last_checked_at stays old so the next run
+    # retries instead of poisoning the cache with a false negative.
     rate_limited: bool = False
 
 
@@ -74,24 +77,31 @@ def _load_api_key() -> str:
     )
 
 
-RATE_LIMIT_STATUSES = {405, 429, 503}  # Akamai 405 = bot challenge, 429 = rate-limit
+# Sketchfab fronts on CloudFront. 429 = edge rate-limit (no Retry-After
+# header — body is `{"detail":"Too many requests."}`). 408/502/503/504 =
+# `x-cache: Error from cloudfront`, i.e. CloudFront couldn't reach gunicorn
+# in time. All five are transient — the caller SKIPS the species rather
+# than upserting `has_models=False` from an incomplete answer. Previously
+# 408 fell through to the warning branch and poisoned the cache on
+# every origin-timeout.
+RATE_LIMIT_STATUSES = {408, 429, 502, 503, 504}
 
 
 class RateLimitedError(Exception):
-    """Raised when Sketchfab returns a bot-block / rate-limit status."""
+    """Raised on a transient Sketchfab failure (rate-limit or CDN-origin timeout)."""
 
 
-def _query(q: str, api_key: str) -> list[dict]:
+def _query(q: str, api_key: str, count: int = 24) -> list[dict]:
     """One Sketchfab search call. Returns first-page results or [].
 
-    Raises RateLimitedError on 405/429/503 so the caller can SKIP the species
-    rather than poison the precache with a false negative. Other non-200s
-    (404, 5xx that aren't 503) are logged and treated as zero hits.
+    Raises RateLimitedError on 408/429/502/503/504 so the caller can SKIP the
+    species rather than poison the precache with a false negative. Other
+    non-200s (e.g. 404) are logged and treated as zero hits.
     """
     try:
         r = requests.get(
             "https://api.sketchfab.com/v3/search",
-            params={"type": "models", "q": q, "count": 12},
+            params={"type": "models", "q": q, "count": count},
             headers={"Authorization": f"Token {api_key}"},
             timeout=20,
         )
@@ -109,7 +119,11 @@ def _query(q: str, api_key: str) -> list[dict]:
         return []
 
 
-def _is_strict_relevant(hit: dict, scientific: str, common: str) -> bool:
+def _classify_match(hit: dict, scientific: str, common: str) -> str | None:
+    """Return 'both' / 'scientific' / 'common' / None per the same text rules
+    `_is_strict_relevant` used. Now derived from the model's text rather than
+    which query returned it, because we only fire one combined query.
+    """
     text_parts = [
         hit.get("name", "") or "",
         hit.get("description", "") or "",
@@ -117,18 +131,30 @@ def _is_strict_relevant(hit: dict, scientific: str, common: str) -> bool:
         " ".join(c.get("name", "") for c in hit.get("categories", [])),
     ]
     text = " ".join(text_parts).lower()
+
     sci_toks = scientific.lower().split()
-    if len(sci_toks) >= 2 and sci_toks[0] in text and sci_toks[-1] in text:
-        return True
+    sci_match = (
+        len(sci_toks) >= 2 and sci_toks[0] in text and sci_toks[-1] in text
+    )
+
     com = common.lower().strip()
-    if len(com.split()) >= 2 and com in text:
-        return True
-    if len(com.split()) == 1 and com in text:
+    com_words = com.split()
+    com_match = False
+    if len(com_words) >= 2 and com in text:
+        com_match = True
+    elif len(com_words) == 1 and com in text:
         tag_set = {t.get("name", "").lower() for t in hit.get("tags", [])}
         cat_slugs = {c.get("slug", "") for c in hit.get("categories", [])}
         if tag_set & INSECT_HINTS or cat_slugs & INSECT_CATEGORY_SLUGS:
-            return True
-    return False
+            com_match = True
+
+    if sci_match and com_match:
+        return "both"
+    if sci_match:
+        return "scientific"
+    if com_match:
+        return "common"
+    return None
 
 
 def _pick_thumbnail(hit: dict) -> str:
@@ -159,52 +185,39 @@ def _trim_hit(hit: dict, matched_by: str) -> dict:
 
 
 def classify_species(scientific: str, common: str, api_key: str) -> SpeciesResult:
-    """Run both queries in parallel; return aggregate relevance + trimmed hits.
+    """Fire ONE combined Sketchfab query and classify hits by text content.
 
-    If EITHER query gets rate-limited, the returned result has
-    rate_limited=True and empty hits — caller should skip the upsert so
-    last_checked_at stays old and the next run retries.
+    The combined query `q="<scientific> <common>"` returns up to 24 models
+    ranked by overall keyword relevance. We then independently check each
+    hit's text against the scientific tokens and the common name to derive
+    `matchedBy` — same semantic as before, just sourced from the hit text
+    instead of which sub-query returned it.
+
+    On a transient Sketchfab failure (rate-limit, CDN origin timeout),
+    returns rate_limited=True with empty hits — the caller should skip the
+    upsert so last_checked_at stays old and the next run retries.
     """
-    with ThreadPoolExecutor(max_workers=2) as inner:
-        f_sci = inner.submit(_query, scientific, api_key)
-        f_com = inner.submit(_query, common, api_key)
-        try:
-            sci_hits = f_sci.result()
-        except RateLimitedError:
-            return SpeciesResult(has_models=False, hit_count=0, hits=[], rate_limited=True)
-        try:
-            com_hits = f_com.result()
-        except RateLimitedError:
-            return SpeciesResult(has_models=False, hit_count=0, hits=[], rate_limited=True)
+    q = " ".join(part for part in (scientific.strip(), common.strip()) if part)
+    try:
+        hits = _query(q, api_key, count=24)
+    except RateLimitedError:
+        return SpeciesResult(has_models=False, hit_count=0, hits=[], rate_limited=True)
 
-    # uid → (raw hit, matched_by_sci, matched_by_common)
-    by_uid: dict[str, tuple[dict, bool, bool]] = {}
-    for h in sci_hits:
+    # Dedupe by uid — Sketchfab shouldn't return dupes on a single page but
+    # be defensive. First occurrence wins (rank order is preserved).
+    by_uid: dict[str, dict] = {}
+    for h in hits:
         uid = h.get("uid", "")
         if not uid:
             continue
-        by_uid[uid] = (h, True, False)
-    for h in com_hits:
-        uid = h.get("uid", "")
-        if not uid:
-            continue
-        if uid in by_uid:
-            prev_hit, sci_f, _ = by_uid[uid]
-            by_uid[uid] = (prev_hit, sci_f, True)
-        else:
-            by_uid[uid] = (h, False, True)
+        by_uid.setdefault(uid, h)
 
     raw = len(by_uid)
     trimmed: list[dict] = []
-    for hit, sci_f, com_f in by_uid.values():
-        if not _is_strict_relevant(hit, scientific, common):
+    for hit in by_uid.values():
+        matched = _classify_match(hit, scientific, common)
+        if matched is None:
             continue
-        if sci_f and com_f:
-            matched = "both"
-        elif sci_f:
-            matched = "scientific"
-        else:
-            matched = "common"
         trimmed.append(_trim_hit(hit, matched))
 
     # Stable ordering: both first (strongest signal), then scientific, then common.

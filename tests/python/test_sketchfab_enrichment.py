@@ -4,12 +4,16 @@ from __future__ import annotations
 import sqlite3
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from scripts.sketchfab_enrichment import (
     classify_species,
     upsert_metadata,
+    RateLimitedError,
     SpeciesResult,
+    _query,
 )
 
 
@@ -106,7 +110,8 @@ def test_upsert_metadata_persists_hits_json():
 
 
 def test_classify_trims_and_sorts_hits():
-    # Two hits: one common-only (relevant), one in both queries (relevant)
+    # Single combined query returns 2 hits. matchedBy is derived from each
+    # hit's text content against the scientific tokens and the common name.
     sci_only = {
         "uid": "sci",
         "name": "Apis mellifera scan",
@@ -120,9 +125,10 @@ def test_classify_trims_and_sorts_hits():
         "viewerUrl": "https://sketchfab.com/3d-models/sci",
         "license": {"slug": "by"},
     }
+    # Text mentions both the scientific name AND the common name → "both".
     in_both = {
         "uid": "both",
-        "name": "honey bee",
+        "name": "Apis mellifera honey bee",
         "tags": [{"name": "bee"}],
         "categories": [{"slug": "animals-pets"}],
         "user": {"username": "modeler"},
@@ -131,11 +137,11 @@ def test_classify_trims_and_sorts_hits():
         "license": None,
     }
     with patch("scripts.sketchfab_enrichment._query") as mock_q:
-        mock_q.side_effect = [
-            [sci_only, in_both],  # scientific query
-            [in_both],             # common query
-        ]
+        mock_q.return_value = [sci_only, in_both]
         result = classify_species("Apis mellifera", "honey bee", api_key="k")
+    # Combined query called exactly once with both terms joined.
+    assert mock_q.call_count == 1
+    assert mock_q.call_args.args[0] == "Apis mellifera honey bee"
     assert result.has_models is True
     assert result.hit_count == 2
     # 'both' must sort first (strongest signal), then 'scientific'
@@ -148,3 +154,31 @@ def test_classify_trims_and_sorts_hits():
     assert result.hits[1]["authorUsername"] == "etain"
     assert result.hits[0]["licenseSlug"] is None  # license: None case
     assert result.hits[1]["licenseSlug"] == "by"
+
+
+@pytest.mark.parametrize("status", [408, 429, 502, 503, 504])
+def test_query_raises_rate_limited_on_transient_status(status):
+    """408 (CloudFront origin timeout), 429 (edge rate-limit), 502/503/504
+    (origin unreachable) must skip the species rather than poison the cache
+    with `has_models=False` from a non-answer."""
+    fake_resp = MagicMock(status_code=status)
+    with patch("scripts.sketchfab_enrichment.requests.get", return_value=fake_resp):
+        with pytest.raises(RateLimitedError):
+            _query("Apis mellifera", api_key="k")
+
+
+def test_classify_species_skips_on_rate_limit():
+    with patch("scripts.sketchfab_enrichment._query", side_effect=RateLimitedError("HTTP 429")):
+        result = classify_species("Apis mellifera", "honey bee", api_key="k")
+    assert result.rate_limited is True
+    assert result.has_models is False
+    assert result.hit_count == 0
+    assert result.hits == []
+
+
+def test_query_404_returns_empty_not_rate_limited():
+    """A real 404 (or other non-transient non-200) keeps the legacy
+    "zero hits" semantic — we DO upsert the species as has_models=False."""
+    fake_resp = MagicMock(status_code=404)
+    with patch("scripts.sketchfab_enrichment.requests.get", return_value=fake_resp):
+        assert _query("nonexistus", api_key="k") == []

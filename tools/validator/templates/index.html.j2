@@ -26,28 +26,40 @@
   .imgs figcaption { font-size: 11px; color: #888; margin-top: 2px; }
   .imgs img { width: 100%; height: auto; background: #0d0c10; border-radius: 4px; display: block; }
   .bbox-overlay { position: relative; display: block; line-height: 0; }
-  .bbox-overlay .box { position: absolute; border: 0.2vw solid #FF6EC7; pointer-events: none; box-sizing: border-box; }
+  /* Crisp pink border + 1px black inner outline for contrast on any background.
+     z-index: 2 keeps the primary in front when secondaries overlap (otherwise
+     the cyan secondary would hide the pink primary). */
+  .bbox-overlay .box { position: absolute; border: 2px solid #FF6EC7; pointer-events: none; box-sizing: border-box; box-shadow: 0 0 0 1px rgba(0,0,0,0.8); z-index: 2; }
 
-  /* Bug zoom: zooms into bbox region so the user can see bbox quality at thumbnail scale */
-  .bug-zoom { position: relative; width: 100%; aspect-ratio: 1 / 1; background-color: #0d0c10; background-repeat: no-repeat; border-radius: 4px; border: 1px solid #28252e; }
-  .bug-zoom-box { position: absolute; border: 2px solid #FF6EC7; box-sizing: border-box; pointer-events: none; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.8); }
-  .bug-zoom-nobbox { background-size: contain; background-position: center; }
-  .bug-zoom-missed { position: absolute; top: 0; left: 0; right: 0; padding: 4px 6px; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: #fbbf24; background: rgba(0,0,0,0.75); text-align: center; }
+  /* Bug zoom: square 1:1 container, real <img> inside positioned by JS at onload so we
+     can use the image's true natural dimensions and preserve aspect (no background-size
+     X% Y% distortion). */
+  .bug-zoom { position: relative; width: 100%; aspect-ratio: 1 / 1; background-color: #0d0c10; border-radius: 4px; border: 1px solid #28252e; overflow: hidden; }
+  .bug-zoom .bug-zoom-img { position: absolute; display: block; max-width: none; width: auto; height: auto; }
+  .bug-zoom-box { position: absolute; border: 2px solid #FF6EC7; box-sizing: border-box; pointer-events: none; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.8); z-index: 2; }
+  /* SAM 3 mask outline overlay — yellow polygon traced from the cached mask,
+     positioned to match the bug-zoom img so user can verify mask quality. */
+  .bug-zoom-mask-overlay { position: absolute; pointer-events: none; z-index: 1; overflow: visible; }
+  .bug-zoom-mask-overlay polygon { fill: rgba(251,191,36,0.08); stroke: #fbbf24; stroke-width: 2; vector-effect: non-scaling-stroke; }
+  .bug-zoom-missed { position: absolute; top: 0; left: 0; right: 0; padding: 4px 6px; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: #fbbf24; background: rgba(0,0,0,0.75); text-align: center; z-index: 3; }
   /* Secondary detections — other distinct subjects the system clustered.
-     Cyan so they contrast against both pink primary and any photo background.
-     The ::after pseudo-element shows the DINO confidence as a corner badge —
-     low conf (≈0.20) is the noise band where flowers/leaves leak in. */
+     Cyan, z-index 1 so they sit BEHIND the pink primary on overlap. */
   .bbox-overlay .box-secondary {
-    position: absolute; border: 0.25vw solid #67D4E6;
+    position: absolute; border: 2px solid #67D4E6;
     pointer-events: none; box-sizing: border-box;
-    box-shadow: 0 0 0 0.05vw rgba(0, 0, 0, 0.8);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.8);
+    z-index: 1;
   }
-  .bbox-overlay .box-secondary::after {
-    content: attr(data-conf);
-    position: absolute; top: -1px; right: -1px;
-    background: #67D4E6; color: #0d0c10;
-    font: 600 9px/1 'JetBrains Mono', monospace;
-    padding: 2px 3px; border-radius: 0 0 0 3px;
+  /* Bug-zoom viewport indicator: dashed yellow rectangle on the original image
+     marking which region the right-panel bug-zoom is magnifying. Yellow stands
+     out against both pink primary and cyan secondary bboxes. */
+  .bbox-overlay .bug-zoom-viewport {
+    position: absolute;
+    border: 2px dashed #fbbf24;
+    pointer-events: none;
+    box-sizing: border-box;
+    z-index: 0;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.7);
   }
   .nocrop { width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; background: #0d0c10; color: #666; font-size: 12px; border-radius: 4px; }
 
@@ -112,23 +124,19 @@
   .col.col2 button.suggested { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.10); }
   .col.col4 button.suggested { border-color: #FF6EC7; color: #FF6EC7; background: rgba(255,110,199,0.10); }
   .col button.informational { font-style: italic; opacity: 0.75; }
-  /* No-bbox cards: dim bbox-derived buttons (col1 except wrong-subject, col2 except no-bug, all col3, all col2_flags) */
-  .col button.nobbox-dim { opacity: 0.25; cursor: not-allowed; }
+  /* Dim + disable buttons that don't apply given current bbox state.
+     For has-bbox cards: the "Should Have Bbox" button is dimmed.
+     For no-bbox cards: all bbox-derived buttons are dimmed. */
+  .col button.nobbox-dim { opacity: 0.25; cursor: not-allowed; pointer-events: none; }
   .col button.nobbox-dim:hover { color: inherit; border-color: inherit; }
-  /* Bbox-only mode: de-emphasize col2-4 */
-  body.bbox-only-mode .col.col2,
-  body.bbox-only-mode .col.col3,
-  body.bbox-only-mode .col.col4 { opacity: 0.4; pointer-events: none; }
   /* Stale label warning */
   .stale-warning { background: rgba(245,158,11,0.15); border: 1px solid #f59e0b; border-radius: 4px;
     color: #f59e0b; font-size: 11px; padding: 4px 8px; margin-bottom: 6px; display: none; }
   .stale-warning.visible { display: block; }
-  /* Per-bbox text-label badge */
-  .bbox-overlay .box-label { position: absolute; top: 0; left: 0;
-    background: rgba(0,0,0,0.7); color: #f5f5f5;
-    font: 600 9px/1 'JetBrains Mono', monospace;
-    padding: 2px 4px; border-radius: 0 0 3px 0; pointer-events: none;
-    white-space: nowrap; max-width: 90%; overflow: hidden; text-overflow: ellipsis; }
+  /* Phrase + confidence summary list shown below the images (replaces the
+     on-bbox label which got truncated and covered the subject). */
+  .phrase-summary { font: 11px/1.5 'JetBrains Mono', monospace; color: #aaa; margin: 4px 0 6px; padding: 4px 8px; background: rgba(255,255,255,0.03); border-radius: 4px; list-style: none; }
+  .phrase-summary li { margin: 0; }
   .bbox-overlay .box.box-negative { border-color: #ef4444; }
   .bbox-overlay .box-secondary.box-negative { border-color: #f97316; }
 
@@ -147,12 +155,22 @@
     border: 0.2vw solid #FF6EC7; border-radius: 0.3vw;
     box-shadow: 0 1vw 3vw rgba(0, 0, 0, 0.7);
   }
+  /* Bug-zoom-clone img inside the popup needs to ESCAPE the #zoomPopup img
+     constraints (max-width 55vw + object-fit contain), because _positionBugZoom
+     sizes the img to ~tens of thousands of px and positions via negative
+     left/top so the bbox region falls within the 50vw clone container. */
+  #zoomPopup .bug-zoom-clone .bug-zoom-img {
+    max-width: none !important; max-height: none !important;
+    object-fit: initial; background: transparent;
+    border: none; border-radius: 0; box-shadow: none;
+  }
   #zoomPopup .zoom-bbox {
     position: absolute;
     border: 0.25vw solid #FF6EC7;
     box-sizing: border-box;
     pointer-events: none;
     display: none;
+    z-index: 2;
   }
   #zoomPopup .zoom-bbox-secondary {
     position: absolute;
@@ -160,13 +178,7 @@
     box-shadow: 0 0 0 0.05vw rgba(0, 0, 0, 0.8);
     box-sizing: border-box;
     pointer-events: none;
-  }
-  #zoomPopup .zoom-bbox-secondary::after {
-    content: attr(data-conf);
-    position: absolute; top: -1px; right: -1px;
-    background: #67D4E6; color: #0d0c10;
-    font: 600 0.7vw/1 'JetBrains Mono', monospace;
-    padding: 0.15vw 0.25vw; border-radius: 0 0 0 0.25vw;
+    z-index: 1;
   }
 </style>
 </head>
@@ -178,22 +190,18 @@
   <label>Predicted <select id="quality"><option value="all">all</option><option value="good">good</option><option value="tight">tight</option><option value="wide">wide</option><option value="no_bug">no_bug</option><option value="bug_too_small">bug_too_small</option><option value="multi_bug">multi_bug</option><option value="poor_contrast">poor_contrast</option></select></label>
   <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="flagged">any flag</option></select></label>
   <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="random">random</option></select></label>
-  <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-    <input type="checkbox" id="bboxOnlyMode" style="width:14px;height:14px;">
-    <span style="font-size:13px;color:#f59e0b;font-weight:600;">Bbox-Only Mode</span>
-  </label>
   <span class="totals" id="totals">{{ total }} images</span>
   <span id="saveStatus" title="Each click is saved to data/cache/labels.json on the server"></span>
 </header>
 
 <div class="help">
   <b>4-column label vocabulary:</b>
-  <span style="color:#4ac64a">Col 1 BBox:</span> Did the detector pick the right region? (human-only) ·
-  <span style="color:#f59e0b">Col 2 BBox Content:</span> What is inside the bbox? (rule labeler pre-fills) ·
-  <span style="color:#67D4E6">Col 3 Mask Rule:</span> Mask-derived quality (rule labeler pre-fills) ·
-  <span style="color:#FF6EC7">Col 4 ML Label:</span> Catch-all (human-only today)
-  <br><b>System-suggested</b> (rule labeler): shown outlined in column color. <b>Confirmed</b>: filled amber/green/cyan/pink. Click to toggle.
-  <br><span style="color:#666">Bbox-Only Mode: focus Col 1 — N/Enter commits Col 1 and auto-accepts rule suggestions for Cols 2-4. Hover any image to zoom. Every click writes to <code>data/cache/labels.json</code>.</span>
+  <span style="color:#4ac64a">Col 1 BBox:</span> Did the detector pick the right region? ·
+  <span style="color:#f59e0b">Col 2 BBox Content:</span> What is inside the bbox? ·
+  <span style="color:#67D4E6">Col 3 Mask Rule:</span> Mask-derived quality ·
+  <span style="color:#FF6EC7">Col 4 ML Label:</span> Catch-all
+  <br><b>Pre-active defaults</b> (no clicks for typical cards): col1 <code>correct-not-clipped</code> + col2 <code>single</code> for has-bbox; col2 <code>no-bug</code> for no-bbox. Click only to override; click an active button to clear it. <b>Rule hint</b> (<code>rule says: …</code>) is informational — sam3-miscalibrated, verify with bug-zoom.
+  <br><span style="color:#666"><b>C</b> commits the displayed defaults for the next unreviewed card — left-hand key so your right hand stays on the mouse. Hover any image to zoom. Every click writes to <code>data/cache/labels.json</code>.</span>
 </div>
 
 <div class="grid" id="grid"></div>
@@ -205,7 +213,8 @@ const DATA = {{ data_json }};
 const COL1_BUTTONS = [
   { id: "bbox_correct-subject_not-clipped", label: "Correct\u00a0Not\u00a0Clipped", tip: "Bbox on right bug, full body. DEFAULT \u2014 gate-pass." },
   { id: "bbox_correct-subject_clipped",     label: "Correct\u00a0Clipped",          tip: "Right bug but body cut off by frame or bbox edge." },
-  { id: "bbox_wrong-subject",               label: "Wrong\u00a0Subject",            tip: "Bbox on wrong subject (flower, leaf, different bug)." },
+  { id: "bbox_wrong-subject",               label: "Wrong\u00a0Subject",            tip: "Bbox EXISTS but is on the wrong thing (flower, leaf, different bug)." },
+  { id: "bbox_should-have-bbox",            label: "Should\u00a0Have\u00a0Bbox",    tip: "No bbox but a bug IS visible \u2014 detector missed it. For recall metrics." },
 ];
 const COL2_COUNT_BUTTONS = [
   { id: "bbox-content_single",                  label: "Single",              tip: "One bug inside bbox. DEFAULT." },
@@ -214,13 +223,15 @@ const COL2_COUNT_BUTTONS = [
   { id: "bbox-content_bbox-multibug_usable",    label: "Multibug\u00a0Usable",   tip: ">=2 bugs but still drawable (human override)." },
 ];
 const COL2_FLAG_BUTTONS = [
-  { id: "bbox-content_subject-too-small", label: "Too\u00a0Small",   tip: "Bug bbox long-edge < 512px.", informational: false },
-  { id: "bbox-content_image-multi-bug",   label: "Image\u00a0Multi", tip: ">=2 distinct detections in image \u2014 informational, not a gate signal.", informational: true },
+  { id: "bbox-content_subject-too-small",   label: "Too\u00a0Small",            tip: "Bug bbox long-edge < 512px.", informational: false },
+  { id: "bbox-content_partially-concealed", label: "Partially\u00a0Concealed",  tip: "Bug visible but partly hidden (leaf, branch, debris).", informational: false },
+  { id: "bbox-content_image-multi-bug",     label: "Image\u00a0Multi",          tip: ">=2 distinct detections in image \u2014 informational, not a gate signal.", informational: true },
 ];
 const COL3_BUTTONS = [
-  { id: "mask_poor-contrast", label: "Poor\u00a0Contrast", tip: "Bug nearly indistinguishable from background." },
-  { id: "mask_blur_unusable", label: "Blur\u00a0Unusable",  tip: "Subject too blurred to draw. Mutex with Blur Usable." },
-  { id: "mask_blur_usable",   label: "Blur\u00a0Usable",    tip: "Some blur, still drawable. Mutex with Blur Unusable." },
+  { id: "mask_poor-contrast",     label: "Poor\u00a0Contrast",     tip: "Bug nearly indistinguishable from background." },
+  { id: "mask_blur_unusable",     label: "Blur\u00a0Unusable",     tip: "Subject too blurred to draw. Mutex with Blur Usable." },
+  { id: "mask_blur_usable",       label: "Blur\u00a0Usable",       tip: "Some blur, still drawable. Mutex with Blur Unusable." },
+  { id: "mask_bad-photo-quality", label: "Bad\u00a0Photo\u00a0Quality", tip: "Subject is sharp but photo is grainy / noisy / poor color (bad camera). Drawable in principle but renders poorly." },
 ];
 const COL4_BUTTONS = [
   { id: "ml_other-bad", label: "Other\u00a0Bad", tip: "Bad for drawing for some other reason." },
@@ -235,10 +246,87 @@ const NEGATIVE_CLASSES = new Set(["flower", "leaf", "stem", "rock"]);
 let LABELS = {};
 let savePending = 0;
 
+// SAM 3 mask outlines (yellow polygon overlay on bug-zoom). Loaded once
+// at startup from tools/validator/sam3_mask_contours.json — pre-computed
+// by scripts/compute_sam3_mask_contours.py. {image_id: [[x,y], ...]}
+// in normalized [0,1] coords. Missing image_ids render no overlay.
+let MASK_CONTOURS = {};
+async function loadMaskContours() {
+  try {
+    const res = await fetch('./sam3_mask_contours.json', { cache: 'no-store' });
+    if (res.ok) MASK_CONTOURS = await res.json();
+  } catch (e) { /* mask overlay is optional — silent failure */ }
+}
+
 function _emptyLabel() {
   return { col1: null, col2_count: null, col2_flags: [], col3: [], col4: [],
            unsure: false, reviewed_at: null, user_edited: false, variant_tag: null };
 }
+
+// Smart defaults: typical cards commit with zero clicks. has-bbox -> col1=
+// correct-not-clipped, col2=single. no-bbox -> col2=no-bug. Rule_labeler
+// suggestions for col2_flags/col3/col4 are pre-selected too — user trusts
+// the threshold thresholds enough to override only the misses (validated:
+// "I'm just going to fully label the first 100").
+function _hasBbox(r) { return !!(r && r.bbox_x !== null && r.bbox_x !== undefined); }
+function _defaultCol1(r) { return _hasBbox(r) ? "bbox_correct-subject_not-clipped" : null; }
+function _defaultCol2Count(r) { return _hasBbox(r) ? "bbox-content_single" : "bbox-content_no-bug"; }
+
+function _ruleSuggested(r, idSet) {
+  const sugg = r.suggested_labels || [];
+  return sugg.filter(s => idSet.has(s));
+}
+function _firstRuleSuggested(r, idSet) {
+  const sugg = r.suggested_labels || [];
+  for (const s of sugg) if (idSet.has(s)) return s;
+  return null;
+}
+
+// Display value for buttons: shows default-as-active until the user touches
+// anything on this card. After user_edited, only the stored value shows.
+// For single-select cols (col1, col2_count) rule suggestion overrides default.
+// For multi-select cols (col2_flags, col3, col4) we union stored + suggestion.
+function _displayCol1(r, lbl) {
+  if (lbl.user_edited) return lbl.col1;
+  if (lbl.col1) return lbl.col1;
+  const col1Ids = new Set(COL1_BUTTONS.map(b => b.id));
+  return _firstRuleSuggested(r, col1Ids) || _defaultCol1(r);
+}
+function _displayCol2Count(r, lbl) {
+  if (lbl.user_edited) return lbl.col2_count;
+  if (lbl.col2_count) return lbl.col2_count;
+  const countIds = new Set(COL2_COUNT_BUTTONS.map(b => b.id));
+  return _firstRuleSuggested(r, countIds) || _defaultCol2Count(r);
+}
+function _displayCol2Flags(r, lbl) {
+  if (lbl.user_edited) return lbl.col2_flags || [];
+  const ids = new Set(COL2_FLAG_BUTTONS.map(b => b.id));
+  return Array.from(new Set([...(lbl.col2_flags || []), ..._ruleSuggested(r, ids)]));
+}
+function _displayCol3(r, lbl) {
+  if (lbl.user_edited) return lbl.col3 || [];
+  const ids = new Set(COL3_BUTTONS.map(b => b.id));
+  return Array.from(new Set([...(lbl.col3 || []), ..._ruleSuggested(r, ids)]));
+}
+function _displayCol4(r, lbl) {
+  if (lbl.user_edited) return lbl.col4 || [];
+  const ids = new Set(COL4_BUTTONS.map(b => b.id));
+  return Array.from(new Set([...(lbl.col4 || []), ..._ruleSuggested(r, ids)]));
+}
+
+// Convert ALL displayed defaults+rule-suggestions into the actual record.
+// MUST be called before flipping user_edited, so the visual state persists.
+// Fixes: clicking col1 used to wipe col2's visual "single" default because
+// user_edited switched _displayCol2Count from default-branch to stored-branch.
+function _materializeAllDefaults(cur, r) {
+  if (cur.col1 === null) cur.col1 = _displayCol1(r, cur);
+  if (cur.col2_count === null) cur.col2_count = _displayCol2Count(r, cur);
+  cur.col2_flags = _displayCol2Flags(r, cur);
+  cur.col3 = _displayCol3(r, cur);
+  cur.col4 = _displayCol4(r, cur);
+}
+// Back-compat alias for C / Reviewed paths.
+function _materializeDefaults(cur, r) { _materializeAllDefaults(cur, r); }
 
 function notifySaveError(msg) {
   const el = document.getElementById("saveStatus");
@@ -335,24 +423,35 @@ function _persist(id, cur) {
   saveLabelsToServer();
 }
 
+// Single-select setters: clicking an already-active button KEEPS the value
+// (col1 and col2_count are mutex — must always have a choice when interacted)
+// AND acts as a "confirm + mark reviewed" shortcut so the user doesn't have to
+// move the mouse all the way to the reviewed button. To CLEAR these cols, use
+// the "? unsure" button which resets all values.
 function setCol1(id, btnId) {
   const cur = LABELS[id] || _emptyLabel();
-  _ensureMaterialized(cur, _rowFor(id));
-  cur.col1 = (cur.col1 === btnId) ? null : btnId;
+  const r = _rowFor(id);
+  if (!cur.user_edited) _materializeAllDefaults(cur, r);
+  _ensureMaterialized(cur, r);
+  cur.col1 = btnId;
   cur.unsure = false;
   _persist(id, cur);
 }
 function setCol2Count(id, btnId) {
   const cur = LABELS[id] || _emptyLabel();
-  _ensureMaterialized(cur, _rowFor(id));
-  cur.col2_count = (cur.col2_count === btnId) ? null : btnId;
+  const r = _rowFor(id);
+  if (!cur.user_edited) _materializeAllDefaults(cur, r);
+  _ensureMaterialized(cur, r);
+  cur.col2_count = btnId;
   cur.unsure = false;
   _persist(id, cur);
 }
 function toggleCol2Flag(id, flagId) {
   const cur = LABELS[id] || _emptyLabel();
-  _ensureMaterialized(cur, _rowFor(id));
-  if (!Array.isArray(cur.col2_flags)) cur.col2_flags = [];  // legacy records lack col2_flags
+  const r = _rowFor(id);
+  if (!cur.user_edited) _materializeAllDefaults(cur, r);
+  _ensureMaterialized(cur, r);
+  if (!Array.isArray(cur.col2_flags)) cur.col2_flags = [];
   const i = cur.col2_flags.indexOf(flagId);
   if (i >= 0) cur.col2_flags.splice(i, 1); else cur.col2_flags.push(flagId);
   cur.unsure = false;
@@ -360,8 +459,10 @@ function toggleCol2Flag(id, flagId) {
 }
 function toggleCol3(id, flagId) {
   const cur = LABELS[id] || _emptyLabel();
-  _ensureMaterialized(cur, _rowFor(id));
-  if (!Array.isArray(cur.col3)) cur.col3 = [];  // legacy records lack col3
+  const r = _rowFor(id);
+  if (!cur.user_edited) _materializeAllDefaults(cur, r);
+  _ensureMaterialized(cur, r);
+  if (!Array.isArray(cur.col3)) cur.col3 = [];
   if (COL3_BLUR_MUTEX.includes(flagId))
     cur.col3 = cur.col3.filter(f => !COL3_BLUR_MUTEX.includes(f));
   const i = cur.col3.indexOf(flagId);
@@ -371,8 +472,10 @@ function toggleCol3(id, flagId) {
 }
 function toggleCol4(id, flagId) {
   const cur = LABELS[id] || _emptyLabel();
-  _ensureMaterialized(cur, _rowFor(id));
-  if (!Array.isArray(cur.col4)) cur.col4 = [];  // legacy records lack col4
+  const r = _rowFor(id);
+  if (!cur.user_edited) _materializeAllDefaults(cur, r);
+  _ensureMaterialized(cur, r);
+  if (!Array.isArray(cur.col4)) cur.col4 = [];
   const i = cur.col4.indexOf(flagId);
   if (i >= 0) cur.col4.splice(i, 1); else cur.col4.push(flagId);
   cur.unsure = false;
@@ -388,12 +491,81 @@ function setUnsure(id) {
 function markReviewed(id) {
   const cur = LABELS[id] || _emptyLabel();
   if (cur.reviewed_at && cur.user_edited) { delete LABELS[id]; render(); saveLabelsToServer(); return; }
-  _ensureMaterialized(cur, _rowFor(id));
+  const r = _rowFor(id);
+  _materializeDefaults(cur, r);  // write displayed defaults into the record
+  _ensureMaterialized(cur, r);
   _persist(id, cur);
 }
 
 function fmtPct(n) { return n === null || n === undefined ? "\u2014" : (n * 100).toFixed(1) + "%"; }
 function fmtNum(n, d) { return n === null || n === undefined ? "\u2014" : n.toFixed(d); }
+
+// Position the bug-zoom img + bbox overlay using the image's natural pixel
+// dimensions (available after onload). Uniform scale = no aspect distortion.
+function _positionBugZoom(img) {
+  const container = img.parentNode;
+  if (!container) return;
+  const containerW = container.clientWidth;
+  const containerH = container.clientHeight;
+  const imgW = img.naturalWidth;
+  const imgH = img.naturalHeight;
+  if (!imgW || !imgH || !containerW || !containerH) return;
+
+  const hasBbox = img.dataset.bx !== undefined && img.dataset.bx !== "";
+  let dispW, dispH, leftPx, topPx;
+  if (hasBbox) {
+    const bx = parseFloat(img.dataset.bx);
+    const by = parseFloat(img.dataset.by);
+    const bw = parseFloat(img.dataset.bw);
+    const bh = parseFloat(img.dataset.bh);
+    const PAD = 0.3;
+    const paddedW = Math.min(1, bw * (1 + 2 * PAD)) * imgW;
+    const paddedH = Math.min(1, bh * (1 + 2 * PAD)) * imgH;
+    // Uniform scale so padded region fits in container (contain — no crop of bbox)
+    const scale = Math.min(containerW / paddedW, containerH / paddedH);
+    dispW = imgW * scale;
+    dispH = imgH * scale;
+    // Position so bbox center sits at container center
+    leftPx = containerW / 2 - (bx + bw / 2) * dispW;
+    topPx  = containerH / 2 - (by + bh / 2) * dispH;
+  } else {
+    // No bbox: fit whole image in the square (contain)
+    const scale = Math.min(containerW / imgW, containerH / imgH);
+    dispW = imgW * scale;
+    dispH = imgH * scale;
+    leftPx = (containerW - dispW) / 2;
+    topPx  = (containerH - dispH) / 2;
+  }
+
+  img.style.width  = dispW + 'px';
+  img.style.height = dispH + 'px';
+  img.style.left   = leftPx + 'px';
+  img.style.top    = topPx + 'px';
+
+  // Sync the pink bbox overlay rectangle to the displayed image
+  const box = container.querySelector('.bug-zoom-box');
+  if (box && hasBbox) {
+    const bx = parseFloat(img.dataset.bx);
+    const by = parseFloat(img.dataset.by);
+    const bw = parseFloat(img.dataset.bw);
+    const bh = parseFloat(img.dataset.bh);
+    box.style.left   = (leftPx + bx * dispW) + 'px';
+    box.style.top    = (topPx + by * dispH) + 'px';
+    box.style.width  = (bw * dispW) + 'px';
+    box.style.height = (bh * dispH) + 'px';
+  }
+
+  // Sync the SAM 3 mask outline SVG to the displayed image (viewBox is 0,0,1,1
+  // in normalized image coords; positioning the SVG over the img makes it
+  // align without any per-point transform).
+  const svgOverlay = container.querySelector('.bug-zoom-mask-overlay');
+  if (svgOverlay) {
+    svgOverlay.style.left   = leftPx + 'px';
+    svgOverlay.style.top    = topPx + 'px';
+    svgOverlay.style.width  = dispW + 'px';
+    svgOverlay.style.height = dispH + 'px';
+  }
+}
 
 // Per-bbox phrase helpers
 function _isNegativePhrase(phrase) {
@@ -401,10 +573,35 @@ function _isNegativePhrase(phrase) {
   const s = phrase.startsWith("a ") ? phrase.slice(2) : phrase.startsWith("an ") ? phrase.slice(3) : phrase;
   return NEGATIVE_CLASSES.has(s.toLowerCase());
 }
-function _phraseBadge(phrase, conf) {
-  if (!phrase && conf == null) return "";
-  const parts = [phrase, (conf != null ? conf.toFixed(2) : null)].filter(Boolean);
-  return '<div class="box-label">' + parts.join("\u00b7") + '</div>';
+// Phrase summary as a tight list (max 3 items) below the images. Multi-phrase
+// detector prompts get truncated to first segment so "an insect. a butterfly.
+// a moth..." renders as "an insect".
+function _shortenPhrase(phrase) {
+  if (!phrase) return '';
+  const dot = phrase.indexOf('.');
+  return dot > 0 ? phrase.slice(0, dot) : phrase;
+}
+function _phraseSummaryHTML(primaryPhrase, primaryConf, secPhrases, secBboxes) {
+  const items = [];
+  if (primaryPhrase || primaryConf != null) {
+    const txt = [_shortenPhrase(primaryPhrase), primaryConf != null ? primaryConf.toFixed(2) : null].filter(Boolean).join(' \u00b7 ');
+    items.push('<li><span style="color:#FF6EC7;font-weight:600">primary</span> ' + txt + '</li>');
+  }
+  const MAX_SECONDARY = 2;
+  let shown = 0;
+  for (let i = 0; i < secBboxes.length && shown < MAX_SECONDARY; i++) {
+    const phrase = secPhrases[i] || null;
+    const conf = (secBboxes[i].length >= 5 && secBboxes[i][4] != null) ? secBboxes[i][4] : null;
+    if (!phrase && conf == null) continue;
+    const txt = [_shortenPhrase(phrase), conf != null ? conf.toFixed(2) : null].filter(Boolean).join(' \u00b7 ');
+    items.push('<li><span style="color:#67D4E6;font-weight:600">secondary</span> ' + txt + '</li>');
+    shown++;
+  }
+  const more = secBboxes.length - shown;
+  if (more > 0) {
+    items.push('<li style="color:#666">+ ' + more + ' more</li>');
+  }
+  return items.length ? '<ul class="phrase-summary">' + items.join('') + '</ul>' : '';
 }
 
 function render() {
@@ -462,62 +659,67 @@ function render() {
       ? '<div class="stale-warning visible">\u26a0 Label set against variant <b>' + lblVariant + '</b>; current is <b>' + rowVariant + '</b> \u2014 re-review recommended.</div>'
       : '<div class="stale-warning"></div>';
 
-    // Build primary bbox with phrase overlay
+    // Build primary bbox — no inline label (caused truncation + concealed subject);
+    // phrase/conf info lives in the phrase-summary line below the images instead.
     const primaryPhrase = r.text_label || null;
     const primaryConf = r.text_label_score != null ? r.text_label_score : null;
     const primaryNegCls = _isNegativePhrase(primaryPhrase) ? " box-negative" : "";
     const primaryBoxHTML = r.bbox_x !== null
-      ? '<div class="box' + primaryNegCls + '" style="left:' + (r.bbox_x*100) + '%;top:' + (r.bbox_y*100) + '%;width:' + (r.bbox_w*100) + '%;height:' + (r.bbox_h*100) + '%">' +
-        _phraseBadge(primaryPhrase, primaryConf) + '</div>'
+      ? '<div class="box' + primaryNegCls + '" style="left:' + (r.bbox_x*100) + '%;top:' + (r.bbox_y*100) + '%;width:' + (r.bbox_w*100) + '%;height:' + (r.bbox_h*100) + '%"></div>'
       : '';
 
-    // Secondary bboxes: [x, y, w, h, conf] format from build_html.py
-    // secondary_phrases: parallel list of phrase strings
     const secPhrases = r.secondary_phrases || [];
-    const secondaryBoxHTML = (r.secondary_bboxes || []).map((b, i) => {
-      const conf = (b.length >= 5 && b[4] != null) ? b[4] : null;
+    const secBboxes = r.secondary_bboxes || [];
+    const secondaryBoxHTML = secBboxes.map((b, i) => {
       const phrase = secPhrases[i] || null;
       const negCls = _isNegativePhrase(phrase) ? " box-negative" : "";
-      const confStr = conf != null ? conf.toFixed(2) : '';
-      return '<div class="box-secondary' + negCls + '" data-conf="' + confStr + '" style="left:' + (b[0]*100) + '%;top:' + (b[1]*100) + '%;width:' + (b[2]*100) + '%;height:' + (b[3]*100) + '%">' +
-        _phraseBadge(phrase, conf) + '</div>';
+      return '<div class="box-secondary' + negCls + '" style="left:' + (b[0]*100) + '%;top:' + (b[1]*100) + '%;width:' + (b[2]*100) + '%;height:' + (b[3]*100) + '%"></div>';
     }).join('');
 
-    const boxHTML = primaryBoxHTML + secondaryBoxHTML;
-
-    // Bug-zoom panel: zoom into the bbox + ~30% padding so the user can judge
-    // bbox edges without hover. Background-image w/ background-size/position
-    // lets CSS do the zoom math; small aspect distortion is acceptable.
-    // For no-bbox images, show the original full image so the user can see what
-    // SAM 3 missed (often a dragonfly / mantis — Phase 3 prompt-budget fix).
-    let bugZoomHTML;
+    // Viewport indicator: dashed rectangle on LEFT image at the same padded-bbox
+    // region that the RIGHT bug-zoom is magnifying. Gives the user a clear "the
+    // right panel is showing THIS region" cue (especially for tiny bboxes that
+    // get 10x+ zoom and look unrelated to the leafy thumbnail).
+    let viewportHTML = '';
     if (r.bbox_x !== null) {
       const PAD = 0.3;
       const pbw = Math.min(1, r.bbox_w * (1 + 2 * PAD));
       const pbh = Math.min(1, r.bbox_h * (1 + 2 * PAD));
       const pbx = Math.max(0, Math.min(1 - pbw, r.bbox_x - r.bbox_w * PAD));
       const pby = Math.max(0, Math.min(1 - pbh, r.bbox_y - r.bbox_h * PAD));
-      const bgSizeX = 100 / pbw;
-      const bgSizeY = 100 / pbh;
-      const bgPosX = pbw < 1 ? (pbx / (1 - pbw)) * 100 : 0;
-      const bgPosY = pbh < 1 ? (pby / (1 - pbh)) * 100 : 0;
-      // Bbox rectangle inside the zoomed view
-      const innerLeft = ((r.bbox_x - pbx) / pbw) * 100;
-      const innerTop = ((r.bbox_y - pby) / pbh) * 100;
-      const innerW = (r.bbox_w / pbw) * 100;
-      const innerH = (r.bbox_h / pbh) * 100;
+      viewportHTML = '<div class="bug-zoom-viewport" style="left:' + (pbx*100) + '%;top:' + (pby*100) + '%;width:' + (pbw*100) + '%;height:' + (pbh*100) + '%"></div>';
+    }
+    const boxHTML = viewportHTML + primaryBoxHTML + secondaryBoxHTML;
+    const phraseSummaryHTML = _phraseSummaryHTML(primaryPhrase, primaryConf, secPhrases, secBboxes);
+
+    // Bug-zoom panel: real <img> inside a 1:1 container. _positionBugZoom runs on
+    // img.onload, reads naturalWidth/Height, and sizes the img so the bbox region
+    // (with ~30% padding) is centered without aspect distortion. For no-bbox cards,
+    // it just contains the full image.
+    let bugZoomHTML;
+    if (r.bbox_x !== null) {
+      // Mask outline overlay (optional — only renders if contour was pre-computed)
+      const contour = MASK_CONTOURS[r.image_id];
+      const maskSvg = contour && contour.length >= 3
+        ? '<svg class="bug-zoom-mask-overlay" viewBox="0 0 1 1" preserveAspectRatio="none">' +
+            '<polygon points="' + contour.map(p => p[0] + ',' + p[1]).join(' ') + '" />' +
+          '</svg>'
+        : '';
       bugZoomHTML =
-        '<div class="bug-zoom" style="background-image:url(' + r.original_path + ');' +
-          'background-size:' + bgSizeX + '% ' + bgSizeY + '%;' +
-          'background-position:' + bgPosX + '% ' + bgPosY + '%;">' +
-          '<div class="bug-zoom-box" style="left:' + innerLeft + '%;top:' + innerTop + '%;' +
-            'width:' + innerW + '%;height:' + innerH + '%;"></div>' +
+        '<div class="bug-zoom">' +
+          '<img class="bug-zoom-img" src="' + r.original_path + '" ' +
+            'data-bx="' + r.bbox_x + '" data-by="' + r.bbox_y + '" ' +
+            'data-bw="' + r.bbox_w + '" data-bh="' + r.bbox_h + '" ' +
+            'onload="_positionBugZoom(this)">' +
+          maskSvg +
+          '<div class="bug-zoom-box"></div>' +
         '</div>';
     } else {
-      // No bbox: full image with a "missed" overlay tag — Phase 3 candidate
       bugZoomHTML =
-        '<div class="bug-zoom bug-zoom-nobbox" style="background-image:url(' + r.original_path + ');">' +
-          '<div class="bug-zoom-missed">no bbox \u2014 mark col2 no-bug if no insect visible, or unsure if SAM 3 missed it</div>' +
+        '<div class="bug-zoom">' +
+          '<img class="bug-zoom-img" src="' + r.original_path + '" ' +
+            'onload="_positionBugZoom(this)">' +
+          '<div class="bug-zoom-missed">no bbox \u2014 click <b>Should Have Bbox</b> if insect visible, else press C</div>' +
         '</div>';
     }
 
@@ -526,48 +728,46 @@ function render() {
     // don't apply — dim them so the user knows only wrong-subject / no-bug /
     // unsure are meaningful.
     const suggested = r.suggested_labels || [];
-    const userEdited = isUserEdited(lbl);
     const hasBbox = r.bbox_x !== null;
-    const NOBBOX_ENABLED_COL1 = new Set(["bbox_wrong-subject"]);
+    // Col1 buttons that ONLY apply when there's no bbox (e.g., "Should Have Bbox")
+    const NOBBOX_ONLY_COL1 = new Set(["bbox_should-have-bbox"]);
+    // Col2 buttons that remain enabled when there's no bbox
     const NOBBOX_ENABLED_COL2 = new Set(["bbox-content_no-bug"]);
 
-    const col1Active = lbl.col1 || null;
+    const col1Display = _displayCol1(r, lbl);
     const col1HTML = COL1_BUTTONS.map(b => {
-      const dim = !hasBbox && !NOBBOX_ENABLED_COL1.has(b.id);
-      const cls = [(col1Active === b.id ? "active" : ""), (dim ? "nobbox-dim" : "")].filter(Boolean).join(' ');
+      // Dim if (no bbox & button assumes a bbox) OR (has bbox & button is no-bbox-only)
+      const dim = (!hasBbox && !NOBBOX_ONLY_COL1.has(b.id)) || (hasBbox && NOBBOX_ONLY_COL1.has(b.id));
+      const cls = [(col1Display === b.id ? "active" : ""), (dim ? "nobbox-dim" : "")].filter(Boolean).join(' ');
       return '<button class="' + cls + '" title="' + b.tip + '" onclick="setCol1(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
     }).join('');
 
-    const col2CountActive = lbl.col2_count || null;
+    const col2CountDisplay = _displayCol2Count(r, lbl);
     const col2CountHTML = COL2_COUNT_BUTTONS.map(b => {
-      const isSug = !userEdited && suggested.includes(b.id);
-      const isAct = userEdited && col2CountActive === b.id;
       const dim = !hasBbox && !NOBBOX_ENABLED_COL2.has(b.id);
-      const cls = [(isAct ? "active" : (isSug ? "suggested" : "")), (dim ? "nobbox-dim" : "")].filter(Boolean).join(' ');
+      const cls = [(col2CountDisplay === b.id ? "active" : ""), (dim ? "nobbox-dim" : "")].filter(Boolean).join(' ');
       return '<button class="' + cls + '" title="' + b.tip + '" onclick="setCol2Count(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
     }).join('');
 
-    const col2FlagsActive = lbl.col2_flags || [];
+    const col2FlagsDisplay = _displayCol2Flags(r, lbl);
     const col2FlagHTML = COL2_FLAG_BUTTONS.map(b => {
-      const isSug = !userEdited && suggested.includes(b.id);
-      const isAct = userEdited && col2FlagsActive.includes(b.id);
+      const isAct = col2FlagsDisplay.includes(b.id);
       const dim = !hasBbox;
-      const cls = [(isAct ? "active" : (isSug ? "suggested" : "")), (b.informational ? "informational" : ""), (dim ? "nobbox-dim" : "")].filter(Boolean).join(' ');
+      const cls = [(isAct ? "active" : ""), (b.informational ? "informational" : ""), (dim ? "nobbox-dim" : "")].filter(Boolean).join(' ');
       return '<button class="' + cls + '" title="' + b.tip + '" onclick="toggleCol2Flag(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
     }).join('');
 
-    const col3Active = lbl.col3 || [];
+    const col3Display = _displayCol3(r, lbl);
     const col3HTML = COL3_BUTTONS.map(b => {
-      const isSug = !userEdited && suggested.includes(b.id);
-      const isAct = userEdited && col3Active.includes(b.id);
+      const isAct = col3Display.includes(b.id);
       const dim = !hasBbox;
-      const cls = [(isAct ? "active" : (isSug ? "suggested" : "")), (dim ? "nobbox-dim" : "")].filter(Boolean).join(' ');
+      const cls = [(isAct ? "active" : ""), (dim ? "nobbox-dim" : "")].filter(Boolean).join(' ');
       return '<button class="' + cls + '" title="' + b.tip + '" onclick="toggleCol3(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
     }).join('');
 
-    const col4Active = lbl.col4 || [];
+    const col4Display = _displayCol4(r, lbl);
     const col4HTML = COL4_BUTTONS.map(b => {
-      const cls = col4Active.includes(b.id) ? "active" : "";
+      const cls = col4Display.includes(b.id) ? "active" : "";
       return '<button class="' + cls + '" title="' + b.tip + '" onclick="toggleCol4(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
     }).join('');
 
@@ -595,6 +795,7 @@ function render() {
         '</figure>' +
         '<figure>' + bugZoomHTML + '<figcaption>bug zoom \u00b7 bbox + 30% padding</figcaption></figure>' +
       '</div>' +
+      phraseSummaryHTML +
       '<div class="name">' + (r.common_name || r.taxon_species || "?") + ' <code>\u00b7 ' + r.image_id + '</code></div>' +
       '<span class="badge ' + r.framing_quality + '">' + r.framing_quality + '</span>' +
       '<div class="metrics">' +
@@ -625,20 +826,14 @@ document.getElementById("quality").addEventListener("change", render);
 document.getElementById("reviewStatus").addEventListener("change", render);
 document.getElementById("sort").addEventListener("change", render);
 
-// Bbox-only mode toggle
-document.getElementById("bboxOnlyMode").addEventListener("change", function() {
-  document.body.classList.toggle("bbox-only-mode", this.checked);
-});
-
-// Bbox-only mode: Enter / N commits the safe defaults (bbox accept + single
-// bug) and nothing else. Rule suggestions for cols 2-4 are NOT auto-applied
-// — see _ensureMaterialized note above on rule miscalibration. For anything
-// other than a typical single-bug card, click the relevant col2/col3
-// buttons explicitly after pressing Enter.
+// Bbox-only mode: C commits the displayed defaults. For has-bbox cards:
+// col1=correct-not-clipped, col2=single. For no-bbox: col2=no-bug, col1
+// stays null (vocab has no "missed" state). Rule_labeler suggestions for
+// cols 2-4 are NOT auto-applied — sam3 miscalibration risk.
 function _commitBboxOnly(id) {
   const cur = LABELS[id] ? Object.assign({}, LABELS[id]) : _emptyLabel();
-  cur.col1 = cur.col1 || "bbox_correct-subject_not-clipped";
-  if (!cur.col2_count) cur.col2_count = "bbox-content_single";
+  const r = _rowFor(id);
+  _materializeDefaults(cur, r);
   if (!Array.isArray(cur.col2_flags)) cur.col2_flags = [];
   if (!Array.isArray(cur.col3)) cur.col3 = [];
   if (!Array.isArray(cur.col4)) cur.col4 = [];
@@ -646,21 +841,59 @@ function _commitBboxOnly(id) {
   _persist(id, cur);
 }
 
+// Find the topmost unreviewed card that's currently in the viewport — so C
+// commits what the user is looking at, not whatever's first in DOM order
+// (which is usually off-screen above once they've scrolled).
+function _findVisibleTargetCard() {
+  const cards = document.querySelectorAll(".card:not(.reviewed)");
+  for (const card of cards) {
+    const rect = card.getBoundingClientRect();
+    if (rect.bottom > 0 && rect.top < window.innerHeight) return card;
+  }
+  return cards[0] || null;
+}
+
+// Lightweight toast confirmation — survives the post-commit re-render so the
+// user knows the C actually did something (the committed card vanishes from
+// view when filter=unreviewed, which previously looked like nothing happened).
+function _toast(msg) {
+  let t = document.getElementById('commitToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'commitToast';
+    t.style.cssText = 'position:fixed;top:60px;right:24px;padding:8px 14px;border-radius:6px;font:600 13px/1.2 system-ui,sans-serif;color:#0d0c10;background:#4ac64a;box-shadow:0 4px 16px rgba(0,0,0,0.6);z-index:200;transition:opacity 0.2s;opacity:0;pointer-events:none;max-width:360px;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 1400);
+}
+
 document.addEventListener("keydown", function(e) {
-  if (e.key !== "Enter" && e.key !== "n" && e.key !== "N") return;
+  if (e.key !== "c" && e.key !== "C") return;
   if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-  if (!document.getElementById("bboxOnlyMode").checked) return;
-  const card = document.querySelector(".card:not(.reviewed)");
+  const card = _findVisibleTargetCard();
   if (!card || !card.dataset.imageId) return;
-  _commitBboxOnly(card.dataset.imageId);
+  const id = card.dataset.imageId;
+  _commitBboxOnly(id);
+  _toast('\u2713 committed ' + id);
+  // After re-render, scroll next target into view so the change is obvious.
+  requestAnimationFrame(() => {
+    const next = _findVisibleTargetCard();
+    if (next) next.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
 });
 
-// Initial paint with empty LABELS so the grid is up immediately; then fetch
-// from server and re-render. The fetch is fast (single file read) and keeps
-// the first paint feeling instant on cold loads of the 360-image grid.
+// Initial paint with empty LABELS + empty MASK_CONTOURS so the grid is up
+// immediately; then fetch both in parallel and re-render. Mask contours
+// rendering is independent of label data — both refresh on arrival.
 render();
 updateSaveStatus();
-loadLabelsFromServer().then(() => { render(); updateSaveStatus(); });
+Promise.all([loadLabelsFromServer(), loadMaskContours()]).then(() => {
+  render();
+  updateSaveStatus();
+});
 
 // Mouse-follow zoom popup with bbox-on-original preservation.
 const zoomPopup = document.createElement("div");
@@ -673,15 +906,23 @@ zoomPopup.appendChild(zoomBox);
 document.body.appendChild(zoomPopup);
 const ZOOM_MARGIN_VW = 1;
 function vwToPx(v) { return v * window.innerWidth / 100; }
+// Both LEFT (original) and RIGHT (bug-zoom) images are hoverable.
+// Left -> full-original popup with bbox overlays (context shot).
+// Right -> 50vw bug-zoom-style popup (detail shot via _positionBugZoom math).
 function isZoomTarget(el) {
   return el && el.tagName === "IMG" && el.closest(".imgs figure");
 }
-document.addEventListener("mouseover", (e) => {
-  if (!isZoomTarget(e.target)) return;
-  zoomImg.src = e.target.src;
-  const overlay = e.target.closest(".bbox-overlay");
-  // Wipe any previously-mirrored secondary boxes; we'll re-create them below.
-  [...zoomPopup.querySelectorAll(".zoom-bbox-secondary")].forEach(n => n.remove());
+function _resetZoomPopup() {
+  // Strip any prior bug-zoom-clone or mirrored secondary boxes
+  [...zoomPopup.querySelectorAll(".zoom-bbox-secondary, .bug-zoom-clone")].forEach(n => n.remove());
+  // Restore the default zoomImg + zoomBox visibility
+  zoomImg.style.display = "";
+  zoomBox.style.display = "";
+}
+function _hoverOriginal(target) {
+  _resetZoomPopup();
+  zoomImg.src = target.src;
+  const overlay = target.closest(".bbox-overlay");
   const box = overlay ? overlay.querySelector(".box") : null;
   if (box) {
     zoomBox.style.cssText = "position:absolute;box-sizing:border-box;display:block;" + box.style.cssText;
@@ -689,7 +930,6 @@ document.addEventListener("mouseover", (e) => {
   } else {
     zoomBox.style.display = "none";
   }
-  // Mirror every secondary bbox into the zoomed overlay so they scale with it.
   if (overlay) {
     for (const sb of overlay.querySelectorAll(".box-secondary")) {
       const mirror = document.createElement("div");
@@ -700,10 +940,42 @@ document.addEventListener("mouseover", (e) => {
     }
   }
   zoomPopup.style.display = "block";
+}
+function _hoverBugZoom(target) {
+  _resetZoomPopup();
+  zoomImg.style.display = "none";  // not used in this mode
+  zoomBox.style.display = "none";
+  const clone = document.createElement("div");
+  clone.className = "bug-zoom bug-zoom-clone";
+  clone.style.cssText = "width: 50vw; aspect-ratio: 1/1; position: relative; overflow: hidden; background: #0d0c10; border: 0.2vw solid #FF6EC7; border-radius: 0.3vw; box-shadow: 0 1vw 3vw rgba(0,0,0,0.7);";
+  const img = document.createElement("img");
+  img.className = "bug-zoom-img";
+  img.src = target.src;
+  if (target.dataset.bx) {
+    img.dataset.bx = target.dataset.bx;
+    img.dataset.by = target.dataset.by;
+    img.dataset.bw = target.dataset.bw;
+    img.dataset.bh = target.dataset.bh;
+  }
+  const box = document.createElement("div");
+  box.className = "bug-zoom-box";
+  clone.appendChild(img);
+  clone.appendChild(box);
+  zoomPopup.appendChild(clone);
+  zoomPopup.style.display = "block";
+  const reposition = () => _positionBugZoom(img);
+  if (img.complete && img.naturalWidth > 0) reposition();
+  else img.onload = reposition;
+}
+document.addEventListener("mouseover", (e) => {
+  if (!isZoomTarget(e.target)) return;
+  if (e.target.closest(".bug-zoom")) _hoverBugZoom(e.target);
+  else _hoverOriginal(e.target);
 });
 document.addEventListener("mouseout", (e) => {
   if (!isZoomTarget(e.target)) return;
   zoomPopup.style.display = "none";
+  _resetZoomPopup();
 });
 document.addEventListener("mousemove", (e) => {
   if (zoomPopup.style.display !== "block") return;
