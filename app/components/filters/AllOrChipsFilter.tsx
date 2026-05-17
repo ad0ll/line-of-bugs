@@ -151,8 +151,37 @@ function Picker({
   searchable: boolean;
   onClose: () => void;
 }) {
+  const [activeIdx, setActiveIdx] = useState(-1);
+  // Reset active when the option set changes (search filter applied)
+  useEffect(() => { setActiveIdx(-1); }, [options.length, search]);
+
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Escape") { onClose(); return; }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIdx((i) => {
+        // Skip already-selected (disabled) rows
+        let next = Math.min(i + 1, options.length - 1);
+        while (next < options.length && selected.includes(options[next]!.value)) next++;
+        return next < options.length ? next : i;
+      });
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIdx((i) => {
+        let next = Math.max(i - 1, 0);
+        while (next >= 0 && selected.includes(options[next]!.value)) next--;
+        return next >= 0 ? next : i;
+      });
+    } else if (e.key === "Enter") {
+      if (activeIdx >= 0 && activeIdx < options.length) {
+        const o = options[activeIdx]!;
+        if (!selected.includes(o.value)) onPick(o.value);
+      }
+    }
+  }
+
   return (
-    <div className={styles.picker} id={id}>
+    <div className={styles.picker} id={id} onKeyDown={onKeyDown}>
       {searchable && (
         <input
           type="text"
@@ -161,20 +190,21 @@ function Picker({
           onChange={(e) => onSearch(e.target.value)}
           placeholder="type to filter…"
           className={styles.search}
-          onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}
         />
       )}
       <ul role="listbox" className={styles.list}>
-        {options.map((o) => {
+        {options.map((o, idx) => {
           const isSelected = selected.includes(o.value);
+          const isActive = idx === activeIdx;
           return (
             <li
               key={o.value}
               role="option"
               aria-selected={isSelected}
               aria-disabled={isSelected}
-              className={`${styles.row} ${isSelected ? styles.rowDisabled : ""}`}
+              className={`${styles.row} ${isSelected ? styles.rowDisabled : ""} ${isActive ? styles.rowActive : ""}`}
               onClick={() => { if (!isSelected) onPick(o.value); }}
+              onMouseEnter={() => setActiveIdx(idx)}
             >
               <span>{o.label}</span>
               <span className={styles.rowCount}>{o.count.toLocaleString()}</span>

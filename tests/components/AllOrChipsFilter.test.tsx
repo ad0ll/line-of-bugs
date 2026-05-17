@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render } from "vitest-browser-react";
-import { userEvent } from "@vitest/browser/context";
+import { userEvent } from "vitest/browser";
 import { AllOrChipsFilter } from "@/app/components/filters/AllOrChipsFilter";
 
 const OPTS = [
@@ -116,5 +116,42 @@ describe("AllOrChipsFilter selected state", () => {
     await screen.getByRole("button", { name: /add bug type/i }).click();
     const butterfliesRow = screen.getByRole("option", { name: /butterflies/i });
     await expect.element(butterfliesRow).toHaveAttribute("aria-disabled", "true");
+  });
+});
+
+describe("AllOrChipsFilter keyboard", () => {
+  it("Esc closes the picker", async () => {
+    const screen = await render(
+      <AllOrChipsFilter
+        label="bug type"
+        emptyLabel="all bug types"
+        options={OPTS}
+        selected={[]}
+        onChange={vi.fn()}
+      />,
+    );
+    await screen.getByRole("combobox").click();
+    await expect.element(screen.getByRole("listbox")).toBeVisible();
+    await userEvent.keyboard("{Escape}");
+    expect(screen.getByRole("listbox").query()).toBeNull();
+  });
+
+  it("ArrowDown moves focus through options; Enter selects", async () => {
+    const onChange = vi.fn();
+    const screen = await render(
+      <AllOrChipsFilter
+        label="bug type"
+        emptyLabel="all bug types"
+        options={OPTS}
+        selected={[]}
+        onChange={onChange}
+      />,
+    );
+    await screen.getByRole("combobox").click();
+    // Search input is auto-focused. Arrow down moves into the list.
+    await userEvent.keyboard("{ArrowDown}{ArrowDown}{Enter}");
+    // Options sorted by count desc → beetles(6404), moths(3130), butterflies(2855)
+    // After 2× ArrowDown, focus is on moths → Enter selects it.
+    expect(onChange).toHaveBeenCalledWith(["moths"]);
   });
 });
