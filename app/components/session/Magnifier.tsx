@@ -13,9 +13,11 @@ const FACTOR: Record<Exclude<MagnifierSize, "off">, number> = {
   S: 8, M: 4, L: 3, XL: 2,
 };
 const ZOOM_BASE = 3;
-// Right-click expand grows the loupe area 2× — the "expand" affordance
-// the user wanted back. Esc / left-click close handled at the action-bar
-// + global keyboard layer; this component just listens for contextmenu.
+// Click / right-click on the loupe expand the loupe area 2×. Phase E
+// (2026-05-17): left-click was added because Mac trackpad's natural
+// one-finger tap registers as a left-click and users expected "tap = bigger
+// view". Esc still closes via the SessionPlayer keyboard handler cycling
+// the magnifier size to "off".
 const EXPAND_MULTIPLIER = 2;
 
 export function Magnifier({ image, size, bw }: Props) {
@@ -136,6 +138,14 @@ export function Magnifier({ image, size, bw }: Props) {
   const filename = image.filename.replace(/^images\//, "");
   // Square hit area so the box reads as square (R8: was circular).
   const side = Math.max(loupeW, loupeH);
+  // Tap/click on the loupe toggles expand. The loupe is normally
+  // pointer-events: none so it doesn't intercept hover-tracking on the
+  // underlying image; we flip it on here so the click reaches us. The
+  // pointermove handler is window-level and still fires through.
+  const onMagnifierClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setExpanded((v) => !v);
+  };
   return (
     <>
       <div
@@ -149,7 +159,10 @@ export function Magnifier({ image, size, bw }: Props) {
           backgroundSize: `${renderedW * ZOOM}px ${renderedH * ZOOM}px`,
           backgroundPosition: `${-(cursorInImageX * ZOOM - side / 2)}px ${-(cursorInImageY * ZOOM - side / 2)}px`,
           filter: bw ? "grayscale(1) contrast(1.05)" : "none",
+          pointerEvents: "auto",
+          cursor: "zoom-in",
         }}
+        onClick={onMagnifierClick}
       />
       {showHint && (
         <div
@@ -162,7 +175,7 @@ export function Magnifier({ image, size, bw }: Props) {
           role="status"
           aria-live="polite"
         >
-          esc / left-click: close · right-click: expand
+          esc: close · tap/click: expand
         </div>
       )}
     </>
