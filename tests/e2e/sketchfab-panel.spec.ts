@@ -33,7 +33,8 @@ test("sketchfab panel opens, shows thumbnails, click opens new tab, timer pauses
   await page.getByRole("button", { name: "30s" }).click();
   await page.getByRole("button", { name: /start session/i }).click();
   await page.waitForURL(/\/session\?session=/);
-  await page.waitForSelector('img[src*="/api/img/"]');
+  // Session renders the bug photo via /api/medium/ (1024px JPEG q88).
+  await page.waitForSelector('img[src*="/api/medium/"]');
 
   const timer = page.getByTestId("session-timer");
   // Capture initial timer text (e.g. "00:30")
