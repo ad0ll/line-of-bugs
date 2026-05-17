@@ -37,6 +37,17 @@ const SUBJECT_OPTS_BASE = [
   { value: "captive", label: "captive" },
 ];
 
+export const POOL_COPY_PRIMARY = "you have {n} bugs to draw";
+export const POOL_COPY_RARE = "{n} bugs are waiting";
+// Roll once per browser session. 1 / 1,000,000 chance of the rare variant —
+// users who see it can screenshot. Don't re-roll on count change.
+export function pickPoolCopy(): string {
+  if (typeof window !== "undefined" && Math.random() < 1e-6) {
+    return POOL_COPY_RARE;
+  }
+  return POOL_COPY_PRIMARY;
+}
+
 export function HomeClient({ initialInterval, initialSubject, initialRepeat, initialFacets }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -139,6 +150,8 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
     setSpecies(species.filter((s) => s !== tag));
   }
 
+  const poolCopyTemplate = useRef(pickPoolCopy());
+
   return (
     <div className="home-wrap">
       <main className="home-main">
@@ -235,11 +248,16 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
             <span className="home-pool-empty">
               <SadBug size={22} /> no insects match — try broadening the filters
             </span>
-          ) : (
-            <>
-              <span key={poolCount} className="home-pool-count-num">{poolCount.toLocaleString()}</span> bugs in your session pool
-            </>
-          )}
+          ) : (() => {
+            const [before, after] = poolCopyTemplate.current.split("{n}");
+            return (
+              <>
+                {before}
+                <span key={poolCount} className="home-pool-count-num">{poolCount.toLocaleString()}</span>
+                {after}
+              </>
+            );
+          })()}
         </p>
 
         <div className="home-ctas">
