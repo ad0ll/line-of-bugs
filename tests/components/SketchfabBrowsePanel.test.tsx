@@ -2,6 +2,15 @@ import { describe, it, expect, vi } from "vitest";
 import { render } from "vitest-browser-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SketchfabBrowsePanel } from "@/app/components/session/SketchfabBrowsePanel";
+import { SketchfabTimeoutError } from "@/lib/sketchfab/fetch-with-timeout";
+
+vi.mock("@/lib/sketchfab/fetch-with-timeout", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/sketchfab/fetch-with-timeout")>();
+  return {
+    ...actual,
+    fetchSketchfabWithTimeout: vi.fn(actual.fetchSketchfabWithTimeout),
+  };
+});
 
 function wrap(node: React.ReactNode) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -73,9 +82,32 @@ describe("SketchfabBrowsePanel", () => {
     const screen = await wrap(
       <SketchfabBrowsePanel scientific="X" common="y" open onClose={() => {}} />,
     );
-    await expect.element(screen.getByText(/couldn['’]t reach sketchfab/i)).toBeInTheDocument();
+    await expect.element(screen.getByText(/couldn.t reach sketchfab/i)).toBeInTheDocument();
     await expect
       .element(screen.getByRole("link", { name: /search sketchfab in a new tab/i }))
       .toHaveAttribute("href", expect.stringContaining("sketchfab.com/search"));
+  });
+
+  it("shows the timeout-specific message when fetch exceeds 5s", async () => {
+    const { fetchSketchfabWithTimeout } = await import("@/lib/sketchfab/fetch-with-timeout");
+    // Mock the timeout helper to reject with SketchfabTimeoutError
+    (fetchSketchfabWithTimeout as any).mockRejectedValue(
+      new SketchfabTimeoutError(),
+    );
+    const screen = await wrap(
+      <SketchfabBrowsePanel
+        scientific="Slow species"
+        common="slow bug"
+        open
+        onClose={() => {}}
+      />,
+    );
+    // Wait for the error state to render
+    await expect.element(
+      screen.getByText(/couldn.t find anything on sketchfab/i),
+    ).toBeInTheDocument();
+    await expect.element(
+      screen.getByRole("link", { name: /try the manual search/i }),
+    ).toBeInTheDocument();
   });
 });

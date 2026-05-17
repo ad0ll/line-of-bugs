@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { SketchfabHit, SketchfabSearchResponse } from "@/lib/sketchfab/types";
 import { sketchfabQueryKey } from "@/lib/sketchfab/query-keys";
+import { fetchSketchfabWithTimeout, SketchfabTimeoutError }
+  from "@/lib/sketchfab/fetch-with-timeout";
 
 interface Props {
   scientific: string;
@@ -16,12 +18,7 @@ export async function fetchSketchfab(
   common: string,
   signal: AbortSignal,
 ): Promise<SketchfabSearchResponse> {
-  const u = new URL("/api/sketchfab/search", window.location.origin);
-  u.searchParams.set("scientific", scientific);
-  u.searchParams.set("common", common);
-  const r = await fetch(u.toString(), { signal });
-  if (!r.ok) throw new Error(`sketchfab search failed: ${r.status}`);
-  return r.json();
+  return fetchSketchfabWithTimeout(scientific, common, signal);
 }
 
 export { sketchfabQueryKey } from "@/lib/sketchfab/query-keys";
@@ -71,7 +68,7 @@ export function SketchfabBrowsePanel({ scientific, common, open, onClose }: Prop
     return () => document.removeEventListener("keydown", onKey);
   }, [renderState, onClose]);
 
-  const { data, isPending, isError } = useQuery({
+  const { data, isPending, isError, error } = useQuery({
     queryKey: sketchfabQueryKey(scientific, common),
     queryFn: ({ signal }) => fetchSketchfab(scientific, common, signal),
     enabled: open && !!scientific && !!common,
@@ -117,7 +114,21 @@ export function SketchfabBrowsePanel({ scientific, common, open, onClose }: Prop
         </ul>
       )}
 
-      {!isPending && isError && (
+      {!isPending && isError && error instanceof SketchfabTimeoutError && (
+        <div
+          className="sketchfab-panel-empty is-error"
+          data-testid="sketchfab-timeout"
+          role="alert"
+        >
+          <span className="sketchfab-panel-empty-glyph" aria-hidden="true">…</span>
+          <p>Couldn't find anything on Sketchfab for this species in time.</p>
+          <a className="sketchfab-empty-link" href={manualSearchUrl} target="_blank" rel="noopener noreferrer">
+            Try the manual search ↗
+          </a>
+        </div>
+      )}
+
+      {!isPending && isError && !(error instanceof SketchfabTimeoutError) && (
         <div className="sketchfab-panel-empty is-error" role="alert">
           <span className="sketchfab-panel-empty-glyph" aria-hidden="true">⚠</span>
           <p>Couldn't reach Sketchfab right now.</p>
