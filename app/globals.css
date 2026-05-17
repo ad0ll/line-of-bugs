@@ -25,6 +25,23 @@
   --text-on-accent: #0d0c10;
   --text-on-danger: #ffffff;
 
+  /* ── Text-size ladder — per docs/design-system.md §Scale.
+     Only the tokens actually referenced today are defined here; add
+     --text-base/-xl/-2xl/-3xl/-display as components migrate off raw
+     rem/px sizes. */
+  --text-xs: 11px;     /* hints, keyboard shortcuts, image IDs */
+  --text-sm: 13px;     /* secondary captions, mono badges */
+  --text-md: 14px;     /* UI body */
+  --text-lg: 16px;     /* session title chip */
+
+  /* ── Semantic font aliases — name-based references for clarity.
+     The Next.js font loaders in app/layout.tsx publish Fraunces as
+     --font-display and Zen Maru Gothic as --font-sans on <html>; these
+     aliases let new CSS spell the typeface explicitly. var() is lazy,
+     so aliasing inside :root resolves correctly at use-time. */
+  --font-fraunces: var(--font-display);
+  --font-zen-maru: var(--font-sans);
+
   /* ── Borders ── */
   --border-subtle: rgba(255, 255, 255, 0.07);
   --border-medium: rgba(255, 255, 255, 0.1);
@@ -1703,6 +1720,203 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
     max-width: calc(100vw - var(--s8));
     row-gap: var(--s1);
   }
+}
+
+/* ───────────────── Sketchfab browse panel ───────────────── */
+
+.sketchfab-panel {
+  position: fixed;
+  /* Anchored above the action bar. The action bar wrap uses
+     bottom: 0 + padding-bottom (~var(--s8)+2px) + ~52px tile height,
+     so we clear ~80px to sit above it with a small gap. */
+  bottom: calc(var(--s24) + var(--s12));
+  right: var(--s10);
+  left: var(--s10);
+  max-width: 720px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s4);
+  background: var(--surface-1);
+  border: 1px solid var(--accent-lilac);
+  border-radius: var(--r-4xl);
+  box-shadow: var(--shadow-panel);
+  z-index: 31; /* one above the action bar */
+  transform-origin: bottom right;
+  animation: sketchfab-panel-in var(--timing-base) ease-out;
+}
+
+@keyframes sketchfab-panel-in {
+  from { opacity: 0; transform: translateY(8px) scaleY(0.92); }
+  to   { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+
+.sketchfab-panel-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s3);
+  padding: 0 var(--s2);
+}
+
+.sketchfab-panel-title {
+  font-family: var(--font-fraunces);
+  font-style: italic;
+  font-size: var(--text-md);
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.sketchfab-panel-source {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  background: var(--surface-chip-strong);
+  padding: var(--s1) var(--s2);
+  border-radius: var(--r-pill);
+}
+
+.sketchfab-panel-close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: var(--text-lg);
+  cursor: pointer;
+  padding: 0 var(--s2);
+  line-height: 1;
+}
+.sketchfab-panel-close:hover { color: var(--accent-pink); }
+
+.sketchfab-panel-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--s3);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  /* Multi-row scroll: ~2.5 rows of 16:9 cards visible at a time so the
+     "more below" cue is implicit. Tune via /audit (see step 2 below). */
+  max-height: 56vh;
+  overflow-y: auto;
+  /* Avoid layout shift when scrollbar appears */
+  scrollbar-gutter: stable;
+}
+
+/* Tablet: 2 cols, taller scroll region */
+@media (max-width: 720px) {
+  .sketchfab-panel-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-height: 50vh;
+  }
+}
+
+/* Phone: single column, smaller cap so the action bar stays in view */
+@media (max-width: 420px) {
+  .sketchfab-panel {
+    /* Panel itself hugs the viewport edges on phone */
+    left: var(--s3);
+    right: var(--s3);
+  }
+  .sketchfab-panel-grid {
+    grid-template-columns: 1fr;
+    max-height: 44vh;
+  }
+}
+
+.sketchfab-card { display: flex; }
+
+.sketchfab-card-link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform var(--timing-fast),
+    border-color var(--timing-fast);
+  min-height: 44px; /* touch target */
+}
+.sketchfab-card-link:hover,
+.sketchfab-card-link:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--accent-sky);
+  outline: none;
+}
+
+.sketchfab-card-thumb {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: var(--surface-0);
+}
+
+.sketchfab-card-title {
+  font-family: var(--font-zen-maru);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  padding: var(--s2) var(--s2) 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.sketchfab-card-author {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  padding: 0 var(--s2) var(--s2);
+}
+
+.sketchfab-card-skeleton {
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(
+    90deg,
+    var(--surface-2) 0%,
+    var(--surface-1) 50%,
+    var(--surface-2) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--r-lg);
+  animation: sketchfab-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes sketchfab-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.sketchfab-panel-empty {
+  padding: var(--s4);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  align-items: center;
+}
+.sketchfab-panel-empty p {
+  font-family: var(--font-zen-maru);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+}
+.sketchfab-empty-link {
+  color: var(--accent-sky);
+  text-decoration: none;
+  font-size: var(--text-sm);
+}
+.sketchfab-empty-link:hover { text-decoration: underline; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sketchfab-panel { animation: none; }
+  .sketchfab-card-skeleton { animation: none; }
+  .sketchfab-card-link:hover { transform: none; }
 }
 
 /* ════════════════════════════════════════════════════════════
