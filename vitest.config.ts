@@ -56,6 +56,7 @@ export default defineConfig({
           name: "browser",
           setupFiles: ["./tests/setup-browser.ts"],
           include: [
+            "tests/lib/abort-helpers.test.ts",
             "tests/components/**/*.test.tsx",
             "tests/lib/audio.test.ts",
             "tests/lib/preload-manager.test.ts",
