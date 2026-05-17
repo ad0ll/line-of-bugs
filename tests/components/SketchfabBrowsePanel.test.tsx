@@ -66,4 +66,15 @@ describe("SketchfabBrowsePanel", () => {
     expect(screen.container.firstChild).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("renders the error state when fetch rejects", async () => {
+    vi.stubGlobal("fetch", () => Promise.reject(new Error("network down")));
+    const screen = await wrap(
+      <SketchfabBrowsePanel scientific="X" common="y" open onClose={() => {}} />,
+    );
+    await expect.element(screen.getByText(/couldn['’]t reach sketchfab/i)).toBeInTheDocument();
+    await expect
+      .element(screen.getByRole("link", { name: /search sketchfab in a new tab/i }))
+      .toHaveAttribute("href", expect.stringContaining("sketchfab.com/search"));
+  });
 });

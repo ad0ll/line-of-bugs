@@ -112,7 +112,7 @@ export function SketchfabBrowsePanel({ scientific, common, open, onClose }: Prop
                   alt={h.name}
                   width={256}
                   height={144}
-                  loading="eager"
+                  loading="lazy"
                   decoding="async"
                 />
                 <span className="sketchfab-card-title">{h.name}</span>
