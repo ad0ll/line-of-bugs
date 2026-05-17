@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sqlite3
 import sys
 import time
@@ -19,7 +20,9 @@ from pathlib import Path
 import requests
 
 ROOT = Path(__file__).resolve().parents[1]
-ENV_PATH = ROOT / ".env.local"
+# Local dev uses .env.local; the prod deploy symlinks .env -> shared/.env
+# inside each release. SKETCHFAB_API_KEY env var also wins if set.
+ENV_PATHS = [ROOT / ".env.local", ROOT / ".env"]
 DEFAULT_DB = ROOT / "data" / "db" / "line-of-bugs.db"
 
 log = logging.getLogger("sketchfab_enrichment")
@@ -40,10 +43,18 @@ class SpeciesResult:
 
 
 def _load_api_key() -> str:
-    for line in ENV_PATH.read_text().splitlines():
-        if line.startswith("SKETCHFAB_API_KEY="):
-            return line.split("=", 1)[1].strip().strip('"').strip("'")
-    raise SystemExit("SKETCHFAB_API_KEY missing from .env.local")
+    env_key = os.environ.get("SKETCHFAB_API_KEY")
+    if env_key:
+        return env_key.strip()
+    for path in ENV_PATHS:
+        if not path.exists():
+            continue
+        for line in path.read_text().splitlines():
+            if line.startswith("SKETCHFAB_API_KEY="):
+                return line.split("=", 1)[1].strip().strip('"').strip("'")
+    raise SystemExit(
+        f"SKETCHFAB_API_KEY not set in env or any of {[str(p) for p in ENV_PATHS]}",
+    )
 
 
 def _query(q: str, api_key: str) -> list[dict]:
