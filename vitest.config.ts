@@ -67,6 +67,13 @@ export default defineConfig({
             headless: true,
           },
         },
+        resolve: {
+          // next/image's CJS entrypoint reads `process.env` at load time and
+          // crashes in the browser harness. Swap it for a plain <img> stub.
+          alias: {
+            "next/image": path.resolve(__dirname, "tests/stubs/next-image.tsx"),
+          },
+        },
       },
     ],
   },

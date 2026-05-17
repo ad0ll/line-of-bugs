@@ -600,12 +600,18 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   border-radius: var(--r-3xl);
   background: var(--surface-1);
   overflow: hidden;
-  transition: transform var(--timing-slow) var(--ease-out),
-              box-shadow var(--timing-slow) var(--ease-out);
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .grid-item:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-pink-soft);
+  transform: scale(1.02);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent-pink) 35%, transparent);
+}
+.grid-item-order-hint {
+  font-style: italic;
+  font-size: 0.75em;
+  opacity: 0.6;
+  margin-left: 0.25rem;
 }
 .grid-item-image {
   position: relative;

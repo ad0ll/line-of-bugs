@@ -1,0 +1,51 @@
+import { describe, it, expect } from "vitest";
+import { render } from "vitest-browser-react";
+import { GridTile } from "@/app/gallery/_components/GridTile";
+
+const BASE_ROW = {
+  image_id: "test-id",
+  collection_id: "col-1",
+  source: "inaturalist",
+  source_page_url: "https://example.com/page",
+  image_url: "https://example.com/img.jpg",
+  thumbnail_filename: "thumbs/x.jpg",
+  medium_filename: "medium/x.jpg",
+  filename: "x.jpg",
+  width: 1024,
+  height: 768,
+  taxon_order: "Lepidoptera",
+  taxon_species: "Danaus plexippus",
+  common_name: "monarch",
+  subject_state: "wild",
+  institution: null,
+  collection_index: 1,
+  collection_size: 1,
+};
+
+describe("GridTile", () => {
+  it("collapses order-only iNat IDs and drops the taxon-group chip", async () => {
+    const row = {
+      ...BASE_ROW,
+      common_name: "butterflies, moths or skippers",
+      taxon_species: "Lepidoptera",
+      taxon_order: "Lepidoptera",
+    };
+    const screen = await render(<GridTile row={row as any} />);
+    await expect.element(screen.getByText(/Butterflies, Moths Or Skippers/i)).toBeInTheDocument();
+    await expect.element(screen.getByText(/\(order\)/i)).toBeInTheDocument();
+    // No scientific repeat, no taxon-group chip (OrderBadge)
+    const sci = screen.container.querySelector(".grid-item-species");
+    expect(sci).toBeNull();
+    const chip = screen.container.querySelector(".order-badge");
+    expect(chip).toBeNull();
+  });
+
+  it("shows common + scientific when species is more specific", async () => {
+    const screen = await render(<GridTile row={BASE_ROW as any} />);
+    await expect.element(screen.getByText(/Monarch/i)).toBeInTheDocument();
+    await expect.element(screen.getByText(/Danaus plexippus/i)).toBeInTheDocument();
+    // The order-badge / taxon-group chip should be gone regardless.
+    const chip = screen.container.querySelector(".order-badge");
+    expect(chip).toBeNull();
+  });
+});
