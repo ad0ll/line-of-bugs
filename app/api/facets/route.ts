@@ -1,5 +1,12 @@
 import { getFacetCounts, getUnfilteredFacets } from "@/lib/queries/facets";
 import { parseSubject } from "@/lib/subject";
+import type { NoveltyMode } from "@/lib/queries/filter-clauses";
+
+const VALID_NOVELTY: NoveltyMode[] = ["show-everything", "never-repeat-species", "allow-different-angles"];
+
+function parseNovelty(v: string | null): NoveltyMode {
+  return (VALID_NOVELTY as string[]).includes(v ?? "") ? (v as NoveltyMode) : "show-everything";
+}
 
 function readList(v: string | null): string[] {
   return v ? v.split(",").filter(Boolean) : [];
@@ -30,6 +37,7 @@ export async function GET(req: Request): Promise<Response> {
   const groups = readList(url.searchParams.get("type"));
   const institutions = readList(url.searchParams.get("inst"));
   const q = readList(url.searchParams.get("q"));
+  const novelty = parseNovelty(url.searchParams.get("novelty"));
 
   const unfiltered =
     subjectType === "all" &&
@@ -38,7 +46,8 @@ export async function GET(req: Request): Promise<Response> {
     sexes.length === 0 &&
     groups.length === 0 &&
     institutions.length === 0 &&
-    q.length === 0;
+    q.length === 0 &&
+    novelty === "show-everything";
 
   const snap = unfiltered
     ? await getUnfilteredFacets()
@@ -50,6 +59,7 @@ export async function GET(req: Request): Promise<Response> {
         groups,
         institutions,
         q,
+        novelty,
       });
 
   return Response.json(snap, {

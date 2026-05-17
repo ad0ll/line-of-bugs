@@ -12,6 +12,8 @@ import type { SubjectType } from "@/lib/subject";
  * institution. The facet endpoint doesn't filter on q (autocomplete
  * already narrows). The gallery filters on both.
  */
+export type NoveltyMode = "show-everything" | "never-repeat-species" | "allow-different-angles";
+
 export interface FilterState {
   subjectType: SubjectType;
   views: string[];
@@ -22,6 +24,7 @@ export interface FilterState {
    *  on its own tokens; tags are OR'd together via FTS5. */
   q?: string[];
   institutions?: string[];
+  novelty?: NoveltyMode;
 }
 
 /**

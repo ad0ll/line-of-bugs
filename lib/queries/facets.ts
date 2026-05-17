@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { cacheTag, cacheLife } from "next/cache";
 import { db } from "@/db";
 import { TAXON_GROUPS } from "@/lib/taxonomy";
-import { buildFilterClauses, type FilterState } from "@/lib/queries/filter-clauses";
+import { buildFilterClauses, type FilterState, type NoveltyMode } from "@/lib/queries/filter-clauses";
 
 export interface FacetCount {
   name: string;
@@ -34,11 +34,24 @@ export interface FacetSnapshot {
  * Use `getUnfilteredFacets()` for the SSR initial render where the
  * snapshot is stable.
  */
+function noveltyCountExpr(mode: NoveltyMode): ReturnType<typeof sql> {
+  switch (mode) {
+    case "never-repeat-species":
+      return sql`COUNT(DISTINCT COALESCE(taxon_species, common_name, image_id))`;
+    case "allow-different-angles":
+      return sql`COUNT(DISTINCT COALESCE(collection_id, image_id))`;
+    case "show-everything":
+    default:
+      return sql`COUNT(*)`;
+  }
+}
+
 export async function getFacetCounts(filters: FilterState): Promise<FacetSnapshot> {
   const totalClauses = buildFilterClauses(filters);
   const totalWhere = sql.join(totalClauses, sql` AND `);
+  const expr = noveltyCountExpr(filters.novelty ?? "show-everything");
   const totalRow = db.get<{ c: number }>(sql`
-    SELECT COUNT(*) AS c FROM images i WHERE ${totalWhere}
+    SELECT ${expr} AS c FROM images i WHERE ${totalWhere}
   `);
 
   return {
