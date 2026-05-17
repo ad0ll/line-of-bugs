@@ -49,4 +49,29 @@ describe("SessionActionBar", () => {
     const root = screen.container.firstChild as HTMLElement;
     expect(root.style.opacity).toBe("0");
   });
+
+  it("action bar buttons (including source) share a min-width", async () => {
+    const screen = await render(<SessionActionBar {...baseProps} />);
+    const buttons = screen.container.querySelectorAll(
+      ".session-action-bar-panel button.u-icon-btn-stacked, .session-action-bar-panel a.u-icon-btn-stacked",
+    );
+    expect(buttons.length).toBeGreaterThanOrEqual(7);
+    const widths = Array.from(buttons).map(
+      (b) => (b as HTMLElement).getBoundingClientRect().width,
+    );
+    const max = Math.max(...widths);
+    const min = Math.min(...widths);
+    expect(max - min).toBeLessThanOrEqual(1.5); // sub-pixel rounding tolerance
+  });
+
+  it("source button is not underlined and shares the stacked layout", async () => {
+    const screen = await render(<SessionActionBar {...baseProps} />);
+    const source = screen.container.querySelector(
+      ".session-action-bar-panel a.u-icon-btn-stacked",
+    )! as HTMLElement;
+    expect(source.tagName.toLowerCase()).toBe("a");
+    // No underline
+    const td = getComputedStyle(source).textDecorationLine;
+    expect(td).toBe("none");
+  });
 });

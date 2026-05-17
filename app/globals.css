@@ -1706,18 +1706,42 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 /* R8 (2026-05-16): zoom cluster removed from the action bar — browser
    zoom handles in-image scaling and the bar was overflowing mobile. */
 
+/* Phase B — uniform action bar slot. The widest label drives min-width
+   so the bar reads as a grid, not a ragged row. 100px accommodates the
+   "fullscreen" label at 13px uppercase + 0.4px letter-spacing with
+   comfortable side padding. Also kills the link-blue underline on the
+   source <a> so it looks identical to the surrounding stacked icon
+   buttons. */
+.session-action-bar-panel .u-icon-btn-stacked {
+  min-width: 100px;
+  text-decoration: none;
+}
+.session-action-bar-panel .u-icon-btn-stacked:hover,
+.session-action-bar-panel .u-icon-btn-stacked:focus-visible {
+  text-decoration: none;
+}
+
 .session-counter {
   padding: var(--s2) var(--s4);
   font-family: var(--font-mono), monospace;
   font-size: 13px;
   color: var(--accent-sky);
-  min-width: 64px;
+  min-width: 100px;
   text-align: center;
   font-variant-numeric: tabular-nums;
   display: inline-flex;
   align-items: baseline;
   justify-content: center;
   gap: 4px;
+}
+
+/* When labels are hidden on narrow viewports (≤720px), drop the slot
+   width back to the glyph-only footprint so the bar fits. */
+@media (max-width: 720px) {
+  .session-action-bar-panel .u-icon-btn-stacked,
+  .session-action-bar-panel .session-counter {
+    min-width: 54px;
+  }
 }
 .session-counter-sep {
   color: var(--text-tertiary);
