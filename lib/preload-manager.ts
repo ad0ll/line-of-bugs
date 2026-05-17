@@ -15,7 +15,11 @@ export interface PreloadManager {
   };
 }
 
-const PRELOAD_AHEAD = 2;
+// Forward window dominates because gesture-drawing sessions are mostly
+// linear (next/next/next). Keep just one slot behind for the occasional
+// ArrowLeft backtrack.
+const PRELOAD_AHEAD = 3;
+const PRELOAD_BEHIND = 1;
 const LRU_MAX = 8;
 
 export function createPreloadManager(
@@ -64,12 +68,16 @@ export function createPreloadManager(
       queue = [...ids];
     },
     onIndexChange(idx) {
-      // Preload forward (next N) AND backward (previous N) so backtracking
-      // through the deck via ArrowLeft is instant. Previously only the
-      // forward direction was hot, making back-nav hit the network.
+      // Forward preload — next N slides so the user never sees a blank
+      // frame on advance.
       for (let i = 1; i <= PRELOAD_AHEAD; i++) {
         const next = queue[idx + i];
         if (next) ensure(next);
+      }
+      // Backward preload — keep prev N hot so ArrowLeft backtracks
+      // don't hit the network. Smaller window than forward since
+      // sessions are mostly linear.
+      for (let i = 1; i <= PRELOAD_BEHIND; i++) {
         const prev = queue[idx - i];
         if (prev) ensure(prev);
       }

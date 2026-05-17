@@ -65,9 +65,12 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
   // Initialize audio + preload once
   useEffect(() => {
     audioRef.current = makeAudio();
+    // Preload the medium tier (1024px) — same tier SessionImage actually
+    // displays. Using full-res here would warm the wrong cache and we'd
+    // still wait on /api/medium for the visible <img>.
     preloadRef.current = createPreloadManager((id) => {
       const item = items.find((it) => it.imageId === id);
-      return item ? `/api/img/${item.filename.replace(/^images\//, "")}` : "";
+      return item ? `/api/medium/${item.filename.replace(/^images\//, "")}` : "";
     });
     preloadRef.current.setQueue(items.map((it) => it.imageId));
   }, [items]);

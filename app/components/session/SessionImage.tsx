@@ -14,6 +14,11 @@ interface Props {
 }
 
 export function SessionImage({ image, bw, chromeVisible }: Props) {
+  // Use the medium tier (1024px JPEG q88) instead of full-res — the
+  // gesture-drawing canvas never benefits from > 1024px of detail, and
+  // the medium tier averages ~150KB vs 1-3MB for full-res. Bytes saved
+  // here translate directly into instant prev/next nav after the
+  // preload window fills.
   const filename = image.filename.replace(/^images\//, "");
   // next/image needs the intrinsic dimensions for CLS protection; with
   // object-fit:cover the rendered size is dictated by the container.
@@ -24,7 +29,7 @@ export function SessionImage({ image, bw, chromeVisible }: Props) {
     <div className="session-image-frame">
       <NextImage
         key={image.imageId}
-        src={`/api/img/${filename}`}
+        src={`/api/medium/${filename}`}
         alt={image.commonName || image.taxonSpecies || (image.taxonOrder ? `${image.taxonOrder} specimen` : "specimen")}
         aria-describedby={chromeVisible ? SOURCE_INFO_CHIP_ID : undefined}
         width={w}
