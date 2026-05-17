@@ -153,6 +153,7 @@ def main(argv: list[str] | None = None) -> int:
             log.error("upsert batch network error: %s", e)
         buffered = []
 
+    skipped = 0  # rate-limited species; their last_checked_at stays old
     with ThreadPoolExecutor(max_workers=args.workers) as ex:
         futs = {ex.submit(classify_species, sci, com, sketchfab_key): (sci, com)
                 for sci, com in pairs}
@@ -164,20 +165,23 @@ def main(argv: list[str] | None = None) -> int:
                 failures += 1
                 log.error("classify %r failed: %s", sci, e)
                 continue
+            if result.rate_limited:
+                skipped += 1
+                continue
             buffered.append(result_to_row(sci, result))
             classified += 1
             if len(buffered) >= args.batch_size:
                 flush()
             if classified % 100 == 0:
                 rate = classified / (time.time() - t0)
-                log.info("  %d/%d classified, %d upserted, %.1f/s",
-                         classified, len(pairs), upserted_total, rate)
+                log.info("  %d/%d classified, %d upserted, %d skipped (rate-limited), %.1f/s",
+                         classified, len(pairs), upserted_total, skipped, rate)
 
     flush()
 
     elapsed = time.time() - t0
-    log.info("done in %.1fs — %d classified, %d upserted, %d failures",
-             elapsed, classified, upserted_total, failures)
+    log.info("done in %.1fs — %d classified, %d upserted, %d rate-limited (skipped), %d failures",
+             elapsed, classified, upserted_total, skipped, failures)
     return 0 if failures == 0 else 2
 
 

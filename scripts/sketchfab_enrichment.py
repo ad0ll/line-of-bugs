@@ -52,6 +52,11 @@ class SpeciesResult:
     has_models: bool
     hit_count: int  # raw, pre-filter
     hits: list[dict] = field(default_factory=list)  # trimmed, post-filter, sorted
+    # True when ANY of the queries got rate-limited / Akamai-gated. Callers
+    # should NOT upsert this result (would poison the cache with a false
+    # negative). The next run picks the species up automatically because
+    # last_checked_at didn't get updated.
+    rate_limited: bool = False
 
 
 def _load_api_key() -> str:
@@ -69,8 +74,20 @@ def _load_api_key() -> str:
     )
 
 
+RATE_LIMIT_STATUSES = {405, 429, 503}  # Akamai 405 = bot challenge, 429 = rate-limit
+
+
+class RateLimitedError(Exception):
+    """Raised when Sketchfab returns a bot-block / rate-limit status."""
+
+
 def _query(q: str, api_key: str) -> list[dict]:
-    """One Sketchfab search call. Returns first-page results or []."""
+    """One Sketchfab search call. Returns first-page results or [].
+
+    Raises RateLimitedError on 405/429/503 so the caller can SKIP the species
+    rather than poison the precache with a false negative. Other non-200s
+    (404, 5xx that aren't 503) are logged and treated as zero hits.
+    """
     try:
         r = requests.get(
             "https://api.sketchfab.com/v3/search",
@@ -78,11 +95,15 @@ def _query(q: str, api_key: str) -> list[dict]:
             headers={"Authorization": f"Token {api_key}"},
             timeout=20,
         )
+        if r.status_code in RATE_LIMIT_STATUSES:
+            raise RateLimitedError(f"HTTP {r.status_code}")
         if r.status_code != 200:
             log.warning("query %r → HTTP %d (treating as zero hits — cache may be poisoned)",
                         q, r.status_code)
             return []
         return r.json().get("results", []) or []
+    except RateLimitedError:
+        raise
     except Exception as e:
         log.warning("query %r failed: %s", q, e)
         return []
@@ -138,12 +159,23 @@ def _trim_hit(hit: dict, matched_by: str) -> dict:
 
 
 def classify_species(scientific: str, common: str, api_key: str) -> SpeciesResult:
-    """Run both queries in parallel; return aggregate relevance + trimmed hits."""
+    """Run both queries in parallel; return aggregate relevance + trimmed hits.
+
+    If EITHER query gets rate-limited, the returned result has
+    rate_limited=True and empty hits — caller should skip the upsert so
+    last_checked_at stays old and the next run retries.
+    """
     with ThreadPoolExecutor(max_workers=2) as inner:
         f_sci = inner.submit(_query, scientific, api_key)
         f_com = inner.submit(_query, common, api_key)
-        sci_hits = f_sci.result()
-        com_hits = f_com.result()
+        try:
+            sci_hits = f_sci.result()
+        except RateLimitedError:
+            return SpeciesResult(has_models=False, hit_count=0, hits=[], rate_limited=True)
+        try:
+            com_hits = f_com.result()
+        except RateLimitedError:
+            return SpeciesResult(has_models=False, hit_count=0, hits=[], rate_limited=True)
 
     # uid → (raw hit, matched_by_sci, matched_by_common)
     by_uid: dict[str, tuple[dict, bool, bool]] = {}
@@ -241,6 +273,7 @@ def main(argv: list[str] | None = None) -> int:
     t0 = time.time()
 
     done = 0
+    skipped = 0
     with ThreadPoolExecutor(max_workers=args.workers) as ex:
         futs = {ex.submit(classify_species, sci, com, api_key): (sci, com)
                 for sci, com in pairs}
@@ -248,15 +281,24 @@ def main(argv: list[str] | None = None) -> int:
             sci, com = futs[f]
             try:
                 result = f.result()
-                upsert_metadata(db_path, sci, result)
             except Exception as e:
                 log.error("classify %r failed: %s", sci, e)
                 continue
+            if result.rate_limited:
+                skipped += 1
+                continue
+            try:
+                upsert_metadata(db_path, sci, result)
+            except Exception as e:
+                log.error("upsert %r failed: %s", sci, e)
+                continue
             done += 1
             if done % 100 == 0:
-                log.info("  %d/%d  (%.1f/s)", done, len(pairs), done / (time.time() - t0))
+                log.info("  %d/%d  (%.1f/s, %d skipped)",
+                         done, len(pairs), done / (time.time() - t0), skipped)
 
-    log.info("done in %.1fs — %d species processed", time.time() - t0, done)
+    log.info("done in %.1fs — %d processed, %d skipped (rate-limited; retry next run)",
+             time.time() - t0, done, skipped)
     return 0
 
 
