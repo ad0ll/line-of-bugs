@@ -4,13 +4,21 @@ vi.mock("@/lib/sketchfab/search", () => ({
   searchSketchfab: vi.fn(),
 }));
 
+vi.mock("@/lib/sketchfab/has-models", () => ({
+  hasSketchfabModels: vi.fn(),
+}));
+
 import { GET } from "@/app/api/sketchfab/search/route";
 import { searchSketchfab } from "@/lib/sketchfab/search";
+import { hasSketchfabModels } from "@/lib/sketchfab/has-models";
 
 describe("GET /api/sketchfab/search", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.SKETCHFAB_API_KEY = "test-key";
+    // Default: precache says "never checked" so the route falls through
+    // to the live API call. Individual tests override as needed.
+    (hasSketchfabModels as ReturnType<typeof vi.fn>).mockReturnValue(null);
   });
 
   it("400s when scientific OR common is missing", async () => {
@@ -65,5 +73,17 @@ describe("GET /api/sketchfab/search", () => {
     const body = await r.json();
     expect(body.error).toBe("upstream search failed");
     expect(body.detail).toContain("401");
+  });
+
+  it("short-circuits with empty hits when precache says no models", async () => {
+    (hasSketchfabModels as ReturnType<typeof vi.fn>).mockReturnValue(false);
+    const r = await GET(new Request(
+      "http://x/api/sketchfab/search?scientific=Nothing&common=here"
+    ));
+    expect(r.status).toBe(200);
+    const body = await r.json();
+    expect(body.hits).toEqual([]);
+    expect(body.precachedHasModels).toBe(false);
+    expect(searchSketchfab).not.toHaveBeenCalled();
   });
 });
