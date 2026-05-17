@@ -1,5 +1,5 @@
 import { searchSketchfab } from "@/lib/sketchfab/search";
-import { hasSketchfabModels } from "@/lib/sketchfab/has-models";
+import { getSpeciesCache } from "@/lib/sketchfab/cache";
 
 /**
  * Server-side proxy to Sketchfab's /v3/search endpoint.
@@ -8,6 +8,15 @@ import { hasSketchfabModels } from "@/lib/sketchfab/has-models";
  * route and never sees the key. Both `scientific` and `common` are
  * required so the underlying search can run both queries in parallel
  * and rank "matched in both" above single-query hits.
+ *
+ * Cache-first policy (added when prod's Hetzner IP was bot-blocked by Akamai):
+ *   - Cache row with hits[] populated → return them, never call Sketchfab.
+ *   - Cache row with hasModels=false → short-circuit empty.
+ *   - Cache row with hasModels=null  → fall through to live call.
+ *   - No cache row at all            → fall through to live call.
+ *
+ * Live calls fail on prod (egress IP blocked). They work locally and
+ * cover the "new species added between enrichment runs" gap.
  *
  * Status taxonomy:
  *   400 — caller didn't supply both query params
@@ -26,19 +35,29 @@ export async function GET(req: Request): Promise<Response> {
     );
   }
 
-  const apiKey = process.env.SKETCHFAB_API_KEY;
-  if (!apiKey) {
+  const cache = getSpeciesCache(scientific);
+
+  // Best case: cache has actual hits → serve them directly. This is the
+  // prod path for any species the enrichment job has confirmed.
+  if (cache && cache.hits.length > 0) {
     return new Response(
-      JSON.stringify({ error: "SKETCHFAB_API_KEY not configured" }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
+      JSON.stringify({
+        hits: cache.hits,
+        rawHadResults: true,
+        precachedHasModels: true,
+      }),
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "public, max-age=300, s-maxage=3600",
+        },
+      },
     );
   }
 
-  // Cache short-circuit: skip the API call for species we already
-  // know have nothing. The client uses precachedHasModels to decide
-  // whether to grey out the button.
-  const precached = hasSketchfabModels(scientific);
-  if (precached === false) {
+  // Cache says "checked, none found" → empty short-circuit. Button greys out.
+  if (cache && cache.hasModels === false) {
     return new Response(
       JSON.stringify({ hits: [], rawHadResults: false, precachedHasModels: false }),
       {
@@ -51,13 +70,20 @@ export async function GET(req: Request): Promise<Response> {
     );
   }
 
+  // Cache miss (unchecked species) → live call. Will succeed in dev, fail on
+  // prod with 502 until the enrichment job catches up.
+  const apiKey = process.env.SKETCHFAB_API_KEY;
+  if (!apiKey) {
+    return new Response(
+      JSON.stringify({ error: "SKETCHFAB_API_KEY not configured" }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
+    );
+  }
+
   let result;
   try {
     result = await searchSketchfab({ scientific, common, apiKey });
   } catch (e) {
-    // searchSketchfab throws on upstream HTTP errors (401 = bad key,
-    // 429 = rate limit, 5xx = Sketchfab outage). Surface as 502 so the
-    // client UI can distinguish "Sketchfab is broken" from "no results".
     return new Response(
       JSON.stringify({
         error: "upstream search failed",
@@ -68,13 +94,11 @@ export async function GET(req: Request): Promise<Response> {
   }
 
   return new Response(
-    JSON.stringify({ ...result, precachedHasModels: precached }),
+    JSON.stringify({ ...result, precachedHasModels: null }),
     {
       status: 200,
       headers: {
         "Content-Type": "application/json",
-        // 5 min browser cache, 1 hr CDN cache — Sketchfab content rarely changes
-        // within a single session, and even less per species per day.
         "Cache-Control": "public, max-age=300, s-maxage=3600",
       },
     },

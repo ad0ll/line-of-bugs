@@ -239,6 +239,10 @@ export const speciesMetadata = sqliteTable(
     // null = never checked; 0 = checked, found nothing; >0 = raw API hit count.
     sketchfabHitCount: integer("sketchfab_hit_count"),
     sketchfabLastCheckedAt: integer("sketchfab_last_checked_at", { mode: "timestamp" }),
+    // Trimmed SketchfabHit[] as JSON. Cached so the route handler can serve
+    // the panel without calling Sketchfab live (prod's egress IP is bot-blocked
+    // by Akamai). NULL = no cached hits (either unchecked or known-zero).
+    sketchfabHitsJson: text("sketchfab_hits_json"),
   },
   (t) => [
     index("idx_species_metadata_sketchfab_checked").on(t.sketchfabLastCheckedAt),

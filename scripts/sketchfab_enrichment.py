@@ -1,20 +1,26 @@
-"""Populate species_metadata.has_sketchfab_models for every distinct
-taxon_species in the images table.
+"""Populate species_metadata.has_sketchfab_models + sketchfab_hits_json for
+every distinct taxon_species in the images table.
+
+The hits_json column is what the prod route handler serves from — prod's
+Hetzner egress IP is bot-blocked by Akamai (Sketchfab's CDN), so the
+route cannot call Sketchfab live and depends entirely on this precache.
 
 Run: .venv/bin/python -m scripts.sketchfab_enrichment [--limit N] [--max-age-days D]
 
-Concurrency: 8 workers, well within Sketchfab fair-use.
+Concurrency: 8 outer workers × 2 inner (sci+common queries) = 16 in-flight
+Sketchfab requests at a time. Within fair-use observed ≤70 req/s.
 """
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import os
 import sqlite3
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import requests
@@ -35,11 +41,17 @@ INSECT_HINTS = {
 }
 INSECT_CATEGORY_SLUGS = {"animals-pets", "nature-plants"}
 
+# Mirrors the TS `SketchfabHit` shape in lib/sketchfab/types.ts. Stored
+# inside species_metadata.sketchfab_hits_json so the route can ship them
+# straight to the UI without re-shaping.
+_RANK = {"both": 0, "scientific": 1, "common": 2}
+
 
 @dataclass
 class SpeciesResult:
     has_models: bool
     hit_count: int  # raw, pre-filter
+    hits: list[dict] = field(default_factory=list)  # trimmed, post-filter, sorted
 
 
 def _load_api_key() -> str:
@@ -98,40 +110,94 @@ def _is_strict_relevant(hit: dict, scientific: str, common: str) -> bool:
     return False
 
 
+def _pick_thumbnail(hit: dict) -> str:
+    """256x144 if available, else the smallest tier. Mirrors TS pickThumbnail."""
+    imgs = (hit.get("thumbnails") or {}).get("images") or []
+    for img in imgs:
+        if img.get("width") == 256:
+            return img.get("url", "")
+    if not imgs:
+        return ""
+    return sorted(imgs, key=lambda i: i.get("width", 0))[0].get("url", "")
+
+
+def _trim_hit(hit: dict, matched_by: str) -> dict:
+    """Trim a raw Sketchfab hit down to the SketchfabHit shape stored in the cache."""
+    user = hit.get("user") or {}
+    license_ = hit.get("license") or {}
+    return {
+        "uid": hit.get("uid", ""),
+        "name": hit.get("name", "") or "",
+        "author": user.get("displayName") or user.get("username") or "",
+        "authorUsername": user.get("username", "") or "",
+        "thumbnailUrl": _pick_thumbnail(hit),
+        "viewerUrl": hit.get("viewerUrl", "") or "",
+        "licenseSlug": license_.get("slug") if isinstance(license_, dict) else None,
+        "matchedBy": matched_by,
+    }
+
+
 def classify_species(scientific: str, common: str, api_key: str) -> SpeciesResult:
-    """Run both queries (in parallel); return aggregate relevance + raw hit count."""
+    """Run both queries in parallel; return aggregate relevance + trimmed hits."""
     with ThreadPoolExecutor(max_workers=2) as inner:
         f_sci = inner.submit(_query, scientific, api_key)
         f_com = inner.submit(_query, common, api_key)
         sci_hits = f_sci.result()
         com_hits = f_com.result()
-    seen_uids: set[str] = set()
-    raw = 0
-    relevant = 0
-    for h in (*sci_hits, *com_hits):
+
+    # uid → (raw hit, matched_by_sci, matched_by_common)
+    by_uid: dict[str, tuple[dict, bool, bool]] = {}
+    for h in sci_hits:
         uid = h.get("uid", "")
-        if uid in seen_uids:
+        if not uid:
             continue
-        seen_uids.add(uid)
-        raw += 1
-        if _is_strict_relevant(h, scientific, common):
-            relevant += 1
-    return SpeciesResult(has_models=relevant > 0, hit_count=raw)
+        by_uid[uid] = (h, True, False)
+    for h in com_hits:
+        uid = h.get("uid", "")
+        if not uid:
+            continue
+        if uid in by_uid:
+            prev_hit, sci_f, _ = by_uid[uid]
+            by_uid[uid] = (prev_hit, sci_f, True)
+        else:
+            by_uid[uid] = (h, False, True)
+
+    raw = len(by_uid)
+    trimmed: list[dict] = []
+    for hit, sci_f, com_f in by_uid.values():
+        if not _is_strict_relevant(hit, scientific, common):
+            continue
+        if sci_f and com_f:
+            matched = "both"
+        elif sci_f:
+            matched = "scientific"
+        else:
+            matched = "common"
+        trimmed.append(_trim_hit(hit, matched))
+
+    # Stable ordering: both first (strongest signal), then scientific, then common.
+    trimmed.sort(key=lambda h: _RANK[h["matchedBy"]])
+
+    return SpeciesResult(has_models=len(trimmed) > 0, hit_count=raw, hits=trimmed)
 
 
 def upsert_metadata(db_path: Path, taxon_species: str, result: SpeciesResult) -> None:
     now = int(time.time())
+    # NULL hits_json when has_models is false — keeps "no data" semantic clean.
+    hits_json = json.dumps(result.hits) if result.has_models else None
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """INSERT INTO species_metadata
                  (taxon_species, has_sketchfab_models, sketchfab_hit_count,
-                  sketchfab_last_checked_at)
-               VALUES (?, ?, ?, ?)
+                  sketchfab_hits_json, sketchfab_last_checked_at)
+               VALUES (?, ?, ?, ?, ?)
                ON CONFLICT(taxon_species) DO UPDATE SET
                  has_sketchfab_models = excluded.has_sketchfab_models,
                  sketchfab_hit_count = excluded.sketchfab_hit_count,
+                 sketchfab_hits_json = excluded.sketchfab_hits_json,
                  sketchfab_last_checked_at = excluded.sketchfab_last_checked_at""",
-            (taxon_species, 1 if result.has_models else 0, result.hit_count, now),
+            (taxon_species, 1 if result.has_models else 0, result.hit_count,
+             hits_json, now),
         )
 
 

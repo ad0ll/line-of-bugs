@@ -85,6 +85,13 @@
       "when": 1779000001000,
       "tag": "0011_species_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1779000002000,
+      "tag": "0012_sketchfab_hits_json",
+      "breakpoints": true
     }
   ]
 }

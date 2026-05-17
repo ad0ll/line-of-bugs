@@ -1,7 +1,10 @@
 // lib/sketchfab/has-models.ts
-import { db } from "@/db";
-import { speciesMetadata } from "@/db/schema";
-import { eq } from "drizzle-orm";
+//
+// Thin compatibility shim around getSpeciesCache. Kept so existing callers
+// (and the useSketchfabAvailability hook) don't need to know about the
+// full cache shape. Prefer importing getSpeciesCache directly for new code
+// that needs the actual hits array.
+import { getSpeciesCache } from "./cache";
 
 /**
  * Returns the pre-cached "does Sketchfab have models for this species" flag.
@@ -10,12 +13,7 @@ import { eq } from "drizzle-orm";
  *   - null   → never checked (caller should treat as "unknown" / fetch live)
  */
 export function hasSketchfabModels(taxonSpecies: string): boolean | null {
-  const row = db.select({
-    has: speciesMetadata.hasSketchfabModels,
-  })
-    .from(speciesMetadata)
-    .where(eq(speciesMetadata.taxonSpecies, taxonSpecies))
-    .get();
-  if (!row) return null;
-  return row.has === null ? null : row.has;
+  const cache = getSpeciesCache(taxonSpecies);
+  if (!cache) return null;
+  return cache.hasModels;
 }

@@ -71,6 +71,16 @@ CREATE INDEX IF NOT EXISTS idx_images_hidden ON images (hidden);
 CREATE INDEX IF NOT EXISTS idx_reports_image ON reports (image_id);
 CREATE INDEX IF NOT EXISTS idx_reports_unresolved ON reports (image_id) WHERE resolved_at IS NULL;
 
+CREATE TABLE IF NOT EXISTS species_metadata (
+  taxon_species text PRIMARY KEY NOT NULL,
+  has_sketchfab_models integer,
+  sketchfab_hit_count integer,
+  sketchfab_last_checked_at integer,
+  sketchfab_hits_json text
+);
+CREATE INDEX IF NOT EXISTS idx_species_metadata_sketchfab_checked
+  ON species_metadata (sketchfab_last_checked_at);
+
 CREATE VIRTUAL TABLE IF NOT EXISTS images_fts USING fts5(
   image_id UNINDEXED,
   common_name,

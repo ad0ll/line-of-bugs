@@ -55,6 +55,27 @@ re-import. Don't paper over drift with phantom journal rows.
 - Source enum is `["inaturalist", "bugwood"]` (Smithsonian + USDA-ARS
   removed 2026-05-15).
 
+## Sketchfab enrichment runs out-of-band
+
+The `species_metadata` table caches per-species Sketchfab search results
+so prod's route handler can serve the browse panel without calling the
+Sketchfab API at request time. (Required because the Hetzner egress IP
+is bot-blocked by Akamai — live calls from prod always 405.)
+
+The cache is populated by a Windmill job on a residential IP — see
+`~/projects/windmill-main/docs/sketchfab-enrichment-setup.md`. It runs
+daily, so any new species added by `scripts/fetch_inaturalist.py` or
+`scripts/fetch_bugwood.py` will be dark on prod (button greys out) for
+up to 24 hours until the next scheduled run.
+
+**After running a fetcher that adds new species, manually trigger the
+Sketchfab enrichment job** (Windmill UI → "Sketchfab Enrichment
+(line-of-bugs)" → Run, or the one-off ssh command in the setup doc).
+Otherwise students don't see Sketchfab models for those species until
+the next morning. Local dev can run `.venv/bin/python -m
+scripts.sketchfab_enrichment` directly against the local DB (no Akamai
+block from a residential IP).
+
 ## Out-of-scope code
 
 Anything under `scripts/detect_subjects/` is a WIP ML pipeline. Don't

@@ -20,7 +20,8 @@ def _make_db(path: Path) -> None:
               taxon_species TEXT PRIMARY KEY,
               has_sketchfab_models INTEGER,
               sketchfab_hit_count INTEGER,
-              sketchfab_last_checked_at INTEGER
+              sketchfab_last_checked_at INTEGER,
+              sketchfab_hits_json TEXT
            )"""
     )
     conn.commit()
@@ -63,14 +64,87 @@ def test_upsert_metadata_writes_and_updates():
     with tempfile.TemporaryDirectory() as td:
         db = Path(td) / "t.db"
         _make_db(db)
-        upsert_metadata(db, "Apis mellifera",
-                        SpeciesResult(has_models=True, hit_count=5))
-        upsert_metadata(db, "Apis mellifera",
-                        SpeciesResult(has_models=False, hit_count=0))
+        # First write with hits — populates hits_json
+        upsert_metadata(
+            db, "Apis mellifera",
+            SpeciesResult(has_models=True, hit_count=5,
+                          hits=[{"uid": "u1", "name": "Bee", "matchedBy": "scientific"}]),
+        )
+        # Second write with no hits — clears hits_json to NULL
+        upsert_metadata(
+            db, "Apis mellifera",
+            SpeciesResult(has_models=False, hit_count=0, hits=[]),
+        )
         with sqlite3.connect(db) as conn:
             row = conn.execute(
-                "SELECT has_sketchfab_models, sketchfab_hit_count "
+                "SELECT has_sketchfab_models, sketchfab_hit_count, sketchfab_hits_json "
                 "FROM species_metadata WHERE taxon_species = ?",
                 ("Apis mellifera",),
             ).fetchone()
-        assert row == (0, 0)
+        assert row == (0, 0, None)
+
+
+def test_upsert_metadata_persists_hits_json():
+    with tempfile.TemporaryDirectory() as td:
+        db = Path(td) / "t.db"
+        _make_db(db)
+        hits = [
+            {"uid": "u1", "name": "Bee", "matchedBy": "both"},
+            {"uid": "u2", "name": "Bee 2", "matchedBy": "scientific"},
+        ]
+        upsert_metadata(
+            db, "Apis mellifera",
+            SpeciesResult(has_models=True, hit_count=2, hits=hits),
+        )
+        with sqlite3.connect(db) as conn:
+            row = conn.execute(
+                "SELECT sketchfab_hits_json FROM species_metadata WHERE taxon_species = ?",
+                ("Apis mellifera",),
+            ).fetchone()
+        import json
+        assert json.loads(row[0]) == hits
+
+
+def test_classify_trims_and_sorts_hits():
+    # Two hits: one common-only (relevant), one in both queries (relevant)
+    sci_only = {
+        "uid": "sci",
+        "name": "Apis mellifera scan",
+        "tags": [{"name": "insect"}],
+        "categories": [{"slug": "animals-pets"}],
+        "user": {"username": "etain", "displayName": "ETAIN"},
+        "thumbnails": {"images": [
+            {"width": 256, "height": 144, "url": "https://t/256"},
+            {"width": 1024, "height": 576, "url": "https://t/1024"},
+        ]},
+        "viewerUrl": "https://sketchfab.com/3d-models/sci",
+        "license": {"slug": "by"},
+    }
+    in_both = {
+        "uid": "both",
+        "name": "honey bee",
+        "tags": [{"name": "bee"}],
+        "categories": [{"slug": "animals-pets"}],
+        "user": {"username": "modeler"},
+        "thumbnails": {"images": [{"width": 256, "height": 144, "url": "https://t/b256"}]},
+        "viewerUrl": "https://sketchfab.com/3d-models/both",
+        "license": None,
+    }
+    with patch("scripts.sketchfab_enrichment._query") as mock_q:
+        mock_q.side_effect = [
+            [sci_only, in_both],  # scientific query
+            [in_both],             # common query
+        ]
+        result = classify_species("Apis mellifera", "honey bee", api_key="k")
+    assert result.has_models is True
+    assert result.hit_count == 2
+    # 'both' must sort first (strongest signal), then 'scientific'
+    assert [h["uid"] for h in result.hits] == ["both", "sci"]
+    # First-tier fields are present + trimmed correctly
+    assert result.hits[0]["matchedBy"] == "both"
+    assert result.hits[1]["matchedBy"] == "scientific"
+    assert result.hits[1]["thumbnailUrl"] == "https://t/256"  # 256-tier picked
+    assert result.hits[1]["author"] == "ETAIN"  # displayName preferred
+    assert result.hits[1]["authorUsername"] == "etain"
+    assert result.hits[0]["licenseSlug"] is None  # license: None case
+    assert result.hits[1]["licenseSlug"] == "by"
