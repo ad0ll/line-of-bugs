@@ -19,4 +19,8 @@ export interface SketchfabSearchResponse {
   /** Set true if either query returned ≥1 hit BEFORE relevance filtering.
    *  Lets the UI distinguish "Sketchfab has nothing" from "we filtered everything out". */
   rawHadResults: boolean;
+  /** Set by the API route from species_metadata. true/false reflect a prior
+   *  precache run; null/undefined means "never checked" — UI should treat as
+   *  "show button optimistically". Always present in route responses. */
+  precachedHasModels?: boolean | null;
 }

@@ -144,5 +144,5 @@ export function useSketchfabAvailability(scientific: string, common: string) {
   if (!data) return undefined;
   if (data.hits.length > 0) return true;
   // If precachedHasModels is explicitly false, no models. Otherwise treat as unknown.
-  return (data as { precachedHasModels?: boolean | null }).precachedHasModels !== false;
+  return data.precachedHasModels !== false;
 }
