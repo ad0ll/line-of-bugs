@@ -42,6 +42,7 @@ export default defineConfig({
             "tests/lib/order-colors.test.ts",
             "tests/lib/repeat-mode.test.ts",
             "tests/lib/session-pools.test.ts",
+            "tests/lib/sketchfab-search.test.ts",
             "tests/lib/subject.test.ts",
             "tests/lib/tokens.test.ts",
           ],
