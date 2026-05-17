@@ -96,6 +96,11 @@ export function useSketchfabPreloader(
             queryFn: ({ signal }) => fetchSketchfabWithTimeout(sci, com, signal),
             staleTime: 10 * 60_000,
             gcTime: 20 * 60_000,
+            // Preload is best-effort — don't retry on failure. Saves
+            // bandwidth on bad connections (3 species × 1 retry per slide
+            // change adds up) and the panel's own useQuery will retry
+            // on user-initiated open if it really matters.
+            retry: false,
           })
             .then(() => {
               if (ctrl.signal.aborted) return;

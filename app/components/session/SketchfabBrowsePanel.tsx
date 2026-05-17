@@ -74,6 +74,13 @@ export function SketchfabBrowsePanel({ scientific, common, open, onClose }: Prop
     enabled: open && !!scientific && !!common,
     staleTime: 10 * 60_000,
     gcTime: 20 * 60_000,
+    // Provider default is retry: 1, which doubles the timeout (5s + ~1s
+    // backoff + 5s = ~11s) before the timeout-specific copy renders.
+    // Skip the retry on SketchfabTimeoutError so users see "couldn't find
+    // in time" at the intended ~5s mark. Other errors (transient 502s,
+    // network blips) still get their one retry.
+    retry: (failureCount, err) =>
+      !(err instanceof SketchfabTimeoutError) && failureCount < 1,
   });
 
   if (renderState === "closed") return null;
@@ -198,6 +205,10 @@ export function useSketchfabAvailability(scientific: string, common: string) {
     enabled: !!scientific && !!common,
     staleTime: 10 * 60_000,
     gcTime: 20 * 60_000,
+    // Mirror the panel's retry policy so the toggle's grey-out timing
+    // matches the panel's "couldn't find in time" copy timing.
+    retry: (failureCount, err) =>
+      !(err instanceof SketchfabTimeoutError) && failureCount < 1,
   });
   // Tri-state: undefined (loading) | true (has hits or unchecked) | false (precache says none)
   if (!data) return undefined;
