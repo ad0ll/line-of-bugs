@@ -11,30 +11,52 @@ test.describe("home redesign", () => {
 
   test("filter rows render with all-or-chips empty state", async ({ page }) => {
     await page.goto("/");
+    // The "what is bug?" row replaces the old "bug type" + "species" rows; its
+    // empty-state combobox label still includes "all bug types" so the same
+    // selector matches.
     for (const label of ["all photo types", "all bug types", "all views", "all life stages", "all sexes"]) {
       await expect(page.getByRole("combobox", { name: new RegExp(label, "i") })).toBeVisible();
     }
   });
 
-  test("selecting a bug type narrows the pool count", async ({ page }) => {
+  test("selecting a bug type via WhatIsBugFilter narrows the pool count", async ({ page }) => {
     await page.goto("/");
     const poolText = () => page.locator(".home-pool-count").innerText();
     const before = await poolText();
+    // WhatIsBugFilter combobox: click it, type a partial query, pick the group.
     await page.getByRole("combobox", { name: /all bug types/i }).click();
-    await page.getByRole("option", { name: /butterflies/i }).click();
+    await page.getByPlaceholder(/type a bug type or species/i).fill("butter");
+    await page.waitForResponse((r) => r.url().includes("/api/search/insect"));
+    await page.getByRole("option").filter({ hasText: /butterflies/i }).first().click();
     // Wait for facets to refetch
     await page.waitForResponse((r) => r.url().includes("/api/facets") && r.status() === 200);
     const after = await poolText();
     expect(after).not.toBe(before);
-    expect(after).toContain("bugs in your session pool");
+    expect(after).toMatch(/bugs to draw|bugs are waiting/);
+  });
+
+  test("WhatIsBugFilter autocomplete shows groups + species", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("combobox", { name: /all bug types/i }).click();
+    await page.getByPlaceholder(/type a bug type or species/i).fill("but");
+    await page.waitForResponse((r) => r.url().includes("/api/search/insect"));
+    // Result list should populate with at least one option.
+    await expect(page.getByRole("option").first()).toBeVisible();
   });
 
   test("novelty change updates the pool count number", async ({ page }) => {
     await page.goto("/");
-    const before = await page.locator(".home-pool-count-num").innerText();
-    // Click 'never repeat species' radio
-    await page.getByRole("radio", { name: /never repeat species/i }).click();
+    // Wait for initial facet refresh to settle (SSR uses show-everything;
+    // default Phase D mode is never-repeat-animals, so the client fetches
+    // /api/facets once on mount to apply the novelty filter to the count).
     await page.waitForResponse((r) => r.url().includes("/api/facets"));
+    // Give state a tick to commit.
+    await page.waitForTimeout(150);
+    const before = await page.locator(".home-pool-count-num").innerText();
+    // Click 'include all photos' to flip away from the default "never repeat".
+    await page.getByRole("radio", { name: /include all photos/i }).click();
+    await page.waitForResponse((r) => r.url().includes("/api/facets"));
+    await page.waitForTimeout(150);
     const after = await page.locator(".home-pool-count-num").innerText();
     expect(after).not.toBe(before);
   });

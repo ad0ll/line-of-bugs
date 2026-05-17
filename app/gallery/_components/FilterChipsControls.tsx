@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { AllOrChipsFilter, type AllOrChipsOption } from "@/app/components/filters/AllOrChipsFilter";
-import { SpeciesAutocomplete } from "@/app/gallery/_components/SpeciesAutocomplete";
+import { WhatIsBugFilter } from "@/app/components/filters/WhatIsBugFilter";
 import type { FacetCount, FacetSnapshot } from "@/lib/queries/facets";
 import type { SubjectType } from "@/lib/subject";
 
@@ -86,9 +86,6 @@ export function FilterChipsControls({ initialSubject, initialFacets, institution
     count: facets.subject[s.value as "wild" | "specimen" | "captive"] ?? 0,
   }));
 
-  function addSpecies(t: string) { if (!species.includes(t)) setSpecies([...species, t]); }
-  function removeSpecies(t: string) { setSpecies(species.filter((s) => s !== t)); }
-
   return (
     <div className="gallery-filter-row">
       <AllOrChipsFilter
@@ -98,12 +95,12 @@ export function FilterChipsControls({ initialSubject, initialFacets, institution
         selected={subjects}
         onChange={setSubjects}
       />
-      <AllOrChipsFilter
-        label="bug type"
-        emptyLabel="all bug types"
-        options={asOptions(facets.taxonGroups)}
-        selected={groups}
-        onChange={setGroups}
+      <WhatIsBugFilter
+        selectedGroups={groups}
+        selectedSpecies={species}
+        onGroupsChange={setGroups}
+        onSpeciesChange={setSpecies}
+        totalCount={initialFacets.total}
       />
       <AllOrChipsFilter
         label="view"
@@ -133,9 +130,6 @@ export function FilterChipsControls({ initialSubject, initialFacets, institution
         selected={insts}
         onChange={setInsts}
       />
-      <div className="gallery-filter-row-species">
-        <SpeciesAutocomplete selected={species} onAdd={addSpecies} onRemove={removeSpecies} />
-      </div>
     </div>
   );
 }

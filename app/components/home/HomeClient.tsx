@@ -8,7 +8,7 @@ import { StartSessionButton } from "@/app/components/home/StartSessionButton";
 import { HeroBlock } from "@/app/components/home/HeroBlock";
 import { SocialRow } from "@/app/components/home/SocialRow";
 import { AllOrChipsFilter, type AllOrChipsOption } from "@/app/components/filters/AllOrChipsFilter";
-import { SpeciesAutocomplete } from "@/app/gallery/_components/SpeciesAutocomplete";
+import { WhatIsBugFilter } from "@/app/components/filters/WhatIsBugFilter";
 import { Tooltip } from "@/app/components/ui/Tooltip";
 import { CuteLadybug, WiltedFlower } from "@/app/components/icons";
 import { TOOLTIPS } from "@/lib/tooltips";
@@ -140,16 +140,6 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
   // Photo type rename: empty/all = no subject filter.
   const subjectTypeForStart = subjects.length === 1 ? (subjects[0] as SubjectType) : "all";
 
-  // The shared SpeciesAutocomplete exposes selected/onAdd/onRemove; adapt
-  // it to the value/onChange shape the rest of the home filters use.
-  function addSpecies(tag: string) {
-    if (species.includes(tag)) return;
-    setSpecies([...species, tag]);
-  }
-  function removeSpecies(tag: string) {
-    setSpecies(species.filter((s) => s !== tag));
-  }
-
   const poolCopyTemplate = useRef(pickPoolCopy());
 
   return (
@@ -182,13 +172,13 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
                   onChange={setSubjects}
                 />
               </FilterRow>
-              <FilterRow label="bug type">
-                <AllOrChipsFilter
-                  label="bug type"
-                  emptyLabel="all bug types"
-                  options={asOptions(facets.taxonGroups)}
-                  selected={groups}
-                  onChange={setGroups}
+              <FilterRow label="what is bug?">
+                <WhatIsBugFilter
+                  selectedGroups={groups}
+                  selectedSpecies={species}
+                  onGroupsChange={setGroups}
+                  onSpeciesChange={setSpecies}
+                  totalCount={initialFacetsRef.current.total}
                 />
               </FilterRow>
               <FilterRow label="view">
@@ -216,13 +206,6 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
                   options={asOptions(facets.sexes)}
                   selected={sexes}
                   onChange={setSexes}
-                />
-              </FilterRow>
-              <FilterRow label="species">
-                <SpeciesAutocomplete
-                  selected={species}
-                  onAdd={addSpecies}
-                  onRemove={removeSpecies}
                 />
               </FilterRow>
             </div>
