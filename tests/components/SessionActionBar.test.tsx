@@ -20,6 +20,8 @@ const baseProps = {
   onToggleFullscreen: noop,
   onReport: noop,
   onIntervalChange: noop,
+  sketchfabOpen: false,
+  onToggleSketchfab: noop,
 };
 
 describe("SessionActionBar", () => {
@@ -48,5 +50,23 @@ describe("SessionActionBar", () => {
     const screen = await render(<SessionActionBar {...baseProps} visible={false} />);
     const root = screen.container.firstChild as HTMLElement;
     expect(root.style.opacity).toBe("0");
+  });
+
+  it("renders a Sketchfab toggle button reflecting active state", async () => {
+    const onToggle = vi.fn();
+    const screen = await render(
+      <SessionActionBar {...baseProps} sketchfabOpen={false} onToggleSketchfab={onToggle} />,
+    );
+    const btn = screen.getByRole("button", { name: /sketchfab/i });
+    await expect.element(btn).not.toHaveClass("is-active");
+    await btn.click();
+    expect(onToggle).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks the Sketchfab button active when panel is open", async () => {
+    const screen = await render(
+      <SessionActionBar {...baseProps} sketchfabOpen={true} onToggleSketchfab={() => {}} />,
+    );
+    await expect.element(screen.getByRole("button", { name: /sketchfab/i })).toHaveClass("is-active");
   });
 });

@@ -282,6 +282,8 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
         onToggleFullscreen={toggleFullscreen}
         onReport={() => router.push(`/report/${encodeURIComponent(current.imageId)}`)}
         onIntervalChange={(s) => setIntervalSec(s)}
+        sketchfabOpen={false}
+        onToggleSketchfab={() => {}}
       />
       <Magnifier image={current} size={magnifier} bw={bw} />
       <EndOfSessionOverlay
