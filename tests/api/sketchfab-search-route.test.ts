@@ -18,6 +18,11 @@ describe("GET /api/sketchfab/search", () => {
     expect(r.status).toBe(400);
   });
 
+  it("400s when scientific is missing", async () => {
+    const r = await GET(new Request("http://x/api/sketchfab/search?common=bee"));
+    expect(r.status).toBe(400);
+  });
+
   it("500s when SKETCHFAB_API_KEY is missing", async () => {
     delete process.env.SKETCHFAB_API_KEY;
     const r = await GET(new Request("http://x/api/sketchfab/search?scientific=Apis&common=bee"));
