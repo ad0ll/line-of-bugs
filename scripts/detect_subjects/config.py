@@ -80,10 +80,11 @@ CROP_THUMB_MAX_EDGE = 512
 CROP_THUMB_QUALITY = 85
 
 # ─── Schema version ────────────────────────────────────────────────
+# v3 (2026-05-17): Phase 3 ML labeler — predicted_<label>_p + _unreliable columns
 # v2 (2026-05-17): subject_sharpness now mask-restricted (was bbox-only).
 #   New columns: top10pct_lap_mask, edge_density_mask_vs_bg.
 #   See experiments/blur_mask_features.py for the calibration.
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 # ─── Concurrency ───────────────────────────────────────────────────
 N_LOADER_THREADS = 16

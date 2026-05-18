@@ -56,6 +56,9 @@ class DetectionRow:
     text_label_score: Optional[float] = None
     gate_decision: Optional[str] = None
     distinct_subjects: list[dict] = field(default_factory=list)
+    # Phase 3 additions
+    predicted_mask_blur_unusable_p: Optional[float] = None
+    predicted_mask_blur_unusable_unreliable: Optional[bool] = None
 
 
 SCHEMA = pa.schema([
@@ -81,6 +84,8 @@ SCHEMA = pa.schema([
     ("subject_sharpness", pa.float32()),
     ("top10pct_lap_mask", pa.float32()),
     ("edge_density_mask_vs_bg", pa.float32()),
+    ("predicted_mask_blur_unusable_p", pa.float32()),
+    ("predicted_mask_blur_unusable_unreliable", pa.bool_()),
     ("bbox_min_edge_px", pa.float32()),
     ("bbox_long_edge_px", pa.float32()),
     ("bbox_touches_edge", pa.bool_()),
