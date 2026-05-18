@@ -144,7 +144,7 @@
   .rule-hint.rule-hint-empty { color: #666; background: none; border-left-color: #2a2a2a; }
   .rule-hint.rule-hint-empty em { color: #555; }
 
-  /* 4-column label grid (Phase 2a) */
+  /* 4-column label grid */
   .label-columns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
   .col { border: 1px solid #28252e; border-radius: 6px; padding: 6px; display: flex; flex-direction: column; gap: 3px; }
   .col-header { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #aaa; margin-bottom: 2px; }
@@ -301,7 +301,7 @@
 <script>
 const DATA = {{ data_json }};
 
-// 4-column label vocabulary (Phase 2a)
+// 4-column label vocabulary
 const COL1_BUTTONS = [
   { id: "bbox_correct-subject_not-clipped", label: "Correct\u00a0Not\u00a0Clipped", tip: "Bbox on right bug, full body. DEFAULT \u2014 gate-pass." },
   { id: "bbox_correct-subject_clipped",     label: "Correct\u00a0Clipped",          tip: "Right bug but body cut off by frame or bbox edge." },
