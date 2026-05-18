@@ -2640,39 +2640,25 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   color: var(--accent-pink);
 }
 
-/* Phase E (2026-05-17) — paused-state visual feedback.
-   Center overlay reads as a "pause card" pinned to the viewport, dimming
-   the image without hiding it entirely so the user knows what they're
-   paused on. Backdrop-blur softens detail so the eye relaxes during pause. */
-.session-paused-overlay {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background: color-mix(in srgb, var(--surface-0) 55%, transparent);
-  backdrop-filter: blur(3px);
-  pointer-events: none;
-  z-index: 30;
-  animation: pausedFadeIn 200ms cubic-bezier(0.22, 1, 0.36, 1);
+/* Phase F (2026-05-17) — paused state lives in the timer pill itself
+   (was a centered overlay that blurred the image; user feedback: the
+   overlay dimmed too much and felt heavy). Pink-on-surface treatment
+   keeps the pill prominent without occluding the bug. */
+.session-timer.is-paused {
+  background: color-mix(in srgb, var(--accent-pink) 35%, var(--surface-0));
+  color: var(--surface-0);
+  border-color: color-mix(in srgb, var(--accent-pink) 60%, transparent);
 }
-@keyframes pausedFadeIn { from { opacity: 0; } to { opacity: 1; } }
-.session-paused-glyph {
-  font-size: 4rem;
-  color: var(--accent-pink);
-  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--accent-pink) 50%, transparent));
+.session-timer-paused-glyph {
+  font-size: 1.1em;
+  margin-right: 0.35rem;
 }
-.session-paused-label {
-  font-family: var(--font-serif), serif;
+.session-timer-paused-label {
+  font-family: var(--font-display), serif;
   font-style: italic;
-  font-size: 1.2rem;
-  color: var(--text-primary);
-}
-.session-timer-paused-icon {
-  margin-right: 0.3rem;
-  color: var(--accent-pink);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
 }
 .session-timer-muted-icon {
   margin-left: 0.3rem;

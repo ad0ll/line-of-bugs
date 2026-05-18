@@ -32,13 +32,20 @@ export function Timer({ remainingMs, paused, muted = false }: Props) {
   return (
     <>
       <div
-        className="session-timer"
-        style={{ opacity: paused ? 0.55 : 1 }}
+        className={`session-timer ${paused ? "is-paused" : ""}`.trim()}
         data-testid="session-timer"
       >
-        {paused && <span aria-hidden className="session-timer-paused-icon">⏸</span>}
-        {fmt(remainingMs)}
-        {muted && <span aria-hidden className="session-timer-muted-icon">⊘</span>}
+        {paused ? (
+          <>
+            <span aria-hidden className="session-timer-paused-glyph">⏸</span>
+            <span className="session-timer-paused-label">paused</span>
+          </>
+        ) : (
+          <>
+            {fmt(remainingMs)}
+            {muted && <span aria-hidden className="session-timer-muted-icon">⊘</span>}
+          </>
+        )}
       </div>
       {announcement ? (
         <span className="u-sr-only" role="status" aria-live="polite" aria-atomic="true">

@@ -64,9 +64,12 @@ test.describe("session player polish (Phase B)", () => {
     await page.goto(`/session?session=${sessionId}&interval=60`);
     // Tap in image area (avoid action bar at bottom)
     await page.touchscreen.tap(207, 300);
-    await expect(page.locator(".session-paused-overlay")).toBeVisible();
+    // Phase F: paused state lives in the timer pill (the centered overlay was
+    // removed because it dimmed the bug too aggressively).
+    await expect(page.locator(".session-timer.is-paused")).toBeVisible();
+    await expect(page.locator(".session-timer-paused-label")).toHaveText("paused");
     await page.touchscreen.tap(207, 300);
-    await expect(page.locator(".session-paused-overlay")).toHaveCount(0);
+    await expect(page.locator(".session-timer.is-paused")).toHaveCount(0);
     await ctx.close();
   });
 

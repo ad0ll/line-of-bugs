@@ -18,21 +18,27 @@ describe("Timer", () => {
     await expect.element(screen.getByText("00:00")).toBeInTheDocument();
   });
 
-  it("dims when paused", async () => {
+  it("adds .is-paused class to the pill when paused (bolder treatment, no overlay)", async () => {
     const screen = await render(<Timer remainingMs={60_000} paused />);
     const root = screen.container.firstChild as HTMLElement;
-    expect(root.style.opacity).toBe("0.55");
+    expect(root.classList.contains("is-paused")).toBe(true);
   });
 
-  it("shows a pause icon prefix when paused", async () => {
+  it("renders ⏸ glyph + 'paused' label instead of the time when paused", async () => {
     const screen = await render(<Timer remainingMs={60_000} paused />);
-    const icon = screen.container.querySelector(".session-timer-paused-icon");
-    expect(icon?.textContent).toBe("⏸");
+    const glyph = screen.container.querySelector(".session-timer-paused-glyph");
+    const label = screen.container.querySelector(".session-timer-paused-label");
+    expect(glyph?.textContent).toBe("⏸");
+    expect(label?.textContent).toBe("paused");
+    // Time string should NOT be displayed while paused — pill is wholly
+    // the pause indicator.
+    expect(screen.container.textContent).not.toMatch(/\d\d:\d\d/);
   });
 
-  it("omits the pause icon prefix when not paused", async () => {
+  it("omits the pause glyph + label when not paused", async () => {
     const screen = await render(<Timer remainingMs={60_000} paused={false} />);
-    expect(screen.container.querySelector(".session-timer-paused-icon")).toBeNull();
+    expect(screen.container.querySelector(".session-timer-paused-glyph")).toBeNull();
+    expect(screen.container.querySelector(".session-timer-paused-label")).toBeNull();
   });
 
   it("renders SR status when announcement threshold is hit (30s)", async () => {
