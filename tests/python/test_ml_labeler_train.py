@@ -3,7 +3,6 @@ import json
 from pathlib import Path
 import numpy as np
 import polars as pl
-import pytest
 
 
 def _fake_parquet_and_labels(tmpdir: Path):
@@ -50,17 +49,7 @@ def _fake_parquet_and_labels(tmpdir: Path):
     return parquet_path, labels_path
 
 
-def _logistic_factory():
-    """Fast sklearn stand-in so the test does not require a TABPFN_TOKEN."""
-    from sklearn.linear_model import LogisticRegression
-    return LogisticRegression(max_iter=500, random_state=42)
-
-
-def test_train_blur_unusable_persists_model_and_metrics(tmp_path, monkeypatch):
-    import scripts.detect_subjects.ml_labeler.train as train_mod
-    # Patch _tabpfn_factory so the test runs without TabPFN model weights.
-    monkeypatch.setattr(train_mod, "_tabpfn_factory", _logistic_factory)
-
+def test_train_blur_unusable_persists_model_and_metrics(tmp_path):
     from scripts.detect_subjects.ml_labeler.train import train_label
     parquet_path, labels_path = _fake_parquet_and_labels(tmp_path)
     out_dir = tmp_path / "models" / "mask_blur_unusable"

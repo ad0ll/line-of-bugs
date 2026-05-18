@@ -1,4 +1,5 @@
-"""Per-label training — V1: scalar-arm TabPFN-v2 for mask_blur_unusable.
+"""Per-label training — V1: scalar-arm scikit-learn HistGradientBoostingClassifier
+(TabPFN-v2 deferred pending license token) for mask_blur_unusable.
 
 Loads framing_detections.parquet + labels.json, builds (X, y) for one label,
 runs 5x5 stratified CV, fits a final model on all data, persists joblib + metrics.
@@ -49,10 +50,14 @@ def _load_xy_for_label(
     return X, y, ids
 
 
-def _tabpfn_factory():
-    """Fresh TabPFNClassifier per CV fold (in-context, no shared state)."""
-    from tabpfn import TabPFNClassifier
-    return TabPFNClassifier(device="cpu", n_jobs=1, ignore_pretraining_limits=True)
+def _scalar_clf_factory():
+    """Fresh HistGradientBoostingClassifier per CV fold.
+
+    HGB handles NaN natively, needs no license token, and is competitive
+    with TabPFN-v2 below ~500 samples (TabPFN-v2 deferred pending license token).
+    """
+    from sklearn.ensemble import HistGradientBoostingClassifier
+    return HistGradientBoostingClassifier(random_state=42, max_iter=200)
 
 
 def train_label(
@@ -62,7 +67,7 @@ def train_label(
     out_dir: Optional[Path] = None,
     random_state: int = 42,
 ) -> dict:
-    """Train scalar-arm TabPFN classifier for `label`. Returns metrics dict."""
+    """Train scalar-arm HistGradientBoosting classifier for `label`. Returns metrics dict."""
     if out_dir is None:
         from scripts.detect_subjects.ml_labeler import MODELS_DIR
         out_dir = MODELS_DIR / label
@@ -80,7 +85,7 @@ def train_label(
         )
 
     t0 = time.perf_counter()
-    cv_metrics = cv_evaluate(_tabpfn_factory, X, y, n_splits=5, n_repeats=5,
+    cv_metrics = cv_evaluate(_scalar_clf_factory, X, y, n_splits=5, n_repeats=5,
                              random_state=random_state)
     cv_elapsed = time.perf_counter() - t0
     print(f"[train:{label}] CV ({cv_metrics['n_folds']} folds) in {cv_elapsed:.1f}s: "
@@ -88,12 +93,13 @@ def train_label(
           f"PR-AUC={cv_metrics['pr_auc_mean']:.3f}, Brier={cv_metrics['brier_mean']:.3f}")
 
     # Final model on all data
-    final_clf = _tabpfn_factory()
+    final_clf = _scalar_clf_factory()
     final_clf.fit(X, y)
     model_path = out_dir / "arm_scalar_latest.joblib"
     joblib.dump({
         "label": label,
         "arm": "scalar",
+        "clf_class": type(final_clf).__name__,
         "clf": final_clf,
         "feature_names": SCALAR_FEATURE_NAMES,
         "n_train": n_total,
