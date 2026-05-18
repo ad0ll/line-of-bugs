@@ -7,6 +7,7 @@ import {
   CuteBug,
   CuteLadybug,
   CuteRefresh,
+  GalleryIcon,
   SadBug,
   WiltedFlower,
 } from "@/app/components/icons";
@@ -19,6 +20,7 @@ describe("cute icons", () => {
     ["CuteBug", CuteBug],
     ["CuteLadybug", CuteLadybug],
     ["CuteRefresh", CuteRefresh],
+    ["GalleryIcon", GalleryIcon],
     ["SadBug", SadBug],
     ["WiltedFlower", WiltedFlower],
   ] as const)("renders %s as an img with aria-hidden + size", async (name, Cmp) => {

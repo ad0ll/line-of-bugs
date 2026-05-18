@@ -11,7 +11,7 @@ import { AllOrChipsFilter, type AllOrChipsOption } from "@/app/components/filter
 import { WhatIsBugFilter } from "@/app/components/filters/WhatIsBugFilter";
 import { DiceRoll, type DiceRollState } from "@/app/components/filters/DiceRoll";
 import { Tooltip } from "@/app/components/ui/Tooltip";
-import { CuteLadybug, WiltedFlower } from "@/app/components/icons";
+import { GalleryIcon, WiltedFlower } from "@/app/components/icons";
 import { TOOLTIPS } from "@/lib/tooltips";
 import type { RepeatMode } from "@/lib/repeat-mode";
 import { type SubjectType } from "@/lib/subject";
@@ -256,7 +256,7 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
             disabled={poolCount === 0}
           />
           <a href="/gallery" className="home-gallery-link">
-            <CuteLadybug size={22} className="home-gallery-link-icon" />
+            <GalleryIcon size={22} className="home-gallery-link-icon" />
             browse the gallery <span aria-hidden>→</span>
           </a>
         </div>

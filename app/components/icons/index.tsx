@@ -38,6 +38,13 @@ export const CuteFlower = makeIcon("cherry_blossom.svg", "cherry blossom");
 export const CuteLadybug = makeIcon("lady_beetle.svg", "ladybug");
 export const WiltedFlower = makeIcon("wilted_flower.svg", "wilted flower");
 
+// Phase F (2026-05-17) — gallery icon switched from the Fluent ladybug
+// (red + black palette clashed with the pink/lilac theme) to Fluent
+// hibiscus. Hibiscus shares the cherry-blossom's pink-with-yellow-center
+// five-petal silhouette, so the title + gallery CTA read as a kindred
+// brand pair.
+export const GalleryIcon = makeIcon("hibiscus.svg", "hibiscus");
+
 // Deprecated — kept exporting temporarily so callers can migrate; remove
 // in a follow-up commit once HomeClient + GalleryGrid stop importing them.
 export const CuteButterfly = makeIcon("butterfly.svg", "butterfly");
