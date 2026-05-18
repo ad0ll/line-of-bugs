@@ -51,9 +51,14 @@ def predict_labels_batched(
     # still emits a probability (defaulting to majority class) but it's
     # meaningless — these cards shouldn't appear in tab-specific views.
     # Leave their predicted_*_p as null so the UI can filter them out.
+    # Also exclude close-ups (zoom shots of body parts) — students won't
+    # see them in the gallery, so labels on them aren't useful.
+    from scripts.detect_subjects.ml_labeler.train import _load_non_drawable_ids
+    non_drawable = _load_non_drawable_ids()
     sam3_rows = df.filter(
         (pl.col("variant") == "sam3__sam3")
         & ~pl.col("framing_quality").is_in(["no_bug", "bug_too_small"])
+        & ~pl.col("image_id").is_in(list(non_drawable))
     )
     X = np.stack([scalar_feature_vector(row) for row in sam3_rows.iter_rows(named=True)])
     sam3_ids = sam3_rows["image_id"].to_list()

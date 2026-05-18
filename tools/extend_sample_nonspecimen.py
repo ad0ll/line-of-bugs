@@ -62,6 +62,7 @@ def pick_nonspecimen(n: int, seed: int = 42) -> list[dict]:
         rows = con.execute(
             f"SELECT {cols} FROM images "
             f"WHERE subject_state != 'specimen' "
+            f"  AND (view_label IS NULL OR view_label != 'close-up') "
             f"ORDER BY RANDOM() LIMIT ?",
             (n * 3,),
         ).fetchall()

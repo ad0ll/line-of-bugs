@@ -22,12 +22,32 @@ from scripts.detect_subjects.ml_labeler.features import (
 from scripts.detect_subjects.ml_labeler.evaluation import cv_evaluate
 
 
+def _load_non_drawable_ids() -> set[str]:
+    """image_ids the gallery will never show students, regardless of label.
+    Currently: bugwood close-ups (zoom shots of body parts — useless for
+    gesture drawing). Loaded from DB once per training run.
+    """
+    import sqlite3
+    db_path = Path("data/db/line-of-bugs.db")
+    if not db_path.exists():
+        return set()
+    con = sqlite3.connect(db_path)
+    try:
+        rows = con.execute(
+            "SELECT image_id FROM images WHERE view_label = 'close-up'"
+        ).fetchall()
+        return {r[0] for r in rows}
+    finally:
+        con.close()
+
+
 def _load_xy_for_label(
     parquet_path: Path, labels_path: Path, label: str,
 ) -> tuple[np.ndarray, np.ndarray, list[str]]:
     """Return X (n,12), y (n,), image_ids list. Only sam3__sam3 rows with a
     reviewed labels.json entry are included."""
     labels = json.loads(labels_path.read_text())
+    non_drawable = _load_non_drawable_ids()
     df = pl.read_parquet(parquet_path).filter(pl.col("variant") == "sam3__sam3")
     X_rows, y_rows, ids = [], [], []
     for row in df.iter_rows(named=True):
@@ -45,6 +65,10 @@ def _load_xy_for_label(
         # training would teach the classifier to fire on cards that aren't
         # in production AND poison the loss with NaN-feature rows.
         if row.get("framing_quality") in ("bug_too_small", "no_bug"):
+            continue
+        # Close-ups (bugwood view_label='close-up') are zoom shots of body
+        # parts — useless for gesture drawing, students won't see them.
+        if iid in non_drawable:
             continue
         # Determine label class — accept both new schema (col3) and legacy
         # schema (flags array) as sources of positives.
