@@ -89,8 +89,12 @@ SCHEMA_VERSION = 3
 # ─── Concurrency ───────────────────────────────────────────────────
 N_LOADER_THREADS = 16
 N_METRICS_PROCESSES = 16
-DETECT_BATCH_SIZE = 16
-SEGMENT_BATCH_SIZE = 8
+# Batched SAM3 inference: set >1 to opt in (sam3 wrappers expose
+# detect_batch/segment_batch). Default 1 = sequential — batched correctness
+# is verified but throughput on M5 Max unified memory hasn't been benchmarked
+# in isolation. See classify.py:_run_batched_loop.
+DETECT_BATCH_SIZE = 1
+SEGMENT_BATCH_SIZE = 1
 PARQUET_WRITE_BATCH = 50
 
 # ─── Pipeline component selection ─────────────────────────────────

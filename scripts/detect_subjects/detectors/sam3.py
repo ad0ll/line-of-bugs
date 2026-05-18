@@ -107,94 +107,124 @@ class Sam3Detector:
 
     @torch.no_grad()
     def detect(self, image: Image.Image, image_id: str | None = None) -> DetectionResult:
-        start = time.perf_counter()
-        W, H = image.width, image.height
+        """Single-image detect — thin wrapper over detect_batch for API compat."""
+        return self.detect_batch([image], [image_id])[0]
+
+    @torch.no_grad()
+    def detect_batch(
+        self, images: list[Image.Image], image_ids: list[str | None],
+    ) -> list[DetectionResult]:
+        """Batched detection: one model.forward() over N images, then per-image
+        post-processing. Cache hits are decoded without touching the GPU; the
+        remaining uncached images go through a single batched forward.
+
+        The text query is the same for every image (it's a property of the
+        detector instance), so we can pass `text=text_query` once and let the
+        processor broadcast — no per-image text needed.
+        """
+        if len(images) != len(image_ids):
+            raise ValueError(f"images ({len(images)}) and image_ids ({len(image_ids)}) length mismatch")
+        if not images:
+            return []
+
         text_query = self._text_query
-
-        # Disk cache: skip inference if (image_id, prompt, model_id) already processed.
         cache_key = _sam3_cache_key(text_query, self.model_id)
-        cache_path = SAM3_CACHE_DIR / f"{image_id}__{cache_key}.json" if image_id else None
-        cached = None
-        if cache_path is not None and cache_path.exists():
-            try:
-                cached = json.loads(cache_path.read_text())
-            except Exception:
-                cached = None  # corrupted; re-run
+        n = len(images)
 
-        if cached is not None:
-            boxes_list = cached["boxes"]
-            scores_list = cached["scores"]
-        else:
+        # Phase 1: cache check
+        cached_at: dict[int, dict] = {}
+        cache_paths: list[Path | None] = []
+        for i, image_id in enumerate(image_ids):
+            cache_path = (
+                SAM3_CACHE_DIR / f"{image_id}__{cache_key}.json" if image_id else None
+            )
+            cache_paths.append(cache_path)
+            if cache_path is not None and cache_path.exists():
+                try:
+                    cached_at[i] = json.loads(cache_path.read_text())
+                except Exception:
+                    pass  # corrupted; re-run below
+
+        # Phase 2: batched inference for uncached indices
+        # Per-image timing is meaningless in a batch — apportion the batch wall
+        # time evenly across the uncached members.
+        uncached_idx = [i for i in range(n) if i not in cached_at]
+        per_image_ms = {}
+
+        if uncached_idx:
+            t_batch = time.perf_counter()
+            sub_images = [images[i] for i in uncached_idx]
+            target_sizes = [(images[i].height, images[i].width) for i in uncached_idx]
+            # SAM3 requires text to be batched 1-to-1 with images — passing a
+            # single string with N images yields RuntimeError on cross-attn
+            # shape ('[N, ...]' invalid for input of size N*single_text).
+            # Repeat the same prompt N times.
             inputs = self.processor(
-                images=image,
-                text=text_query,
+                images=sub_images,
+                text=[text_query] * len(sub_images),
                 return_tensors="pt",
             ).to(self.device)
             if "pixel_values" in inputs:
                 inputs["pixel_values"] = inputs["pixel_values"].to(self.dtype)
-
             outputs = self.model(**inputs)
-
-            results = self.processor.post_process_instance_segmentation(
-                outputs,
-                threshold=self.box_threshold,
-                mask_threshold=0.5,
-                target_sizes=[(H, W)],
-            )[0]
-
-            boxes_tensor = results.get("boxes")
-            scores_tensor = results.get("scores")
-            if boxes_tensor is None or len(boxes_tensor) == 0:
-                boxes_list, scores_list = [], []
-            else:
-                boxes_list = boxes_tensor.cpu().tolist()
-                scores_list = scores_tensor.cpu().tolist()
-
-            if cache_path is not None:
-                try:
-                    cache_path.write_text(json.dumps({
-                        "boxes": boxes_list,
-                        "scores": scores_list,
-                    }))
-                except Exception:
-                    pass  # best-effort cache
-
-        elapsed_ms = int((time.perf_counter() - start) * 1000)
-
-        if not boxes_list:
-            return DetectionResult(
-                bbox_xywh_normalized=None,
-                confidence=None,
-                n_raw_detections=0,
-                n_distinct_detections=0,
-                detection_ms=elapsed_ms,
-                distinct_subjects=[],
-                text_label=None,
-                text_label_score=None,
+            results_per_image = self.processor.post_process_instance_segmentation(
+                outputs, threshold=self.box_threshold, mask_threshold=0.5,
+                target_sizes=target_sizes,
             )
+            batch_ms = int((time.perf_counter() - t_batch) * 1000)
+            apportioned = max(1, batch_ms // len(uncached_idx))
+            for j, i in enumerate(uncached_idx):
+                r = results_per_image[j]
+                boxes_t = r.get("boxes")
+                scores_t = r.get("scores")
+                if boxes_t is None or len(boxes_t) == 0:
+                    boxes_list, scores_list = [], []
+                else:
+                    boxes_list = boxes_t.cpu().tolist()
+                    scores_list = scores_t.cpu().tolist()
+                cached_at[i] = {"boxes": boxes_list, "scores": scores_list}
+                per_image_ms[i] = apportioned
+                cp = cache_paths[i]
+                if cp is not None:
+                    try:
+                        cp.write_text(json.dumps({"boxes": boxes_list, "scores": scores_list}))
+                    except Exception:
+                        pass
 
-        # Convert xyxy pixel → normalized xywh
-        distinct: list[tuple] = []
-        for (x1, y1, x2, y2), score in zip(boxes_list, scores_list):
-            nx = x1 / W
-            ny = y1 / H
-            nw = max(0.0, (x2 - x1) / W)
-            nh = max(0.0, (y2 - y1) / H)
-            # SAM 3 has no per-detection label; attribute all to the full query string
-            distinct.append((float(nx), float(ny), float(nw), float(nh),
-                             float(score), text_query))
-
-        # Sort by confidence descending; pick highest as primary
-        distinct.sort(key=lambda r: r[4], reverse=True)
-        primary = distinct[0]
-
-        return DetectionResult(
-            bbox_xywh_normalized=(primary[0], primary[1], primary[2], primary[3]),
-            confidence=primary[4],
-            n_raw_detections=len(distinct),
-            n_distinct_detections=len(distinct),
-            detection_ms=elapsed_ms,
-            distinct_subjects=distinct,
-            text_label=text_query,
-            text_label_score=primary[4],
-        )
+        # Phase 3: decode into DetectionResults in input order
+        out: list[DetectionResult] = []
+        for i in range(n):
+            data = cached_at[i]
+            boxes_list = data["boxes"]
+            scores_list = data["scores"]
+            W, H = images[i].width, images[i].height
+            ms = per_image_ms.get(i, 0)  # 0 for cache hits — load was negligible
+            if not boxes_list:
+                out.append(DetectionResult(
+                    bbox_xywh_normalized=None, confidence=None,
+                    n_raw_detections=0, n_distinct_detections=0,
+                    detection_ms=ms, distinct_subjects=[],
+                    text_label=None, text_label_score=None,
+                ))
+                continue
+            distinct: list[tuple] = []
+            for (x1, y1, x2, y2), score in zip(boxes_list, scores_list):
+                nx = x1 / W
+                ny = y1 / H
+                nw = max(0.0, (x2 - x1) / W)
+                nh = max(0.0, (y2 - y1) / H)
+                distinct.append((float(nx), float(ny), float(nw), float(nh),
+                                 float(score), text_query))
+            distinct.sort(key=lambda r: r[4], reverse=True)
+            primary = distinct[0]
+            out.append(DetectionResult(
+                bbox_xywh_normalized=(primary[0], primary[1], primary[2], primary[3]),
+                confidence=primary[4],
+                n_raw_detections=len(distinct),
+                n_distinct_detections=len(distinct),
+                detection_ms=ms,
+                distinct_subjects=distinct,
+                text_label=text_query,
+                text_label_score=primary[4],
+            ))
+        return out
