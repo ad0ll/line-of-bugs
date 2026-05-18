@@ -413,8 +413,10 @@ function _refreshTabStrip() {
       const lbl = LABELS[r.image_id];
       const isReviewed = lbl && lbl.reviewed_at;
       const isUnsure = lbl && lbl.unsure;
-      if (!isReviewed && r[probKey] != null) unreviewed++;
-      if (isUnsure && r[probKey] != null) unsure++;
+      const hasPrediction = r[probKey] != null && !Number.isNaN(r[probKey]);
+      if (!hasPrediction) continue;
+      if (!isReviewed) unreviewed++;
+      if (isUnsure) unsure++;
     }
     const unsureFrag = unsure > 0 ? ` · ${unsure}?` : '';
     const m = ML_METRICS[label];
@@ -848,6 +850,18 @@ function render() {
   // on cards the student will actually see.
   if (!showTooSmall) {
     rows = rows.filter(r => r.framing_quality !== "bug_too_small");
+  }
+  // On a tab view, hide cards with no predicted_p for the active label.
+  // These are no_bug / no-bbox cards where the model can't predict anything
+  // meaningful — labeling blur/contrast on a non-existent subject makes no
+  // sense, and they otherwise pollute the uncertainty sort (predicted p=0
+  // → max distance from 0.5 → sorts first under "uncertainty desc").
+  if (activeLabel) {
+    const probKey = "predicted_" + activeLabel + "_p";
+    rows = rows.filter(r => {
+      const p = r[probKey];
+      return p != null && !Number.isNaN(p);
+    });
   }
   if (rf !== "all") {
     rows = rows.filter(r => {

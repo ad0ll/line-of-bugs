@@ -46,7 +46,15 @@ def predict_labels_batched(
     bundles = {lbl: _load_bundle(lbl) for lbl in labels}
 
     df = pl.read_parquet(parquet_path)
-    sam3_rows = df.filter(pl.col("variant") == "sam3__sam3")
+    # Restrict to sam3__sam3 rows that have a labelable subject. no_bug +
+    # too_small cards have no bbox/mask, so most features are NaN. HGB
+    # still emits a probability (defaulting to majority class) but it's
+    # meaningless — these cards shouldn't appear in tab-specific views.
+    # Leave their predicted_*_p as null so the UI can filter them out.
+    sam3_rows = df.filter(
+        (pl.col("variant") == "sam3__sam3")
+        & ~pl.col("framing_quality").is_in(["no_bug", "bug_too_small"])
+    )
     X = np.stack([scalar_feature_vector(row) for row in sam3_rows.iter_rows(named=True)])
     sam3_ids = sam3_rows["image_id"].to_list()
 

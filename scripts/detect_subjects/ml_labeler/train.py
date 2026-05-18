@@ -40,10 +40,11 @@ def _load_xy_for_label(
         # to learn from, so we exclude it from training entirely.
         if lbl.get("unsure"):
             continue
-        # too_small cards never reach the gallery (gate rejects them before
-        # students see them). Including them in training would teach the
-        # classifier to fire on cards that won't appear in production.
-        if row.get("framing_quality") == "bug_too_small":
+        # too_small + no_bug cards have no labelable subject — the gallery
+        # gate rejects them and most features are NaN. Including them in
+        # training would teach the classifier to fire on cards that aren't
+        # in production AND poison the loss with NaN-feature rows.
+        if row.get("framing_quality") in ("bug_too_small", "no_bug"):
             continue
         # Determine label class — accept both new schema (col3) and legacy
         # schema (flags array) as sources of positives.

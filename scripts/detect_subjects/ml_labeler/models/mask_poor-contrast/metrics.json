@@ -1,14 +1,14 @@
 {
   "label": "mask_poor-contrast",
-  "n_total": 296,
-  "n_positives": 20,
+  "n_total": 313,
+  "n_positives": 19,
   "arm_scalar": {
-    "mcc_mean": 0.3865796710257132,
-    "mcc_std": 0.1836212192508562,
-    "pr_auc_mean": 0.4942000426164163,
-    "brier_mean": 0.06339395234040562,
+    "mcc_mean": 0.3998078362679833,
+    "mcc_std": 0.2632159260815066,
+    "pr_auc_mean": 0.5861852296724952,
+    "brier_mean": 0.05307681211413099,
     "n_folds": 25
   },
-  "trained_at": 1779123177,
-  "cv_elapsed_s": 30.3
+  "trained_at": 1779123699,
+  "cv_elapsed_s": 34.6
 }
