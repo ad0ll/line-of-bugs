@@ -18,6 +18,7 @@ from scripts.detect_subjects.metrics import (
     bbox_area_ratio_normalized,
     boundary_sharpness,
     lab_delta_e_mask_vs_background,
+    lab_delta_e_p80_inside_vs_outside_mean,
     offcenter_normalized,
 )
 
@@ -65,18 +66,23 @@ def compute_mask_features(
 
     Returns a dict with keys (None when mask is None/empty):
       mask_area_ratio    — fraction of image pixels inside mask
-      lab_delta_e        — mean LAB color difference between mask interior and exterior
+      lab_delta_e        — mean LAB color difference between mask mean and outside mean
+      lab_delta_e_p80    — 80th-percentile per-pixel LAB ΔE from outside mean. Catches
+                           body contrast that lab_delta_e misses when transparent regions
+                           (dragonfly wings) dominate the mask. See
+                           tools/poor_contrast_p80_validation.py for the calibration.
       boundary_sharpness — mean Sobel gradient magnitude along mask boundary
     """
     if mask is None:
         return {"mask_area_ratio": None, "lab_delta_e": None,
-                "boundary_sharpness": None}
+                "lab_delta_e_p80": None, "boundary_sharpness": None}
     if not mask.any():
         return {"mask_area_ratio": 0.0, "lab_delta_e": None,
-                "boundary_sharpness": None}
+                "lab_delta_e_p80": None, "boundary_sharpness": None}
     return {
         "mask_area_ratio": float(mask.sum()) / float(mask.size),
         "lab_delta_e": lab_delta_e_mask_vs_background(rgb, mask),
+        "lab_delta_e_p80": lab_delta_e_p80_inside_vs_outside_mean(rgb, mask),
         "boundary_sharpness": boundary_sharpness(rgb, mask),
     }
 

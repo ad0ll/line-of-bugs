@@ -60,6 +60,32 @@ def lab_delta_e_mask_vs_background(rgb: np.ndarray, mask: np.ndarray) -> float:
     return float(np.linalg.norm(mean_in - mean_out))
 
 
+def lab_delta_e_p80_inside_vs_outside_mean(
+    rgb: np.ndarray, mask: np.ndarray,
+) -> float:
+    """80th percentile of per-pixel LAB ΔE between inside-pixels and the
+    outside MEAN. Captures body contrast even when wings/transparent regions
+    bias the mask-average toward background.
+
+    Why p80 specifically: the body is typically 10-40% of the mask area for
+    dragonflies (the rest being wings); p80 sits firmly inside that body
+    region. p50/p95 are alternatives — p50 captures the dominant region
+    (often wings = low contrast, missing the body); p95 captures only the
+    most extreme pixels (sensitive to noise / specular highlights). p80
+    empirically balances signal and stability — see
+    tools/poor_contrast_p80_validation.py for the 391-card sweep.
+    """
+    if rgb.dtype != np.uint8:
+        rgb = rgb.astype(np.uint8)
+    if not mask.any() or not (~mask).any():
+        return 0.0
+    lab = rgb2lab(rgb / 255.0)
+    mean_out = lab[~mask].mean(axis=0)
+    in_pixels = lab[mask]
+    per_pixel_dE = np.linalg.norm(in_pixels - mean_out, axis=1)
+    return float(np.percentile(per_pixel_dE, 80))
+
+
 def boundary_sharpness(rgb: np.ndarray, mask: np.ndarray) -> float:
     """Mean Sobel gradient magnitude along the mask boundary."""
     if not mask.any():

@@ -110,11 +110,12 @@ def _build_record_for_image(
 
     mask_iou = seg.iou_score if seg else None
     rgb_np = np.array(im) if det.bbox_xywh_normalized is not None else None
-    mask_area = d_e = sharp = None
+    mask_area = d_e = d_e_p80 = sharp = None
     if mask is not None and mask.any():
         mf = compute_mask_features(mask, rgb_np)
         mask_area = mf["mask_area_ratio"]
         d_e = mf["lab_delta_e"]
+        d_e_p80 = mf["lab_delta_e_p80"]
         sharp = mf["boundary_sharpness"]
     subj_sharp = compute_subject_sharpness(rgb_np, det.bbox_xywh_normalized, W, H, mask=mask)
     top10_lap_mask = compute_top10pct_lap_masked(rgb_np, mask)
@@ -156,14 +157,16 @@ def _build_record_for_image(
         bbox_long_edge_px=bbox_long_edge_px,
         n_distinct_detections=det.n_distinct_detections,
         n_in_primary_bbox=n_in_primary, mask_area_ratio=mask_area,
-        lab_delta_e=d_e, bbox_touches_edge=bbox_touches_edge,
+        lab_delta_e=d_e, lab_delta_e_p80=d_e_p80,
+        bbox_touches_edge=bbox_touches_edge,
     )
     quality = classify_framing(
         confidence=det.confidence, bbox_area_ratio=bbox_area,
         bbox_long_edge_px=bbox_long_edge_px,
         n_distinct_detections=det.n_distinct_detections,
         n_in_primary_bbox=n_in_primary, mask_area_ratio=mask_area,
-        lab_delta_e=d_e, bbox_touches_edge=bbox_touches_edge,
+        lab_delta_e=d_e, lab_delta_e_p80=d_e_p80,
+        bbox_touches_edge=bbox_touches_edge,
     )
     _bbox_content_count = "bbox-content_single"
     _bbox_too_small = False
@@ -208,7 +211,8 @@ def _build_record_for_image(
         confidence=det.confidence,
         bbox_area_ratio=bbox_area, offcenter=offc,
         mask_area_ratio=mask_area, mask_iou_score=mask_iou,
-        lab_delta_e=d_e, boundary_sharpness=sharp,
+        lab_delta_e=d_e, lab_delta_e_p80=d_e_p80,
+        boundary_sharpness=sharp,
         subject_sharpness=subj_sharp,
         top10pct_lap_mask=top10_lap_mask,
         edge_density_mask_vs_bg=edge_dens_ratio,
@@ -428,11 +432,12 @@ def run_v1_on_sample(
                 mask_iou = seg.iou_score if seg else None
                 # rgb_np is needed for mask features and subject sharpness; build once.
                 rgb_np = np.array(im) if det.bbox_xywh_normalized is not None else None
-                mask_area = d_e = sharp = None
+                mask_area = d_e = d_e_p80 = sharp = None
                 if mask is not None and mask.any():
                     mf = compute_mask_features(mask, rgb_np)
                     mask_area = mf["mask_area_ratio"]
                     d_e = mf["lab_delta_e"]
+                    d_e_p80 = mf["lab_delta_e_p80"]
                     sharp = mf["boundary_sharpness"]
                 # Subject sharpness — schema v2: mask-restricted Laplacian variance
                 # (was bbox-only). Mask-restriction empirically beats bbox-only
@@ -495,6 +500,7 @@ def run_v1_on_sample(
                     n_in_primary_bbox=n_in_primary,
                     mask_area_ratio=mask_area,
                     lab_delta_e=d_e,
+                    lab_delta_e_p80=d_e_p80,
                     bbox_touches_edge=bbox_touches_edge,
                 )
                 quality = classify_framing(
@@ -505,6 +511,7 @@ def run_v1_on_sample(
                     n_in_primary_bbox=n_in_primary,
                     mask_area_ratio=mask_area,
                     lab_delta_e=d_e,
+                    lab_delta_e_p80=d_e_p80,
                     bbox_touches_edge=bbox_touches_edge,
                 )
 
@@ -556,7 +563,8 @@ def run_v1_on_sample(
                     confidence=det.confidence,
                     bbox_area_ratio=bbox_area, offcenter=offc,
                     mask_area_ratio=mask_area, mask_iou_score=mask_iou,
-                    lab_delta_e=d_e, boundary_sharpness=sharp,
+                    lab_delta_e=d_e, lab_delta_e_p80=d_e_p80,
+                    boundary_sharpness=sharp,
                     subject_sharpness=subj_sharp,
                     top10pct_lap_mask=top10_lap_mask,
                     edge_density_mask_vs_bg=edge_dens_ratio,

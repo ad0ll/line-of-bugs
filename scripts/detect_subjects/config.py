@@ -58,7 +58,8 @@ CLASSIFY_HIDDEN_CONF       = 0.05  # 2026-05-15: tuned 0.20 → 0.05 via grid sw
 CLASSIFY_HIDDEN_AREA       = 0.02
 CLASSIFY_WIDE_AREA         = 0.20
 CLASSIFY_TIGHT_AREA        = 0.50
-CLASSIFY_CAMOUFLAGED_DELTA = 10.5  # 2026-05-15: tuned 8.0 → 10.5 via grid sweep against manual labels (F1 0.33 → 0.39). Catches a few more genuinely-low-contrast bugs the old threshold missed.
+CLASSIFY_CAMOUFLAGED_DELTA = 12.0  # 2026-05-18: tuned 10.5 → 12.0 alongside CLASSIFY_CAMOUFLAGED_P80 (new). AND rule (dE<12 AND p80<30) replaces the single-threshold rule. F1 0.413 → 0.453, dragonfly FPs 7 → 2 (-71%). See tools/poor_contrast_p80_validation.py.
+CLASSIFY_CAMOUFLAGED_P80 = 30.0  # 2026-05-18: second leg of poor-contrast rule — body-contrast metric that handles transparent wings. See metrics.lab_delta_e_p80_inside_vs_outside_mean.
 CLASSIFY_BUG_TOO_SMALL_EDGE_PX = 512
 BBOX_EDGE_TOLERANCE_NORMALIZED = 0.014  # 2026-05-15: tuned 0.005 → 0.014 (F1 0.36 → 0.49). Still poor recall because user-clipped bugs often have bboxes far from the frame edge (bug body extends past bbox) — fundamental fix would require a mask-edge-proximity metric, not just bbox.
 # Bbox-selection rule (the bark-beetle fix): prefer larger high-confidence bboxes over
@@ -84,7 +85,7 @@ CROP_THUMB_QUALITY = 85
 # v2 (2026-05-17): subject_sharpness now mask-restricted (was bbox-only).
 #   New columns: top10pct_lap_mask, edge_density_mask_vs_bg.
 #   See experiments/blur_mask_features.py for the calibration.
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4  # v4: lab_delta_e_p80 added (transparent-wing-aware contrast metric).
 
 # ─── Concurrency ───────────────────────────────────────────────────
 N_LOADER_THREADS = 16

@@ -8,6 +8,7 @@ def test_predicted_column_in_schema():
     assert "predicted_mask_blur_unusable_unreliable" in field_names
 
 
-def test_schema_version_3():
+def test_schema_version_4():
+    """v4 adds lab_delta_e_p80 for the transparent-wing-aware poor-contrast rule."""
     from scripts.detect_subjects.config import SCHEMA_VERSION
-    assert SCHEMA_VERSION == 3
+    assert SCHEMA_VERSION == 4

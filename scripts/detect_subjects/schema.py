@@ -26,6 +26,7 @@ class DetectionRow:
     mask_area_ratio: Optional[float]
     mask_iou_score: Optional[float]
     lab_delta_e: Optional[float]
+    lab_delta_e_p80: Optional[float]  # schema_version >= 4: per-pixel ΔE p80 (transparent-wing-aware)
     boundary_sharpness: Optional[float]
     subject_sharpness: Optional[float]  # schema_version >= 2: mask-restricted Laplacian variance
     top10pct_lap_mask: Optional[float]   # schema_version >= 2: ML labeler input
@@ -80,6 +81,7 @@ SCHEMA = pa.schema([
     ("mask_area_ratio", pa.float32()),
     ("mask_iou_score", pa.float32()),
     ("lab_delta_e", pa.float32()),
+    ("lab_delta_e_p80", pa.float32()),
     ("boundary_sharpness", pa.float32()),
     ("subject_sharpness", pa.float32()),
     ("top10pct_lap_mask", pa.float32()),

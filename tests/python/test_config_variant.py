@@ -11,9 +11,9 @@ def test_variant_tag_concatenates_detector_and_segmenter():
 
 
 def test_default_variants_are_current_models():
-    """At Phase 1 we still default to the existing combo."""
-    assert DETECTOR_VARIANT == "grounding_dino"
-    assert SEGMENTER_VARIANT == "insectsam"
+    """Production default (post Phase 2): both detector and segmenter are sam3."""
+    assert DETECTOR_VARIANT == "sam3"
+    assert SEGMENTER_VARIANT == "sam3"
 
 
 def test_default_variants_are_registered():

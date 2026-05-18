@@ -24,6 +24,7 @@ from scripts.detect_subjects.config import (
     CLASSIFY_HIDDEN_AREA,
     CLASSIFY_WIDE_AREA,
     CLASSIFY_CAMOUFLAGED_DELTA,
+    CLASSIFY_CAMOUFLAGED_P80,
     CLASSIFY_BUG_TOO_SMALL_EDGE_PX,
 )
 
@@ -58,6 +59,7 @@ def suggest_labels(
     n_in_primary_bbox: int,
     mask_area_ratio: Optional[float],
     lab_delta_e: Optional[float],
+    lab_delta_e_p80: Optional[float] = None,
     bbox_touches_edge: Optional[bool] = None,
 ) -> list[str]:
     """Return list of new-vocab Column 2 (bbox-content_*) and Column 3 (mask_*) labels."""
@@ -88,9 +90,17 @@ def suggest_labels(
     if not has_content_rejection:
         out.append("bbox-content_single")
 
-    if (mask_area_ratio is not None and lab_delta_e is not None
-            and lab_delta_e < CLASSIFY_CAMOUFLAGED_DELTA):
-        out.append("mask_poor-contrast")
+    # AND-rule for poor-contrast: BOTH the mask-mean-vs-bg-mean ΔE must be
+    # low AND the p80 per-pixel ΔE must be low. The AND requires both
+    # signals to agree — empirically eliminates 71% of dragonfly false-positives
+    # (transparent wings drag the mean inside toward background, but the body's
+    # p80 stays high). When lab_delta_e_p80 is None (pre-v4 parquet rows) we
+    # degrade gracefully to the old single-metric behavior so we don't lose
+    # rule output until the row is recomputed.
+    if mask_area_ratio is not None and lab_delta_e is not None and \
+            lab_delta_e < CLASSIFY_CAMOUFLAGED_DELTA:
+        if lab_delta_e_p80 is None or lab_delta_e_p80 < CLASSIFY_CAMOUFLAGED_P80:
+            out.append("mask_poor-contrast")
 
     return out
 
@@ -130,6 +140,7 @@ def classify_framing(
     n_distinct_detections: int,
     mask_area_ratio: Optional[float],
     lab_delta_e: Optional[float],
+    lab_delta_e_p80: Optional[float] = None,
     bbox_touches_edge: Optional[bool] = None,
     n_in_primary_bbox: int = 1,
 ) -> str:
@@ -146,6 +157,7 @@ def classify_framing(
         n_in_primary_bbox=n_in_primary_bbox,
         mask_area_ratio=mask_area_ratio,
         lab_delta_e=lab_delta_e,
+        lab_delta_e_p80=lab_delta_e_p80,
         bbox_touches_edge=bbox_touches_edge,
     )
     prim = primary_label(labels)
