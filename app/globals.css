@@ -1886,6 +1886,14 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   font-size: 13px;
 }
 .session-source-chip-line-species { font-style: italic; }
+/* Phase F (2026-05-17) — meta row inside the source chip; same layout
+   as `.grid-item-meta-row` so the session view mirrors gallery cards. */
+.session-source-chip-meta-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  flex-wrap: wrap;
+}
 
 /* Edge-positioned prev/next buttons — large invisible click targets on
    the left and right viewport edges, revealed on chrome hover. */

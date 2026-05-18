@@ -18,13 +18,40 @@ const img: Image = {
 };
 
 describe("SourceInfoChip", () => {
-  it("renders order badge + species + photographer + institution", async () => {
+  it("renders order badge + species + photographer + institution chip", async () => {
     const screen = await render(<SourceInfoChip image={img} visible />);
     // Common name moved to SessionTitle; chip carries scientific + attribution
     await expect.element(screen.getByText(/Harmonia axyridis/i)).toBeInTheDocument();
     await expect.element(screen.getByText(/Coleoptera/i)).toBeInTheDocument();
     await expect.element(screen.getByText(/Marie Cerda/i)).toBeInTheDocument();
-    await expect.element(screen.getByText(/iNaturalist/i)).toBeInTheDocument();
+    // Institution renders as a TileMetaChips pill (parity with gallery)
+    await expect.element(screen.getByText(/iNaturalist/i).first()).toBeInTheDocument();
+  });
+
+  it("renders the source name (Bugwood / iNaturalist) as a chip line", async () => {
+    const bw: Image = { ...img, source: "bugwood" };
+    const screen = await render(<SourceInfoChip image={bw} visible />);
+    await expect.element(screen.getByText(/Bugwood/i)).toBeInTheDocument();
+  });
+
+  it("renders the license code pill when present", async () => {
+    const screen = await render(<SourceInfoChip image={img} visible />);
+    const badge = screen.container.querySelector(".grid-item-license");
+    expect(badge?.textContent).toBe("cc-by-4.0");
+  });
+
+  it("renders TileMetaChips with life stage / sex / institution when set", async () => {
+    const detailed: Image = { ...img, lifeStage: "adult", sex: "female" };
+    const screen = await render(<SourceInfoChip image={detailed} visible />);
+    const chips = Array.from(
+      screen.container.querySelectorAll(".grid-item-meta-chip"),
+    );
+    // Order: stage → sex → institution
+    expect(chips.map((c) => c.textContent)).toEqual([
+      "adult",
+      "female",
+      "iNaturalist",
+    ]);
   });
 
   it("hides via opacity when visible=false", async () => {
