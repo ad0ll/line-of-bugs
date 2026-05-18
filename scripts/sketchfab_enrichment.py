@@ -77,32 +77,34 @@ def _load_api_key() -> str:
     )
 
 
-# Sketchfab fronts on CloudFront (NOT Akamai despite older comments).
-#   429 — edge rate-limit (no Retry-After header; body is `{"detail":"Too many requests."}`)
-#   408/502/503/504 — `x-cache: Error from cloudfront`, origin-fetch failure
-#   405 — observed on certain multi-word queries (e.g. "Cactopinus desertus
-#         bark beetle"). The `Allow: GET, HEAD, OPTIONS` header makes it
-#         look like a wrong-method error, but we send GET — so this is
-#         almost certainly the CloudFront/WAF bot-filter on certain query
-#         shapes. Whatever the mechanism, the empty body means we have
-#         no real answer and MUST skip rather than upserting has_models=False.
-# All five are transient — the caller SKIPS the species so last_checked_at
-# stays old and the next run retries. Previously the script only treated
-# 429/503 as rate-limited and let 408/405 fall through to a "zero hits"
-# upsert, silently poisoning the cache.
-RATE_LIMIT_STATUSES = {405, 408, 429, 502, 503, 504}
-
-
 class RateLimitedError(Exception):
-    """Raised on a transient Sketchfab failure (rate-limit or CDN-origin timeout)."""
+    """Raised whenever Sketchfab failed to give us a real answer — any non-200
+    HTTP status, any network/parse exception. The caller MUST skip the
+    species rather than upserting `has_models=False` from a non-answer.
+
+    Known reasons observed in the wild (Sketchfab fronts on CloudFront, NOT
+    Akamai despite older comments):
+      - 429 = edge rate-limit (no Retry-After; body `{"detail":"Too many requests."}`)
+      - 408/502/503/504 = `x-cache: Error from cloudfront`, origin-fetch failure
+      - 405 = CloudFront/WAF bot-filter on certain multi-word queries
+              (e.g. "Cactopinus desertus bark beetle"). Misleading
+              `Allow: GET, HEAD, OPTIONS` header makes it look like a
+              wrong-method error, but we send GET.
+    """
 
 
 def _query(q: str, api_key: str, count: int = 24) -> list[dict]:
-    """One Sketchfab search call. Returns first-page results or [].
+    """One Sketchfab search call. Returns first-page results, or [] when
+    Sketchfab gave us a real 200 response saying "no models match" — which
+    is the ONLY way the caller is allowed to mark `has_models=False`.
 
-    Raises RateLimitedError on 408/429/502/503/504 so the caller can SKIP the
-    species rather than poison the precache with a false negative. Other
-    non-200s (e.g. 404) are logged and treated as zero hits.
+    Any non-200 status OR any exception → RateLimitedError. The caller skips
+    the species so last_checked_at stays old and the next run retries.
+    This is deliberately defensive — enumerating "transient" status codes
+    one-by-one (the prior approach) cache-poisoned 2300 species when
+    Sketchfab started returning HTTP 405 on multi-word queries, because
+    405 wasn't in the allowlist. Fail-closed eliminates that entire bug
+    class — only a clean 200 with parsed JSON is allowed to write a row.
     """
     try:
         r = requests.get(
@@ -111,18 +113,20 @@ def _query(q: str, api_key: str, count: int = 24) -> list[dict]:
             headers={"Authorization": f"Token {api_key}"},
             timeout=20,
         )
-        if r.status_code in RATE_LIMIT_STATUSES:
-            raise RateLimitedError(f"HTTP {r.status_code}")
-        if r.status_code != 200:
-            log.warning("query %r → HTTP %d (treating as zero hits — cache may be poisoned)",
-                        q, r.status_code)
-            return []
-        return r.json().get("results", []) or []
-    except RateLimitedError:
-        raise
     except Exception as e:
-        log.warning("query %r failed: %s", q, e)
-        return []
+        log.warning("query %r request failed: %s (skipping)", q, e)
+        raise RateLimitedError(f"network error: {e}") from e
+
+    if r.status_code != 200:
+        log.warning("query %r → HTTP %d (skipping species, will retry next run)",
+                    q, r.status_code)
+        raise RateLimitedError(f"HTTP {r.status_code}")
+
+    try:
+        return r.json().get("results", []) or []
+    except Exception as e:
+        log.warning("query %r → 200 but non-JSON / unparseable: %s (skipping)", q, e)
+        raise RateLimitedError(f"parse error: {e}") from e
 
 
 def _classify_match(hit: dict, scientific: str, common: str) -> str | None:

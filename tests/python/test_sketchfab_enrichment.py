@@ -156,16 +156,47 @@ def test_classify_trims_and_sorts_hits():
     assert result.hits[1]["licenseSlug"] == "by"
 
 
-@pytest.mark.parametrize("status", [405, 408, 429, 502, 503, 504])
-def test_query_raises_rate_limited_on_transient_status(status):
-    """405 (CloudFront bot-filter for some query shapes), 408 (origin timeout),
-    429 (edge rate-limit), 502/503/504 (origin unreachable) must skip the
-    species rather than poison the cache with `has_models=False` from a
-    non-answer."""
+@pytest.mark.parametrize("status", [400, 401, 403, 404, 405, 408, 421, 429, 500, 502, 503, 504])
+def test_query_raises_rate_limited_on_any_non_200(status):
+    """Fail-closed: ANY non-200 → RateLimitedError → species skipped.
+    Enumerating "known transient" codes (the old approach) cache-poisoned
+    2300 species when 405 wasn't in the list. Anything that isn't a clean
+    200 must skip, regardless of code."""
     fake_resp = MagicMock(status_code=status)
     with patch("scripts.sketchfab_enrichment.requests.get", return_value=fake_resp):
         with pytest.raises(RateLimitedError):
             _query("Apis mellifera", api_key="k")
+
+
+def test_query_raises_rate_limited_on_network_exception():
+    """Connection timeouts / DNS failures / TLS errors must also skip,
+    not silently return []."""
+    import requests as _req
+    with patch(
+        "scripts.sketchfab_enrichment.requests.get",
+        side_effect=_req.exceptions.ConnectTimeout("boom"),
+    ):
+        with pytest.raises(RateLimitedError):
+            _query("Apis mellifera", api_key="k")
+
+
+def test_query_raises_rate_limited_on_non_json_200():
+    """A 200 with an unparseable body is also a non-answer — skip."""
+    fake_resp = MagicMock(status_code=200)
+    fake_resp.json.side_effect = ValueError("not JSON")
+    with patch("scripts.sketchfab_enrichment.requests.get", return_value=fake_resp):
+        with pytest.raises(RateLimitedError):
+            _query("Apis mellifera", api_key="k")
+
+
+def test_query_200_empty_results_returns_empty_list():
+    """The only path that returns [] is a clean 200 with results=[] — that's
+    Sketchfab honestly saying "no models". The caller upserts has_models=False
+    for this case, which is correct."""
+    fake_resp = MagicMock(status_code=200)
+    fake_resp.json.return_value = {"results": []}
+    with patch("scripts.sketchfab_enrichment.requests.get", return_value=fake_resp):
+        assert _query("Apis mellifera", api_key="k") == []
 
 
 def test_classify_species_skips_on_rate_limit():
@@ -175,11 +206,3 @@ def test_classify_species_skips_on_rate_limit():
     assert result.has_models is False
     assert result.hit_count == 0
     assert result.hits == []
-
-
-def test_query_404_returns_empty_not_rate_limited():
-    """A real 404 (or other non-transient non-200) keeps the legacy
-    "zero hits" semantic — we DO upsert the species as has_models=False."""
-    fake_resp = MagicMock(status_code=404)
-    with patch("scripts.sketchfab_enrichment.requests.get", return_value=fake_resp):
-        assert _query("nonexistus", api_key="k") == []
