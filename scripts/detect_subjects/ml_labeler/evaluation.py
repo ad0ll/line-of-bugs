@@ -16,15 +16,14 @@ def cv_evaluate(
     clf_factory: Callable, X: np.ndarray, y: np.ndarray,
     n_splits: int = 5, n_repeats: int = 5, random_state: int = 42,
 ) -> dict:
-    """5x5 stratified CV. clf_factory must produce a fresh fitted classifier
-    with predict_proba support (sklearn-style) per call.
-
-    Returns dict with mcc_mean, mcc_std, pr_auc_mean, brier_mean, n_folds.
-    """
+    """5x5 stratified CV. Returns metric means/stds AND concatenated held-out
+    probabilities + labels (consumed by train._recall_threshold)."""
     rskf = RepeatedStratifiedKFold(
         n_splits=n_splits, n_repeats=n_repeats, random_state=random_state,
     )
     mccs, prs, briers = [], [], []
+    p_holdout: list[float] = []
+    y_holdout: list[int] = []
     for train_idx, test_idx in rskf.split(X, y):
         X_tr, X_te = X[train_idx], X[test_idx]
         y_tr, y_te = y[train_idx], y[test_idx]
@@ -37,10 +36,14 @@ def cv_evaluate(
         if len(np.unique(y_te)) == 2:
             prs.append(average_precision_score(y_te, prob_pos))
         briers.append(brier_score_loss(y_te, prob_pos))
+        p_holdout.extend(prob_pos.tolist())
+        y_holdout.extend(y_te.tolist())
     return {
         "mcc_mean": float(np.mean(mccs)),
         "mcc_std": float(np.std(mccs)),
         "pr_auc_mean": float(np.mean(prs)) if prs else float("nan"),
         "brier_mean": float(np.mean(briers)),
         "n_folds": n_splits * n_repeats,
+        "p_holdout": p_holdout,
+        "y_holdout": y_holdout,
     }

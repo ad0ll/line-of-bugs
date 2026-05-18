@@ -1,19 +1,56 @@
 """Verify training script persists a fitted classifier with metrics."""
 import json
+import sqlite3
 from pathlib import Path
 import numpy as np
 import polars as pl
 
 
-def _fake_parquet_and_labels(tmpdir: Path):
-    """Build a tiny synthetic parquet + labels.json with blur_unusable positives."""
+IMAGES_SCHEMA = """
+CREATE TABLE images (
+  image_id TEXT PRIMARY KEY,
+  collection_id TEXT NOT NULL, source TEXT NOT NULL, source_id TEXT NOT NULL,
+  source_page_url TEXT NOT NULL, image_url TEXT NOT NULL,
+  filename TEXT NOT NULL, thumbnail_filename TEXT NOT NULL,
+  medium_filename TEXT NOT NULL, file_sha256 TEXT NOT NULL,
+  license TEXT NOT NULL, subject_state TEXT NOT NULL,
+  hidden INTEGER NOT NULL DEFAULT 0,
+  added_at INTEGER NOT NULL DEFAULT (unixepoch())
+);
+"""
+IMAGE_LABELS_SCHEMA = """
+CREATE TABLE image_labels (
+  image_id TEXT PRIMARY KEY REFERENCES images(image_id) ON DELETE CASCADE,
+  col1 TEXT, col2_count TEXT, col2_flags TEXT, col3 TEXT, col4 TEXT,
+  unsure INTEGER NOT NULL DEFAULT 0 CHECK (unsure IN (0, 1)),
+  reviewed_at INTEGER,
+  user_edited INTEGER NOT NULL DEFAULT 0 CHECK (user_edited IN (0, 1)),
+  variant_tag TEXT
+);
+"""
+
+# T8 also writes suggested_threshold into label_thresholds; the test DB must
+# include this table so the UPDATE in _write_suggested_threshold doesn't fail.
+LABEL_THRESHOLDS_SCHEMA = """
+CREATE TABLE label_thresholds (
+  label TEXT PRIMARY KEY,
+  tier INTEGER NOT NULL CHECK (tier IN (1, 2)),
+  threshold REAL NOT NULL,
+  suggested_threshold REAL,
+  threshold_v INTEGER NOT NULL,
+  notes TEXT,
+  updated_at INTEGER NOT NULL
+);
+"""
+
+
+def _fake_parquet_and_db(tmpdir: Path):
+    """Build a tiny synthetic parquet + SQLite DB with blur_unusable positives."""
     rng = np.random.default_rng(0)
     n = 80
     image_ids = [f"img-{i:03d}" for i in range(n)]
-    # Make subject_sharpness predictive: positives have low sharpness
     sharpness = rng.uniform(100, 500, n)
-    # First 40 are positives (blur_unusable) with lower sharpness
-    sharpness[:40] -= 200
+    sharpness[:40] -= 200  # first 40 are positives, lower sharpness
     df = pl.DataFrame({
         "image_id": image_ids,
         "variant": ["sam3__sam3"] * n,
@@ -34,32 +71,72 @@ def _fake_parquet_and_labels(tmpdir: Path):
     })
     parquet_path = tmpdir / "test.parquet"
     df.write_parquet(parquet_path)
-    labels = {}
+
+    db_path = tmpdir / "test.db"
+    conn = sqlite3.connect(db_path)
+    conn.executescript(IMAGES_SCHEMA)
+    conn.executescript(IMAGE_LABELS_SCHEMA)
+    conn.executescript(LABEL_THRESHOLDS_SCHEMA)
+    # Seed the threshold row so train.py's UPDATE finds something to write to.
+    conn.execute(
+        "INSERT INTO label_thresholds (label, tier, threshold, threshold_v, updated_at) "
+        "VALUES ('mask_blur_unusable', 1, 0.5, 1, 1)"
+    )
+    for iid in image_ids:
+        conn.execute(
+            "INSERT INTO images (image_id, collection_id, source, source_id, "
+            "source_page_url, image_url, filename, thumbnail_filename, "
+            "medium_filename, file_sha256, license, subject_state) "
+            "VALUES (?, 'c', 'inaturalist', 's', 'u', 'u', 'f', 't', 'm', "
+            "'sha', 'lic', 'wild')",
+            (iid,),
+        )
     for i, iid in enumerate(image_ids):
-        labels[iid] = {
-            "col1": "bbox_correct-subject_not-clipped",
-            "col2_count": "bbox-content_single",
-            "col2_flags": [], "col4": [],
-            "col3": ["mask_blur_unusable"] if i < 40 else [],
-            "reviewed_at": 1, "user_edited": True,
-            "variant_tag": "sam3__sam3", "unsure": False,
-        }
-    labels_path = tmpdir / "labels.json"
-    labels_path.write_text(json.dumps(labels))
-    return parquet_path, labels_path
+        col3 = json.dumps(["mask_blur_unusable"] if i < 40 else [])
+        conn.execute(
+            "INSERT INTO image_labels (image_id, col1, col2_count, col2_flags, "
+            "col3, col4, unsure, reviewed_at, user_edited, variant_tag) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (iid, "bbox_correct-subject_not-clipped", "bbox-content_single",
+             "[]", col3, "[]", 0, 1, 1, "sam3__sam3"),
+        )
+    conn.commit()
+    conn.close()
+    return parquet_path, db_path
 
 
 def test_train_blur_unusable_persists_model_and_metrics(tmp_path):
     from scripts.detect_subjects.ml_labeler.train import train_label
-    parquet_path, labels_path = _fake_parquet_and_labels(tmp_path)
+    parquet_path, db_path = _fake_parquet_and_db(tmp_path)
     out_dir = tmp_path / "models" / "mask_blur_unusable"
     metrics = train_label(
         label="mask_blur_unusable",
-        parquet_path=parquet_path, labels_path=labels_path,
+        parquet_path=parquet_path, db_path=db_path,
         out_dir=out_dir, random_state=42,
     )
     assert (out_dir / "arm_scalar_latest.joblib").exists()
     assert (out_dir / "metrics.json").exists()
-    assert metrics["arm_scalar"]["mcc_mean"] > 0.3  # easy synthetic task
+    assert metrics["arm_scalar"]["mcc_mean"] > 0.3
     assert metrics["n_positives"] == 40
     assert metrics["n_total"] == 80
+
+
+def test_train_writes_suggested_threshold(tmp_path):
+    """After train_label runs, label_thresholds.suggested_threshold is set."""
+    from scripts.detect_subjects.ml_labeler.train import train_label
+    parquet_path, db_path = _fake_parquet_and_db(tmp_path)
+    out_dir = tmp_path / "models" / "mask_blur_unusable"
+    train_label(
+        label="mask_blur_unusable",
+        parquet_path=parquet_path, db_path=db_path,
+        out_dir=out_dir, random_state=42,
+    )
+    conn = sqlite3.connect(db_path)
+    row = conn.execute(
+        "SELECT suggested_threshold, threshold "
+        "FROM label_thresholds WHERE label='mask_blur_unusable'"
+    ).fetchone()
+    conn.close()
+    assert row[0] is not None and 0.0 <= row[0] <= 1.0
+    # threshold (human-edited column) MUST remain at its seed value of 0.5.
+    assert row[1] == 0.5
