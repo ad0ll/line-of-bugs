@@ -45,6 +45,35 @@ def _load_bundle(label: str, models_dir: Optional[Path] = None) -> dict:
     return bundle
 
 
+def warn_if_db_version_mismatch(
+    label: str, bundle: dict, db_path: Optional[Path],
+) -> None:
+    """Print a warning if the joblib's trained_at would produce a
+    model_version that doesn't appear in existing predictions.model_version
+    for this label. Catches the C2 'silent drift' case where the joblib at
+    HEAD has been rolled back but DB predictions still reference an older/
+    newer version."""
+    from scripts.detect_subjects.sqlite_db import open_conn, DEFAULT_DB_PATH
+    if db_path is None:
+        db_path = DEFAULT_DB_PATH
+    expected = model_version_for(label, bundle)
+    conn = open_conn(db_path)
+    try:
+        rows = conn.execute(
+            "SELECT DISTINCT model_version FROM predictions WHERE label = ?",
+            (label,),
+        ).fetchall()
+    finally:
+        conn.close()
+    versions = {r[0] for r in rows}
+    if versions and expected not in versions:
+        print(
+            f"[predict:{label}] WARN: joblib trained_at would produce "
+            f"model_version={expected!r} but DB has prediction(s) at "
+            f"{sorted(versions)}. Run predict to overwrite DB with the joblib."
+        )
+
+
 def predict_labels_batched(
     labels: list[str],
     parquet_path: Path = Path("data/cache/framing_detections.parquet"),
@@ -57,6 +86,8 @@ def predict_labels_batched(
     if db_path is None:
         db_path = DEFAULT_DB_PATH
     bundles = {lbl: _load_bundle(lbl, models_dir) for lbl in labels}
+    for lbl in labels:
+        warn_if_db_version_mismatch(lbl, bundles[lbl], db_path)
 
     df = pl.read_parquet(parquet_path)
     # Restrict to sam3__sam3 rows that have a labelable subject. no_bug +

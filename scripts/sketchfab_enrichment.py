@@ -55,11 +55,14 @@ class SpeciesResult:
     has_models: bool
     hit_count: int  # raw, pre-filter
     hits: list[dict] = field(default_factory=list)  # trimmed, post-filter, sorted
-    # True when the Sketchfab query hit a transient failure (429 edge
-    # rate-limit, or 408/502/503/504 CloudFront-origin error). Callers should
-    # NOT upsert the result — last_checked_at stays old so the next run
-    # retries instead of poisoning the cache with a false negative.
+    # True when the Sketchfab query hit a non-200 / non-answer. Callers
+    # MUST NOT upsert — last_checked_at stays old so the next run retries
+    # instead of poisoning the cache with a false negative.
     rate_limited: bool = False
+    # HTTP status code (or None for network/parse exceptions) that caused
+    # the skip. Surfaced so the runner can build a status-code histogram
+    # and identify when burst budget is exhausted vs. a real outage.
+    skip_status: int | None = None
 
 
 def _load_api_key() -> str:
@@ -82,15 +85,26 @@ class RateLimitedError(Exception):
     HTTP status, any network/parse exception. The caller MUST skip the
     species rather than upserting `has_models=False` from a non-answer.
 
-    Known reasons observed in the wild (Sketchfab fronts on CloudFront, NOT
-    Akamai despite older comments):
-      - 429 = edge rate-limit (no Retry-After; body `{"detail":"Too many requests."}`)
-      - 408/502/503/504 = `x-cache: Error from cloudfront`, origin-fetch failure
-      - 405 = CloudFront/WAF bot-filter on certain multi-word queries
-              (e.g. "Cactopinus desertus bark beetle"). Misleading
-              `Allow: GET, HEAD, OPTIONS` header makes it look like a
-              wrong-method error, but we send GET.
+    Known shapes observed in the wild (Sketchfab fronts on CloudFront, origin
+    is gunicorn):
+      - 429 with body `{"detail":"Too many requests."}` — origin rate-limit.
+              Verified 2026-05-18 via probe (verbose response capture).
+      - 408 with body `{}` — `x-cache: Error from cloudfront`, origin-fetch
+              timeout, response synthesized at CloudFront edge.
+      - 405 — observed in production runs alongside 429s; body content not
+              yet captured cleanly. Hypothesis pending: may be the same
+              origin-throttle expressed differently for certain request
+              shapes, OR a parallel CloudFront-edge response. The verbose
+              `_query` warning now captures the body + cf headers so we
+              can resolve this next time it appears in a real run.
+
+    The .status attribute carries the HTTP code (or None for network/parse
+    exceptions) so the runner can build a per-status histogram.
     """
+
+    def __init__(self, msg: str, status: int | None = None) -> None:
+        super().__init__(msg)
+        self.status = status
 
 
 def _query(q: str, api_key: str, count: int = 24) -> list[dict]:
@@ -118,9 +132,22 @@ def _query(q: str, api_key: str, count: int = 24) -> list[dict]:
         raise RateLimitedError(f"network error: {e}") from e
 
     if r.status_code != 200:
-        log.warning("query %r → HTTP %d (skipping species, will retry next run)",
-                    q, r.status_code)
-        raise RateLimitedError(f"HTTP {r.status_code}")
+        # Capture the full Sketchfab response, not just a preview, so we never
+        # need to re-run a probe to figure out what was different about this
+        # failure. cf-id uniquely identifies a CloudFront edge response —
+        # Sketchfab support can look up the request if asked. Headers other
+        # than the noisy CSP-report-only one go in verbatim; body capped at
+        # 1024 chars (Sketchfab error bodies are tiny JSON in practice).
+        headers_for_log = {
+            k: v for k, v in r.headers.items()
+            if k.lower() != "content-security-policy-report-only"
+        }
+        body_capture = (r.text or "")[:1024].replace("\n", " ").replace("\r", " ")
+        log.warning(
+            "query %r → HTTP %d headers=%s body=%r",
+            q, r.status_code, headers_for_log, body_capture,
+        )
+        raise RateLimitedError(f"HTTP {r.status_code}", status=r.status_code)
 
     try:
         return r.json().get("results", []) or []
@@ -210,8 +237,8 @@ def classify_species(scientific: str, common: str, api_key: str) -> SpeciesResul
     q = " ".join(part for part in (scientific.strip(), common.strip()) if part)
     try:
         hits = _query(q, api_key, count=24)
-    except RateLimitedError:
-        return SpeciesResult(has_models=False, hit_count=0, hits=[], rate_limited=True)
+    except RateLimitedError as e:
+        return SpeciesResult(has_models=False, hit_count=0, hits=[], rate_limited=True, skip_status=e.status)
 
     # Dedupe by uid — Sketchfab shouldn't return dupes on a single page but
     # be defensive. First occurrence wins (rank order is preserved).

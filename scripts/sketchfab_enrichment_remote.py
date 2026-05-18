@@ -169,7 +169,28 @@ def main(argv: list[str] | None = None) -> int:
             log.error("upsert batch network error: %s", e)
         buffered = []
 
-    skipped = 0  # rate-limited species; their last_checked_at stays old
+    skipped = 0  # rate-limited / non-200 species; their last_checked_at stays old
+
+    # Observability: distribution of HTTP status codes across the run, and
+    # the attempt index where the first skip happened. The "first skip" point
+    # is the strongest signal of burst-budget — if it always lands at the
+    # same N regardless of total workload, that's our threshold. Also captures
+    # "first_skip_elapsed_s" so we can correlate with wall-clock pace.
+    from collections import Counter
+    status_counts: "Counter[object]" = Counter()
+    first_skip_at_n: int | None = None
+    first_skip_at_elapsed_s: float | None = None
+    first_skip_status: object = None
+    # Recovery detection: track the most recent skip, and how many consecutive
+    # successes we've seen since. If Sketchfab's WAF flips back off mid-run,
+    # the recovery line surfaces that — distinguishes "permanent lockdown for
+    # the rest of the run" from "transient burst-then-recover-then-burst".
+    last_skip_at_n: int | None = None
+    consecutive_successes_after_skip = 0
+    RECOVERY_THRESHOLD = 50  # consecutive 200s after a skip → flag as recovery
+    PERIODIC_HIST_EVERY = 250  # dump rolling histogram every N attempts
+    attempts = 0
+
     with ThreadPoolExecutor(max_workers=args.workers) as ex:
         futs = {ex.submit(classify_species, sci, com, sketchfab_key): (sci, com)
                 for sci, com in pairs}
@@ -181,23 +202,65 @@ def main(argv: list[str] | None = None) -> int:
                 failures += 1
                 log.error("classify %r failed: %s", sci, e)
                 continue
+            attempts += 1
             if result.rate_limited:
                 skipped += 1
-                continue
-            buffered.append(result_to_row(sci, result))
-            classified += 1
-            if len(buffered) >= args.batch_size:
-                flush()
-            if classified % 100 == 0:
-                rate = classified / (time.time() - t0)
-                log.info("  %d/%d classified, %d upserted, %d skipped (rate-limited), %.1f/s",
-                         classified, len(pairs), upserted_total, skipped, rate)
+                key = result.skip_status if result.skip_status is not None else "network/parse"
+                status_counts[key] += 1
+                if first_skip_at_n is None:
+                    first_skip_at_n = attempts
+                    first_skip_at_elapsed_s = time.time() - t0
+                    first_skip_status = key
+                    log.info(
+                        "FIRST SKIP at attempt #%d (status=%s) — %.1fs into run",
+                        first_skip_at_n, first_skip_status, first_skip_at_elapsed_s,
+                    )
+                last_skip_at_n = attempts
+                consecutive_successes_after_skip = 0
+            else:
+                status_counts[200] += 1
+                if last_skip_at_n is not None:
+                    consecutive_successes_after_skip += 1
+                    if consecutive_successes_after_skip == RECOVERY_THRESHOLD:
+                        log.info(
+                            "RECOVERY: %d consecutive 200s after last skip at attempt #%d (now at attempt #%d, %.1fs in)",
+                            RECOVERY_THRESHOLD, last_skip_at_n, attempts, time.time() - t0,
+                        )
+                buffered.append(result_to_row(sci, result))
+                classified += 1
+                if len(buffered) >= args.batch_size:
+                    flush()
+                if classified % 100 == 0:
+                    rate = classified / (time.time() - t0)
+                    log.info("  %d/%d classified, %d upserted, %d skipped, %.1f/s",
+                             classified, len(pairs), upserted_total, skipped, rate)
+            # Periodic rolling histogram — every PERIODIC_HIST_EVERY attempts —
+            # so the gradient (200s vs 405s vs 429s over time) is visible in
+            # the log without grep'ing/parsing. Reveals e.g. "200=200 405=0
+            # for the first 250, then 200=18 405=232 for attempts 250-500"
+            # which is the burst-budget transition we keep trying to pin down.
+            if attempts % PERIODIC_HIST_EVERY == 0:
+                hist = ", ".join(
+                    f"{k}={v}" for k, v in sorted(status_counts.items(), key=lambda kv: (-kv[1], str(kv[0])))
+                )
+                log.info("[%d/%d attempts, %.1fs] histogram: %s",
+                         attempts, len(pairs), time.time() - t0, hist)
 
     flush()
 
     elapsed = time.time() - t0
-    log.info("done in %.1fs — %d classified, %d upserted, %d rate-limited (skipped), %d failures",
+    log.info("done in %.1fs — %d classified, %d upserted, %d skipped, %d failures",
              elapsed, classified, upserted_total, skipped, failures)
+    # Per-status histogram makes 405-vs-429-vs-other visible without grep'ing logs.
+    if status_counts:
+        hist = ", ".join(f"{k}={v}" for k, v in sorted(status_counts.items(), key=lambda kv: (-kv[1], str(kv[0]))))
+        log.info("status histogram: %s", hist)
+    if first_skip_at_n is not None and (classified + skipped) > 0:
+        pct = 100 * first_skip_at_n / (classified + skipped)
+        log.info(
+            "first skip at attempt #%d / %d (%.1f%% through, %.1fs in, status=%s)",
+            first_skip_at_n, classified + skipped, pct, first_skip_at_elapsed_s, first_skip_status,
+        )
 
     if failures > 0:
         return 2

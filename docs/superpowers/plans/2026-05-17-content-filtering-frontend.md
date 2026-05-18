@@ -28,11 +28,15 @@ Expected: total count > 0 (Plan 1 backfilled), reject count > 0 (some images fla
 - `lib/queries/session.ts:61-77` — `getImage` direct-id-lookup gets the same clause
 - `lib/queries/gallery.ts:122-139` — `listInstitutions` raw SQL gets the same clause
 - `lib/queries/gallery.ts:150-179` — `searchSpecies` raw SQL gets the same clause
+- `app/api/search/insect/route.ts:26-53` — autocomplete raw SQL (Task 6, group + species)
 - `tests/fixtures/init-db.ts` — add `gate_decisions` CREATE TABLE + `markRejected()` helper
 - `tests/lib/filter-clauses.test.ts` — unit test the new clause; update existing count assertions (2 → 3)
+- `tests/api/search-insect.test.ts` — append Task 6 coverage for autocomplete gate filtering
+- `vitest.config.ts` — alias `next/cache` to `tests/stubs/next-cache.ts` for the node test project
 
 **Created:**
 - `tests/lib/gate-decisions-filter.test.ts` — focused integration tests proving rejected images are excluded from gallery/session/count/getImage/listInstitutions/searchSpecies
+- `tests/stubs/next-cache.ts` — no-op `cacheTag`/`cacheLife`/`revalidateTag` for the Vitest node harness (real `next/cache` requires `cacheComponents` config only honored by Next.js dev/build)
 
 ---
 
@@ -43,9 +47,23 @@ The data layer (Plan 1) precomputes the decision into `gate_decisions`. The fron
 Vacuous truth makes the rollout safe: an image with no `gate_decisions` row passes the filter (matching the "innocent until proven flagged" default the spec describes). After Plan 1's `--all` backfill, every image has a row, so this case shouldn't happen, but the predicate would still behave correctly if it did.
 
 **Out of scope:**
-- Cache invalidation when gate decisions change. `searchGallery` (cacheTag `gallery-results`, cacheLife hours) and `getUnfilteredFacets` (cacheTag `images-stats`, cacheLife days) cache results. A freshly-flipped reject won't disappear from the gallery until the cache expires OR a report is resolved (which invalidates `images-stats`). Recorded as a known limitation; webhook-based revalidation is a follow-up.
-- Admin UI to view/edit gate decisions. That lives in Plan 4 (validator React port).
-- Per-route crop-image rendering changes. The spec explicitly punts this to per-route logic.
+
+- **Cache invalidation when gate decisions change.** Current cache map (from `lib/queries/gallery.ts`, `lib/queries/facets.ts`, `actions/_invalidation.ts`):
+
+  | Tag | Producer | cacheLife | Currently invalidated by |
+  |---|---|---|---|
+  | `gallery-results` | `searchGallery()` | hours | `submitReport`, `dismissReport`, `hideImage`, `deleteImage` |
+  | `institutions` | `listInstitutions()` | days | **(never)** |
+  | `species-index` | `searchSpecies()` | hours | `deleteImage` only |
+  | `images-stats` | `getUnfilteredFacets()` | days | `submitReport`, `hideImage`, `deleteImage` |
+
+  After Plan 1's `recompute_gate.py` rewrites `gate_decisions`, no invalidation fires automatically. A freshly-rejected image stays in `gallery-results` for up to `cacheLife("hours")` and in `images-stats`/`institutions` for up to `cacheLife("days")` unless something else triggers the existing invalidators (e.g., a report submit). Ops workaround: after running `recompute_gate.py --all` or a retrain pipeline run, manually call `revalidateTag` for all four tags via an admin endpoint, or `rm -rf .next/cache && systemctl restart line-of-bugs`. Webhook-based revalidation (label_server → Next.js revalidate-on-write) is a follow-up plan.
+
+- **Admin UI to view/edit gate decisions.** Lives in Plan 4 (validator React port).
+
+- **Admin enrichment endpoints intentionally don't filter `gate_decisions`.** `app/api/admin/sketchfab/species/route.ts` returns species needing enrichment; rejected images still need enrichment as a data-quality task independent of visibility. `app/api/healthz/route.ts` counts ALL images for monitoring (visible + hidden). These bypass the gate by design.
+
+- **Per-route crop-image rendering changes.** The spec explicitly punts this to per-route logic — `detections.crop_x/y/w/h` are available but the production tile renderer keeps using full images for now.
 
 ---
 
@@ -681,7 +699,161 @@ git commit --only --no-gpg-sign -- lib/queries/gallery.ts tests/lib/gate-decisio
 
 ---
 
-## Task 6: Manual browser smoke test against the dev server
+## Task 6: Extend `/api/search/insect` autocomplete (raw SQL — third path)
+
+**Files:**
+- Modify: `app/api/search/insect/route.ts:26-29` (group count query) and `:44-53` (species FTS query)
+- Modify: `tests/api/search-insect.test.ts` — add coverage for gate exclusion
+
+**Background:**
+The homepage autocomplete (typing in the gallery search box) hits `/api/search/insect?q=<term>` which runs TWO raw SQL queries:
+1. Group count per `taxon_subgroup` (lines 26-29) — `SELECT COUNT(*) AS c FROM images WHERE hidden = 0 AND taxon_subgroup IN (...)`
+2. Species FTS join (lines 44-53) — `SELECT i.common_name, i.taxon_species, COUNT(*) FROM images_fts JOIN images i ... WHERE images_fts MATCH ? AND i.hidden = 0`
+
+Both queries filter `hidden = 0` but NEITHER checks `gate_decisions`. Without this fix:
+
+- A search for "butterfly" returns "butterfly (12)" in the dropdown even if all 12 are rejected
+- Clicking the result navigates to the gallery, where `searchGallery` (now gate-aware) returns 0 hits
+- User sees a ghost group/species → empty grid. Misleading.
+
+This endpoint duplicates the FTS pattern that `searchSpecies` uses; the cleanest long-term fix is to refactor it to call `searchSpecies`, but for this plan we just add the gate clause directly so the autocomplete counts match the gallery results.
+
+- [ ] **Step 1: Add the failing tests**
+
+Read `tests/api/search-insect.test.ts` first to see the existing test pattern. Append:
+
+```typescript
+it("excludes a rejected image from group counts", async () => {
+  // The base fixture seeds 12 butterflies in the "butterfly" taxon_subgroup.
+  // Mark one rejected and verify the group count drops.
+  const { markRejected } = await import("../fixtures/init-db");
+  const { sqlite } = await import("@/db");
+  // Reset gate_decisions to a known state.
+  sqlite.prepare("DELETE FROM gate_decisions").run();
+
+  const before = await GET(
+    new Request("http://localhost/api/search/insect?q=butterf"),
+  );
+  const beforeBody = (await before.json()) as { results: Array<{ kind: string; label: string; count: number }> };
+  const beforeGroup = beforeBody.results.find((r) => r.kind === "group" && r.label.toLowerCase().includes("butterfly"));
+  expect(beforeGroup?.count).toBeGreaterThan(0);
+  const beforeCount = beforeGroup!.count;
+
+  // Mark one butterfly rejected.
+  const butterfly = sqlite
+    .prepare("SELECT image_id FROM images WHERE taxon_subgroup = 'butterfly' LIMIT 1")
+    .get() as { image_id: string };
+  markRejected(butterfly.image_id);
+
+  const after = await GET(
+    new Request("http://localhost/api/search/insect?q=butterf"),
+  );
+  const afterBody = (await after.json()) as { results: Array<{ kind: string; label: string; count: number }> };
+  const afterGroup = afterBody.results.find((r) => r.kind === "group" && r.label.toLowerCase().includes("butterfly"));
+  expect(afterGroup?.count).toBe(beforeCount - 1);
+});
+
+it("excludes rejected images from species autocomplete counts", async () => {
+  const { markRejected } = await import("../fixtures/init-db");
+  const { sqlite } = await import("@/db");
+  sqlite.prepare("DELETE FROM gate_decisions").run();
+
+  const before = await GET(
+    new Request("http://localhost/api/search/insect?q=Testus"),
+  );
+  const beforeBody = (await before.json()) as { results: Array<{ kind: string; count: number }> };
+  const beforeSpeciesSum = beforeBody.results
+    .filter((r) => r.kind === "species")
+    .reduce((s, r) => s + r.count, 0);
+  expect(beforeSpeciesSum).toBeGreaterThan(0);
+
+  // Pick any image whose species matches the FTS query.
+  const target = sqlite
+    .prepare("SELECT image_id FROM images WHERE taxon_species LIKE 'Testus%' LIMIT 1")
+    .get() as { image_id: string };
+  markRejected(target.image_id);
+
+  const after = await GET(
+    new Request("http://localhost/api/search/insect?q=Testus"),
+  );
+  const afterBody = (await after.json()) as { results: Array<{ kind: string; count: number }> };
+  const afterSpeciesSum = afterBody.results
+    .filter((r) => r.kind === "species")
+    .reduce((s, r) => s + r.count, 0);
+  expect(afterSpeciesSum).toBe(beforeSpeciesSum - 1);
+});
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+```bash
+npm run test -- tests/api/search-insect.test.ts
+```
+
+Expected: the two new tests FAIL — both counts stay unchanged because the queries don't check gate_decisions.
+
+- [ ] **Step 3: Patch the group count query**
+
+In `app/api/search/insect/route.ts:26-29`, modify:
+
+```typescript
+      const counts = db.all<{ c: number }>(sql`
+        SELECT COUNT(*) AS c FROM images
+        WHERE hidden = 0 AND taxon_subgroup IN (${sql.join(g.dbValues.map((v) => sql`${v}`), sql`, `)})
+          AND NOT EXISTS (
+            SELECT 1 FROM gate_decisions g
+            WHERE g.image_id = images.image_id AND g.decision = 'reject'
+          )
+      `);
+```
+
+- [ ] **Step 4: Patch the species FTS query**
+
+In `app/api/search/insect/route.ts:44-53`, modify:
+
+```typescript
+    const rows = db.all<{ common_name: string; taxon_species: string; c: number }>(sql`
+      SELECT i.common_name, i.taxon_species, COUNT(*) AS c
+      FROM images_fts f
+      JOIN images i ON i.image_id = f.image_id
+      WHERE images_fts MATCH ${ftsExpr}
+        AND i.hidden = 0
+        AND NOT EXISTS (
+          SELECT 1 FROM gate_decisions g
+          WHERE g.image_id = i.image_id AND g.decision = 'reject'
+        )
+      GROUP BY i.common_name, i.taxon_species
+      ORDER BY c DESC
+      LIMIT 15
+    `);
+```
+
+- [ ] **Step 5: Run tests to verify they pass**
+
+```bash
+npm run test -- tests/api/search-insect.test.ts
+```
+
+Expected: all tests PASS.
+
+- [ ] **Step 6: Run the full suite once more**
+
+```bash
+npm run test
+```
+
+Expected: every test PASS.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add app/api/search/insect/route.ts tests/api/search-insect.test.ts
+git commit --only --no-gpg-sign -- app/api/search/insect/route.ts tests/api/search-insect.test.ts -m "feat(api): /api/search/insect autocomplete excludes gate_decisions reject rows"
+```
+
+---
+
+## Task 7: Manual browser smoke test against the dev server
 
 **Files touched:** none (verification step).
 
@@ -745,17 +917,18 @@ No commit for this task — it's verification.
 
 ## Spec coverage self-review
 
-| Spec section | Implemented in |
+| Spec section / consumer | Implemented in |
 |---|---|
-| Production query change to `buildFilterClauses` | Task 2 |
-| Session pool helper picks up gate clause | Task 2 (via shared helper) |
-| Facet counts pick up gate clause | Task 2 (via shared helper) |
-| Direct-id `getImage` enforces gate | Task 4 |
-| Autocomplete / institutions pick up gate | Task 5 |
-| Out-of-scope: cache invalidation | Recorded as known limitation in plan header |
-| Out-of-scope: crop image rendering | Recorded |
+| `buildFilterClauses` (gallery, session, facets — 4 callsites) | Task 2 |
+| `getImage` direct-id lookup | Task 4 |
+| `listInstitutions` raw SQL | Task 5 |
+| `searchSpecies` raw SQL | Task 5 |
+| `/api/search/insect` autocomplete raw SQL (group + species) | Task 6 |
+| Out-of-scope: cache invalidation | Documented in plan header (with cache map + ops workaround) |
+| Out-of-scope: admin enrichment endpoints (`/api/admin/sketchfab`, `/api/healthz`) | Documented in plan header |
+| Out-of-scope: crop image rendering | Documented |
 
-No spec section is unmapped.
+All public-facing read paths verified via `grep -rn "FROM images" app/ lib/ actions/`. No unfilteredless public callsites remain.
 
 ---
 

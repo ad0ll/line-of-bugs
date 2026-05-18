@@ -71,6 +71,21 @@ CREATE INDEX IF NOT EXISTS idx_images_hidden ON images (hidden);
 CREATE INDEX IF NOT EXISTS idx_reports_image ON reports (image_id);
 CREATE INDEX IF NOT EXISTS idx_reports_unresolved ON reports (image_id) WHERE resolved_at IS NULL;
 
+CREATE TABLE IF NOT EXISTS gate_decisions (
+  image_id      text PRIMARY KEY NOT NULL,
+  decision      text NOT NULL CHECK (decision IN ('keep','reject')),
+  reason        text NOT NULL,
+  reason_source text NOT NULL CHECK (reason_source IN ('hand','report','rule','ml','default')),
+  computed_at   integer NOT NULL,
+  model_version text,
+  threshold_v   integer,
+  FOREIGN KEY (image_id) REFERENCES images(image_id) ON UPDATE no action ON DELETE cascade
+);
+CREATE INDEX IF NOT EXISTS idx_gate_decisions_decision
+  ON gate_decisions (decision);
+CREATE INDEX IF NOT EXISTS idx_gate_decisions_reason_source
+  ON gate_decisions (reason_source);
+
 CREATE TABLE IF NOT EXISTS species_metadata (
   taxon_species text PRIMARY KEY NOT NULL,
   has_sketchfab_models integer,
@@ -222,4 +237,44 @@ export function initTestDb(): void {
     });
   });
   tx(seed);
+}
+
+/**
+ * Test helper: mark an image as rejected in gate_decisions. Used by
+ * filter integration tests to verify the gallery/session/count helpers
+ * exclude the row. reason_source defaults to 'rule' (most common path).
+ */
+export function markRejected(
+  imageId: string,
+  reason: string = "rule:bbox-content_no-bug",
+  reasonSource: "hand" | "report" | "rule" | "ml" | "default" = "rule",
+): void {
+  sqlite
+    .prepare(
+      "INSERT INTO gate_decisions " +
+      "(image_id, decision, reason, reason_source, computed_at) " +
+      "VALUES (?, 'reject', ?, ?, unixepoch()) " +
+      "ON CONFLICT(image_id) DO UPDATE SET " +
+      "decision='reject', reason=excluded.reason, " +
+      "reason_source=excluded.reason_source, " +
+      "computed_at=excluded.computed_at",
+    )
+    .run(imageId, reason, reasonSource);
+}
+
+/**
+ * Test helper: insert a 'keep' decision (used when a test wants to
+ * confirm a kept-decision image stays visible).
+ */
+export function markKept(imageId: string): void {
+  sqlite
+    .prepare(
+      "INSERT INTO gate_decisions " +
+      "(image_id, decision, reason, reason_source, computed_at) " +
+      "VALUES (?, 'keep', 'defaults_pass', 'default', unixepoch()) " +
+      "ON CONFLICT(image_id) DO UPDATE SET " +
+      "decision='keep', reason='defaults_pass', reason_source='default', " +
+      "computed_at=unixepoch()",
+    )
+    .run(imageId);
 }

@@ -58,8 +58,6 @@ def build_html_for_variant(
     for row in df.iter_rows(named=True):
         img_id = row["image_id"]
         mrow = db_index.get(img_id, {})
-        crop_rel = f"crops/{variant}/{img_id}.jpg"
-        crop_path = crop_rel if (out_dir / crop_rel).exists() else None
 
         # distinct_subjects is a list of structs from parquet. Convert to the
         # legacy [x, y, w, h, conf] list-of-lists shape the UI consumer expects.
@@ -85,7 +83,6 @@ def build_html_for_variant(
             "variant": row["variant"],
             "framing_quality": row["framing_quality"],
             "suggested_labels": list(row.get("suggested_labels") or []),
-            "gate_decision": row.get("gate_decision"),
             "secondary_bboxes": secondary_bboxes,
             "secondary_phrases": secondary_phrases,
             "text_label": row.get("text_label"),
@@ -100,7 +97,6 @@ def build_html_for_variant(
             "confidence": row["confidence"],
             "lab_delta_e": row["lab_delta_e"],
             "subject_sharpness": row.get("subject_sharpness"),
-            "offcenter": row["offcenter"],
             "n_distinct_detections": row["n_distinct_detections"],
             "gt_iou": row["gt_iou"],
             "predicted_mask_blur_unusable_p": row.get("predicted_mask_blur_unusable_p"),
@@ -115,7 +111,6 @@ def build_html_for_variant(
             "taxon_species": mrow.get("taxon_species", ""),
             # HTML now at tools/validator/<variant>.html; data/ is 2 levels up.
             "original_path": f"../../data/{mrow.get('filename', '')}",
-            "crop_path": crop_path,
         })
         sources.add(row["source"])
 

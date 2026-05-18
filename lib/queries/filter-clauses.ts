@@ -80,6 +80,10 @@ export function buildFilterClauses(
       SELECT 1 FROM reports r
       WHERE r.image_id = ${outerImageId} AND r.resolved_at IS NULL
     )`,
+    sql`NOT EXISTS (
+      SELECT 1 FROM gate_decisions g
+      WHERE g.image_id = ${outerImageId} AND g.decision = 'reject'
+    )`,
   ];
 
   if (filters.subjectType !== "all") {

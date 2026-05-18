@@ -1,7 +1,21 @@
 import { describe, it, expect } from "vitest";
 import { sql } from "drizzle-orm";
 import { SQLiteSyncDialect } from "drizzle-orm/sqlite-core";
+import { sqlite } from "@/db";
 import { buildFilterClauses, type FilterState } from "@/lib/queries/filter-clauses";
+import { markRejected } from "../fixtures/init-db";
+
+describe("markRejected fixture helper", () => {
+  it("inserts a gate_decisions row with decision='reject'", () => {
+    const someImageId = "test-000";
+    markRejected(someImageId, "test:setup");
+    const row = sqlite
+      .prepare("SELECT decision, reason FROM gate_decisions WHERE image_id = ?")
+      .get(someImageId) as { decision: string; reason: string } | undefined;
+    expect(row?.decision).toBe("reject");
+    expect(row?.reason).toBe("test:setup");
+  });
+});
 
 const base: FilterState = {
   subjectType: "all",
@@ -16,29 +30,49 @@ const base: FilterState = {
 // Drizzle's sqlite dialect serializes user-supplied values as `?`
 // placeholders — exactly what we want for an injection-safety check.
 const dialect = new SQLiteSyncDialect();
-function renderWhere(state: FilterState): { sql: string; params: unknown[] } {
-  const clauses = buildFilterClauses(state);
+function renderWhere(
+  state: FilterState,
+  alias: "i" | "images" = "i",
+): { sql: string; params: unknown[] } {
+  const clauses = buildFilterClauses(state, alias);
   const q = dialect.sqlToQuery(sql.join(clauses, sql` AND `));
   return { sql: q.sql, params: q.params };
 }
 
 describe("buildFilterClauses", () => {
   it("returns just the visibility predicates when no filters set", () => {
-    expect(buildFilterClauses(base)).toHaveLength(2);
+    expect(buildFilterClauses(base)).toHaveLength(3);
   });
 
   it("adds a subject_state clause for any non-'all' subject", () => {
-    expect(buildFilterClauses({ ...base, subjectType: "wild" })).toHaveLength(3);
-    expect(buildFilterClauses({ ...base, subjectType: "captive" })).toHaveLength(3);
-    expect(buildFilterClauses({ ...base, subjectType: "specimen" })).toHaveLength(3);
+    expect(buildFilterClauses({ ...base, subjectType: "wild" })).toHaveLength(4);
+    expect(buildFilterClauses({ ...base, subjectType: "captive" })).toHaveLength(4);
+    expect(buildFilterClauses({ ...base, subjectType: "specimen" })).toHaveLength(4);
   });
 
   it("adds a taxon_subgroup clause when groups are selected", () => {
-    expect(buildFilterClauses({ ...base, groups: ["butterflies"] })).toHaveLength(3);
+    expect(buildFilterClauses({ ...base, groups: ["butterflies"] })).toHaveLength(4);
   });
 
   it("skips axes with empty arrays", () => {
-    expect(buildFilterClauses({ ...base, lifeStages: ["adult"] })).toHaveLength(3);
+    expect(buildFilterClauses({ ...base, lifeStages: ["adult"] })).toHaveLength(4);
+  });
+
+  it("renders the gate_decisions NOT EXISTS clause referencing the alias", () => {
+    const { sql: textI } = renderWhere(base);
+    expect(textI).toContain("gate_decisions");
+    expect(textI).toContain("decision = 'reject'");
+    expect(textI).toMatch(/i\.image_id/);
+  });
+
+  it("renders the gate clause with 'images' alias for session path", () => {
+    // session.ts:buildSessionPool / countSessionPool call buildFilterClauses
+    // with alias="images" (drizzle's QueryBuilder leaves the table un-aliased).
+    // Make sure the gate NOT EXISTS correlates on `images.image_id` in that path.
+    const { sql: textImages } = renderWhere(base, "images");
+    expect(textImages).toContain("gate_decisions");
+    expect(textImages).toMatch(/images\.image_id/);
+    expect(textImages).not.toMatch(/\bi\.image_id\b/);
   });
 
   it("stacks all axes when several are active", () => {
@@ -50,8 +84,8 @@ describe("buildFilterClauses", () => {
       sexes: ["male"],
       groups: ["butterflies"],
     });
-    // 2 base + subject + view + life + sex + group = 7
-    expect(clauses).toHaveLength(7);
+    // 3 base + subject + view + life + sex + group = 8
+    expect(clauses).toHaveLength(8);
   });
 
   // ─── SQL content assertions ────────────────────────────────────────

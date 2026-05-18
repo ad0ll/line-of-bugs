@@ -67,6 +67,12 @@ export async function searchGallery(args: SearchGalleryArgs): Promise<SearchGall
   "use cache";
   cacheTag("gallery-results");
   cacheLife("hours");
+  // CACHE STALENESS NOTE: gate_decisions changes (label save, retrain,
+  // recompute_gate --all) do NOT invalidate this cache. A freshly-rejected
+  // image stays in cached results for up to cacheLife("hours") unless a
+  // user-report action (which invalidates "gallery-results") fires first.
+  // See docs/superpowers/plans/2026-05-17-content-filtering-frontend.md
+  // → "Out of scope: cache invalidation" for the operator workaround.
 
   const offset = (args.page - 1) * PAGE_SIZE;
 
@@ -123,6 +129,9 @@ export async function listInstitutions(): Promise<InstitutionRow[]> {
   "use cache";
   cacheTag("institutions");
   cacheLife("days");
+  // CACHE STALENESS NOTE: gate_decisions changes don't invalidate this tag,
+  // AND no action currently invalidates "institutions" at all. Counts here
+  // can lag by up to cacheLife("days"). See cf-frontend plan → Out of scope.
 
   return db.all<InstitutionRow>(sql`
     SELECT i.institution AS name, COUNT(*) AS count
@@ -132,6 +141,10 @@ export async function listInstitutions(): Promise<InstitutionRow[]> {
       AND NOT EXISTS (
         SELECT 1 FROM reports r
         WHERE r.image_id = i.image_id AND r.resolved_at IS NULL
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM gate_decisions g
+        WHERE g.image_id = i.image_id AND g.decision = 'reject'
       )
     GROUP BY i.institution
     ORDER BY count DESC, name ASC
@@ -151,6 +164,9 @@ export async function searchSpecies(q: string): Promise<SpeciesRow[]> {
   "use cache";
   cacheTag("species-index");
   cacheLife("hours");
+  // CACHE STALENESS NOTE: only `deleteImage` invalidates "species-index" today;
+  // gate_decisions changes do not. Autocomplete counts can stay stale for up to
+  // cacheLife("hours"). See cf-frontend plan → Out of scope.
 
   const trimmed = q.trim();
   if (trimmed.length < 2) return [];
@@ -168,6 +184,10 @@ export async function searchSpecies(q: string): Promise<SpeciesRow[]> {
         AND NOT EXISTS (
           SELECT 1 FROM reports r
           WHERE r.image_id = i.image_id AND r.resolved_at IS NULL
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM gate_decisions g
+          WHERE g.image_id = i.image_id AND g.decision = 'reject'
         )
     )
     SELECT common_name, taxon_species, taxon_order, COUNT(*) AS count

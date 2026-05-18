@@ -38,6 +38,7 @@ from scripts.detect_subjects.image_labels_io import (
 from scripts.detect_subjects.recompute_gate import recompute_for_image
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PARQUET_PATH = PROJECT_ROOT / "data" / "cache" / "framing_detections.parquet"
 
 # Tunable via env so the same port can be reused after a crash without
 # stale-listener "address already in use" pain.
@@ -86,7 +87,7 @@ def _read_predictions() -> dict:
     mirrors them to the predictions table but the UI still reads here for the
     `predicted_p` badge contract.
     """
-    parquet_path = PROJECT_ROOT / "data" / "cache" / "framing_detections.parquet"
+    parquet_path = PARQUET_PATH
     if not parquet_path.exists():
         return {}
     try:
@@ -119,55 +120,91 @@ class _StompGuardError(ValueError):
     """Raised when an empty POST would clear non-empty image_labels."""
 
 
+def _records_differ(a: dict, b: dict) -> bool:
+    """True if two label dicts differ on any field the UI cares about."""
+    for key in ("col1", "col2_count", "col2_flags", "col3", "col4",
+                "unsure", "reviewed_at", "user_edited", "variant_tag"):
+        if a.get(key) != b.get(key):
+            return True
+    return False
+
+
 def _write_labels_and_recompute(payload: dict) -> dict:
-    """Atomic replace of image_labels with `payload`:
-      - Delete rows whose image_id is NOT in payload (UI 'un-mark' semantic)
-      - Upsert every payload row
-      - Recompute_for_image for every image_id that exists in the new state
-        OR was just deleted (so the gate reflects both adds and removes)
-    All in one BEGIN/COMMIT — a crash mid-save leaves the previous state intact.
+    """Atomic replace of image_labels with `payload`. Only upserts entries
+    that NEW or CHANGED relative to current DB state; only recomputes gate
+    for changed + deleted image_ids. Avoids O(N) work per save when only
+    one record changed.
 
-    Returns {upserted, deleted, recomputed}.
+    Returns {upserted, deleted, recomputed, unchanged}.
 
-    Safety: a payload of {} when image_labels has rows is treated as a likely
-    bug, not a deliberate wipe — raises _StompGuardError. The UI never needs
-    to clear every label this way (it deletes one key at a time). Operator can
-    drop the table directly for intentional wipes.
+    Stomp guard: an empty POST when image_labels has rows is treated as a
+    likely UI bug and raises _StompGuardError.
     """
     now_s = int(time.time())
     conn = open_conn()
     try:
-        existing_ids = {
-            r[0] for r in conn.execute("SELECT image_id FROM image_labels")
-        }
-        if not payload and existing_ids:
-            raise _StompGuardError(
-                f"refusing to clear {len(existing_ids)} image_labels rows "
-                "via empty POST payload (likely UI bug; use sqlite3 directly "
-                "for intentional wipes)"
-            )
-        keep_ids = set(payload.keys())
-        deleted_ids = existing_ids - keep_ids
         conn.execute("BEGIN")
         try:
-            deleted = delete_labels_not_in(conn, keep_ids)
+            # Load existing state inside the transaction (after BEGIN so the
+            # snapshot is consistent with the writes below).
+            existing_records: dict[str, dict] = {}
+            for (iid, col1, col2_count, flags_j, col3_j, col4_j,
+                 unsure, reviewed_at, user_edited, variant_tag) in conn.execute(
+                "SELECT image_id, col1, col2_count, col2_flags, col3, col4, "
+                "unsure, reviewed_at, user_edited, variant_tag FROM image_labels"
+            ):
+                existing_records[iid] = {
+                    "col1": col1, "col2_count": col2_count,
+                    "col2_flags": json.loads(flags_j) if flags_j else [],
+                    "col3": json.loads(col3_j) if col3_j else [],
+                    "col4": json.loads(col4_j) if col4_j else [],
+                    "unsure": bool(unsure),
+                    "reviewed_at": reviewed_at,
+                    "user_edited": bool(user_edited),
+                    "variant_tag": variant_tag,
+                }
+            existing_ids = set(existing_records.keys())
+
+            if not payload and existing_ids:
+                raise _StompGuardError(
+                    f"refusing to clear {len(existing_ids)} image_labels rows "
+                    "via empty POST payload (likely UI bug; use sqlite3 directly "
+                    "for intentional wipes)"
+                )
+
+            keep_ids = set(payload.keys())
+            deleted_ids = existing_ids - keep_ids
+
+            # Diff: which payload entries are new or changed?
+            changed_or_new: list[str] = []
+            unchanged_count = 0
             for image_id, record in payload.items():
-                upsert_label(conn, image_id, record)
-            for image_id in keep_ids:
+                existing = existing_records.get(image_id)
+                if existing is None or _records_differ(existing, record):
+                    changed_or_new.append(image_id)
+                else:
+                    unchanged_count += 1
+
+            deleted = delete_labels_not_in(conn, keep_ids)
+            for image_id in changed_or_new:
+                upsert_label(conn, image_id, payload[image_id])
+
+            touched_ids = changed_or_new + list(deleted_ids)
+            for image_id in touched_ids:
                 recompute_for_image(image_id, conn, now_s=now_s)
-            for image_id in deleted_ids:
-                recompute_for_image(image_id, conn, now_s=now_s)
+
             conn.commit()
+            return {
+                "upserted": len(changed_or_new),
+                "deleted": deleted,
+                "recomputed": len(touched_ids),
+                "unchanged": unchanged_count,
+            }
         except Exception:
-            conn.rollback()
+            conn.execute("ROLLBACK")
             raise
     finally:
         conn.close()
-    return {
-        "upserted": len(payload),
-        "deleted": deleted,
-        "recomputed": len(keep_ids) + len(deleted_ids),
-    }
 
 
 class LabelServerHandler(SimpleHTTPRequestHandler):
@@ -230,7 +267,7 @@ class LabelServerHandler(SimpleHTTPRequestHandler):
         self._send_json(HTTPStatus.OK, {"ok": True, **stats})
 
     def _handle_retrain(self):
-        label = self.path.split("/api/retrain/", 1)[1]
+        label = self.path.rsplit("/", 1)[-1]
         from scripts.detect_subjects.ml_labeler import TIER1_LABELS
         if label not in TIER1_LABELS:
             self._send_json(HTTPStatus.BAD_REQUEST, {

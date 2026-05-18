@@ -39,6 +39,7 @@ export default defineConfig({
             "tests/lib/facets.test.ts",
             "tests/lib/filter-clauses.test.ts",
             "tests/lib/fts-query.test.ts",
+            "tests/lib/gate-decisions-filter.test.ts",
             "tests/lib/order-colors.test.ts",
             "tests/lib/repeat-mode.test.ts",
             "tests/lib/session-pools.test.ts",
@@ -48,6 +49,15 @@ export default defineConfig({
             "tests/lib/tokens.test.ts",
           ],
           env: { DATABASE_URL: ":memory:" },
+        },
+        resolve: {
+          // `next/cache` requires the `cacheComponents` Next config to be
+          // active at runtime; in pure vitest it throws. Swap it for a
+          // no-op stub so `searchGallery` / `listInstitutions` / etc.
+          // can be exercised by integration tests.
+          alias: {
+            "next/cache": path.resolve(__dirname, "tests/stubs/next-cache.ts"),
+          },
         },
       },
       {

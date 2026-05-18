@@ -199,14 +199,21 @@ def _recall_threshold(cv_metrics: dict, target_recall: float) -> Optional[float]
 def _write_suggested_threshold(
     db_path: Path, label: str, value: float, now_s: int,
 ) -> None:
+    """Write suggested_threshold via UPSERT. If the label row doesn't exist
+    in label_thresholds, INSERT a fresh tier-1 row at threshold=1.0 (safe
+    "off" default until a human picks a value). If it exists, UPDATE only
+    the suggested_threshold + updated_at columns — leave `threshold` and
+    `threshold_v` alone (those are human-edited)."""
     conn = open_conn(db_path)
     try:
-        # Update only suggested_threshold + updated_at. Per spec, `threshold`
-        # is human-edited and not touched here.
         conn.execute(
-            "UPDATE label_thresholds SET suggested_threshold = ?, updated_at = ? "
-            "WHERE label = ?",
-            (value, now_s, label),
+            "INSERT INTO label_thresholds "
+            "(label, tier, threshold, suggested_threshold, threshold_v, notes, updated_at) "
+            "VALUES (?, 1, 1.0, ?, 1, 'auto-seeded by train.py', ?) "
+            "ON CONFLICT(label) DO UPDATE SET "
+            "  suggested_threshold = excluded.suggested_threshold, "
+            "  updated_at = excluded.updated_at",
+            (label, value, now_s),
         )
         conn.commit()
     finally:

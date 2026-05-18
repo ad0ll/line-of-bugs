@@ -59,6 +59,10 @@ export async function GET(req: Request): Promise<Response> {
       const counts = db.all<{ c: number }>(sql`
         SELECT COUNT(*) AS c FROM images
         WHERE hidden = 0 AND taxon_subgroup IN (${sql.join(g.dbValues.map((v) => sql`${v}`), sql`, `)})
+          AND NOT EXISTS (
+            SELECT 1 FROM gate_decisions g
+            WHERE g.image_id = images.image_id AND g.decision = 'reject'
+          )
       `);
       groupResults.push({
         kind: "group",
@@ -80,6 +84,10 @@ export async function GET(req: Request): Promise<Response> {
       JOIN images i ON i.image_id = f.image_id
       WHERE images_fts MATCH ${ftsExpr}
         AND i.hidden = 0
+        AND NOT EXISTS (
+          SELECT 1 FROM gate_decisions g
+          WHERE g.image_id = i.image_id AND g.decision = 'reject'
+        )
       GROUP BY i.common_name, i.taxon_species
       ORDER BY c DESC
       LIMIT 15

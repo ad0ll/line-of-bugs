@@ -200,6 +200,42 @@ def test_post_empty_dict_against_existing_rows_is_rejected(server_url, tmp_db):
     assert n == 1
 
 
+def test_get_predictions_returns_dict_from_parquet(server_url, tmp_db, tmp_path, monkeypatch):
+    """GET /api/predictions reads predicted_*_p columns from parquet and
+    returns {image_id: {predicted_<label>_p, predicted_<label>_unreliable}}."""
+    import polars as pl
+    parquet_path = tmp_path / "framing_detections.parquet"
+    df = pl.DataFrame({
+        "image_id": ["img-1", "img-2"],
+        "variant": ["sam3__sam3", "sam3__sam3"],
+        "predicted_mask_blur_unusable_p": [0.85, 0.20],
+        "predicted_mask_blur_unusable_unreliable": [False, False],
+    })
+    df.write_parquet(parquet_path)
+    monkeypatch.setattr(
+        "scripts.detect_subjects.label_server.PARQUET_PATH", parquet_path,
+    )
+    resp = urllib.request.urlopen(f"{server_url}/api/predictions")
+    assert resp.status == 200
+    body = json.loads(resp.read())
+    assert "img-1" in body
+    assert body["img-1"]["predicted_mask_blur_unusable_p"] == 0.85
+    assert body["img-1"]["predicted_mask_blur_unusable_unreliable"] is False
+
+
+def test_get_predictions_returns_empty_when_parquet_missing(server_url, monkeypatch, tmp_path):
+    """If the parquet doesn't exist, /api/predictions returns an empty
+    dict rather than crashing."""
+    monkeypatch.setattr(
+        "scripts.detect_subjects.label_server.PARQUET_PATH",
+        tmp_path / "does-not-exist.parquet",
+    )
+    resp = urllib.request.urlopen(f"{server_url}/api/predictions")
+    assert resp.status == 200
+    body = json.loads(resp.read())
+    assert body == {}
+
+
 def test_post_deletes_rows_not_in_payload(server_url, tmp_db):
     """If a key is absent from the POST body, its row is removed — matches
     the legacy labels.json overwrite behavior the UI relies on for 'un-mark'."""
@@ -245,3 +281,73 @@ def test_post_deletes_rows_not_in_payload(server_url, tmp_db):
     rows = list(conn.execute("SELECT image_id FROM image_labels ORDER BY image_id"))
     conn.close()
     assert rows == [("img-1",)]
+
+
+def test_post_with_no_changes_does_zero_upserts(server_url, tmp_db):
+    """POSTing the same labels dict back unchanged should produce
+    upserted=0, recomputed=0 (only delta is computed)."""
+    # Pre-seed a label.
+    conn = sqlite3.connect(tmp_db)
+    conn.execute(
+        "INSERT INTO image_labels (image_id, col1, col2_count, col2_flags, "
+        "col3, col4, unsure, reviewed_at, user_edited, variant_tag) "
+        "VALUES ('img-1', 'bbox_correct-subject_not-clipped', 'bbox-content_single', "
+        "'[]', '[]', '[]', 0, 100, 1, 'sam3__sam3')"
+    )
+    conn.commit()
+    conn.close()
+    # GET the labels (matches what the UI does on load).
+    resp = urllib.request.urlopen(f"{server_url}/api/labels")
+    labels = json.loads(resp.read())
+    assert "img-1" in labels
+    # POST the same dict back unchanged.
+    req = urllib.request.Request(
+        f"{server_url}/api/labels", data=json.dumps(labels).encode(),
+        headers={"Content-Type": "application/json"}, method="POST",
+    )
+    resp = urllib.request.urlopen(req)
+    body = json.loads(resp.read())
+    assert resp.status == 200
+    assert body["upserted"] == 0
+    assert body["deleted"] == 0
+    assert body["recomputed"] == 0
+    assert body["unchanged"] == 1
+
+
+def test_post_with_one_changed_only_touches_one(server_url, tmp_db):
+    """POSTing 2 entries where only 1 differs from DB should upsert
+    just the changed one."""
+    conn = sqlite3.connect(tmp_db)
+    for iid in ("img-1", "img-2"):
+        conn.execute(
+            "INSERT INTO images (image_id, collection_id, source, source_id, "
+            "source_page_url, image_url, filename, thumbnail_filename, "
+            "medium_filename, file_sha256, license, subject_state) "
+            "VALUES (?, 'c', 'inaturalist', 's', 'u', 'u', 'f', 't', 'm', "
+            "'sha', 'lic', 'wild') ON CONFLICT(image_id) DO NOTHING",
+            (iid,),
+        )
+        conn.execute(
+            "INSERT INTO image_labels (image_id, col1, col2_count, col2_flags, "
+            "col3, col4, unsure, reviewed_at, user_edited, variant_tag) "
+            "VALUES (?, 'bbox_correct-subject_not-clipped', 'bbox-content_single', "
+            "'[]', '[]', '[]', 0, 100, 1, 'sam3__sam3') "
+            "ON CONFLICT(image_id) DO NOTHING",
+            (iid,),
+        )
+    conn.commit()
+    conn.close()
+    resp = urllib.request.urlopen(f"{server_url}/api/labels")
+    labels = json.loads(resp.read())
+    # Mutate only img-2's col3 to add a mask label.
+    labels["img-2"]["col3"] = ["mask_blur_unusable"]
+    req = urllib.request.Request(
+        f"{server_url}/api/labels", data=json.dumps(labels).encode(),
+        headers={"Content-Type": "application/json"}, method="POST",
+    )
+    resp = urllib.request.urlopen(req)
+    body = json.loads(resp.read())
+    assert resp.status == 200
+    assert body["upserted"] == 1
+    assert body["unchanged"] == 1
+    assert body["recomputed"] == 1

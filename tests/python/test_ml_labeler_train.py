@@ -142,3 +142,34 @@ def test_train_writes_suggested_threshold(tmp_path):
     assert row[0] is not None and 0.0 <= row[0] <= 1.0
     # threshold (human-edited column) MUST remain at its seed value of 0.5.
     assert row[1] == 0.5
+
+
+def test_train_writes_suggested_threshold_for_unseeded_label(tmp_path):
+    """Training a label NOT in label_thresholds should INSERT a row with
+    threshold=1.0 (safe off) and the computed suggested_threshold."""
+    from scripts.detect_subjects.ml_labeler.train import train_label
+    import sqlite3
+    # Reuse the fixture but use a DIFFERENT label so no seed row exists
+    parquet_path, db_path = _fake_parquet_and_db(tmp_path)
+    # Drop the seed row that _fake_parquet_and_db inserts
+    conn = sqlite3.connect(db_path)
+    conn.execute("DELETE FROM label_thresholds")
+    conn.commit()
+    conn.close()
+    out_dir = tmp_path / "models" / "mask_blur_unusable"
+    train_label(
+        label="mask_blur_unusable",
+        parquet_path=parquet_path, db_path=db_path,
+        out_dir=out_dir, random_state=42,
+    )
+    conn = sqlite3.connect(db_path)
+    row = conn.execute(
+        "SELECT tier, threshold, suggested_threshold, threshold_v "
+        "FROM label_thresholds WHERE label='mask_blur_unusable'"
+    ).fetchone()
+    conn.close()
+    assert row is not None, "row should have been inserted"
+    assert row[0] == 1            # tier=1 (default)
+    assert row[1] == 1.0          # threshold=1.0 (safe off)
+    assert row[2] is not None and 0.0 <= row[2] <= 1.0
+    assert row[3] == 1            # threshold_v=1

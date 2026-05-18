@@ -22,10 +22,19 @@ DEFAULT_DB_PATH = ROOT / "data" / "db" / "line-of-bugs.db"
 
 def open_conn(db_path: Optional[Path] = None) -> sqlite3.Connection:
     """Return a sqlite3.Connection with WAL + foreign_keys + busy_timeout
-    set. Use this everywhere instead of bare sqlite3.connect()."""
+    set.
+
+    isolation_level=None puts sqlite3 in autocommit mode: Python does NOT
+    auto-open transactions on the first DML statement. Combined with our
+    explicit `conn.execute("BEGIN") ... conn.commit()` patterns in
+    detections_sync, predictions_sync, recompute_gate, and label_server,
+    this avoids the Python 3.12+ behavior where an implicit BEGIN can
+    collide with our explicit one and raise "cannot start a transaction
+    within a transaction".
+    """
     if db_path is None:
         db_path = DEFAULT_DB_PATH
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(db_path, isolation_level=None)
     conn.execute("PRAGMA journal_mode = WAL")
     conn.execute("PRAGMA synchronous = NORMAL")
     conn.execute("PRAGMA foreign_keys = ON")
