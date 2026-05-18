@@ -12,7 +12,7 @@
  * Generated types are exported below for use throughout the app.
  */
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text, index, uniqueIndex, check } from "drizzle-orm/sqlite-core";
+import { integer, real, sqliteTable, text, index, uniqueIndex, check, primaryKey } from "drizzle-orm/sqlite-core";
 
 // ──────────────────────────── images ────────────────────────────
 
@@ -306,19 +306,19 @@ export const detections = sqliteTable(
     suggestedLabels: text("suggested_labels").notNull(),
     gateRuleOnly: text("gate_rule_only").notNull(),
     hasBbox: integer("has_bbox").notNull(),
-    bboxX: integer("bbox_x", { mode: "number" }),
-    bboxY: integer("bbox_y", { mode: "number" }),
-    bboxW: integer("bbox_w", { mode: "number" }),
-    bboxH: integer("bbox_h", { mode: "number" }),
-    maskAreaRatio: integer("mask_area_ratio", { mode: "number" }),
-    labDeltaE: integer("lab_delta_e", { mode: "number" }),
-    boundarySharpness: integer("boundary_sharpness", { mode: "number" }),
-    maskIouScore: integer("mask_iou_score", { mode: "number" }),
-    cropX: integer("crop_x", { mode: "number" }),
-    cropY: integer("crop_y", { mode: "number" }),
-    cropW: integer("crop_w", { mode: "number" }),
-    cropH: integer("crop_h", { mode: "number" }),
-    postCropSubjectArea: integer("post_crop_subject_area", { mode: "number" }),
+    bboxX: real("bbox_x"),
+    bboxY: real("bbox_y"),
+    bboxW: real("bbox_w"),
+    bboxH: real("bbox_h"),
+    maskAreaRatio: real("mask_area_ratio"),
+    labDeltaE: real("lab_delta_e"),
+    boundarySharpness: real("boundary_sharpness"),
+    maskIouScore: real("mask_iou_score"),
+    cropX: real("crop_x"),
+    cropY: real("crop_y"),
+    cropW: real("crop_w"),
+    cropH: real("crop_h"),
+    postCropSubjectArea: real("post_crop_subject_area"),
     processedAt: integer("processed_at").notNull(),
     schemaVersion: integer("schema_version").notNull(),
   },
@@ -345,13 +345,13 @@ export const predictions = sqliteTable(
       .notNull()
       .references(() => images.imageId, { onDelete: "cascade" }),
     label: text("label").notNull(),
-    p: integer("p", { mode: "number" }).notNull(),
+    p: real("p").notNull(),
     unreliable: integer("unreliable").notNull().default(0),
     modelVersion: text("model_version").notNull(),
     predictedAt: integer("predicted_at").notNull(),
   },
   (t) => [
-    uniqueIndex("idx_predictions_pk").on(t.imageId, t.label),
+    primaryKey({ columns: [t.imageId, t.label] }),
     index("idx_predictions_label_p").on(t.label, t.p),
     check("predictions_unreliable_check", sql`${t.unreliable} IN (0, 1)`),
   ],
@@ -411,8 +411,8 @@ export const labelThresholds = sqliteTable(
   {
     label: text("label").primaryKey(),
     tier: integer("tier").notNull(),
-    threshold: integer("threshold", { mode: "number" }).notNull(),
-    suggestedThreshold: integer("suggested_threshold", { mode: "number" }),
+    threshold: real("threshold").notNull(),
+    suggestedThreshold: real("suggested_threshold"),
     thresholdV: integer("threshold_v").notNull(),
     notes: text("notes"),
     updatedAt: integer("updated_at").notNull(),
