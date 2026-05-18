@@ -124,13 +124,15 @@ Investigation:
 - Modify: `lib/queries/gallery.ts` — project institution, sex, life_stage into GalleryRow if not already
 - Modify: `app/globals.css`
 
-Display order (left to right, top to bottom):
-1. Taxon order (existing — already removed in Phase A; bring back as a thin pill?)
-2. Life stage (e.g., "adult", "larva")
-3. Sex (e.g., "female", "worker")
-4. Institution (e.g., "UGA")
+Display order (left to right, top to bottom) — final, picked for drawing-student priority:
+1. Taxon order (e.g., "hemiptera") — broad reference; already shown on tiles per current build
+2. Life stage (e.g., "adult", "larva") — biggest morphological cue
+3. Sex (e.g., "female", "worker") — anatomical detail
+4. Institution (e.g., "UGA") — attribution, lowest priority for drawing decisions
 
-Style: small italic serif pills in muted lilac; wrap to multiple lines as needed. Order chosen by relevance to drawing students: stage first (drawability), then sex (anatomy), then institution (attribution).
+License (CC-BY-3.0) keeps its own corner pill (bottom-left) — it's required attribution, not metadata.
+
+Style: small italic serif pills in muted lilac; institution pill in muted pink to set attribution apart from biological metadata.
 
 - [ ] **Step 1: TileMetaChips component**
 
