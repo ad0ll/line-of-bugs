@@ -506,9 +506,6 @@ function _materializeAllDefaults(cur, r) {
   cur.col3 = _displayCol3(r, cur);
   cur.col4 = _displayCol4(r, cur);
 }
-// Back-compat alias for C / Reviewed paths.
-function _materializeDefaults(cur, r) { _materializeAllDefaults(cur, r); }
-
 function notifySaveError(msg) {
   const el = document.getElementById("saveStatus");
   if (el) { el.textContent = "save failed: " + msg; el.style.color = "#ef4444"; }
@@ -589,14 +586,6 @@ async function saveLabelsToServer() {
   }
   savePending--;
   updateSaveStatus();
-}
-
-// Has the user actually started editing this image?
-function isUserEdited(lbl) {
-  return !!(lbl && (lbl.user_edited || lbl.col1 || lbl.col2_count ||
-    (lbl.col2_flags && lbl.col2_flags.length > 0) ||
-    (lbl.col3 && lbl.col3.length > 0) ||
-    (lbl.col4 && lbl.col4.length > 0) || lbl.unsure));
 }
 
 // Mark the record as user-edited on first interaction. Rule-suggested
@@ -722,7 +711,7 @@ function markReviewed(id) {
   const cur = LABELS[id] || _emptyLabel();
   if (cur.reviewed_at && cur.user_edited) { delete LABELS[id]; render(); saveLabelsToServer(); return; }
   const r = _rowFor(id);
-  _materializeDefaults(cur, r);  // write displayed defaults into the record
+  _materializeAllDefaults(cur, r);  // write displayed defaults into the record
   _ensureMaterialized(cur, r);
   _persist(id, cur);
 }
@@ -1155,7 +1144,7 @@ document.getElementById("sort").addEventListener("change", render);
 function _commitBboxOnly(id) {
   const cur = LABELS[id] ? Object.assign({}, LABELS[id]) : _emptyLabel();
   const r = _rowFor(id);
-  _materializeDefaults(cur, r);
+  _materializeAllDefaults(cur, r);
   if (!Array.isArray(cur.col2_flags)) cur.col2_flags = [];
   if (!Array.isArray(cur.col3)) cur.col3 = [];
   if (!Array.isArray(cur.col4)) cur.col4 = [];
