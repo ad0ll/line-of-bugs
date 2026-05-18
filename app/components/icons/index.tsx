@@ -38,35 +38,35 @@ export const CuteFlower = makeIcon("cherry_blossom.svg", "cherry blossom");
 export const CuteLadybug = makeIcon("lady_beetle.svg", "ladybug");
 export const WiltedFlower = makeIcon("wilted_flower.svg", "wilted flower");
 
-// Phase F (2026-05-18) — gallery icon. Tried ladybug + hibiscus (both
-// Fluent Color); both clashed against pink/lilac theme at small sizes.
-// Switched to a monochrome pink cherry-blossom outline, inline SVG so
-// it inherits color from currentColor (we tint with --accent-pink).
-// Same shape family as the hero cherry blossom; quieter for a page
-// header. Doesn't compete with the tile grid below it.
+// Phase F iter 4 (2026-05-18) — Gallery icon = Phosphor butterfly-duotone.
+// Iterations: Fluent ladybug/hibiscus (color clash, vetoed), inline
+// outline cherry-blossom (Claude shouldn't be drawing SVGs — user
+// feedback), Phosphor butterfly-fill (too geometric).
+//
+// Final pick: Phosphor's butterfly-duotone weight reads as two layered
+// pink shapes (wings + body) — looks intentional, hand-finished, not
+// flat-emoji. MIT-licensed (phosphoricons.com), designed for 16-48px
+// scale. Tinted via CSS `filter` chain to --accent-pink so it matches
+// the brand pink without us shipping a colored SVG.
 export function GalleryIcon({ size = 20, style, ...rest }: IconProps) {
   return (
-    <svg
-      viewBox="0 0 24 24"
+    <img
+      src="/icons/phosphor/butterfly-duotone.svg"
+      alt=""
+      aria-hidden="true"
       width={size}
       height={size}
-      aria-hidden="true"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinejoin="round"
-      style={{ display: "inline-block", flexShrink: 0, verticalAlign: "middle", color: "var(--accent-pink)", ...style }}
-      {...(rest as React.SVGAttributes<SVGSVGElement>)}
-    >
-      <g transform="translate(12 12)">
-        <ellipse cx="0" cy="-5.5" rx="2.6" ry="3.8" />
-        <ellipse cx="0" cy="-5.5" rx="2.6" ry="3.8" transform="rotate(72)" />
-        <ellipse cx="0" cy="-5.5" rx="2.6" ry="3.8" transform="rotate(144)" />
-        <ellipse cx="0" cy="-5.5" rx="2.6" ry="3.8" transform="rotate(216)" />
-        <ellipse cx="0" cy="-5.5" rx="2.6" ry="3.8" transform="rotate(288)" />
-        <circle cx="0" cy="0" r="2" fill="currentColor" stroke="none" />
-      </g>
-    </svg>
+      draggable={false}
+      decoding="async"
+      style={{
+        display: "inline-block",
+        flexShrink: 0,
+        verticalAlign: "middle",
+        filter: "brightness(0) saturate(100%) invert(60%) sepia(70%) saturate(2000%) hue-rotate(290deg) brightness(105%) contrast(95%)",
+        ...style,
+      }}
+      {...rest}
+    />
   );
 }
 
