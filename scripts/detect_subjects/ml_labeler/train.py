@@ -26,16 +26,42 @@ from scripts.detect_subjects.sqlite_db import open_conn, DEFAULT_DB_PATH
 from scripts.detect_subjects.image_labels_io import fetch_all_reviewed_labels
 
 
+def _load_non_drawable_ids(db_path: Optional[Path] = None) -> set[str]:
+    """image_ids the gallery will never show students, regardless of label.
+    Currently: bugwood close-ups (zoom shots of body parts — useless for
+    gesture drawing). Queried from SQLite once per training run.
+    """
+    from scripts.detect_subjects.sqlite_db import open_conn, DEFAULT_DB_PATH
+    if db_path is None:
+        db_path = DEFAULT_DB_PATH
+    if not Path(db_path).exists():
+        return set()
+    conn = open_conn(db_path)
+    try:
+        rows = conn.execute(
+            "SELECT image_id FROM images WHERE view_label = 'close-up'"
+        ).fetchall()
+        return {r[0] for r in rows}
+    finally:
+        conn.close()
+
+
 def _load_xy_for_label(
     parquet_path: Path, db_path: Path, label: str,
 ) -> tuple[np.ndarray, np.ndarray, list[str]]:
     """Return X (n,12), y (n,), image_ids list. Only sam3__sam3 rows whose
-    image_id has a reviewed, user_edited row in image_labels are included."""
+    image_id has a reviewed, user_edited row in image_labels are included.
+
+    Excludes:
+      - framing_quality in ('bug_too_small', 'no_bug') — non-drawable detections
+      - bugwood close-ups (view_label='close-up') — zoom shots of body parts
+    """
     conn = open_conn(db_path)
     try:
         labels = fetch_all_reviewed_labels(conn)
     finally:
         conn.close()
+    non_drawable = _load_non_drawable_ids(db_path)
     df = pl.read_parquet(parquet_path).filter(pl.col("variant") == "sam3__sam3")
     X_rows, y_rows, ids = [], [], []
     for row in df.iter_rows(named=True):
@@ -45,6 +71,14 @@ def _load_xy_for_label(
             continue
         # 'unsure' = user couldn't decide; not a negative example — exclude.
         if lbl.get("unsure"):
+            continue
+        # Skip non-drawable detections — students never see them in the
+        # gallery, and including them poisons training with bad-feature rows.
+        if row.get("framing_quality") in ("bug_too_small", "no_bug"):
+            continue
+        # Close-ups (bugwood view_label='close-up') are zoom shots of body
+        # parts — useless for gesture drawing.
+        if iid in non_drawable:
             continue
         col3 = lbl.get("col3") or []
         if label in col3:

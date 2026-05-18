@@ -15,6 +15,7 @@ CREATE TABLE images (
   medium_filename TEXT NOT NULL, file_sha256 TEXT NOT NULL,
   license TEXT NOT NULL, subject_state TEXT NOT NULL,
   hidden INTEGER NOT NULL DEFAULT 0,
+  view_label TEXT,
   added_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 """
@@ -68,6 +69,7 @@ def _fake_parquet_and_db(tmpdir: Path):
         "edge_density_mask_vs_bg": [1.5] * n,
         "confidence": [0.9] * n,
         "n_distinct_detections": [1] * n,
+        "framing_quality": ["good"] * n,
     })
     parquet_path = tmpdir / "test.parquet"
     df.write_parquet(parquet_path)
