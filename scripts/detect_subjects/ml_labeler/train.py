@@ -35,6 +35,11 @@ def _load_xy_for_label(
         lbl = labels.get(iid)
         if not lbl or not lbl.get("reviewed_at") or not lbl.get("user_edited"):
             continue
+        # "unsure" is the user telling us they don't know how to score this
+        # card. It is NOT a negative example — the model has no ground truth
+        # to learn from, so we exclude it from training entirely.
+        if lbl.get("unsure"):
+            continue
         # Determine label class — accept both new schema (col3) and legacy
         # schema (flags array) as sources of positives.
         col3_or_flags = (lbl.get("col3") or []) + (lbl.get("flags") or [])

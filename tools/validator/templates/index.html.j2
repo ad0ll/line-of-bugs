@@ -224,6 +224,8 @@
   <label style="margin-left:12px;font-size:12px;color:#aaa;cursor:pointer;font-family:'JetBrains Mono',monospace;">
     <input type="checkbox" id="hideReviewed" style="vertical-align:middle;margin-right:4px"> hide reviewed
   </label>
+  <button id="snapshotMoreBtn" style="display:none;margin-left:4px;font-size:11px;padding:1px 6px" title="Add newly-reviewed cards to the hidden set">↻ hide <span id="snapshotMoreCount">0</span> more</button>
+  <button id="showHiddenBtn" style="display:none;margin-left:4px;font-size:11px;padding:1px 6px" title="Clear the snapshot — formerly-hidden cards reappear">show <span id="showHiddenCount">0</span> hidden</button>
   <button id="retrainBtn" style="margin-left:auto;background:#ef4444;color:#fff;border-color:#ef4444;display:none">retrain selected</button>
 </div>
 
@@ -311,6 +313,11 @@ async function loadMLMetrics() {
 // little marginal information). Reduces low-leverage labeling cycles.
 let hideConfident = false;
 let hideReviewed = false;
+// Snapshot of image_ids hidden by hide-reviewed. Snapshot is taken on toggle
+// ON and explicit refresh. Live edits (corrections that mark reviewed_at) do
+// NOT auto-add to the snapshot — so the card the user just corrected stays
+// visible, preventing the "card I just labeled disappeared" UX.
+let hiddenIds = new Set();
 const HIDE_CONFIDENT_THRESHOLD = 0.4;
 
 // Render tab strip labels with live counts. Called from render() so they
@@ -585,8 +592,21 @@ function setUnsure(id) {
   const cur = LABELS[id] || _emptyLabel();
   cur.user_edited = true;
   cur.unsure = !cur.unsure;
-  if (cur.unsure) { cur.col1 = null; cur.col2_count = null; cur.col2_flags = []; cur.col3 = []; cur.col4 = []; }
-  _persist(id, cur);
+  if (cur.unsure) {
+    // "unsure" is a terminal state: clear all label data. _persist will
+    // stamp reviewed_at so the card disappears under hide-reviewed.
+    // Training skips unsure cards explicitly (see train.py).
+    cur.col1 = null; cur.col2_count = null; cur.col2_flags = [];
+    cur.col3 = []; cur.col4 = [];
+    _persist(id, cur);
+  } else {
+    // Toggling unsure OFF resets the card to a pristine, unreviewed state.
+    // We bypass _persist (which would re-stamp reviewed_at) and clear the
+    // record entirely, then save.
+    delete LABELS[id];
+    render();
+    saveLabelsToServer();
+  }
 }
 function markReviewed(id) {
   const cur = LABELS[id] || _emptyLabel();
@@ -705,6 +725,8 @@ function _phraseSummaryHTML(primaryPhrase, primaryConf, secPhrases, secBboxes) {
 }
 
 function render() {
+  // Keep hide-reviewed snapshot UI in sync with current LABELS state.
+  if (typeof _refreshHideReviewedButtons === 'function') _refreshHideReviewedButtons();
   const sf = document.getElementById("source").value;
   const qf = document.getElementById("quality").value;
   const rf = document.getElementById("reviewStatus").value;
@@ -723,13 +745,12 @@ function render() {
       return Math.abs(p - 0.5) <= HIDE_CONFIDENT_THRESHOLD;
     });
   }
-  // Hide-reviewed filter — works regardless of active tab. Drops any card
-  // with a reviewed_at timestamp so user sees only unreviewed work.
-  if (hideReviewed) {
-    rows = rows.filter(r => {
-      const lbl = labels[r.image_id];
-      return !lbl || !lbl.reviewed_at;
-    });
+  // Hide-reviewed filter — uses a snapshot of reviewed image_ids taken at
+  // toggle/refresh time, NOT live reviewed_at. This way, when the user
+  // corrects a card (which auto-marks it reviewed via _persist), the card
+  // stays visible until the user explicitly clicks "↻ hide N more".
+  if (hideReviewed && hiddenIds.size > 0) {
+    rows = rows.filter(r => !hiddenIds.has(r.image_id));
   }
   if (rf !== "all") {
     rows = rows.filter(r => {
@@ -1067,9 +1088,68 @@ document.getElementById('hideConfident').addEventListener('change', (e) => {
   render();
 });
 
-// Hide-reviewed checkbox handler.
+// Hide-reviewed snapshot helpers. The filter operates on `hiddenIds`, not
+// live reviewed_at, so the working set is stable while the user edits.
+function _allReviewedIds() {
+  const ids = new Set();
+  for (const r of DATA) {
+    const lbl = LABELS[r.image_id];
+    if (lbl && lbl.reviewed_at) ids.add(r.image_id);
+  }
+  return ids;
+}
+function _newlyReviewedNotInSnapshot() {
+  const out = [];
+  for (const r of DATA) {
+    const lbl = LABELS[r.image_id];
+    if (lbl && lbl.reviewed_at && !hiddenIds.has(r.image_id)) out.push(r.image_id);
+  }
+  return out;
+}
+function _refreshHideReviewedButtons() {
+  const wrap = document.getElementById('snapshotMoreBtn');
+  const showBtn = document.getElementById('showHiddenBtn');
+  if (!hideReviewed) {
+    wrap.style.display = 'none';
+    showBtn.style.display = 'none';
+    return;
+  }
+  const moreIds = _newlyReviewedNotInSnapshot();
+  if (moreIds.length > 0) {
+    wrap.style.display = 'inline-block';
+    document.getElementById('snapshotMoreCount').textContent = moreIds.length;
+  } else {
+    wrap.style.display = 'none';
+  }
+  if (hiddenIds.size > 0) {
+    showBtn.style.display = 'inline-block';
+    document.getElementById('showHiddenCount').textContent = hiddenIds.size;
+  } else {
+    showBtn.style.display = 'none';
+  }
+}
+
 document.getElementById('hideReviewed').addEventListener('change', (e) => {
   hideReviewed = e.target.checked;
+  if (hideReviewed) {
+    hiddenIds = _allReviewedIds();  // initial snapshot
+  } else {
+    hiddenIds = new Set();
+  }
+  _refreshHideReviewedButtons();
+  render();
+});
+document.getElementById('snapshotMoreBtn').addEventListener('click', () => {
+  // Add newly-reviewed cards to the snapshot
+  for (const id of _newlyReviewedNotInSnapshot()) hiddenIds.add(id);
+  _refreshHideReviewedButtons();
+  render();
+});
+document.getElementById('showHiddenBtn').addEventListener('click', () => {
+  // Clear the snapshot — formerly-hidden cards reappear. Checkbox stays
+  // checked so the next snapshot starts empty until user clicks "↻ hide N more".
+  hiddenIds = new Set();
+  _refreshHideReviewedButtons();
   render();
 });
 
