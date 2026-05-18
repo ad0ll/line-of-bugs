@@ -97,6 +97,9 @@
   .review-row button.mark-reviewed.active { background: #2d4a2d; color: #a8e6a8; border-color: #4a7a4a; }
   .review-row button.unsure-button.active { background: #28252e; color: #aaa; border-color: #666; }
 
+  .pred-badge { font-size: 9px; color: #67D4E6; font-weight: 400; margin-left: 6px; font-family: 'JetBrains Mono', monospace; }
+  .pred-badge.unreliable { color: #888; }
+
   /* Rule labeler hint — informational only, not auto-applied (sam3 miscalibrated) */
   .rule-hint { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #bbb; background: rgba(245,158,11,0.06); border-left: 2px solid rgba(245,158,11,0.4); padding: 4px 8px; margin: 6px 0; }
   .rule-hint code { background: rgba(245,158,11,0.15); color: #f59e0b; padding: 1px 4px; border-radius: 3px; margin-right: 4px; font-size: 10px; }
@@ -806,7 +809,11 @@ function render() {
       '<div class="label-columns">' +
         '<div class="col col1"><div class="col-header">BBox</div>' + col1HTML + '</div>' +
         '<div class="col col2"><div class="col-header">BBox Content</div>' + col2CountHTML + col2FlagHTML + '</div>' +
-        '<div class="col col3"><div class="col-header">Mask Rule</div>' + col3HTML + '</div>' +
+        '<div class="col col3"><div class="col-header">Mask Rule' +
+          (r.predicted_mask_blur_unusable_p != null
+            ? '<span class="pred-badge' + (r.predicted_mask_blur_unusable_unreliable ? ' unreliable' : '') + '">blur_p=' + r.predicted_mask_blur_unusable_p.toFixed(2) + '</span>'
+            : '') +
+        '</div>' + col3HTML + '</div>' +
         '<div class="col col4"><div class="col-header">ML Label</div>' + col4HTML + '</div>' +
       '</div>';
 
