@@ -5,6 +5,7 @@ import { isOrderOnlyId, titleCaseCommonName } from '@/lib/text-format';
 import { TileActions } from '@/app/components/gallery/TileActions';
 import { OrderBadge } from '@/app/components/ui/OrderBadge';
 import { BugNotFoundThumb } from '@/app/components/gallery/BugNotFoundThumb';
+import { TileMetaChips } from '@/app/components/gallery/TileMetaChips';
 
 function basename(p: string): string {
   return p.split('/').pop() ?? p;
@@ -74,6 +75,11 @@ export function GridTile({ row }: { row: GalleryRow }) {
             </span>
           )}
         </div>
+        <TileMetaChips
+          lifeStage={row.life_stage}
+          sex={row.sex}
+          institution={row.institution}
+        />
       </div>
     </article>
   );

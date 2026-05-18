@@ -24,6 +24,10 @@ export type GalleryRow = {
   common_name: string | null;
   subject_state: string;
   institution: string | null;
+  /** Phase F (2026-05-17) — projected for TileMetaChips display. NULL +
+   *  '' both render as "no chip"; "unknown" is filtered client-side. */
+  life_stage: string | null;
+  sex: string | null;
   /** License code (e.g., "CC-BY", "CC-BY-NC", "public-domain"). Rendered
    *  bottom-left of every tile per Phase E — required attribution stays
    *  visible without hover-gating. */
@@ -92,7 +96,7 @@ export async function searchGallery(args: SearchGalleryArgs): Promise<SearchGall
       image_id, collection_id, source, source_page_url, image_url,
       thumbnail_filename, medium_filename, filename,
       width, height, taxon_order, taxon_species, common_name,
-      subject_state, institution, license,
+      subject_state, institution, life_stage, sex, license,
       ROW_NUMBER() OVER (PARTITION BY collection_id ORDER BY image_id) AS collection_index,
       COUNT(*) OVER (PARTITION BY collection_id) AS collection_size
     FROM visible

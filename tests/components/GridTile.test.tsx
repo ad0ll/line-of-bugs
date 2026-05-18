@@ -18,6 +18,8 @@ const BASE_ROW = {
   common_name: "monarch",
   subject_state: "wild",
   institution: null,
+  life_stage: null,
+  sex: null,
   license: "CC-BY-NC",
   collection_index: 1,
   collection_size: 1,
@@ -62,5 +64,19 @@ describe("GridTile", () => {
     const row = { ...BASE_ROW, license: "" };
     const screen = await render(<GridTile row={row as any} />);
     expect(screen.container.querySelector(".grid-item-license")).toBeNull();
+  });
+
+  it("renders TileMetaChips when life_stage / sex / institution are set", async () => {
+    const row = { ...BASE_ROW, life_stage: "larva", sex: "female", institution: "UGA" };
+    const screen = await render(<GridTile row={row as any} />);
+    const chips = Array.from(
+      screen.container.querySelectorAll(".grid-item-meta-chip"),
+    );
+    expect(chips.map((c) => c.textContent)).toEqual(["larva", "female", "UGA"]);
+  });
+
+  it("omits the meta chips block when all biological + institution fields are absent", async () => {
+    const screen = await render(<GridTile row={BASE_ROW as any} />);
+    expect(screen.container.querySelector(".grid-item-meta-chips")).toBeNull();
   });
 });

@@ -732,6 +732,30 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   text-transform: uppercase;
   border: 1px solid var(--border-medium);
 }
+/* Phase F (2026-05-17) — biological + attribution metadata chips below
+   the species/license meta row. Lilac for biology (stage, sex), pink for
+   institution so attribution reads as a distinct axis. */
+.grid-item-meta-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.35rem;
+  margin-top: 0.35rem;
+}
+.grid-item-meta-chip {
+  display: inline-block;
+  font-family: var(--font-display), serif;
+  font-style: italic;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-lilac) 14%, transparent);
+  color: var(--accent-lilac);
+  letter-spacing: 0.02em;
+}
+.grid-item-meta-chip.is-inst {
+  background: color-mix(in srgb, var(--accent-pink) 10%, transparent);
+  color: var(--accent-pink);
+}
 .grid-item.skeleton-tile {
   aspect-ratio: 1 / 1;
   background: var(--surface-1);
