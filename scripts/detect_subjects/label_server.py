@@ -97,6 +97,12 @@ class LabelServerHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
         if self.path.startswith("/api/retrain/"):
             label = self.path.split("/api/retrain/", 1)[1]
+            from scripts.detect_subjects.ml_labeler import TIER1_LABELS
+            if label not in TIER1_LABELS:
+                self._send_json(HTTPStatus.BAD_REQUEST, {
+                    "error": f"unknown label {label!r}; allowed: {TIER1_LABELS}",
+                })
+                return
             import subprocess
             try:
                 # Run training in subprocess so server stays responsive
@@ -154,7 +160,7 @@ class LabelServerHandler(SimpleHTTPRequestHandler):
 
 
 def serve(port: int = DEFAULT_PORT) -> None:
-    addr = ("", port)
+    addr = ("127.0.0.1", port)
     httpd = ThreadingHTTPServer(addr, LabelServerHandler)
     print(f"[label-server] serving on http://localhost:{port}")
     print(f"[label-server] static root: {PROJECT_ROOT}")

@@ -35,11 +35,16 @@ def _load_xy_for_label(
         lbl = labels.get(iid)
         if not lbl or not lbl.get("reviewed_at") or not lbl.get("user_edited"):
             continue
-        # Determine label class
-        if label in (lbl.get("col3") or []):
+        # Determine label class — accept both new schema (col3) and legacy
+        # schema (flags array) as sources of positives.
+        col3_or_flags = (lbl.get("col3") or []) + (lbl.get("flags") or [])
+        if label in col3_or_flags:
             y_rows.append(1)
-        elif lbl.get("col1") is not None or lbl.get("col2_count") is not None:
-            # User looked at this card and chose not to mark this label.
+        elif (lbl.get("col1") is not None
+              or lbl.get("col2_count") is not None
+              or lbl.get("flags") is not None):
+            # User reviewed this card (either new-schema with col1/col2 set, or legacy
+            # with flags field present); chose not to mark this label.
             y_rows.append(0)
         else:
             continue  # truly empty label = unclear; skip

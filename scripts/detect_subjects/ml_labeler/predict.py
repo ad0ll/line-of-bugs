@@ -2,6 +2,12 @@
 sam3__sam3 row in the parquet, write predicted_<label>_p and _unreliable cols.
 
 V1: scalar-arm only. Future: image-arm and per-label winner-arm selection.
+
+CONCURRENCY: This function reads, modifies, and rewrites the entire parquet
+file. Do not run concurrently with classify.py (which also rewrites the
+parquet on each batch flush). No lock is taken. In V1's single-user dev
+flow this is acceptable; revisit if classify and predict ever run in
+parallel.
 """
 from __future__ import annotations
 from pathlib import Path
@@ -30,6 +36,13 @@ def predict_label_into_parquet(
         model_path = MODELS_DIR / label / "arm_scalar_latest.joblib"
     bundle = joblib.load(model_path)
     clf = bundle["clf"]
+    if bundle.get("feature_names") != SCALAR_FEATURE_NAMES:
+        raise ValueError(
+            f"Feature-name drift between bundle and current features.py:\n"
+            f"  bundle:  {bundle.get('feature_names')}\n"
+            f"  current: {SCALAR_FEATURE_NAMES}\n"
+            f"Retrain {label!r} after a features.py change."
+        )
     unreliable = bundle["n_positives"] < unreliable_threshold
 
     df = pl.read_parquet(parquet_path)
