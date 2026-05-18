@@ -38,21 +38,28 @@ function renderWhere(state: FilterState): { sql: string; params: unknown[] } {
 
 describe("buildFilterClauses", () => {
   it("returns just the visibility predicates when no filters set", () => {
-    expect(buildFilterClauses(base)).toHaveLength(2);
+    expect(buildFilterClauses(base)).toHaveLength(3);
   });
 
   it("adds a subject_state clause for any non-'all' subject", () => {
-    expect(buildFilterClauses({ ...base, subjectType: "wild" })).toHaveLength(3);
-    expect(buildFilterClauses({ ...base, subjectType: "captive" })).toHaveLength(3);
-    expect(buildFilterClauses({ ...base, subjectType: "specimen" })).toHaveLength(3);
+    expect(buildFilterClauses({ ...base, subjectType: "wild" })).toHaveLength(4);
+    expect(buildFilterClauses({ ...base, subjectType: "captive" })).toHaveLength(4);
+    expect(buildFilterClauses({ ...base, subjectType: "specimen" })).toHaveLength(4);
   });
 
   it("adds a taxon_subgroup clause when groups are selected", () => {
-    expect(buildFilterClauses({ ...base, groups: ["butterflies"] })).toHaveLength(3);
+    expect(buildFilterClauses({ ...base, groups: ["butterflies"] })).toHaveLength(4);
   });
 
   it("skips axes with empty arrays", () => {
-    expect(buildFilterClauses({ ...base, lifeStages: ["adult"] })).toHaveLength(3);
+    expect(buildFilterClauses({ ...base, lifeStages: ["adult"] })).toHaveLength(4);
+  });
+
+  it("renders the gate_decisions NOT EXISTS clause referencing the alias", () => {
+    const { sql: textI } = renderWhere(base);
+    expect(textI).toContain("gate_decisions");
+    expect(textI).toContain("decision = 'reject'");
+    expect(textI).toMatch(/i\.image_id/);
   });
 
   it("stacks all axes when several are active", () => {
@@ -64,8 +71,8 @@ describe("buildFilterClauses", () => {
       sexes: ["male"],
       groups: ["butterflies"],
     });
-    // 2 base + subject + view + life + sex + group = 7
-    expect(clauses).toHaveLength(7);
+    // 3 base + subject + view + life + sex + group = 8
+    expect(clauses).toHaveLength(8);
   });
 
   // ─── SQL content assertions ────────────────────────────────────────
