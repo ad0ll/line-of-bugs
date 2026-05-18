@@ -230,7 +230,7 @@
   <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="unsure">unsure</option><option value="flagged">any flag</option></select></label>
   <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">detector conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="random">random</option></select></label>
   <span class="totals" id="totals">{{ total }} images</span>
-  <span id="saveStatus" title="Each click is saved to data/cache/labels.json on the server"></span>
+  <span id="saveStatus" title="Each click is saved to the image_labels table on the server"></span>
 </header>
 
 <div class="tab-strip" id="tabStrip">
@@ -286,7 +286,7 @@
   <span style="color:#67D4E6">Col 3 Mask Rule:</span> Mask-derived quality ·
   <span style="color:#FF6EC7">Col 4 ML Label:</span> Catch-all
   <br><b>Pre-active defaults</b> (no clicks for typical cards): col1 <code>correct-not-clipped</code> + col2 <code>single</code> for has-bbox; col2 <code>no-bug</code> for no-bbox. Click only to override; click an active button to clear it. <b>Rule hint</b> (<code>rule says: …</code>) is informational — sam3-miscalibrated, verify with bug-zoom.
-  <br><span style="color:#666"><b>C</b> commits the displayed defaults for the next unreviewed card — left-hand key so your right hand stays on the mouse. Hover any image to zoom. Every click writes to <code>data/cache/labels.json</code>.</span>
+  <br><span style="color:#666"><b>C</b> commits the displayed defaults for the next unreviewed card — left-hand key so your right hand stays on the mouse. Hover any image to zoom. Every click writes to <code>image_labels</code> (SQLite).</span>
 </div>
 
 <div class="grid" id="grid"></div>
@@ -325,7 +325,7 @@ const COL2_COUNT_IDS = new Set(COL2_COUNT_BUTTONS.map(b => b.id));
 const COL3_BLUR_MUTEX = ["mask_blur_unusable", "mask_blur_usable"];
 const NEGATIVE_CLASSES = new Set(["flower", "leaf", "stem", "rock"]);
 
-// Source of truth: server-owned `data/cache/labels.json`. We mirror it
+// Source of truth: server-owned `image_labels` SQLite table. We mirror it
 // in-memory here; every mutation POSTs the full dict back. localStorage
 // is no longer used — origin / port changes don't lose work anymore.
 let LABELS = {};
@@ -515,7 +515,7 @@ function updateSaveStatus() {
   el.style.color = "#666";
   const n = Object.keys(LABELS).length;
   const reviewed = Object.values(LABELS).filter(v => !!v.reviewed_at).length;
-  el.textContent = reviewed + " reviewed · " + n + " labelled · data/cache/labels.json";
+  el.textContent = reviewed + " reviewed · " + n + " labelled";
 }
 
 async function loadLabelsFromServer() {
