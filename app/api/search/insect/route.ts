@@ -19,6 +19,15 @@ export async function GET(req: Request): Promise<Response> {
   if (!q) {
     // Picker default: all groups by count desc — so the dropdown shows
     // candidates as soon as it opens, matching AllOrChipsFilter behavior.
+    //
+    // The "weird" group has catchesNull: true and must also include rows
+    // where taxon_subgroup IS NULL (mirrors lib/queries/facets.ts:
+    // runTaxonGroupCounts). One extra query for the NULL bucket; folded
+    // in below for any group with catchesNull set.
+    const nullRow = db.all<{ c: number }>(sql`
+      SELECT COUNT(*) AS c FROM images WHERE hidden = 0 AND taxon_subgroup IS NULL
+    `);
+    const nullCount = nullRow[0]?.c ?? 0;
     const groupResults: ResultRow[] = TAXON_GROUPS.map((g) => {
       const counts = db.all<{ c: number }>(sql`
         SELECT COUNT(*) AS c FROM images
@@ -27,11 +36,13 @@ export async function GET(req: Request): Promise<Response> {
           sql`, `,
         )})
       `);
+      let count = counts[0]?.c ?? 0;
+      if (g.catchesNull) count += nullCount;
       return {
         kind: "group" as const,
         value: g.key,
         label: g.label,
-        count: counts[0]?.c ?? 0,
+        count,
       };
     }).sort((a, b) => b.count - a.count);
     return Response.json(

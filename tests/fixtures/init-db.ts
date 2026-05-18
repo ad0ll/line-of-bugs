@@ -102,7 +102,7 @@ END;
 `;
 
 export const FIXTURE = {
-  subject: { wild: 18, captive: 7, specimen: 7 },
+  subject: { wild: 20, captive: 7, specimen: 7 },
   taxon: {
     butterflies: { wild: 6, captive: 4, specimen: 2, total: 12 },
     moths:       { wild: 5, captive: 0, specimen: 0, total: 5 },
@@ -111,11 +111,13 @@ export const FIXTURE = {
     bees:        { wild: 1, captive: 1, specimen: 1, total: 3 },
     ants:        { wild: 0, captive: 0, specimen: 2, total: 2 },
   },
-  total: 32,
+  total: 34,
 };
 
 interface SeedRow {
-  taxon_subgroup: string;
+  /** Nullable so we can seed NULL-taxon_subgroup rows for the
+   *  "weird" group's catchesNull rollup regression guard. */
+  taxon_subgroup: string | null;
   taxon_order: string;
   common_name: string;
   taxon_species: string;
@@ -127,7 +129,7 @@ interface SeedRow {
 
 function rows(): SeedRow[] {
   const out: SeedRow[] = [];
-  function add(n: number, r: Omit<SeedRow, "common_name" | "taxon_species">) {
+  function add(n: number, r: Omit<SeedRow, "common_name" | "taxon_species"> & { taxon_subgroup: string }) {
     for (let i = 0; i < n; i++) {
       out.push({
         ...r,
@@ -149,6 +151,24 @@ function rows(): SeedRow[] {
   add(1, { taxon_subgroup: "bee",        taxon_order: "Hymenoptera", subject_state: "captive",  sex: "worker" });
   add(1, { taxon_subgroup: "bee",        taxon_order: "Hymenoptera", subject_state: "specimen", sex: "female" });
   add(2, { taxon_subgroup: "ant",        taxon_order: "Hymenoptera", subject_state: "specimen", sex: "worker" });
+  // NULL-taxon_subgroup rows so the "weird" group's catchesNull
+  // rollup is exercised by tests (lib/taxonomy.ts:catchesNull).
+  out.push({
+    taxon_subgroup: null,
+    taxon_order: "Siphonaptera",
+    subject_state: "wild",
+    life_stage: "adult",
+    common_name: "weird thing 1",
+    taxon_species: "Pulex irritans",
+  });
+  out.push({
+    taxon_subgroup: null,
+    taxon_order: "Zygentoma",
+    subject_state: "wild",
+    life_stage: "adult",
+    common_name: "weird thing 2",
+    taxon_species: "Lepisma saccharina",
+  });
   return out;
 }
 

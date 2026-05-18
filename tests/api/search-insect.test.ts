@@ -47,5 +47,13 @@ describe("GET /api/search/insect", () => {
     const butterflies = data.results.find((r) => r.value === "butterflies");
     expect(butterflies).toBeDefined();
     expect(butterflies!.count).toBeGreaterThan(0);
+
+    // The "weird" group has catchesNull: true and must include NULL-
+    // taxon_subgroup rows in its count (regression guard).
+    const weird = data.results.find((r) => r.value === "weird");
+    expect(weird).toBeDefined();
+    // Fixture seeds 2 NULL-subgroup rows; "weird" has no dbValue matches
+    // in the fixture, so the entire count comes from the NULL rollup.
+    expect(weird!.count).toBeGreaterThanOrEqual(2);
   });
 });
