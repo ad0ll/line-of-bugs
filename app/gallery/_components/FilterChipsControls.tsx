@@ -35,6 +35,11 @@ export function FilterChipsControls({ initialSubject, initialFacets, institution
   const params = useSearchParams();
   const [, startTransition] = useTransition();
 
+  // No implicit default filters — every chip's initial state derives from URL
+  // search params (?subject=, ?type=, ?view=, ?life=, ?sex=, ?inst=, ?q=) or
+  // is empty. The only always-on predicates (hidden=0 + unresolved-report
+  // exclusion in buildFilterClauses) are moderation guardrails, intentionally
+  // not surfaced as chips. Verified Phase F (2026-05-17).
   const initialSubjectList = initialSubject === "all" ? [] : [initialSubject];
   const [subjects, setSubjects] = useState<string[]>(initialSubjectList);
   const [groups, setGroups] = useState<string[]>(parseList(params.get("type")));
