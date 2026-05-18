@@ -67,9 +67,11 @@ export function WhatIsBugFilter({
     return () => { document.body.style.overflow = prev; };
   }, [open]);
 
-  // Fetch search results, debounced
+  // Fetch search results when the picker is open. Empty query is allowed
+  // — the backend returns the all-groups list so the dropdown shows
+  // candidates immediately, matching AllOrChipsFilter behavior.
   useEffect(() => {
-    if (!query.trim()) { setResults([]); return; }
+    if (!open) return;
     const controller = new AbortController();
     const handle = setTimeout(() => {
       fetch(`/api/search/insect?q=${encodeURIComponent(query)}`, { signal: controller.signal })
@@ -78,7 +80,7 @@ export function WhatIsBugFilter({
         .catch(() => { /* ignore aborts */ });
     }, 120);
     return () => { clearTimeout(handle); controller.abort(); };
-  }, [query]);
+  }, [query, open]);
 
   const isEmpty = selectedGroups.length === 0 && selectedSpecies.length === 0;
 
@@ -169,8 +171,11 @@ export function WhatIsBugFilter({
                   <span className={styles.rowCount}>{r.count.toLocaleString()}</span>
                 </li>
               ))}
-              {query && results.length === 0 && <li className={styles.empty}>no matches</li>}
-              {!query && <li className={styles.empty}>start typing to see suggestions</li>}
+              {results.length === 0 && (
+                <li className={styles.empty}>
+                  {query ? "no matches" : "loading…"}
+                </li>
+              )}
             </ul>
           </div>
         </>
