@@ -29,18 +29,11 @@
               background 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .chip:hover { transform: translateY(-1px); border-color: var(--border-emphasis); }
-.chip.selectedGroup:hover, .chip.selectedSpecies:hover { border-color: var(--accent-lilac); }
 .chip.empty:hover { border-color: var(--accent-pink-border); }
 .chip.empty { background: color-mix(in srgb, var(--accent-pink) 12%, transparent); border-color: color-mix(in srgb, var(--accent-pink) 28%, transparent); }
 .chip.open  { background: color-mix(in srgb, var(--accent-pink) 22%, transparent); }
-/* Both selection states use lilac (structure) per design-system. Audit H2. */
-.chip.selectedGroup   { background: var(--accent-lilac-soft); border-color: var(--accent-lilac-border); }
-.chip.selectedSpecies { background: var(--accent-lilac-soft); border-color: var(--accent-lilac-border); }
-.chip.addBtn          { border-style: dashed; }
 
 .chevron { opacity: 0.6; flex-shrink: 0; }
-
-.chipWall { display: flex; flex-wrap: wrap; gap: var(--s4); }
 
 .kindBadge {
   display: inline-block;
