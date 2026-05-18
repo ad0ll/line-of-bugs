@@ -643,7 +643,15 @@ function render() {
       return true;
     });
   }
-  if (sortBy === "random") rows.sort(() => Math.random() - 0.5);
+  if (activeLabel) {
+    // Active label: sort by uncertainty (|p - 0.5| ascending = most uncertain first)
+    const probKey = "predicted_" + activeLabel + "_p";
+    rows.sort((a, b) => {
+      const pa = a[probKey] ?? 0.5;
+      const pb = b[probKey] ?? 0.5;
+      return Math.abs(pa - 0.5) - Math.abs(pb - 0.5);
+    });
+  } else if (sortBy === "random") rows.sort(() => Math.random() - 0.5);
   else if (sortBy === "bbox_area") rows.sort((a, b) => (a.bbox_area_ratio ?? 0) - (b.bbox_area_ratio ?? 0));
   else if (sortBy === "bbox_long_edge") rows.sort((a, b) => (a.bbox_long_edge_px ?? 0) - (b.bbox_long_edge_px ?? 0));
   else if (sortBy === "bbox_min_edge") rows.sort((a, b) => (a.bbox_min_edge_px ?? 0) - (b.bbox_min_edge_px ?? 0));
