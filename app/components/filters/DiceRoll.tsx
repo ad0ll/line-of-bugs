@@ -2,19 +2,19 @@
 import { useState } from "react";
 
 /**
- * Phase F (2026-05-17) — "surprise me" button. Picks ~2-3 filter axes at
- * random with sensible distributions. Used on both home + gallery.
- *
- * Caller wires the shape returned by `onRoll` into their own
- * setGroups / setViews / setLifeStages / setSubjects setters; the
- * absence of a key means "leave that axis alone" (don't clobber an
- * existing selection with []).
+ * Every axis is always present. Cleared axes are `[]`; rolled axes are
+ * non-empty. The parent's `onRoll` wires each axis directly into its
+ * setter, so every roll starts from a clean slate (filters reset) and
+ * lands on the random subset.
  */
 export interface DiceRollState {
-  groups?: string[];
-  views?: string[];
-  lifeStages?: string[];
-  subjects?: string[];
+  groups: string[];
+  species: string[];
+  views: string[];
+  lifeStages: string[];
+  sexes: string[];
+  subjects: string[];
+  insts: string[];
 }
 
 interface DiceRollProps {
@@ -47,15 +47,34 @@ export function DiceRoll({ onRoll, className }: DiceRollProps) {
   function roll() {
     if (rolling) return;
     setRolling(true);
-    const state: DiceRollState = {};
-    if (Math.random() < 0.6) state.groups = pick(GROUPS_POOL, 1 + Math.floor(Math.random() * 3));
-    if (Math.random() < 0.5) state.views = pick(["dorsal", "lateral", "ventral", "head"], 1);
-    if (Math.random() < 0.3) state.lifeStages = pick(["adult", "larva", "nymph"], 1);
-    if (Math.random() < 0.2) state.subjects = pick(["wild", "specimen", "captive"], 1);
-    setTimeout(() => {
-      setRolling(false);
-      onRoll(state);
-    }, 500);
+    // Every axis is present. Default: cleared ([]). Apply each random
+    // pick with the Phase F probabilities. Species / sexes / institutions
+    // are not currently rollable axes, so they are always cleared.
+    const state: DiceRollState = {
+      groups: [],
+      species: [],
+      views: [],
+      lifeStages: [],
+      sexes: [],
+      subjects: [],
+      insts: [],
+    };
+    if (Math.random() < 0.6) {
+      state.groups = pick(GROUPS_POOL, 1 + Math.floor(Math.random() * 3));
+    }
+    if (Math.random() < 0.5) {
+      state.views = pick(["dorsal", "lateral", "ventral", "head"], 1);
+    }
+    if (Math.random() < 0.3) {
+      state.lifeStages = pick(["adult", "larva", "nymph"], 1);
+    }
+    if (Math.random() < 0.2) {
+      state.subjects = pick(["wild", "specimen", "captive"], 1);
+    }
+    // Apply immediately — URL updates at t=0 so facets/grid start
+    // loading right away while the animation plays alongside.
+    onRoll(state);
+    setTimeout(() => setRolling(false), 600);
   }
   return (
     <button

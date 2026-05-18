@@ -31,31 +31,55 @@ describe("DiceRoll", () => {
     expect(sparks.length).toBe(5);
   });
 
-  it("calls onRoll with at least one axis when Math.random is high (all probs pass under 0.5)", async () => {
-    // Math.random sequence: 0.01 (groups passes), 0.5 (one group), 0.01 (views passes), 0.1 (pick first view), ...
-    // We can't fully pin without mocking, so we just verify shape: roll calls onRoll once after 500ms.
+  it("invokes onRoll immediately with a clear-then-roll state shape", async () => {
     const onRoll = vi.fn();
     vi.spyOn(Math, "random").mockReturnValue(0.05);
     const screen = await render(<DiceRoll onRoll={onRoll} />);
     await screen.getByRole("button").click();
-    expect(onRoll).not.toHaveBeenCalled();
-    vi.advanceTimersByTime(500);
+    // onRoll fires synchronously; no 500ms gate.
     expect(onRoll).toHaveBeenCalledTimes(1);
     const arg = onRoll.mock.calls[0]![0];
-    // 0.05 < 0.6, 0.5, 0.3, 0.2 — all four axes pass; each pick uses
-    // additional 0.05 calls. Just confirm we got at least groups.
-    expect(arg.groups?.length ?? 0).toBeGreaterThan(0);
+    // Every axis is present — cleared axes are [], rolled axes are non-empty.
+    expect(arg).toHaveProperty("groups");
+    expect(arg).toHaveProperty("species");
+    expect(arg).toHaveProperty("views");
+    expect(arg).toHaveProperty("lifeStages");
+    expect(arg).toHaveProperty("sexes");
+    expect(arg).toHaveProperty("subjects");
+    expect(arg).toHaveProperty("insts");
+    // species / sexes / insts are always cleared.
+    expect(arg.species).toEqual([]);
+    expect(arg.sexes).toEqual([]);
+    expect(arg.insts).toEqual([]);
+    // With Math.random = 0.05, all rollable axes are populated.
+    expect(arg.groups.length).toBeGreaterThan(0);
+    expect(arg.views.length).toBe(1);
+    expect(arg.lifeStages.length).toBe(1);
+    expect(arg.subjects.length).toBe(1);
   });
 
-  it("does not call onRoll a second time while already rolling", async () => {
+  it("with Math.random=0.99 every rollable axis is empty (just a clear)", async () => {
     const onRoll = vi.fn();
-    vi.spyOn(Math, "random").mockReturnValue(0.99); // every axis skipped
+    vi.spyOn(Math, "random").mockReturnValue(0.99);
+    const screen = await render(<DiceRoll onRoll={onRoll} />);
+    await screen.getByRole("button").click();
+    expect(onRoll).toHaveBeenCalledTimes(1);
+    const arg = onRoll.mock.calls[0]![0];
+    expect(arg.groups).toEqual([]);
+    expect(arg.views).toEqual([]);
+    expect(arg.lifeStages).toEqual([]);
+    expect(arg.subjects).toEqual([]);
+  });
+
+  it("ignores a second click while .is-rolling is active", async () => {
+    const onRoll = vi.fn();
+    vi.spyOn(Math, "random").mockReturnValue(0.99);
     const screen = await render(<DiceRoll onRoll={onRoll} />);
     const btn = screen.getByRole("button");
-    await btn.click();
-    await btn.click(); // ignored
-    vi.advanceTimersByTime(500);
+    await btn.click();   // fires onRoll once
+    await btn.click();   // ignored, .is-rolling still active
     expect(onRoll).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(600);  // cleanup the is-rolling state
   });
 
   it("adds is-rolling class during the tumble", async () => {
@@ -64,6 +88,6 @@ describe("DiceRoll", () => {
     const btn = screen.getByRole("button");
     await btn.click();
     expect((btn.element() as HTMLElement).classList.contains("is-rolling")).toBe(true);
-    vi.advanceTimersByTime(500);
+    vi.advanceTimersByTime(600);
   });
 });

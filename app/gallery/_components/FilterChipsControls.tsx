@@ -93,10 +93,14 @@ export function FilterChipsControls({ initialSubject, initialFacets, institution
   }));
 
   function onDiceRoll(state: DiceRollState) {
-    if (state.groups !== undefined) setGroups(state.groups);
-    if (state.views !== undefined) setViews(state.views);
-    if (state.lifeStages !== undefined) setLife(state.lifeStages);
-    if (state.subjects !== undefined) setSubjects(state.subjects);
+    // Every axis is present (cleared ones are []); apply each directly.
+    setGroups(state.groups);
+    setSpecies(state.species);
+    setViews(state.views);
+    setLife(state.lifeStages);
+    setSexes(state.sexes);
+    setSubjects(state.subjects);
+    setInsts(state.insts);
   }
 
   return (
