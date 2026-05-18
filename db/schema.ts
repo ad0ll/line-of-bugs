@@ -249,6 +249,179 @@ export const speciesMetadata = sqliteTable(
   ],
 );
 
+// ──────────────────────────── image_labels ─────────────────
+
+/**
+ * Hand-labels from the validator UI (replaces data/cache/labels.json,
+ * post-migration). One row per labeled image. JSON-typed columns hold
+ * arrays serialized as TEXT — Python reads/writes via json.loads.
+ *
+ * reviewed_at is unix epoch MILLISECONDS (matches the validator's
+ * Date.now() output, kept for round-trip compatibility with the
+ * legacy labels.json snapshots).
+ */
+export const imageLabels = sqliteTable(
+  "image_labels",
+  {
+    imageId: text("image_id")
+      .primaryKey()
+      .references(() => images.imageId, { onDelete: "cascade" }),
+    col1: text("col1"),
+    col2Count: text("col2_count"),
+    col2Flags: text("col2_flags"),
+    col3: text("col3"),
+    col4: text("col4"),
+    unsure: integer("unsure").notNull().default(0),
+    reviewedAt: integer("reviewed_at"),
+    userEdited: integer("user_edited").notNull().default(0),
+    variantTag: text("variant_tag"),
+  },
+  (t) => [
+    index("idx_image_labels_reviewed")
+      .on(t.reviewedAt)
+      .where(sql`${t.reviewedAt} IS NOT NULL`),
+    check("image_labels_unsure_check", sql`${t.unsure} IN (0, 1)`),
+    check("image_labels_user_edited_check", sql`${t.userEdited} IN (0, 1)`),
+  ],
+);
+
+// ──────────────────────────── detections ───────────────────
+
+/**
+ * Per-image sync target from framing_detections.parquet. Latest-variant-
+ * wins on upsert (ordered by processed_at desc when the parquet holds
+ * multiple variants for the same image_id). Holds rule output, bbox,
+ * mask scalars, and recommended crop coords.
+ *
+ * gate_rule_only is the legacy per-row rule decision; the full
+ * hierarchical decision lives in gate_decisions.
+ */
+export const detections = sqliteTable(
+  "detections",
+  {
+    imageId: text("image_id")
+      .primaryKey()
+      .references(() => images.imageId, { onDelete: "cascade" }),
+    variant: text("variant").notNull(),
+    suggestedLabels: text("suggested_labels").notNull(),
+    gateRuleOnly: text("gate_rule_only").notNull(),
+    hasBbox: integer("has_bbox").notNull(),
+    bboxX: integer("bbox_x", { mode: "number" }),
+    bboxY: integer("bbox_y", { mode: "number" }),
+    bboxW: integer("bbox_w", { mode: "number" }),
+    bboxH: integer("bbox_h", { mode: "number" }),
+    maskAreaRatio: integer("mask_area_ratio", { mode: "number" }),
+    labDeltaE: integer("lab_delta_e", { mode: "number" }),
+    boundarySharpness: integer("boundary_sharpness", { mode: "number" }),
+    maskIouScore: integer("mask_iou_score", { mode: "number" }),
+    cropX: integer("crop_x", { mode: "number" }),
+    cropY: integer("crop_y", { mode: "number" }),
+    cropW: integer("crop_w", { mode: "number" }),
+    cropH: integer("crop_h", { mode: "number" }),
+    postCropSubjectArea: integer("post_crop_subject_area", { mode: "number" }),
+    processedAt: integer("processed_at").notNull(),
+    schemaVersion: integer("schema_version").notNull(),
+  },
+  (t) => [
+    index("idx_detections_variant").on(t.variant),
+    index("idx_detections_has_bbox").on(t.hasBbox),
+    check("detections_gate_rule_only_check",
+      sql`${t.gateRuleOnly} IN ('keep', 'reject')`),
+    check("detections_has_bbox_check", sql`${t.hasBbox} IN (0, 1)`),
+  ],
+);
+
+// ──────────────────────────── predictions ──────────────────
+
+/**
+ * Per-(image, label) ML probability. Sparse — only image_ids with a
+ * model that ran appear. model_version is "<label>@<unix_epoch_s>"
+ * encoding which retrain produced the row.
+ */
+export const predictions = sqliteTable(
+  "predictions",
+  {
+    imageId: text("image_id")
+      .notNull()
+      .references(() => images.imageId, { onDelete: "cascade" }),
+    label: text("label").notNull(),
+    p: integer("p", { mode: "number" }).notNull(),
+    unreliable: integer("unreliable").notNull().default(0),
+    modelVersion: text("model_version").notNull(),
+    predictedAt: integer("predicted_at").notNull(),
+  },
+  (t) => [
+    uniqueIndex("idx_predictions_pk").on(t.imageId, t.label),
+    index("idx_predictions_label_p").on(t.label, t.p),
+    check("predictions_unreliable_check", sql`${t.unreliable} IN (0, 1)`),
+  ],
+);
+
+// ──────────────────────────── gate_decisions ───────────────
+
+/**
+ * Per-image final keep/reject decision after applying the trust
+ * hierarchy. Dense — every image has a row after the first full
+ * recompute_gate --all backfill. Production query joins on
+ * `decision = 'reject'`, so the decision index is load-bearing.
+ *
+ * reason format examples:
+ *   'ml:mask_blur_unusable:0.87'
+ *   'rule:bbox-content_no-bug'
+ *   'hand:mask:mask_blur_unusable'
+ *   'hand:pass'
+ *   'report:ai-generated'
+ *   'defaults_pass'
+ */
+export const gateDecisions = sqliteTable(
+  "gate_decisions",
+  {
+    imageId: text("image_id")
+      .primaryKey()
+      .references(() => images.imageId, { onDelete: "cascade" }),
+    decision: text("decision").notNull(),
+    reason: text("reason").notNull(),
+    reasonSource: text("reason_source").notNull(),
+    computedAt: integer("computed_at").notNull(),
+    modelVersion: text("model_version"),
+    thresholdV: integer("threshold_v"),
+  },
+  (t) => [
+    index("idx_gate_decisions_decision").on(t.decision),
+    index("idx_gate_decisions_reason_source").on(t.reasonSource),
+    check("gate_decisions_decision_check",
+      sql`${t.decision} IN ('keep', 'reject')`),
+    check("gate_decisions_reason_source_check",
+      sql`${t.reasonSource} IN ('hand', 'report', 'rule', 'ml', 'default')`),
+  ],
+);
+
+// ──────────────────────────── label_thresholds ────────────
+
+/**
+ * Per-label gating config. tier=1 labels with p>=threshold trigger
+ * rejection via the ML tier. tier=2 labels are stored in predictions
+ * but never gate (they exist so we can promote later without losing
+ * historical scores). threshold is human-edited; suggested_threshold
+ * is auto-written by train.py based on recall ≥ 0.95 from CV.
+ * threshold_v is bumped any time a human edits threshold.
+ */
+export const labelThresholds = sqliteTable(
+  "label_thresholds",
+  {
+    label: text("label").primaryKey(),
+    tier: integer("tier").notNull(),
+    threshold: integer("threshold", { mode: "number" }).notNull(),
+    suggestedThreshold: integer("suggested_threshold", { mode: "number" }),
+    thresholdV: integer("threshold_v").notNull(),
+    notes: text("notes"),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => [
+    check("label_thresholds_tier_check", sql`${t.tier} IN (1, 2)`),
+  ],
+);
+
 // ──────────────────────────── generated types ──────────────────
 
 export type Image = typeof images.$inferSelect;
@@ -257,3 +430,13 @@ export type Report = typeof reports.$inferSelect;
 export type NewReport = typeof reports.$inferInsert;
 export type SpeciesMetadata = typeof speciesMetadata.$inferSelect;
 export type NewSpeciesMetadata = typeof speciesMetadata.$inferInsert;
+export type ImageLabel = typeof imageLabels.$inferSelect;
+export type NewImageLabel = typeof imageLabels.$inferInsert;
+export type Detection = typeof detections.$inferSelect;
+export type NewDetection = typeof detections.$inferInsert;
+export type Prediction = typeof predictions.$inferSelect;
+export type NewPrediction = typeof predictions.$inferInsert;
+export type GateDecision = typeof gateDecisions.$inferSelect;
+export type NewGateDecision = typeof gateDecisions.$inferInsert;
+export type LabelThreshold = typeof labelThresholds.$inferSelect;
+export type NewLabelThreshold = typeof labelThresholds.$inferInsert;
