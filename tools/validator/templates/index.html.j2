@@ -325,6 +325,13 @@ const COL2_COUNT_IDS = new Set(COL2_COUNT_BUTTONS.map(b => b.id));
 const COL3_BLUR_MUTEX = ["mask_blur_unusable", "mask_blur_usable"];
 const NEGATIVE_CLASSES = new Set(["flower", "leaf", "stem", "rock"]);
 
+// Variants pre-dating the {detector}__{segmenter} convention had no variant_tag in labels.json; assume the legacy default.
+const IMPLICIT_VARIANT = "grounding_dino__insectsam";
+// How many secondary detections to summarize below the images before collapsing to "+ N more".
+const MAX_SECONDARY = 2;
+// Padding ratio applied around the primary bbox for the bug-zoom view AND for the dashed yellow viewport indicator on the original image. These must match.
+const BUG_ZOOM_PAD = 0.3;
+
 // Source of truth: server-owned `image_labels` SQLite table. We mirror it
 // in-memory here; every mutation POSTs the full dict back. localStorage
 // is no longer used — origin / port changes don't lose work anymore.
@@ -384,6 +391,10 @@ let probRange = [0, 1];
 // NOT auto-add to the snapshot — so the card the user just corrected stays
 // visible, preventing the "card I just labeled disappeared" UX.
 let hiddenIds = new Set();
+// Predicate is |predicted_p - 0.5| > 0.4 → cards with p > 0.9 (confidently
+// positive) or p < 0.1 (confidently negative) get hidden. Keeps the
+// borderline cards (0.1 ≤ p ≤ 0.9) which give the most active-learning
+// signal.
 const HIDE_CONFIDENT_THRESHOLD = 0.4;
 
 // Render tab strip labels with live counts. Called from render() so they
@@ -730,9 +741,8 @@ function _positionBugZoom(img) {
     const by = parseFloat(img.dataset.by);
     const bw = parseFloat(img.dataset.bw);
     const bh = parseFloat(img.dataset.bh);
-    const PAD = 0.3;
-    const paddedW = Math.min(1, bw * (1 + 2 * PAD)) * imgW;
-    const paddedH = Math.min(1, bh * (1 + 2 * PAD)) * imgH;
+    const paddedW = Math.min(1, bw * (1 + 2 * BUG_ZOOM_PAD)) * imgW;
+    const paddedH = Math.min(1, bh * (1 + 2 * BUG_ZOOM_PAD)) * imgH;
     // Uniform scale so padded region fits in container (contain — no crop of bbox)
     const scale = Math.min(containerW / paddedW, containerH / paddedH);
     dispW = imgW * scale;
@@ -799,7 +809,6 @@ function _phraseSummaryHTML(primaryPhrase, primaryConf, secPhrases, secBboxes) {
     const txt = [_shortenPhrase(primaryPhrase), primaryConf != null ? primaryConf.toFixed(2) : null].filter(Boolean).join(' \u00b7 ');
     items.push('<li><span style="color:#FF6EC7;font-weight:600">primary</span> ' + txt + '</li>');
   }
-  const MAX_SECONDARY = 2;
   let shown = 0;
   for (let i = 0; i < secBboxes.length && shown < MAX_SECONDARY; i++) {
     const phrase = secPhrases[i] || null;
@@ -932,8 +941,6 @@ function render() {
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
-  const IMPLICIT_VARIANT = "grounding_dino__insectsam";
-
   for (const r of rows) {
     const lbl = labels[r.image_id] || _emptyLabel();
     const reviewed = !!lbl.reviewed_at;
@@ -976,11 +983,10 @@ function render() {
     // get 10x+ zoom and look unrelated to the leafy thumbnail).
     let viewportHTML = '';
     if (r.bbox_x !== null) {
-      const PAD = 0.3;
-      const pbw = Math.min(1, r.bbox_w * (1 + 2 * PAD));
-      const pbh = Math.min(1, r.bbox_h * (1 + 2 * PAD));
-      const pbx = Math.max(0, Math.min(1 - pbw, r.bbox_x - r.bbox_w * PAD));
-      const pby = Math.max(0, Math.min(1 - pbh, r.bbox_y - r.bbox_h * PAD));
+      const pbw = Math.min(1, r.bbox_w * (1 + 2 * BUG_ZOOM_PAD));
+      const pbh = Math.min(1, r.bbox_h * (1 + 2 * BUG_ZOOM_PAD));
+      const pbx = Math.max(0, Math.min(1 - pbw, r.bbox_x - r.bbox_w * BUG_ZOOM_PAD));
+      const pby = Math.max(0, Math.min(1 - pbh, r.bbox_y - r.bbox_h * BUG_ZOOM_PAD));
       viewportHTML = '<div class="bug-zoom-viewport" style="left:' + (pbx*100) + '%;top:' + (pby*100) + '%;width:' + (pbw*100) + '%;height:' + (pbh*100) + '%"></div>';
     }
     const boxHTML = viewportHTML + primaryBoxHTML + secondaryBoxHTML;
