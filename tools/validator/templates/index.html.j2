@@ -209,6 +209,10 @@
 <div class="tab-strip" id="tabStrip">
   <button data-label="" class="active">all</button>
   <button data-label="mask_blur_unusable">blur_unusable</button>
+  <label id="hideConfidentWrap" style="display:none;margin-left:12px;font-size:12px;color:#aaa;cursor:pointer;font-family:'JetBrains Mono',monospace;">
+    <input type="checkbox" id="hideConfident" style="vertical-align:middle;margin-right:4px"> hide confident
+    <span style="color:#666">(|p−0.5|&gt;0.4)</span>
+  </label>
   <button id="retrainBtn" style="margin-left:auto;background:#ef4444;color:#fff;border-color:#ef4444;display:none">retrain selected</button>
 </div>
 
@@ -269,6 +273,57 @@ let savePending = 0;
 // by scripts/compute_sam3_mask_contours.py. {image_id: [[x,y], ...]}
 // in normalized [0,1] coords. Missing image_ids render no overlay.
 let MASK_CONTOURS = {};
+
+// Per-label ML metrics: {label: {n_total, n_positives, arm_scalar: {mcc_mean, ...}}}
+// Loaded from scripts/detect_subjects/ml_labeler/models/<label>/metrics.json at startup.
+// Used to render tab labels with positive counts + current MCC so the user can
+// see at a glance where their labeling effort has the most leverage.
+let ML_METRICS = {};
+const TIER1_LABELS = ["mask_blur_unusable"];
+async function loadMLMetrics() {
+  await Promise.all(TIER1_LABELS.map(async (label) => {
+    try {
+      const url = `/scripts/detect_subjects/ml_labeler/models/${label}/metrics.json`;
+      const res = await fetch(url, { cache: 'no-store' });
+      if (res.ok) ML_METRICS[label] = await res.json();
+    } catch (e) { /* missing metrics is fine — tab just shows label name */ }
+  }));
+}
+
+// Hide-confident toggle: when active label tab is selected, hide cards where
+// |predicted_p - 0.5| > 0.4 (model is very confident; relabeling these gives
+// little marginal information). Reduces low-leverage labeling cycles.
+let hideConfident = false;
+const HIDE_CONFIDENT_THRESHOLD = 0.4;
+
+// Render tab strip labels with live counts. Called from render() so they
+// stay current as the user labels.
+function _refreshTabStrip() {
+  // Count unreviewed sam3 cards per tier-1 label, and overall totals.
+  const totalCards = DATA.length;
+  const tabStrip = document.getElementById('tabStrip');
+  const allBtn = tabStrip.querySelector('button[data-label=""]');
+  if (allBtn) allBtn.textContent = `all (${totalCards})`;
+  for (const label of TIER1_LABELS) {
+    const btn = tabStrip.querySelector(`button[data-label="${label}"]`);
+    if (!btn) continue;
+    const probKey = `predicted_${label}_p`;
+    let unreviewed = 0;
+    for (const r of DATA) {
+      const lbl = LABELS[r.image_id];
+      const isReviewed = lbl && lbl.reviewed_at;
+      if (!isReviewed && r[probKey] != null) unreviewed++;
+    }
+    const m = ML_METRICS[label];
+    if (m && m.arm_scalar) {
+      const mcc = m.arm_scalar.mcc_mean;
+      const npos = m.n_positives;
+      btn.textContent = `${label.replace(/^mask_|^bbox-content_|^bbox_/, '')} (${unreviewed}u · ${npos}p · MCC ${mcc.toFixed(2)})`;
+    } else {
+      btn.textContent = `${label.replace(/^mask_|^bbox-content_|^bbox_/, '')} (${unreviewed}u)`;
+    }
+  }
+}
 // Active label tab — null shows all cards; otherwise filters + sorts by
 // uncertainty (|predicted_p - 0.5| ascending = most-uncertain first).
 let activeLabel = null;
@@ -633,6 +688,17 @@ function render() {
   const labels = LABELS;
   let rows = DATA.filter(r => sf === "all" || r.source === sf);
   rows = rows.filter(r => qf === "all" || r.framing_quality === qf);
+  // Hide-confident filter — only applies when a label tab is active.
+  // Drops cards where the model is very confident either way; keeps the
+  // borderline cards that yield the most labeling signal.
+  if (activeLabel && hideConfident) {
+    const probKey = "predicted_" + activeLabel + "_p";
+    rows = rows.filter(r => {
+      const p = r[probKey];
+      if (p == null) return true;  // keep cards w/o prediction yet
+      return Math.abs(p - 0.5) <= HIDE_CONFIDENT_THRESHOLD;
+    });
+  }
   if (rf !== "all") {
     rows = rows.filter(r => {
       const lbl = labels[r.image_id];
@@ -664,6 +730,7 @@ function render() {
   else if (sortBy === "subject_sharpness") rows.sort((a, b) => (a.subject_sharpness ?? 1e9) - (b.subject_sharpness ?? 1e9));
 
   document.getElementById("totals").textContent = rows.length + " of " + DATA.length + " images";
+  _refreshTabStrip();
   const grid = document.getElementById("grid");
   grid.innerHTML = "";
 
@@ -923,7 +990,7 @@ document.addEventListener("keydown", function(e) {
 // rendering is independent of label data — both refresh on arrival.
 render();
 updateSaveStatus();
-Promise.all([loadLabelsFromServer(), loadMaskContours()]).then(() => {
+Promise.all([loadLabelsFromServer(), loadMaskContours(), loadMLMetrics()]).then(() => {
   render();
   updateSaveStatus();
 });
@@ -937,6 +1004,13 @@ document.getElementById('tabStrip').addEventListener('click', (e) => {
     b.classList.toggle('active', b === btn);
   }
   document.getElementById('retrainBtn').style.display = activeLabel ? 'inline-block' : 'none';
+  document.getElementById('hideConfidentWrap').style.display = activeLabel ? 'inline-block' : 'none';
+  render();
+});
+
+// Hide-confident checkbox handler: re-render to apply/lift the filter.
+document.getElementById('hideConfident').addEventListener('change', (e) => {
+  hideConfident = e.target.checked;
   render();
 });
 
