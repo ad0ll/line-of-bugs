@@ -231,7 +231,7 @@ class LabelServerHandler(SimpleHTTPRequestHandler):
         self._send_json(HTTPStatus.OK, {"ok": True, **stats})
 
     def _handle_retrain(self):
-        label = self.path.split("/api/retrain/", 1)[1]
+        label = self.path.rsplit("/", 1)[-1]
         from scripts.detect_subjects.ml_labeler import TIER1_LABELS
         if label not in TIER1_LABELS:
             self._send_json(HTTPStatus.BAD_REQUEST, {
