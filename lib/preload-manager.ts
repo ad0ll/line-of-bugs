@@ -9,6 +9,11 @@ export interface PreloadManager {
   setQueue: (ids: string[]) => void;
   onIndexChange: (idx: number) => void;
   markUsed: (id: string) => void;
+  /** True when the image for `id` is fully decoded and ready to render
+   *  immediately — used by the ramp-up handler (Phase F) to decide
+   *  whether to show the "whoa so fast" overlay while preload catches
+   *  up. Returns false for unknown ids and for in-flight loads. */
+  isReady: (id: string) => boolean;
   cache: {
     get: (id: string) => Entry | undefined;
     has: (id: string) => boolean;
@@ -84,6 +89,9 @@ export function createPreloadManager(
     },
     markUsed(id) {
       ensure(id);
+    },
+    isReady(id) {
+      return entries.get(id)?.status === "ok";
     },
     cache: {
       get: (id) => entries.get(id),

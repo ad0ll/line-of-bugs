@@ -47,4 +47,14 @@ describe("PreloadManager", () => {
     // Returns true if entry is present
     expect(pm.cache.has("a")).toBe(true);
   });
+
+  it("isReady is false for unknown ids and for in-flight loads", () => {
+    const pm = createPreloadManager((id) => `/api/img/${id}.jpg`);
+    pm.setQueue(["a", "b"]);
+    // Never touched
+    expect(pm.isReady("z")).toBe(false);
+    // Touched but still loading (no DOM Image to fire load events here)
+    pm.markUsed("a");
+    expect(pm.isReady("a")).toBe(false);
+  });
 });

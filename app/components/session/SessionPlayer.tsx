@@ -19,6 +19,7 @@ import { Magnifier } from "./Magnifier";
 import { EndOfSessionOverlay } from "./EndOfSessionOverlay";
 import { SessionTitle } from "./SessionTitle";
 import { SketchfabBrowsePanel, fetchSketchfab, sketchfabQueryKey, useSketchfabAvailability } from "./SketchfabBrowsePanel";
+import { WhoaSoFastOverlay } from "./WhoaSoFastOverlay";
 
 interface Props {
   items: Image[];
@@ -151,6 +152,63 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
     setIdx((cur) => Math.min(items.length - 1, cur + 1));
   }, [items.length]);
 
+  // Phase F (2026-05-17) — arrow-hold ramp-up. Single press of ArrowLeft/
+  // Right still does a discrete step; once the key starts auto-repeating
+  // (e.repeat=true) we kick into a setTimeout chain whose interval shrinks
+  // from 700ms → 90ms over ~5s of continuous hold. If preload can't keep
+  // up, the WhoaSoFastOverlay tells the user we're catching up.
+  const [whoa, setWhoa] = useState(false);
+  const rampRef = useRef<{
+    dir: -1 | 1;
+    tickId: ReturnType<typeof setTimeout> | null;
+  } | null>(null);
+  const rampStartRef = useRef<number>(0);
+  const startRamp = useCallback(
+    (dir: -1 | 1) => {
+      if (rampRef.current) return;
+      rampStartRef.current = Date.now();
+      const tick = () => {
+        const heldMs = Date.now() - rampStartRef.current;
+        const interval =
+          heldMs < 1500 ? 700 : heldMs < 3000 ? 350 : heldMs < 5000 ? 175 : 90;
+        if (dir === 1) {
+          const next = idxRef.current + 1;
+          if (next < items.length) setIdx(next);
+        } else {
+          const prev = idxRef.current - 1;
+          if (prev >= 0) setIdx(prev);
+        }
+        // Check whether the just-advanced-to slide is preloaded; if not,
+        // surface the "whoa" overlay until preload catches up.
+        const targetIdx = dir === 1 ? idxRef.current + 1 : idxRef.current - 1;
+        const targetItem = items[Math.max(0, Math.min(items.length - 1, targetIdx))];
+        if (targetItem && preloadRef.current) {
+          setWhoa(!preloadRef.current.isReady(targetItem.imageId));
+        }
+        if (rampRef.current) {
+          rampRef.current.tickId = setTimeout(tick, interval);
+        }
+      };
+      rampRef.current = { dir, tickId: setTimeout(tick, 700) };
+    },
+    [items],
+  );
+  const stopRamp = useCallback(() => {
+    if (rampRef.current?.tickId) clearTimeout(rampRef.current.tickId);
+    rampRef.current = null;
+    setWhoa(false);
+  }, []);
+
+  // Clear the whoa overlay once the next slide finishes preloading.
+  useEffect(() => {
+    if (!whoa || !preloadRef.current) return;
+    const current = items[idx];
+    if (!current) return;
+    if (preloadRef.current.isReady(current.imageId)) {
+      setWhoa(false);
+    }
+  }, [whoa, idx, items]);
+
   const onTick = useCallback(
     (elapsed: number) => {
       setElapsedMs(elapsed);
@@ -238,9 +296,14 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
     const handler = (e: KeyboardEvent) => {
       const tgt = e.target as HTMLElement;
       if (tgt.tagName === "INPUT" || tgt.tagName === "TEXTAREA" || tgt.isContentEditable) return;
-      // Holding an arrow key would otherwise auto-repeat at the OS rate and
-      // race past the preload manager. Slide changes should be discrete.
-      if (e.repeat && (e.key === "ArrowLeft" || e.key === "ArrowRight")) return;
+      // Phase F (2026-05-17): arrow auto-repeat enters ramp mode instead of
+      // being suppressed entirely. First repeat tick kicks off the ramp,
+      // which uses its own setTimeout cadence (700→90ms) rather than OS-rate.
+      if (e.repeat && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+        e.preventDefault();
+        startRamp(e.key === "ArrowRight" ? 1 : -1);
+        return;
+      }
       switch (e.key) {
         case "ArrowLeft":
           e.preventDefault();
@@ -294,9 +357,22 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
           break;
       }
     };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") stopRamp();
+    };
+    // Tab-away or window blur should also drop ramp — otherwise the
+    // setTimeout chain races on after the user has lost focus.
+    const onBlur = () => stopRamp();
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [goPrev, goNext, idx, items, router, pathname, toggleFullscreen, toggleSketchfab, sketchfabOpen, setMuted]);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onBlur);
+      stopRamp();
+    };
+  }, [goPrev, goNext, idx, items, router, pathname, toggleFullscreen, toggleSketchfab, sketchfabOpen, setMuted, startRamp, stopRamp]);
 
   // Cursor hide when chrome hidden
   useEffect(() => {
@@ -395,6 +471,7 @@ export function SessionPlayer({ items, initialIntervalSec }: Props) {
         open={sketchfabOpen}
         onClose={() => setSketchfabOpen(false)}
       />
+      <WhoaSoFastOverlay visible={whoa} />
     </main>
   );
 }
