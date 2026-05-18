@@ -2,7 +2,18 @@
    treatment for .picker so it no longer obscures adjacent filter rows
    on small viewports (audit C1). */
 
-.wrap { position: relative; display: inline-block; width: 100%; }
+.wrap {
+  position: relative;
+  display: inline-block;
+  /* width: auto so the empty chip sits at its intrinsic size and the
+     filter row can flow horizontally. Home uses .home-filter-row-control
+     to grow the wrap to fill that row's flex slot. */
+  width: auto;
+}
+/* Home — within the labeled filter-row layout, the wrap fills the
+   right-hand column. Gallery omits this wrapper, so the wrap stays
+   intrinsic. */
+:global(.home-filter-row-control) .wrap { width: 100%; }
 
 .chip {
   display: inline-flex; align-items: center; gap: var(--s3);

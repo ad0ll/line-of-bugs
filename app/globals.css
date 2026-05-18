@@ -673,31 +673,45 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
    Tumbles for 500ms on click then triggers the filter mutation. */
 .dice-roll {
   appearance: none;
-  background: color-mix(in srgb, var(--accent-pink) 18%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent-pink) 35%, transparent);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: color-mix(in srgb, var(--accent-pink) 16%, transparent);
+  border: 1px dashed color-mix(in srgb, var(--accent-pink) 45%, transparent);
   border-radius: 999px;
-  padding: 0.5rem 0.85rem;
-  font-size: 1.1rem;
+  padding: 0.5rem 0.9rem;
+  color: var(--accent-pink);
+  font-family: var(--font-display), serif;
+  font-style: italic;
+  font-size: 0.9rem;
   line-height: 1;
   cursor: pointer;
-  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1),
+              background 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .dice-roll:hover {
   transform: translateY(-1px);
-  box-shadow: 0 0 16px color-mix(in srgb, var(--accent-pink) 40%, transparent);
+  background: color-mix(in srgb, var(--accent-pink) 26%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent-pink) 50%, transparent);
+}
+.dice-roll-sparkle {
+  display: inline-flex;
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dice-roll.is-rolling .dice-roll-sparkle {
+  animation: sparkleSpin 500ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .dice-roll.is-rolling {
-  animation: diceTumble 500ms cubic-bezier(0.22, 1, 0.36, 1);
+  background: color-mix(in srgb, var(--accent-pink) 32%, transparent);
 }
-@keyframes diceTumble {
+@keyframes sparkleSpin {
   0%   { transform: rotate(0deg) scale(1); }
-  25%  { transform: rotate(180deg) scale(1.15); }
-  50%  { transform: rotate(360deg) scale(0.9); }
-  75%  { transform: rotate(540deg) scale(1.1); }
-  100% { transform: rotate(720deg) scale(1); }
+  50%  { transform: rotate(180deg) scale(1.4); }
+  100% { transform: rotate(360deg) scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dice-roll.is-rolling { animation: none; }
+  .dice-roll.is-rolling .dice-roll-sparkle { animation: none; }
 }
 
 /* Phase F (2026-05-17) — placeholder when the thumb file is missing on

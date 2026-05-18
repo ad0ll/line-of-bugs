@@ -38,12 +38,37 @@ export const CuteFlower = makeIcon("cherry_blossom.svg", "cherry blossom");
 export const CuteLadybug = makeIcon("lady_beetle.svg", "ladybug");
 export const WiltedFlower = makeIcon("wilted_flower.svg", "wilted flower");
 
-// Phase F (2026-05-17) — gallery icon switched from the Fluent ladybug
-// (red + black palette clashed with the pink/lilac theme) to Fluent
-// hibiscus. Hibiscus shares the cherry-blossom's pink-with-yellow-center
-// five-petal silhouette, so the title + gallery CTA read as a kindred
-// brand pair.
-export const GalleryIcon = makeIcon("hibiscus.svg", "hibiscus");
+// Phase F (2026-05-18) — gallery icon. Tried ladybug + hibiscus (both
+// Fluent Color); both clashed against pink/lilac theme at small sizes.
+// Switched to a monochrome pink cherry-blossom outline, inline SVG so
+// it inherits color from currentColor (we tint with --accent-pink).
+// Same shape family as the hero cherry blossom; quieter for a page
+// header. Doesn't compete with the tile grid below it.
+export function GalleryIcon({ size = 20, style, ...rest }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+      style={{ display: "inline-block", flexShrink: 0, verticalAlign: "middle", color: "var(--accent-pink)", ...style }}
+      {...(rest as React.SVGAttributes<SVGSVGElement>)}
+    >
+      <g transform="translate(12 12)">
+        <ellipse cx="0" cy="-5.5" rx="2.6" ry="3.8" />
+        <ellipse cx="0" cy="-5.5" rx="2.6" ry="3.8" transform="rotate(72)" />
+        <ellipse cx="0" cy="-5.5" rx="2.6" ry="3.8" transform="rotate(144)" />
+        <ellipse cx="0" cy="-5.5" rx="2.6" ry="3.8" transform="rotate(216)" />
+        <ellipse cx="0" cy="-5.5" rx="2.6" ry="3.8" transform="rotate(288)" />
+        <circle cx="0" cy="0" r="2" fill="currentColor" stroke="none" />
+      </g>
+    </svg>
+  );
+}
 
 // Deprecated — kept exporting temporarily so callers can migrate; remove
 // in a follow-up commit once HomeClient + GalleryGrid stop importing them.

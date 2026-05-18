@@ -65,7 +65,14 @@ export function DiceRoll({ onRoll, className }: DiceRollProps) {
       aria-label="surprise me — pick random filters"
       title="surprise me"
     >
-      <span aria-hidden>🎲</span>
+      <span aria-hidden className="dice-roll-sparkle">
+        {/* Pink 4-point sparkle — fits the pastel palette where the Fluent
+            dice emoji clashed (red dots + white face). Phase F adjustment. */}
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 0 L9.5 6.5 L16 8 L9.5 9.5 L8 16 L6.5 9.5 L0 8 L6.5 6.5 Z" />
+        </svg>
+      </span>
+      <span className="dice-roll-label">surprise me</span>
     </button>
   );
 }

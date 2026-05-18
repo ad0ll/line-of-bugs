@@ -101,7 +101,6 @@ export function FilterChipsControls({ initialSubject, initialFacets, institution
 
   return (
     <div className="gallery-filter-row">
-      <DiceRoll onRoll={onDiceRoll} />
       <AllOrChipsFilter
         label="photo type"
         emptyLabel="all photo types"
@@ -143,6 +142,7 @@ export function FilterChipsControls({ initialSubject, initialFacets, institution
         selected={insts}
         onChange={setInsts}
       />
+      <DiceRoll onRoll={onDiceRoll} />
     </div>
   );
 }
