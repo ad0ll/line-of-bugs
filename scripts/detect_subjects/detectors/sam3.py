@@ -56,6 +56,7 @@ class Sam3Detector:
         dtype: torch.dtype = torch.float32,
         prompt_phrases: Optional[list[str]] = None,
         box_threshold: float = 0.3,
+        processor=None,
         **kwargs,
     ) -> None:
         self.device = device
@@ -66,7 +67,10 @@ class Sam3Detector:
                   f"empirical evidence says single 'an insect' wins (see "
                   f"docs/sam3_prompt_investigation.md). Honoring caller's choice anyway.")
         self.box_threshold = box_threshold
-        self.model, self.processor = get_shared_sam3(device=device, dtype=dtype)
+        # Shared model (singleton); processor is per-instance if caller provided one
+        # (concurrent inference workers need their own — see _sam3_shared.py).
+        self.model, shared_processor = get_shared_sam3(device=device, dtype=dtype)
+        self.processor = processor if processor is not None else shared_processor
         # Build and cache the text query at init time (token-budget trimming is O(phrases))
         self._text_query = self._build_text_query()
         print(f"[Sam3Detector] text query ({len(self._text_query.split('. '))} phrases): {self._text_query!r}")

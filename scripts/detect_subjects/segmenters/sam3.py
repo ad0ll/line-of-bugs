@@ -22,10 +22,12 @@ from scripts.detect_subjects.interfaces import SegmentationResult
 class Sam3Segmenter:
     model_id: str = "facebook/sam3"
 
-    def __init__(self, device: str = "mps", dtype: torch.dtype = torch.float32, **kwargs) -> None:
+    def __init__(self, device: str = "mps", dtype: torch.dtype = torch.float32,
+                 processor=None, **kwargs) -> None:
         self.device = device
         self.dtype = dtype
-        self.model, self.processor = get_shared_sam3(device=device, dtype=dtype)
+        self.model, shared_processor = get_shared_sam3(device=device, dtype=dtype)
+        self.processor = processor if processor is not None else shared_processor
 
     @torch.no_grad()
     def segment_with_bbox(

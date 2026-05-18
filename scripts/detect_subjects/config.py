@@ -96,8 +96,8 @@ PARQUET_WRITE_BATCH = 50
 # ─── Pipeline component selection ─────────────────────────────────
 # These names look up classes in detectors/__init__.py and segmenters/__init__.py.
 # Swapping is a one-line config change.
-DETECTOR_VARIANT = "grounding_dino"
-SEGMENTER_VARIANT = "insectsam"
+DETECTOR_VARIANT = "sam3"
+SEGMENTER_VARIANT = "sam3"
 
 
 def variant_tag() -> str:

@@ -62,17 +62,20 @@ def _now_ms() -> int:
 def _flush_records(records: list[dict], parquet_path: Path) -> None:
     """Append records to the parquet file via read-concat-rewrite.
 
-    Casts the existing table to SCHEMA before concat to handle string/large_string
-    type mismatches that arise when different PyArrow versions wrote the file.
+    Projects existing to the declared SCHEMA columns before cast + concat —
+    drops any downstream-added cols (e.g. predict.py's predicted_* outputs)
+    so schemas line up. Those cols are re-derived by running predict after
+    classify finishes.
     """
     new_table = pa.Table.from_pylist(records, schema=SCHEMA)
     if parquet_path.exists():
         existing = pq.read_table(parquet_path)
-        # Cast existing to SCHEMA to harmonize string vs large_string differences
+        declared_names = [n for n in SCHEMA.names if n in existing.schema.names]
+        existing = existing.select(declared_names)
         try:
             existing = existing.cast(SCHEMA)
         except Exception:
-            pass  # if cast fails, let concat raise for diagnosis
+            pass  # if cast fails (e.g. type mismatch), let concat raise
         combined = pa.concat_tables([existing, new_table])
     else:
         combined = new_table

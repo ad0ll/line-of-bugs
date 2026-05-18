@@ -1,4 +1,4 @@
-# PR curves per tier-1 label (auto-generated 2026-05-18 09:31)
+# PR curves per tier-1 label (auto-generated 2026-05-18 09:41)
 
 Each row shows the highest-recall threshold that achieves the target precision.
 OOF predictions via StratifiedKFold(5) — unbiased estimate of held-out behavior.
