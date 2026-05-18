@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { AllOrChipsFilter, type AllOrChipsOption } from "@/app/components/filters/AllOrChipsFilter";
 import { WhatIsBugFilter } from "@/app/components/filters/WhatIsBugFilter";
+import { DiceRoll, type DiceRollState } from "@/app/components/filters/DiceRoll";
 import type { FacetCount, FacetSnapshot } from "@/lib/queries/facets";
 import type { SubjectType } from "@/lib/subject";
 
@@ -91,8 +92,16 @@ export function FilterChipsControls({ initialSubject, initialFacets, institution
     count: facets.subject[s.value as "wild" | "specimen" | "captive"] ?? 0,
   }));
 
+  function onDiceRoll(state: DiceRollState) {
+    if (state.groups !== undefined) setGroups(state.groups);
+    if (state.views !== undefined) setViews(state.views);
+    if (state.lifeStages !== undefined) setLife(state.lifeStages);
+    if (state.subjects !== undefined) setSubjects(state.subjects);
+  }
+
   return (
     <div className="gallery-filter-row">
+      <DiceRoll onRoll={onDiceRoll} />
       <AllOrChipsFilter
         label="photo type"
         emptyLabel="all photo types"

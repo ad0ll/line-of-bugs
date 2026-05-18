@@ -669,6 +669,37 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   background: var(--surface-2);
 }
 .grid-item-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Phase F (2026-05-17) — dice-roll "surprise me" filter button.
+   Tumbles for 500ms on click then triggers the filter mutation. */
+.dice-roll {
+  appearance: none;
+  background: color-mix(in srgb, var(--accent-pink) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-pink) 35%, transparent);
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 200ms;
+}
+.dice-roll:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--accent-pink) 40%, transparent);
+}
+.dice-roll.is-rolling {
+  animation: diceTumble 500ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes diceTumble {
+  0%   { transform: rotate(0deg) scale(1); }
+  25%  { transform: rotate(180deg) scale(1.15); }
+  50%  { transform: rotate(360deg) scale(0.9); }
+  75%  { transform: rotate(540deg) scale(1.1); }
+  100% { transform: rotate(720deg) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dice-roll.is-rolling { animation: none; }
+}
+
 /* Phase F (2026-05-17) — placeholder when the thumb file is missing on
    disk (9 of ~40k rows currently from incremental fetcher desync).
    Lives inside .grid-item-image so the tile silhouette stays intact. */
@@ -1321,6 +1352,14 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 .home-filter-row-control {
   flex: 1;
   min-width: 0;
+}
+
+/* Phase F (2026-05-17) — trailing slot for the dice-roll button next to
+   the "what is bug?" row, also used for any future row-level affordance. */
+.home-filter-row-trailing {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
 }
 
 /* Mobile: stack label above control. The 6rem label rail crowds the chip
