@@ -678,6 +678,7 @@ def test_upsert_then_fetch_roundtrips_all_fields(tmp_db):
     conn = open_conn(tmp_db)
     try:
         upsert_label(conn, "img-1", record)
+        conn.commit()  # upsert_label no longer commits — caller controls
         got = fetch_label(conn, "img-1")
     finally:
         conn.close()
@@ -699,11 +700,71 @@ def test_upsert_overwrites_existing_row(tmp_db):
     try:
         upsert_label(conn, "img-1", first)
         upsert_label(conn, "img-1", second)
+        conn.commit()
         got = fetch_label(conn, "img-1")
     finally:
         conn.close()
     assert got["col3"] == ["mask_blur_unusable"]
     assert got["reviewed_at"] == 2
+
+
+def test_delete_labels_not_in_removes_orphans(tmp_db):
+    """delete_labels_not_in removes rows whose image_id isn't in the keep set."""
+    from scripts.detect_subjects.sqlite_db import open_conn
+    from scripts.detect_subjects.image_labels_io import (
+        upsert_label, delete_labels_not_in, fetch_label,
+    )
+    base = {
+        "col1": "bbox_correct-subject_not-clipped",
+        "col2_count": "bbox-content_single",
+        "col2_flags": [], "col3": [], "col4": [],
+        "unsure": False, "reviewed_at": 1, "user_edited": True,
+        "variant_tag": "sam3__sam3",
+    }
+    conn = open_conn(tmp_db)
+    try:
+        upsert_label(conn, "img-1", base)
+        upsert_label(conn, "img-2", base)
+        upsert_label(conn, "img-3", base)
+        conn.commit()
+        deleted = delete_labels_not_in(conn, {"img-1", "img-3"})
+        conn.commit()
+        got_1 = fetch_label(conn, "img-1")
+        got_2 = fetch_label(conn, "img-2")
+        got_3 = fetch_label(conn, "img-3")
+    finally:
+        conn.close()
+    assert deleted == 1
+    assert got_1 is not None
+    assert got_2 is None
+    assert got_3 is not None
+
+
+def test_delete_labels_not_in_empty_set_clears_all(tmp_db):
+    """An empty keep set deletes every row (POST with {} body)."""
+    from scripts.detect_subjects.sqlite_db import open_conn
+    from scripts.detect_subjects.image_labels_io import (
+        upsert_label, delete_labels_not_in,
+    )
+    base = {
+        "col1": "bbox_correct-subject_not-clipped",
+        "col2_count": "bbox-content_single",
+        "col2_flags": [], "col3": [], "col4": [],
+        "unsure": False, "reviewed_at": 1, "user_edited": True,
+        "variant_tag": "sam3__sam3",
+    }
+    conn = open_conn(tmp_db)
+    try:
+        upsert_label(conn, "img-1", base)
+        upsert_label(conn, "img-2", base)
+        conn.commit()
+        deleted = delete_labels_not_in(conn, set())
+        conn.commit()
+        n = conn.execute("SELECT COUNT(*) FROM image_labels").fetchone()[0]
+    finally:
+        conn.close()
+    assert deleted == 2
+    assert n == 0
 
 
 def test_fetch_all_reviewed_returns_dict_by_image_id(tmp_db):
@@ -724,6 +785,7 @@ def test_fetch_all_reviewed_returns_dict_by_image_id(tmp_db):
         upsert_label(conn, "img-1", reviewed)
         upsert_label(conn, "img-2", unreviewed)
         upsert_label(conn, "img-3", reviewed)
+        conn.commit()
         got = fetch_all_reviewed_labels(conn)
     finally:
         conn.close()
@@ -745,6 +807,7 @@ def test_fetch_all_reviewed_filters_by_variant_tag(tmp_db):
     try:
         upsert_label(conn, "img-1", {**base, "variant_tag": "sam3__sam3"})
         upsert_label(conn, "img-2", {**base, "variant_tag": "grounding_dino__insectsam"})
+        conn.commit()
         got = fetch_all_reviewed_labels(conn, variant_tag="sam3__sam3")
     finally:
         conn.close()
@@ -836,7 +899,12 @@ def fetch_label(conn: sqlite3.Connection, image_id: str) -> Optional[dict]:
 def upsert_label(
     conn: sqlite3.Connection, image_id: str, record: dict,
 ) -> None:
-    """Upsert one image_labels row from a UI-shaped dict. Commits."""
+    """Upsert one image_labels row from a UI-shaped dict.
+
+    Does NOT commit — callers are responsible for the transaction boundary.
+    This matters for batch saves (label_server POST) where we want all-or-
+    nothing semantics matching the legacy labels.json atomic-rename behavior.
+    """
     values = (
         image_id,
         record.get("col1"),
@@ -850,7 +918,28 @@ def upsert_label(
         record.get("variant_tag"),
     )
     conn.execute(_UPSERT_SQL, values)
-    conn.commit()
+
+
+def delete_labels_not_in(
+    conn: sqlite3.Connection, keep_ids: set[str],
+) -> int:
+    """Delete image_labels rows whose image_id is NOT in keep_ids. Returns
+    the count deleted. Used by the POST /api/labels handler to honor the
+    legacy 'POST body is the full state' semantic — if the UI removed a key
+    from its LABELS dict (user cleared every label on a card), we must
+    remove the corresponding row instead of leaving it orphaned.
+
+    Does NOT commit."""
+    if not keep_ids:
+        cur = conn.execute("DELETE FROM image_labels")
+        return cur.rowcount
+    # SQLite parameter limit is high (32k+) — fine for our ~300 keys.
+    placeholders = ",".join("?" * len(keep_ids))
+    cur = conn.execute(
+        f"DELETE FROM image_labels WHERE image_id NOT IN ({placeholders})",
+        tuple(keep_ids),
+    )
+    return cur.rowcount
 
 
 def fetch_all_reviewed_labels(
@@ -1086,13 +1175,19 @@ def migrate(
         }
         migrated = 0
         skipped_orphans = 0
-        for image_id, record in labels.items():
-            if image_id not in existing_image_ids:
-                print(f"[migrate] WARN orphan label, skipping: {image_id}")
-                skipped_orphans += 1
-                continue
-            upsert_label(conn, image_id, record)
-            migrated += 1
+        conn.execute("BEGIN")
+        try:
+            for image_id, record in labels.items():
+                if image_id not in existing_image_ids:
+                    print(f"[migrate] WARN orphan label, skipping: {image_id}")
+                    skipped_orphans += 1
+                    continue
+                upsert_label(conn, image_id, record)
+                migrated += 1
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
     finally:
         conn.close()
 
@@ -2172,6 +2267,26 @@ def test_hand_unreviewed_falls_through(tmp_db):
     assert row["reason"] == "defaults_pass"
 
 
+def test_hand_unsure_falls_through_to_rule(tmp_db):
+    """unsure=1 means 'user couldn't decide' — fall through to rule/ML/default,
+    don't treat as a hand reject. Prevents undecidable cards from getting
+    hidden just because the user clicked 'unsure'."""
+    from scripts.detect_subjects.sqlite_db import open_conn
+    from scripts.detect_subjects.recompute_gate import recompute_for_image
+    conn = open_conn(tmp_db)
+    try:
+        _setup_image(conn, "img-1")
+        _insert_detection(conn, "img-1", ["bbox-content_single"])
+        # Reviewed + edited but marked unsure → no hand signal.
+        _insert_image_label(conn, "img-1", unsure=True)
+        conn.commit()
+        row = recompute_for_image("img-1", conn, now_s=100)
+    finally:
+        conn.close()
+    assert row["decision"] == "keep"
+    assert row["reason_source"] != "hand"
+
+
 def test_recompute_for_image_writes_to_gate_decisions(tmp_db):
     from scripts.detect_subjects.sqlite_db import open_conn
     from scripts.detect_subjects.recompute_gate import recompute_for_image
@@ -2335,11 +2450,14 @@ def recompute_for_image(
     image_id: str, conn: sqlite3.Connection, *, now_s: int,
 ) -> dict:
     """Compute and write one gate_decisions row. Returns the row dict."""
-    # Tier 1: Hand label
+    # Tier 1: Hand label.
+    # unsure=1 means the user marked the card "can't decide" — it is NOT a
+    # confirmed hand signal; fall through to lower tiers (rule/ML/default).
     row = conn.execute(
         "SELECT col1, col2_count, col2_flags, col3, col4 "
         "FROM image_labels "
-        "WHERE image_id = ? AND reviewed_at IS NOT NULL AND user_edited = 1",
+        "WHERE image_id = ? AND reviewed_at IS NOT NULL "
+        "  AND user_edited = 1 AND unsure = 0",
         (image_id,),
     ).fetchone()
     if row:
@@ -3254,13 +3372,17 @@ git commit --only --no-gpg-sign -- scripts/detect_subjects/classify.py tests/pyt
 - Modify: `scripts/detect_subjects/label_server.py` — replace `_read_labels` / `_atomic_write_labels` to use SQLite; stop the autosnapshot thread; call `recompute_for_image` on every upsert
 
 **Background:**
-Today `label_server.py` reads/writes `data/cache/labels.json` and runs an autosnapshot thread. Post-migration, image_labels in SQLite is the source of truth. The server still serves the legacy HTML validator (Task 4 from plan 4 ports it to React), so we keep the GET/POST shape identical from the UI's perspective — it still receives/posts a JSON dict `{image_id: record}`.
+Today `label_server.py` reads/writes `data/cache/labels.json` and runs an autosnapshot thread. Post-migration, image_labels in SQLite is the source of truth. The server still serves the legacy HTML validator (Plan 4 ports it to React), so we keep the GET/POST shape identical from the UI's perspective — it still receives/posts a JSON dict `{image_id: record}`.
+
+**Critical UI compatibility constraint:** the validator's JS removes a key from its local `LABELS` dict when the user un-marks every label on a card (template `_persist`, lines 591-603). It then POSTs the smaller dict. Today the file-based handler overwrites `labels.json` so the row vanishes. The SQLite handler MUST do the same: rows whose image_id is not in the POST payload get deleted. Without this, "un-marking" a card silently fails — the orphaned row stays in `image_labels` and the gate keeps treating it as a hand label.
+
+**Atomicity:** the legacy `_atomic_write_labels` was all-or-nothing (`os.replace` of a temp file). The SQLite handler preserves this with a single `BEGIN ... COMMIT` around the delete-missing + upsert-all + recompute-all sequence. A mid-save crash either leaves the previous state intact or the new state in full.
 
 Changes:
 - `GET /api/labels` → reads ALL rows from `image_labels`, returns the dict
-- `POST /api/labels` → upserts each record AND calls `recompute_for_image` for each image_id touched
+- `POST /api/labels` → atomic transaction: delete rows not in payload + upsert payload rows + recompute_for_image for every touched id
 - Drop the autosnapshot thread (SQLite + WAL is the durability story now)
-- Drop the labels.json `{}` stomp guard (no labels.json anymore)
+- Drop the labels.json `{}` stomp guard (replaced by an explicit "is this really intentional?" check — see Step 3)
 - Keep the bind-to-127.0.0.1 + /api/retrain/<label> endpoints unchanged
 
 There's no separate test file for label_server.py today; we'll write one as part of this task.
@@ -3276,6 +3398,7 @@ import json
 import sqlite3
 import threading
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -3430,9 +3553,8 @@ def test_post_upserts_label_and_recomputes_gate(server_url, tmp_db):
     assert row == ("reject", "hand")
 
 
-def test_post_empty_dict_returns_200_but_writes_nothing(server_url, tmp_db):
-    """A bare {} POST shouldn't error; previous behavior stomped labels.json,
-    new behavior is a no-op (upserts zero rows)."""
+def test_post_empty_dict_into_empty_table_is_noop(server_url, tmp_db):
+    """A bare {} POST against an empty image_labels is OK (no rows to wipe)."""
     req = urllib.request.Request(
         f"{server_url}/api/labels", data=b"{}",
         headers={"Content-Type": "application/json"}, method="POST",
@@ -3443,6 +3565,84 @@ def test_post_empty_dict_returns_200_but_writes_nothing(server_url, tmp_db):
     n = conn.execute("SELECT COUNT(*) FROM image_labels").fetchone()[0]
     conn.close()
     assert n == 0
+
+
+def test_post_empty_dict_against_existing_rows_is_rejected(server_url, tmp_db):
+    """Stomp guard: an empty POST when image_labels has rows is treated as a
+    UI bug and rejected with 400, preserving the data."""
+    # Pre-seed a row.
+    conn = sqlite3.connect(tmp_db)
+    conn.execute(
+        "INSERT INTO image_labels (image_id, col1, col2_count, col2_flags, "
+        "col3, col4, unsure, reviewed_at, user_edited, variant_tag) "
+        "VALUES ('img-1', 'bbox_correct-subject_not-clipped', 'bbox-content_single', "
+        "'[]', '[]', '[]', 0, 100, 1, 'sam3__sam3')"
+    )
+    conn.commit()
+    conn.close()
+    req = urllib.request.Request(
+        f"{server_url}/api/labels", data=b"{}",
+        headers={"Content-Type": "application/json"}, method="POST",
+    )
+    try:
+        urllib.request.urlopen(req)
+        raised = False
+    except urllib.error.HTTPError as e:
+        raised = (e.code == 400)
+    assert raised
+    conn = sqlite3.connect(tmp_db)
+    n = conn.execute("SELECT COUNT(*) FROM image_labels").fetchone()[0]
+    conn.close()
+    assert n == 1  # row preserved
+
+
+def test_post_deletes_rows_not_in_payload(server_url, tmp_db):
+    """If a key is absent from the POST body, its row is removed — matches
+    the legacy labels.json overwrite behavior the UI relies on for 'un-mark'."""
+    # Pre-seed two rows.
+    conn = sqlite3.connect(tmp_db)
+    for iid in ("img-1", "img-2"):
+        conn.execute(
+            "INSERT INTO images (image_id, collection_id, source, source_id, "
+            "source_page_url, image_url, filename, thumbnail_filename, "
+            "medium_filename, file_sha256, license, subject_state) "
+            "VALUES (?, 'c', 'inaturalist', 's', 'u', 'u', 'f', 't', 'm', "
+            "'sha', 'lic', 'wild') ON CONFLICT(image_id) DO NOTHING",
+            (iid,),
+        )
+        conn.execute(
+            "INSERT INTO image_labels (image_id, col1, col2_count, col2_flags, "
+            "col3, col4, unsure, reviewed_at, user_edited, variant_tag) "
+            "VALUES (?, 'bbox_correct-subject_not-clipped', 'bbox-content_single', "
+            "'[]', '[]', '[]', 0, 100, 1, 'sam3__sam3') "
+            "ON CONFLICT(image_id) DO NOTHING",
+            (iid,),
+        )
+    conn.commit()
+    conn.close()
+    # POST a body that only contains img-1 — img-2 must be deleted.
+    payload = {
+        "img-1": {
+            "col1": "bbox_correct-subject_not-clipped",
+            "col2_count": "bbox-content_single",
+            "col2_flags": [], "col3": [], "col4": [],
+            "unsure": False, "reviewed_at": 200, "user_edited": True,
+            "variant_tag": "sam3__sam3",
+        },
+    }
+    req = urllib.request.Request(
+        f"{server_url}/api/labels", data=json.dumps(payload).encode(),
+        headers={"Content-Type": "application/json"}, method="POST",
+    )
+    resp = urllib.request.urlopen(req)
+    body = json.loads(resp.read())
+    assert resp.status == 200
+    assert body["deleted"] == 1
+    assert body["upserted"] == 1
+    conn = sqlite3.connect(tmp_db)
+    rows = list(conn.execute("SELECT image_id FROM image_labels ORDER BY image_id"))
+    conn.close()
+    assert rows == [("img-1",)]
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
@@ -3451,7 +3651,7 @@ def test_post_empty_dict_returns_200_but_writes_nothing(server_url, tmp_db):
 .venv/bin/python -m pytest tests/python/test_label_server.py -v
 ```
 
-Expected: 3 FAIL — server still reads labels.json, no SQLite plumbing yet.
+Expected: 5 FAIL — server still reads labels.json, no SQLite plumbing yet.
 
 - [ ] **Step 3: Rewrite the labels endpoints**
 
@@ -3485,7 +3685,7 @@ from pathlib import Path
 
 from scripts.detect_subjects.sqlite_db import open_conn, DEFAULT_DB_PATH
 from scripts.detect_subjects.image_labels_io import (
-    upsert_label, fetch_all_reviewed_labels,
+    upsert_label, fetch_all_reviewed_labels, delete_labels_not_in,
 )
 from scripts.detect_subjects.recompute_gate import recompute_for_image
 
@@ -3519,21 +3719,60 @@ def _read_all_labels() -> dict:
     return out
 
 
-def _write_labels_and_recompute(payload: dict) -> int:
-    """Upsert each (image_id, record) and recompute the gate for each.
-    Returns the count touched."""
-    if not payload:
-        return 0
+class _StompGuardError(ValueError):
+    """Raised when an empty POST would clear non-empty image_labels."""
+
+
+def _write_labels_and_recompute(payload: dict) -> dict:
+    """Atomic replace of image_labels with `payload`:
+      - Delete rows whose image_id is NOT in payload (so UI's 'un-mark a card'
+        actually removes the row, matching the legacy file-overwrite semantic)
+      - Upsert every payload row
+      - Recompute_for_image for every image_id that exists in the new state
+        OR was just deleted (so the gate reflects both adds and removes)
+    All in one BEGIN/COMMIT — a crash mid-save leaves the previous state intact.
+
+    Returns {upserted, deleted, recomputed}.
+
+    Safety: a payload of {} when image_labels has rows is treated as a likely
+    bug, not a deliberate wipe — it raises _StompGuardError. The UI never
+    needs to clear every label this way (it deletes one key at a time). The
+    operator can drop the table directly if they really want a wipe.
+    """
     now_s = int(time.time())
     conn = open_conn()
     try:
-        for image_id, record in payload.items():
-            upsert_label(conn, image_id, record)
-            recompute_for_image(image_id, conn, now_s=now_s)
-        conn.commit()
+        existing_ids = {
+            r[0] for r in conn.execute("SELECT image_id FROM image_labels")
+        }
+        if not payload and existing_ids:
+            raise _StompGuardError(
+                f"refusing to clear {len(existing_ids)} image_labels rows "
+                "via empty POST payload (likely UI bug; use sqlite3 directly "
+                "for intentional wipes)"
+            )
+        keep_ids = set(payload.keys())
+        deleted_ids = existing_ids - keep_ids
+        conn.execute("BEGIN")
+        try:
+            deleted = delete_labels_not_in(conn, keep_ids)
+            for image_id, record in payload.items():
+                upsert_label(conn, image_id, record)
+            for image_id in keep_ids:
+                recompute_for_image(image_id, conn, now_s=now_s)
+            for image_id in deleted_ids:
+                recompute_for_image(image_id, conn, now_s=now_s)
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
     finally:
         conn.close()
-    return len(payload)
+    return {
+        "upserted": len(payload),
+        "deleted": deleted,
+        "recomputed": len(keep_ids) + len(deleted_ids),
+    }
 
 
 class LabelServerHandler(SimpleHTTPRequestHandler):
@@ -3580,11 +3819,14 @@ class LabelServerHandler(SimpleHTTPRequestHandler):
             self.send_error(HTTPStatus.BAD_REQUEST, "expected a dict")
             return
         try:
-            n = _write_labels_and_recompute(payload)
+            stats = _write_labels_and_recompute(payload)
+        except _StompGuardError as e:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(e)})
+            return
         except Exception as e:
             self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": str(e)})
             return
-        self._send_json(HTTPStatus.OK, {"ok": True, "n": n})
+        self._send_json(HTTPStatus.OK, {"ok": True, **stats})
 
     def _handle_retrain(self):
         label = self.path.split("/api/retrain/", 1)[1]
@@ -3654,13 +3896,13 @@ Key behavior changes:
 .venv/bin/python -m pytest tests/python/test_label_server.py -v
 ```
 
-Expected: 3 PASS.
+Expected: 5 PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
 git add scripts/detect_subjects/label_server.py tests/python/test_label_server.py
-git commit --only --no-gpg-sign -- scripts/detect_subjects/label_server.py tests/python/test_label_server.py -m "feat(label_server): read/write SQLite image_labels + recompute gate per image"
+git commit --only --no-gpg-sign -- scripts/detect_subjects/label_server.py tests/python/test_label_server.py -m "feat(label_server): atomic SQLite POST (upsert + delete-missing + recompute) replacing labels.json"
 ```
 
 ---
@@ -3751,13 +3993,15 @@ Expected: `mask_blur_unusable|N|<min_p>|<max_p>` with N matching sam3 row count.
 - [ ] **Step 7: Run full gate recompute**
 
 ```bash
-.venv/bin/python -m scripts.detect_subjects.recompute_gate --all
+time .venv/bin/python -m scripts.detect_subjects.recompute_gate --all
 sqlite3 data/db/line-of-bugs.db "
   SELECT reason_source, decision, COUNT(*)
   FROM gate_decisions GROUP BY reason_source, decision
   ORDER BY reason_source, decision;
 "
 ```
+
+Expected runtime: 30-90s for the ~39,659 images. The design spec's "~5s" estimate underweighted the per-row 4-SELECT + 1-UPSERT pattern; realistic single-thread SQLite throughput puts a full rebuild in the half-minute to minute range. If it runs in under 5s, something is wrong (maybe images table is empty? check `SELECT COUNT(*) FROM images;` first).
 
 Expected sample output (numbers will vary):
 ```
@@ -3797,17 +4041,26 @@ git rm scripts/migrate_labels_to_sqlite.py tests/python/test_migrate_labels_to_s
 
 Per CLAUDE.md "delete one-shot scripts after they run". The labels.json backup remains in `data/cache/` as a historical artifact.
 
-- [ ] **Step 10: Delete labels.json**
+- [ ] **Step 10: Delete labels.json from the working tree and from git**
+
+The file `data/cache/labels.json` is TRACKED (see initial `git status` showing `M data/cache/labels.json`). Removing it on disk without `git rm` would leave git in a "deleted but not staged" state. Two stages:
 
 ```bash
+# Stage 1: copy to a clearly-retired path so the data isn't lost.
 ls -lh data/cache/labels.json data/cache/labels.json.bak-pre-sqlite-migration-*
-mv data/cache/labels.json data/cache/labels.json.RETIRED-$(date +%s)
-ls data/cache/labels.json 2>&1 | head -1
+cp data/cache/labels.json data/cache/labels.json.RETIRED-$(date +%s)
+ls data/cache/labels.json.RETIRED-*
+
+# Stage 2: actually remove from git + working tree.
+git rm data/cache/labels.json
+git status --short data/cache/
 ```
 
-Expected: `mv` succeeds; `labels.json` no longer exists at its old path. The renamed file stays on disk for one more cycle as a safety net (not committed because it's already in `data/cache/`, which is gitignored).
+Expected:
+- The RETIRED copy exists in `data/cache/` (untracked artifact).
+- `git status` shows `D  data/cache/labels.json` (staged delete) and `??  data/cache/labels.json.RETIRED-*` (untracked, fine to ignore).
 
-Note: also stop any running `label_server.py` and restart it so it picks up the SQLite-only code path:
+Also restart the label server so it picks up the SQLite-only code path:
 
 ```bash
 pkill -f "scripts.detect_subjects.label_server" || true
@@ -3818,10 +4071,14 @@ curl -s http://localhost:8765/api/labels | python3 -c "import sys, json; d = jso
 
 Expected: positive count matching the migrated row count.
 
-- [ ] **Step 11: Final commit (one-shot script deletion + any incidental fixes)**
+- [ ] **Step 11: Final commit (one-shot script deletion + labels.json removal)**
 
 ```bash
-git commit --only --no-gpg-sign -- scripts/migrate_labels_to_sqlite.py tests/python/test_migrate_labels_to_sqlite.py -m "chore: delete one-shot labels.json → image_labels migrator (run + backed up)"
+git commit --only --no-gpg-sign -- \
+  scripts/migrate_labels_to_sqlite.py \
+  tests/python/test_migrate_labels_to_sqlite.py \
+  data/cache/labels.json \
+  -m "chore: retire labels.json + one-shot migrator (data migrated to image_labels)"
 ```
 
 - [ ] **Step 12: Verify the full pytest suite passes**
