@@ -11,9 +11,24 @@ describe("DiceRoll", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders a button with the surprise-me aria-label", async () => {
+  it("renders a button with the roll aria-label", async () => {
     const screen = await render(<DiceRoll onRoll={() => {}} />);
-    await expect.element(screen.getByRole("button", { name: /surprise me/i })).toBeInTheDocument();
+    await expect.element(screen.getByRole("button", { name: /^roll$/i })).toBeInTheDocument();
+  });
+
+  it("renders a dice icon (img) inside the button", async () => {
+    const screen = await render(<DiceRoll onRoll={() => {}} />);
+    const btn = screen.getByRole("button");
+    const img = (btn.element() as HTMLElement).querySelector("img");
+    expect(img).not.toBeNull();
+    expect(img!.getAttribute("src")).toBe("/icons/phosphor/dice-five-duotone.svg");
+  });
+
+  it("renders 5 sparkle span children for the burst animation", async () => {
+    const screen = await render(<DiceRoll onRoll={() => {}} />);
+    const btn = screen.getByRole("button");
+    const sparks = (btn.element() as HTMLElement).querySelectorAll(".dice-roll-spark");
+    expect(sparks.length).toBe(5);
   });
 
   it("calls onRoll with at least one axis when Math.random is high (all probs pass under 0.5)", async () => {

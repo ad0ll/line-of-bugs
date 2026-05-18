@@ -62,17 +62,29 @@ export function DiceRoll({ onRoll, className }: DiceRollProps) {
       type="button"
       className={`dice-roll ${rolling ? "is-rolling" : ""} ${className ?? ""}`.trim()}
       onClick={roll}
-      aria-label="surprise me — pick random filters"
-      title="surprise me"
+      aria-label="roll"
+      title="roll — clear and reroll filters"
     >
-      <span aria-hidden className="dice-roll-sparkle">
-        {/* Pink 4-point sparkle — fits the pastel palette where the Fluent
-            dice emoji clashed (red dots + white face). Phase F adjustment. */}
-        <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-          <path d="M8 0 L9.5 6.5 L16 8 L9.5 9.5 L8 16 L6.5 9.5 L0 8 L6.5 6.5 Z" />
-        </svg>
-      </span>
-      <span className="dice-roll-label">surprise me</span>
+      <img
+        src="/icons/phosphor/dice-five-duotone.svg"
+        alt=""
+        aria-hidden="true"
+        width={18}
+        height={18}
+        draggable={false}
+        decoding="async"
+        className="dice-roll-icon"
+      />
+      <span className="dice-roll-label">roll</span>
+      {/* 5 sparkles burst outward when .is-rolling is applied. Each
+          is positioned absolutely and rotated to its angle; CSS handles
+          the staggered keyframes. Render unconditionally so the
+          animation has DOM nodes to animate without a remount. */}
+      <span aria-hidden="true" className="dice-roll-spark dice-roll-spark--0" />
+      <span aria-hidden="true" className="dice-roll-spark dice-roll-spark--1" />
+      <span aria-hidden="true" className="dice-roll-spark dice-roll-spark--2" />
+      <span aria-hidden="true" className="dice-roll-spark dice-roll-spark--3" />
+      <span aria-hidden="true" className="dice-roll-spark dice-roll-spark--4" />
     </button>
   );
 }

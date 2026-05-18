@@ -669,15 +669,19 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   background: var(--surface-2);
 }
 .grid-item-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* Phase F (2026-05-17) — dice-roll "surprise me" filter button.
-   Tumbles for 500ms on click then triggers the filter mutation. */
+/* 2026-05-18 — DiceRoll redesigned. Solid pink-soft border (matches
+   the empty AllOrChipsFilter chip), pink-tinted Phosphor dice icon,
+   tumble + sparkle-burst animation. Behavior: clears all 7 filter
+   axes then applies a random subset immediately; the animation plays
+   alongside, not as a gate. */
 .dice-roll {
+  position: relative;           /* anchor for absolute .dice-roll-spark */
   appearance: none;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: color-mix(in srgb, var(--accent-pink) 16%, transparent);
-  border: 1px dashed color-mix(in srgb, var(--accent-pink) 45%, transparent);
+  background: color-mix(in srgb, var(--accent-pink) 12%, transparent);
+  border: 1px solid var(--accent-pink-border);
   border-radius: 999px;
   padding: 0.5rem 0.9rem;
   color: var(--accent-pink);
@@ -686,32 +690,86 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   font-size: 0.9rem;
   line-height: 1;
   cursor: pointer;
+  overflow: visible;            /* sparkles escape the pill */
   transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
               box-shadow 200ms cubic-bezier(0.22, 1, 0.36, 1),
               background 200ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .dice-roll:hover {
   transform: translateY(-1px);
-  background: color-mix(in srgb, var(--accent-pink) 26%, transparent);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--accent-pink) 50%, transparent);
+  background: color-mix(in srgb, var(--accent-pink) 22%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent-pink) 45%, transparent);
 }
-.dice-roll-sparkle {
-  display: inline-flex;
-  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+
+/* Tint the monochrome Phosphor SVG to --accent-pink via the same CSS
+   filter chain the gallery butterfly uses. */
+.dice-roll-icon {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+  filter: brightness(0) saturate(100%) invert(60%) sepia(70%) saturate(2000%) hue-rotate(290deg) brightness(105%) contrast(95%);
+  transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.dice-roll.is-rolling .dice-roll-sparkle {
-  animation: sparkleSpin 500ms cubic-bezier(0.22, 1, 0.36, 1);
+.dice-roll.is-rolling .dice-roll-icon {
+  animation: diceWobble 400ms cubic-bezier(0.22, 1, 0.36, 1);
 }
+@keyframes diceWobble {
+  0%   { transform: rotate(0deg); }
+  20%  { transform: rotate(15deg); }
+  40%  { transform: rotate(-15deg); }
+  60%  { transform: rotate(15deg); }
+  80%  { transform: rotate(-15deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Sparkle burst — 5 pink 4-point stars radiating outward. Each rotated
+   to its own angle; CSS handles the radial translation via CSS custom
+   property --angle so we can share one @keyframes rule. */
+.dice-roll-spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  margin-top: -5px;
+  pointer-events: none;
+  opacity: 0;
+  background-color: var(--accent-pink);
+  /* 4-point star — same shape as the previous inline sparkle SVG */
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M8 0 L9.5 6.5 L16 8 L9.5 9.5 L8 16 L6.5 9.5 L0 8 L6.5 6.5 Z'/></svg>") center / contain no-repeat;
+          mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M8 0 L9.5 6.5 L16 8 L9.5 9.5 L8 16 L6.5 9.5 L0 8 L6.5 6.5 Z'/></svg>") center / contain no-repeat;
+}
+.dice-roll-spark--0 { --angle:   0deg; }
+.dice-roll-spark--1 { --angle:  72deg; }
+.dice-roll-spark--2 { --angle: 144deg; }
+.dice-roll-spark--3 { --angle: 216deg; }
+.dice-roll-spark--4 { --angle: 288deg; }
+
+.dice-roll.is-rolling .dice-roll-spark {
+  animation: sparkBurst 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.dice-roll.is-rolling .dice-roll-spark--0 { animation-delay: 200ms; }
+.dice-roll.is-rolling .dice-roll-spark--1 { animation-delay: 240ms; }
+.dice-roll.is-rolling .dice-roll-spark--2 { animation-delay: 280ms; }
+.dice-roll.is-rolling .dice-roll-spark--3 { animation-delay: 320ms; }
+.dice-roll.is-rolling .dice-roll-spark--4 { animation-delay: 360ms; }
+
+@keyframes sparkBurst {
+  0%   { transform: rotate(var(--angle)) translateY(0)     scale(0); opacity: 0; }
+  30%  { transform: rotate(var(--angle)) translateY(-22px) scale(1.2); opacity: 1; }
+  100% { transform: rotate(var(--angle)) translateY(-40px) scale(0); opacity: 0; }
+}
+
 .dice-roll.is-rolling {
-  background: color-mix(in srgb, var(--accent-pink) 32%, transparent);
+  background: color-mix(in srgb, var(--accent-pink) 22%, transparent);
 }
-@keyframes sparkleSpin {
-  0%   { transform: rotate(0deg) scale(1); }
-  50%  { transform: rotate(180deg) scale(1.4); }
-  100% { transform: rotate(360deg) scale(1); }
-}
+
 @media (prefers-reduced-motion: reduce) {
-  .dice-roll.is-rolling .dice-roll-sparkle { animation: none; }
+  .dice-roll.is-rolling .dice-roll-icon,
+  .dice-roll.is-rolling .dice-roll-spark {
+    animation: none;
+  }
 }
 
 /* Phase F (2026-05-17) — placeholder when the thumb file is missing on
