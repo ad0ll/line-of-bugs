@@ -9,11 +9,14 @@ ProcessPool gives each label its own Python interpreter + OMP pool.
 OMP thread budget: each subprocess caps OMP at cores/workers so 4
 workers × 4 OMP threads = 16 logical cores, no oversubscription.
 
-Caching note: data load is ~5ms (parquet 2.8ms + labels.json 0.5ms +
-feature extract 0.2ms). Caching it across 4 label trains would save
-~20ms out of ~70s total — not worth the cache-invalidation risk.
-The real cost is HGB CV (25 fits × ~0.7s = ~17s), which cannot be
-cached because each fold uses a different train split.
+Caching note: data load itself is ~5ms (parquet 2.8ms + labels.json 0.5ms
++ feature extract 0.2ms), so caching that is not worth it. BUT the
+downstream predict step has a real caching win: predict_labels_batched
+amortizes parquet I/O across labels (4× 1.8s sequential → 1.9s batched,
+~4x speedup). Use predict_labels_batched, not per-label predicts, when
+updating multiple labels after a training round.
+The real CV cost (25 HGB fits × ~0.7s = ~17s) cannot be cached because
+each fold uses a different train split.
 """
 from __future__ import annotations
 import os
