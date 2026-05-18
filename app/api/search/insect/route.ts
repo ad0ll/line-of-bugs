@@ -25,7 +25,12 @@ export async function GET(req: Request): Promise<Response> {
     // runTaxonGroupCounts). One extra query for the NULL bucket; folded
     // in below for any group with catchesNull set.
     const nullRow = db.all<{ c: number }>(sql`
-      SELECT COUNT(*) AS c FROM images WHERE hidden = 0 AND taxon_subgroup IS NULL
+      SELECT COUNT(*) AS c FROM images
+      WHERE hidden = 0 AND taxon_subgroup IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM gate_decisions g
+          WHERE g.image_id = images.image_id AND g.decision = 'reject'
+        )
     `);
     const nullCount = nullRow[0]?.c ?? 0;
     const groupResults: ResultRow[] = TAXON_GROUPS.map((g) => {
@@ -35,6 +40,10 @@ export async function GET(req: Request): Promise<Response> {
           g.dbValues.map((v) => sql`${v}`),
           sql`, `,
         )})
+          AND NOT EXISTS (
+            SELECT 1 FROM gate_decisions g
+            WHERE g.image_id = images.image_id AND g.decision = 'reject'
+          )
       `);
       let count = counts[0]?.c ?? 0;
       if (g.catchesNull) count += nullCount;

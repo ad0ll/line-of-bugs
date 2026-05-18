@@ -78,8 +78,10 @@ describe("gate_decisions filter integration", () => {
       q: [], subject: "all", institutions: [],
       views: [], lifeStages: [], sexes: [], groups: [], page: 1,
     });
-    // 32 fixture images, all should be visible.
-    expect(result.totalCount).toBe(32);
+    // 34 fixture images (32 named subgroups + 2 NULL-subgroup rows added
+    // for the WhatIsBugFilter empty-q `weird`-group NULL rollup test), all
+    // visible when gate_decisions is empty.
+    expect(result.totalCount).toBe(34);
   });
 
   it("getImage returns null for a rejected image", async () => {
