@@ -539,10 +539,17 @@ function toggleCol3(id, flagId) {
   if (!cur.user_edited) _materializeAllDefaults(cur, r);
   _ensureMaterialized(cur, r);
   if (!Array.isArray(cur.col3)) cur.col3 = [];
-  if (COL3_BLUR_MUTEX.includes(flagId))
-    cur.col3 = cur.col3.filter(f => !COL3_BLUR_MUTEX.includes(f));
-  const i = cur.col3.indexOf(flagId);
-  if (i >= 0) cur.col3.splice(i, 1); else cur.col3.push(flagId);
+  // Toggle-off path: if clicking an already-active button, just remove it.
+  // (Previously the BLUR_MUTEX filter ran first and ate the toggle-off —
+  // clicking an active blur button looked like remove-all-blur + add-it-back = no-op.)
+  if (cur.col3.includes(flagId)) {
+    cur.col3 = cur.col3.filter(f => f !== flagId);
+  } else {
+    // Toggle-on: enforce blur mutex by removing the other blur button first.
+    if (COL3_BLUR_MUTEX.includes(flagId))
+      cur.col3 = cur.col3.filter(f => !COL3_BLUR_MUTEX.includes(f));
+    cur.col3.push(flagId);
+  }
   cur.unsure = false;
   _persist(id, cur);
 }
