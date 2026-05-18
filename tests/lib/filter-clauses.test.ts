@@ -1,7 +1,21 @@
 import { describe, it, expect } from "vitest";
 import { sql } from "drizzle-orm";
 import { SQLiteSyncDialect } from "drizzle-orm/sqlite-core";
+import { sqlite } from "@/db";
 import { buildFilterClauses, type FilterState } from "@/lib/queries/filter-clauses";
+import { markRejected } from "../fixtures/init-db";
+
+describe("markRejected fixture helper", () => {
+  it("inserts a gate_decisions row with decision='reject'", () => {
+    const someImageId = "test-000";
+    markRejected(someImageId, "test:setup");
+    const row = sqlite
+      .prepare("SELECT decision, reason FROM gate_decisions WHERE image_id = ?")
+      .get(someImageId) as { decision: string; reason: string } | undefined;
+    expect(row?.decision).toBe("reject");
+    expect(row?.reason).toBe("test:setup");
+  });
+});
 
 const base: FilterState = {
   subjectType: "all",
