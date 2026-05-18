@@ -39,9 +39,23 @@ test("session keyboard B toggles B&W", async ({ page }) => {
   // Trigger mousemove to ensure chrome visible
   await page.mouse.move(400, 300);
 
-  const img = page.locator("img").first();
+  // Scope to the SessionImage's <img>. The action-bar icons are also
+  // <img> elements with their own static `brightness(0)...` filter, so
+  // `img.first()` would land on an icon that never toggles.
+  const img = page.locator(".session-image-frame img").first();
+  await expect(img).toBeVisible();
   const filterBefore = await img.evaluate((el) => getComputedStyle(el).filter);
-  await page.keyboard.press("b");
-  const filterAfter = await img.evaluate((el) => getComputedStyle(el).filter);
-  expect(filterAfter).not.toBe(filterBefore);
+  // page.keyboard.press("b") silently no-ops in some browsers (same
+  // Playwright protocol quirk that affects Escape — see sibling test
+  // above). Use evaluate + dispatchEvent for cross-browser reliability.
+  // The player's handler in SessionPlayer.tsx switches on `e.key`, so the
+  // dispatched event must set `key: "b"`.
+  await page.evaluate(() => {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "b", bubbles: true, cancelable: true }));
+  });
+  // React state batches the setBw flip — poll until the computed filter
+  // diverges from the initial value rather than measuring synchronously.
+  await expect
+    .poll(() => img.evaluate((el) => getComputedStyle(el).filter))
+    .not.toBe(filterBefore);
 });
