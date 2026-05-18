@@ -27,9 +27,9 @@ import { WiltedFlower } from "@/app/components/icons";
 
 export function BugNotFoundThumb() {
   return (
-    <div className="bug-not-found-thumb" aria-label="bug wandered off">
+    <div className="bug-not-found-thumb" aria-label="bug not found">
       <WiltedFlower size={48} />
-      <span>this bug wandered off</span>
+      <span>bug not found</span>
     </div>
   );
 }
@@ -423,7 +423,7 @@ export function WhoaSoFastOverlay({ visible }: { visible: boolean }) {
   return (
     <div className="session-whoa" role="status">
       <CuteFlower size={64} className="session-whoa-flower" />
-      <span>whoa so fast!</span>
+      <span>whoa so fast</span>
     </div>
   );
 }
@@ -518,6 +518,53 @@ Steps:
 - [ ] **Step 2**: Read `lib/session-pools.ts` — confirm TTL or session-end cleanup
 - [ ] **Step 3**: If gaps found, file as a follow-up task (NOT in this plan) and note in commit message
 - [ ] **Step 4**: Write a short note to `docs/superpowers/notes-memory-audit-2026-05-17.md` summarizing findings
+
+---
+
+## Task 11: Replace gallery icon — pink-theme aligned
+
+**Files:**
+- Possibly: `public/icons/<new>.svg`
+- Modify: `app/components/icons/index.tsx`
+- Modify: `app/gallery/page.tsx` + `app/components/home/HomeClient.tsx` (gallery CTA)
+
+The Fluent Color ladybug clashes — its red/black palette fights the pink/lilac identity. User flagged: "not ladybug problem, just colored icon". Three avenues to research:
+
+### Avenue A — different Fluent Color emoji that's actually pink/coordinated
+Candidates to fetch and compare:
+- `1f338` cherry blossom (currently the title icon — would collide with hero)
+- `1faf0` pinching hand — wrong meaning
+- `1f4a7` droplet — wrong meaning
+- `1fab4` potted plant — could work; pink-pot green-leaves
+- `1f33c` blossom — five-petal flower with yellow center, pink/yellow
+- `1f490` bouquet — multi-flower, busy
+- `1f31f` glowing star
+- `1f493` beating heart — pink, but generic
+
+Better candidates that are pink AND say "gallery / collection":
+- `1f5bc` framed picture — generic gallery icon
+- `1f4d6` open book — "browse"
+- `1f4f7` camera — collection of photos
+
+### Avenue B — pink-tinted monochrome SVG (Phosphor, Hugeicons, Streamline outline)
+- `phosphor:butterfly-duotone` or `phosphor:bug-duotone` — duotone supports our palette
+- `hugeicons:bug-02` — clean outline
+- Custom: a hand-drawn ladybug in pink monochrome (the "cute" comes from the line style, not the color)
+
+### Avenue C — keep ladybug but DESATURATE the Fluent SVG via CSS filter
+- `filter: saturate(0) sepia(1) hue-rotate(280deg) brightness(0.9)` — tints any image pink
+- Trade: loses the Fluent character; gains theme consistency
+
+- [ ] **Step 1**: Prototype all three avenues — implementation order: B (lowest cost), then A (different emoji), then C (CSS filter)
+- [ ] **Step 2**: Pick the best one via screenshot comparison. Likely winner: Avenue B with Phosphor duotone bug or butterfly, tinted in `--accent-pink`. Falls back to Fluent picture-frame `1f5bc` if duotone looks too clinical.
+- [ ] **Step 3**: Update the export name (`CuteLadybug` may become `GalleryIcon` or stay if the choice is still a bug).
+- [ ] **Step 4**: Visual verify at gallery title AND on home CTA — both renders should look kindred to the cherry blossom.
+- [ ] **Step 5**: Commit
+
+```bash
+git add app/components/icons/index.tsx app/gallery/page.tsx app/components/home/HomeClient.tsx public/icons/*
+git commit --no-gpg-sign -m "feat(icons): gallery icon retheme — pink-aligned (was clashing Fluent ladybug)"
+```
 
 ---
 
