@@ -78,8 +78,6 @@
     z-index: 0;
     box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.7);
   }
-  .nocrop { width: 100%; aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center; background: #0d0c10; color: #666; font-size: 12px; border-radius: 4px; }
-
   .name { font-size: 14px; margin: 4px 0; color: #f5f5f5; }
   .name code { color: #67D4E6; font-size: 11px; }
 
@@ -89,7 +87,6 @@
   .badge.wide          { background: #4a3d2d; color: #e6c8a8; }
   .badge.no_bug        { background: #4a2d2d; color: #e6a8a8; }
   .badge.bug_too_small { background: #4a2d2d; color: #e6a8a8; }
-  .badge.multi_bug     { background: #4a2d4a; color: #e6a8e6; }
   .badge.poor_contrast { background: #2d3a4a; color: #a8c8e6; }
   .metrics { font-size: 11px; color: #888; font-family: 'JetBrains Mono', monospace; margin: 4px 0; line-height: 1.5; }
 
@@ -165,10 +162,6 @@
     transition: background 0.08s, border-color 0.08s, color 0.08s;
   }
   .col button:hover { color: #f5f5f5; border-color: #666; }
-  .col button.suggested { border-color: #67D4E6; color: #67D4E6; background: rgba(103,212,230,0.10); font-weight: 600; }
-  .col.col1 button.suggested { border-color: #4ac64a; color: #4ac64a; background: rgba(74,198,74,0.10); }
-  .col.col2 button.suggested { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,0.10); }
-  .col.col4 button.suggested { border-color: #FF6EC7; color: #FF6EC7; background: rgba(255,110,199,0.10); }
   .col button.informational { font-style: italic; opacity: 0.75; }
   /* Dim + disable buttons that don't apply given current bbox state.
      For has-bbox cards: the "Should Have Bbox" button is dimmed.
@@ -233,7 +226,7 @@
   <h1>✿ Framing Validator</h1>
   <label>Variant <select id="variant"><option>{{ variant }}</option></select></label>
   <label>Source <select id="source"><option value="all">all</option>{% for s in sources %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></label>
-  <label>Predicted <select id="quality"><option value="all">all</option><option value="good">good</option><option value="tight">tight</option><option value="wide">wide</option><option value="no_bug">no_bug</option><option value="bug_too_small">bug_too_small</option><option value="multi_bug">multi_bug</option><option value="poor_contrast">poor_contrast</option></select></label>
+  <label>Predicted <select id="quality"><option value="all">all</option><option value="good">good</option><option value="tight">tight</option><option value="wide">wide</option><option value="no_bug">no_bug</option><option value="bug_too_small">bug_too_small</option><option value="poor_contrast">poor_contrast</option></select></label>
   <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="unsure">unsure</option><option value="flagged">any flag</option></select></label>
   <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">detector conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="random">random</option></select></label>
   <span class="totals" id="totals">{{ total }} images</span>
