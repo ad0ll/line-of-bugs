@@ -3,7 +3,7 @@ import { getFacetCounts } from "@/lib/queries/facets";
 import type { FilterState } from "@/lib/queries/filter-clauses";
 import { FIXTURE } from "@/tests/fixtures/init-db";
 
-// Runs against the 32-row in-memory fixture seeded in tests/setup.ts.
+// Runs against the 34-row in-memory fixture seeded in tests/setup.ts.
 // Counts are exact (not "greater than N") because the fixture is
 // frozen.
 
