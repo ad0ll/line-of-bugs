@@ -397,11 +397,17 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
 
 .gallery-filter-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: wrap;            /* keep wrap as fallback */
+  gap: 0.5rem 0.75rem;
   align-items: center;
-  gap: 0.6rem 0.75rem;
   padding: 0.75rem 0;
   margin-bottom: 1rem;
+  /* No fixed width on children — let them sit at intrinsic width.
+     The WhatIsBugFilter empty chip + 4 other empty chips fit on one
+     1440px line comfortably (Phase F audit 2026-05-17). */
+}
+.gallery-filter-row > * {
+  flex: 0 0 auto;
 }
 .gallery-filter-row-species {
   flex: 1 1 18rem;
