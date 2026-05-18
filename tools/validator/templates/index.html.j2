@@ -30,6 +30,14 @@
   .card { background: #1a1820; border: 1px solid #28252e; border-radius: 8px; padding: 12px; }
   .card.reviewed { border-color: #2d4a2d; }
   .card.flagged  { border-color: #f59e0b; }
+  /* Unsure overrides reviewed/flagged borders. Slight dim signals "set aside". */
+  .card.unsure   { border-color: #666; opacity: 0.78; position: relative; }
+  .card.unsure::before {
+    content: "UNSURE"; position: absolute; top: 6px; right: 6px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+    color: #ddd; background: #444; padding: 2px 6px; border-radius: 3px;
+    font-family: 'JetBrains Mono', monospace; z-index: 2;
+  }
   .imgs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; align-items: start; }
   .imgs figure { margin: 0; }
   .imgs figcaption { font-size: 11px; color: #888; margin-top: 2px; }
@@ -205,8 +213,8 @@
   <label>Variant <select id="variant"><option>{{ variant }}</option></select></label>
   <label>Source <select id="source"><option value="all">all</option>{% for s in sources %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></label>
   <label>Predicted <select id="quality"><option value="all">all</option><option value="good">good</option><option value="tight">tight</option><option value="wide">wide</option><option value="no_bug">no_bug</option><option value="bug_too_small">bug_too_small</option><option value="multi_bug">multi_bug</option><option value="poor_contrast">poor_contrast</option></select></label>
-  <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="flagged">any flag</option></select></label>
-  <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="ml_uncertainty">ML uncertainty (closest to 0.5 first)</option><option value="ml_prob_asc">ML p ↑ (least likely first)</option><option value="ml_prob_desc">ML p ↓ (most likely first)</option><option value="random">random</option></select></label>
+  <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="unsure">unsure</option><option value="flagged">any flag</option></select></label>
+  <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">detector conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="ml_uncertainty">ML uncertainty (closest to 0.5 first)</option><option value="ml_confidence_desc">ML confidence (most confident either way first)</option><option value="ml_prob_asc">ML p ↑ (least likely first)</option><option value="ml_prob_desc">ML p ↓ (most likely first)</option><option value="random">random</option></select></label>
   <span class="totals" id="totals">{{ total }} images</span>
   <span id="saveStatus" title="Each click is saved to data/cache/labels.json on the server"></span>
 </header>
@@ -332,19 +340,22 @@ function _refreshTabStrip() {
     const btn = tabStrip.querySelector(`button[data-label="${label}"]`);
     if (!btn) continue;
     const probKey = `predicted_${label}_p`;
-    let unreviewed = 0;
+    let unreviewed = 0, unsure = 0;
     for (const r of DATA) {
       const lbl = LABELS[r.image_id];
       const isReviewed = lbl && lbl.reviewed_at;
+      const isUnsure = lbl && lbl.unsure;
       if (!isReviewed && r[probKey] != null) unreviewed++;
+      if (isUnsure && r[probKey] != null) unsure++;
     }
+    const unsureFrag = unsure > 0 ? ` · ${unsure}?` : '';
     const m = ML_METRICS[label];
     if (m && m.arm_scalar) {
       const mcc = m.arm_scalar.mcc_mean;
       const npos = m.n_positives;
-      btn.textContent = `${label.replace(/^mask_|^bbox-content_|^bbox_/, '')} (${unreviewed}u · ${npos}p · MCC ${mcc.toFixed(2)})`;
+      btn.textContent = `${label.replace(/^mask_|^bbox-content_|^bbox_/, '')} (${unreviewed}u${unsureFrag} · ${npos}p · MCC ${mcc.toFixed(2)})`;
     } else {
-      btn.textContent = `${label.replace(/^mask_|^bbox-content_|^bbox_/, '')} (${unreviewed}u)`;
+      btn.textContent = `${label.replace(/^mask_|^bbox-content_|^bbox_/, '')} (${unreviewed}u${unsureFrag})`;
     }
   }
 }
@@ -756,7 +767,8 @@ function render() {
     rows = rows.filter(r => {
       const lbl = labels[r.image_id];
       if (rf === "unreviewed") return !lbl || !lbl.reviewed_at;
-      if (rf === "reviewed")   return lbl && lbl.reviewed_at;
+      if (rf === "reviewed")   return lbl && lbl.reviewed_at && !lbl.unsure;
+      if (rf === "unsure")     return lbl && lbl.unsure;
       if (rf === "flagged")    return lbl && (
         lbl.col1 || lbl.col2_count ||
         (lbl.col2_flags && lbl.col2_flags.length > 0) ||
@@ -775,6 +787,16 @@ function render() {
       const pa = a[probKey] ?? 0.5;
       const pb = b[probKey] ?? 0.5;
       return Math.abs(pa - 0.5) - Math.abs(pb - 0.5);
+    });
+  } else if (sortBy === "ml_confidence_desc") {
+    // |p - 0.5| descending → most confident predictions first (high p OR low p).
+    // Tracks the active tab's label, or first tier-1 label if no tab.
+    const label = activeLabel || TIER1_LABELS[0];
+    const probKey = "predicted_" + label + "_p";
+    rows.sort((a, b) => {
+      const pa = a[probKey] ?? 0.5;
+      const pb = b[probKey] ?? 0.5;
+      return Math.abs(pb - 0.5) - Math.abs(pa - 0.5);
     });
   } else if (sortBy === "ml_prob_asc" || sortBy === "ml_prob_desc") {
     // Sort by ML predicted probability for the active label, or for the first
@@ -807,7 +829,7 @@ function render() {
       (lbl.col3 && lbl.col3.length > 0) ||
       (lbl.col4 && lbl.col4.length > 0));
     const div = document.createElement("div");
-    div.className = "card" + (reviewed ? " reviewed" : "") + (hasAnyFlag ? " flagged" : "");
+    div.className = "card" + (reviewed ? " reviewed" : "") + (hasAnyFlag ? " flagged" : "") + (lbl.unsure ? " unsure" : "");
     div.dataset.imageId = r.image_id;
 
     // Stale-label warning
