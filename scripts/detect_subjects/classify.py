@@ -591,4 +591,17 @@ def run_v1_on_sample(
     if pending_records:
         _flush_records(pending_records, parquet_path)
     summary["elapsed_s"] = time.perf_counter() - t_start
+
+    # Sync the parquet's per-row detections into SQLite for the production
+    # gate. Latest-variant-wins; idempotent if no parquet rows changed.
+    try:
+        from scripts.detect_subjects.detections_sync import sync_detections_from_parquet
+        sync_result = sync_detections_from_parquet(parquet_path)
+        summary["sqlite_detections_upserted"] = sync_result["upserted"]
+    except Exception as e:
+        # Don't fail the whole classify run on a sync hiccup — the parquet
+        # is still good and a manual rerun of sync_detections will recover.
+        print(f"[v1] WARN detections sync failed: {type(e).__name__}: {e}")
+        summary["sqlite_detections_upserted"] = -1
+
     return summary
