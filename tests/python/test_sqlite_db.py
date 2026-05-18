@@ -38,3 +38,18 @@ def test_open_conn_returns_sqlite3_connection(tmp_path):
         assert isinstance(conn, sqlite3.Connection)
     finally:
         conn.close()
+
+
+def test_open_conn_uses_manual_transaction_mode(tmp_path):
+    """isolation_level=None gives us autocommit + explicit BEGIN; required
+    so our explicit transaction blocks don't collide with Python's
+    implicit auto-BEGIN."""
+    from scripts.detect_subjects.sqlite_db import open_conn
+    db_path = tmp_path / "iso.db"
+    import sqlite3
+    sqlite3.connect(db_path).close()
+    conn = open_conn(db_path)
+    try:
+        assert conn.isolation_level is None
+    finally:
+        conn.close()
