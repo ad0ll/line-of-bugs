@@ -99,6 +99,11 @@
 
   .pred-badge { font-size: 9px; color: #67D4E6; font-weight: 400; margin-left: 6px; font-family: 'JetBrains Mono', monospace; }
   .pred-badge.unreliable { color: #888; }
+  /* Per-label ML probability chip — shown inline on each col3 button next to
+     the label text. Color-coded: red (likely yes), green (likely no), amber (uncertain). */
+  .ml-chip { display: inline-block; margin-left: 4px; padding: 1px 4px; border-radius: 8px;
+    font-size: 8px; font-weight: 600; color: #0d0c10;
+    font-family: 'JetBrains Mono', monospace; vertical-align: middle; }
 
   /* Rule labeler hint — informational only, not auto-applied (sam3 miscalibrated) */
   .rule-hint { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #bbb; background: rgba(245,158,11,0.06); border-left: 2px solid rgba(245,158,11,0.4); padding: 4px 8px; margin: 6px 0; }
@@ -201,7 +206,7 @@
   <label>Source <select id="source"><option value="all">all</option>{% for s in sources %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></label>
   <label>Predicted <select id="quality"><option value="all">all</option><option value="good">good</option><option value="tight">tight</option><option value="wide">wide</option><option value="no_bug">no_bug</option><option value="bug_too_small">bug_too_small</option><option value="multi_bug">multi_bug</option><option value="poor_contrast">poor_contrast</option></select></label>
   <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="flagged">any flag</option></select></label>
-  <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="random">random</option></select></label>
+  <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="ml_prob_asc">ML p ↑ (least likely first)</option><option value="ml_prob_desc">ML p ↓ (most likely first)</option><option value="random">random</option></select></label>
   <span class="totals" id="totals">{{ total }} images</span>
   <span id="saveStatus" title="Each click is saved to data/cache/labels.json on the server"></span>
 </header>
@@ -209,6 +214,9 @@
 <div class="tab-strip" id="tabStrip">
   <button data-label="" class="active">all</button>
   <button data-label="mask_blur_unusable">blur_unusable</button>
+  <button data-label="mask_blur_usable">blur_usable</button>
+  <button data-label="mask_bad-photo-quality">bad_photo_quality</button>
+  <button data-label="mask_poor-contrast">poor_contrast</button>
   <label id="hideConfidentWrap" style="display:none;margin-left:12px;font-size:12px;color:#aaa;cursor:pointer;font-family:'JetBrains Mono',monospace;">
     <input type="checkbox" id="hideConfident" style="vertical-align:middle;margin-right:4px"> hide confident
     <span style="color:#666">(|p−0.5|&gt;0.4)</span>
@@ -279,7 +287,12 @@ let MASK_CONTOURS = {};
 // Used to render tab labels with positive counts + current MCC so the user can
 // see at a glance where their labeling effort has the most leverage.
 let ML_METRICS = {};
-const TIER1_LABELS = ["mask_blur_unusable"];
+const TIER1_LABELS = [
+  "mask_blur_unusable",
+  "mask_blur_usable",
+  "mask_bad-photo-quality",
+  "mask_poor-contrast",
+];
 async function loadMLMetrics() {
   await Promise.all(TIER1_LABELS.map(async (label) => {
     try {
@@ -728,6 +741,14 @@ function render() {
       const pb = b[probKey] ?? 0.5;
       return Math.abs(pa - 0.5) - Math.abs(pb - 0.5);
     });
+  } else if (sortBy === "ml_prob_asc" || sortBy === "ml_prob_desc") {
+    // Sort by ML predicted probability for the active label, or for the first
+    // tier-1 label if no tab is active. Useful for browsing "most-likely-blur"
+    // before deciding which need review.
+    const label = activeLabel || TIER1_LABELS[0];
+    const probKey = "predicted_" + label + "_p";
+    const dir = sortBy === "ml_prob_asc" ? 1 : -1;
+    rows.sort((a, b) => dir * ((a[probKey] ?? 0.5) - (b[probKey] ?? 0.5)));
   } else if (sortBy === "random") rows.sort(() => Math.random() - 0.5);
   else if (sortBy === "bbox_area") rows.sort((a, b) => (a.bbox_area_ratio ?? 0) - (b.bbox_area_ratio ?? 0));
   else if (sortBy === "bbox_long_edge") rows.sort((a, b) => (a.bbox_long_edge_px ?? 0) - (b.bbox_long_edge_px ?? 0));
@@ -865,7 +886,13 @@ function render() {
       const isAct = col3Display.includes(b.id);
       const dim = !hasBbox;
       const cls = [(isAct ? "active" : ""), (dim ? "nobbox-dim" : "")].filter(Boolean).join(' ');
-      return '<button class="' + cls + '" title="' + b.tip + '" onclick="toggleCol3(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + '</button>';
+      // ML probability chip — show predicted_p next to the button if we have a prediction for this label
+      const probKey = "predicted_" + b.id + "_p";
+      const p = r[probKey];
+      const chip = (p != null)
+        ? '<span class="ml-chip" style="background:' + (p > 0.7 ? '#ef4444' : p < 0.3 ? '#4ac64a' : '#f59e0b') + '">p=' + p.toFixed(2) + '</span>'
+        : '';
+      return '<button class="' + cls + '" title="' + b.tip + '" onclick="toggleCol3(\'' + r.image_id + '\',\'' + b.id + '\')">' + b.label + chip + '</button>';
     }).join('');
 
     const col4Display = _displayCol4(r, lbl);

@@ -105,6 +105,12 @@ def build_html_for_variant(
             "gt_iou": row["gt_iou"],
             "predicted_mask_blur_unusable_p": row.get("predicted_mask_blur_unusable_p"),
             "predicted_mask_blur_unusable_unreliable": row.get("predicted_mask_blur_unusable_unreliable"),
+            "predicted_mask_blur_usable_p": row.get("predicted_mask_blur_usable_p"),
+            "predicted_mask_blur_usable_unreliable": row.get("predicted_mask_blur_usable_unreliable"),
+            "predicted_mask_bad-photo-quality_p": row.get("predicted_mask_bad-photo-quality_p"),
+            "predicted_mask_bad-photo-quality_unreliable": row.get("predicted_mask_bad-photo-quality_unreliable"),
+            "predicted_mask_poor-contrast_p": row.get("predicted_mask_poor-contrast_p"),
+            "predicted_mask_poor-contrast_unreliable": row.get("predicted_mask_poor-contrast_unreliable"),
             "common_name": mrow.get("common_name", ""),
             "taxon_species": mrow.get("taxon_species", ""),
             # HTML now at tools/validator/<variant>.html; data/ is 2 levels up.
