@@ -21,6 +21,13 @@
   }
   .tab-strip button.active { background: #4ac64a; color: #0d0c10; border-color: #4ac64a; font-weight: 600; }
   .tab-strip button:hover { color: #f5f5f5; border-color: #666; }
+  .tab-strip label.checkbox-label {
+    margin-left: 12px; font-size: 12px; color: #aaa; cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .tab-strip label.checkbox-label input[type="checkbox"] {
+    vertical-align: middle; margin-right: 4px;
+  }
 
   .help { font-size: 12px; color: #aaa; padding: 8px 24px; background: #1a1820; border-bottom: 1px solid #28252e; line-height: 1.6; }
   .help code { background: #0d0c10; padding: 1px 6px; border-radius: 3px; color: #FF6EC7; font-family: 'JetBrains Mono', monospace; }
@@ -239,18 +246,18 @@
   <button data-label="mask_blur_usable">blur_usable</button>
   <button data-label="mask_bad-photo-quality">bad_photo_quality</button>
   <button data-label="mask_poor-contrast">poor_contrast</button>
-  <label id="hideConfidentWrap" style="display:none;margin-left:12px;font-size:12px;color:#aaa;cursor:pointer;font-family:'JetBrains Mono',monospace;">
-    <input type="checkbox" id="hideConfident" style="vertical-align:middle;margin-right:4px"> hide confident
+  <label id="hideConfidentWrap" class="checkbox-label" style="display:none">
+    <input type="checkbox" id="hideConfident"> hide confident
     <span style="color:#666">(|p−0.5|&gt;0.4)</span>
   </label>
-  <label style="margin-left:12px;font-size:12px;color:#aaa;cursor:pointer;font-family:'JetBrains Mono',monospace;">
-    <input type="checkbox" id="hideReviewed" style="vertical-align:middle;margin-right:4px"> hide reviewed
+  <label class="checkbox-label">
+    <input type="checkbox" id="hideReviewed"> hide reviewed
   </label>
-  <label style="margin-left:12px;font-size:12px;color:#aaa;cursor:pointer;font-family:'JetBrains Mono',monospace;">
-    <input type="checkbox" id="showUnsure" style="vertical-align:middle;margin-right:4px"> show unsure
+  <label class="checkbox-label">
+    <input type="checkbox" id="showUnsure"> show unsure
   </label>
-  <label style="margin-left:12px;font-size:12px;color:#aaa;cursor:pointer;font-family:'JetBrains Mono',monospace;">
-    <input type="checkbox" id="showTooSmall" style="vertical-align:middle;margin-right:4px"> show too-small
+  <label class="checkbox-label">
+    <input type="checkbox" id="showTooSmall"> show too-small
   </label>
   <button id="snapshotMoreBtn" style="display:none;margin-left:4px;font-size:11px;padding:1px 6px" title="Add newly-reviewed cards to the hidden set">↻ hide <span id="snapshotMoreCount">0</span> more</button>
   <button id="showHiddenBtn" style="display:none;margin-left:4px;font-size:11px;padding:1px 6px" title="Clear the snapshot — formerly-hidden cards reappear">show <span id="showHiddenCount">0</span> hidden</button>
