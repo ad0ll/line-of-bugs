@@ -925,16 +925,14 @@
     "variant_tag": "sam3__sam3"
   },
   "inat-11495391": {
-    "col1": null,
-    "col2_count": null,
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
     "col2_flags": [],
-    "col3": [
-      "mask_blur_usable"
-    ],
+    "col3": [],
     "col4": [],
-    "reviewed_at": null,
+    "reviewed_at": 1779118711893,
     "unsure": false,
-    "user_edited": false,
+    "user_edited": true,
     "variant_tag": "sam3__sam3"
   },
   "inat-1152092": {
@@ -4018,6 +4016,50 @@
     "col4": [],
     "unsure": false,
     "reviewed_at": 1779113113235,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5611038": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779118685193,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5542256": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779118687533,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-5610992": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779118690977,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "bugwood-1267032": {
+    "col1": null,
+    "col2_count": null,
+    "col2_flags": [],
+    "col3": [],
+    "col4": [],
+    "unsure": true,
+    "reviewed_at": 1779118723658,
     "user_edited": true,
     "variant_tag": "sam3__sam3"
   }

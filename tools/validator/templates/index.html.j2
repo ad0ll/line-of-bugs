@@ -253,6 +253,9 @@
   <label style="margin-left:12px;font-size:12px;color:#aaa;cursor:pointer;font-family:'JetBrains Mono',monospace;">
     <input type="checkbox" id="hideReviewed" style="vertical-align:middle;margin-right:4px"> hide reviewed
   </label>
+  <label style="margin-left:12px;font-size:12px;color:#aaa;cursor:pointer;font-family:'JetBrains Mono',monospace;">
+    <input type="checkbox" id="showUnsure" style="vertical-align:middle;margin-right:4px"> show unsure
+  </label>
   <button id="snapshotMoreBtn" style="display:none;margin-left:4px;font-size:11px;padding:1px 6px" title="Add newly-reviewed cards to the hidden set">↻ hide <span id="snapshotMoreCount">0</span> more</button>
   <button id="showHiddenBtn" style="display:none;margin-left:4px;font-size:11px;padding:1px 6px" title="Clear the snapshot — formerly-hidden cards reappear">show <span id="showHiddenCount">0</span> hidden</button>
   <button id="retrainBtn" style="margin-left:auto;background:#ef4444;color:#fff;border-color:#ef4444;display:none">retrain selected</button>
@@ -364,6 +367,10 @@ async function loadMLMetrics() {
 // little marginal information). Reduces low-leverage labeling cycles.
 let hideConfident = false;
 let hideReviewed = false;
+// Unsure cards are always hidden by default (they're "set aside"). Toggle
+// `showUnsure` to bring them back into the visible set (e.g., to revisit).
+// Use the Status=unsure filter to see ONLY unsure cards.
+let showUnsure = false;
 // Tri-state ML sort. criterion = 'prob' | 'uncertainty' | null. direction =
 // 'asc' | 'desc' | null. Only one button is non-off at a time. When set, this
 // overrides the dropdown sort. Resets on tab change.
@@ -661,11 +668,15 @@ function setUnsure(id) {
     cur.col1 = null; cur.col2_count = null; cur.col2_flags = [];
     cur.col3 = []; cur.col4 = [];
     _persist(id, cur);
+    // Unsure cards are always hidden by default (see render filter); no need
+    // to touch hiddenIds.
   } else {
     // Toggling unsure OFF resets the card to a pristine, unreviewed state.
     // We bypass _persist (which would re-stamp reviewed_at) and clear the
-    // record entirely, then save.
+    // record entirely, then save. Also drop from the hide-reviewed snapshot
+    // (the symmetric counterpart of adding it on toggle-ON).
     delete LABELS[id];
+    hiddenIds.delete(id);
     render();
     saveLabelsToServer();
   }
@@ -813,6 +824,14 @@ function render() {
   // stays visible until the user explicitly clicks "↻ hide N more".
   if (hideReviewed && hiddenIds.size > 0) {
     rows = rows.filter(r => !hiddenIds.has(r.image_id));
+  }
+  // Unsure cards are hidden by default unless explicitly shown OR the user
+  // filters specifically to unsure via the Status dropdown.
+  if (!showUnsure && rf !== "unsure") {
+    rows = rows.filter(r => {
+      const lbl = labels[r.image_id];
+      return !(lbl && lbl.unsure);
+    });
   }
   if (rf !== "all") {
     rows = rows.filter(r => {
@@ -1282,6 +1301,10 @@ document.getElementById('hideReviewed').addEventListener('change', (e) => {
     hiddenIds = new Set();
   }
   _refreshHideReviewedButtons();
+  render();
+});
+document.getElementById('showUnsure').addEventListener('change', (e) => {
+  showUnsure = e.target.checked;
   render();
 });
 document.getElementById('snapshotMoreBtn').addEventListener('click', () => {
