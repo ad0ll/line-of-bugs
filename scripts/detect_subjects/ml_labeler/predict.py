@@ -1,5 +1,6 @@
 """Batch inference: load joblib classifier(s), predict probabilities for every
-sam3__sam3 row in the parquet, write predicted_<label>_p and _unreliable cols.
+sam3__sam3 row in the parquet, write predicted_<label>_p / _unreliable cols,
+sync to SQLite `predictions`, and trigger gate recompute for the label.
 
 V1: scalar-arm only. Future: image-arm and per-label winner-arm selection.
 
@@ -10,6 +11,7 @@ sequential predict_label_into_parquet calls because it amortizes the
 ~1.7s parquet I/O across all labels (1 read + 1 write instead of N each).
 """
 from __future__ import annotations
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -20,11 +22,18 @@ import polars as pl
 from scripts.detect_subjects.ml_labeler.features import (
     SCALAR_FEATURE_NAMES, scalar_feature_vector,
 )
+from scripts.detect_subjects.predictions_sync import (
+    sync_predictions_from_parquet, model_version_for,
+)
+from scripts.detect_subjects.recompute_gate import recompute_for_label
+from scripts.detect_subjects.sqlite_db import open_conn, DEFAULT_DB_PATH
 
 
-def _load_bundle(label: str) -> dict:
-    from scripts.detect_subjects.ml_labeler import MODELS_DIR
-    model_path = MODELS_DIR / label / "arm_scalar_latest.joblib"
+def _load_bundle(label: str, models_dir: Optional[Path] = None) -> dict:
+    if models_dir is None:
+        from scripts.detect_subjects.ml_labeler import MODELS_DIR
+        models_dir = MODELS_DIR
+    model_path = models_dir / label / "arm_scalar_latest.joblib"
     bundle = joblib.load(model_path)
     if bundle.get("feature_names") != SCALAR_FEATURE_NAMES:
         raise ValueError(
@@ -40,10 +49,14 @@ def predict_labels_batched(
     labels: list[str],
     parquet_path: Path = Path("data/cache/framing_detections.parquet"),
     unreliable_threshold: int = 30,
+    db_path: Optional[Path] = None,
+    models_dir: Optional[Path] = None,
 ) -> dict[str, int]:
-    """One parquet read + N model inferences + one parquet write. Returns
-    {label: n_rows_updated}."""
-    bundles = {lbl: _load_bundle(lbl) for lbl in labels}
+    """One parquet read + N inferences + one parquet write + sync to SQLite +
+    gate recompute. Returns {label: n_rows_updated}."""
+    if db_path is None:
+        db_path = DEFAULT_DB_PATH
+    bundles = {lbl: _load_bundle(lbl, models_dir) for lbl in labels}
 
     df = pl.read_parquet(parquet_path)
     # Restrict to sam3__sam3 rows that have a labelable subject. no_bug +
@@ -54,7 +67,7 @@ def predict_labels_batched(
     # Also exclude close-ups (zoom shots of body parts) — students won't
     # see them in the gallery, so labels on them aren't useful.
     from scripts.detect_subjects.ml_labeler.train import _load_non_drawable_ids
-    non_drawable = _load_non_drawable_ids()
+    non_drawable = _load_non_drawable_ids(db_path)
     sam3_rows = df.filter(
         (pl.col("variant") == "sam3__sam3")
         & ~pl.col("framing_quality").is_in(["no_bug", "bug_too_small"])
@@ -65,6 +78,7 @@ def predict_labels_batched(
 
     new_cols: list[pl.Expr] = []
     counts: dict[str, int] = {}
+    model_versions: dict[str, str] = {}
     for lbl in labels:
         bundle = bundles[lbl]
         probs = bundle["clf"].predict_proba(X)[:, 1].astype(np.float32)
@@ -81,11 +95,27 @@ def predict_labels_batched(
         )
         new_cols += [new_p.alias(p_col), new_u.alias(u_col)]
         counts[lbl] = len(prob_map)
+        model_versions[lbl] = model_version_for(lbl, bundle)
 
     df = df.with_columns(new_cols)
     df.write_parquet(parquet_path)
     for lbl, n in counts.items():
         print(f"[predict:{lbl}] updated {n} rows with prob+unreliable cols")
+
+    # Sync to SQLite predictions + trigger gate recompute per label.
+    now_s = int(time.time())
+    sync_predictions_from_parquet(
+        parquet_path, labels, model_versions=model_versions,
+        now_s=now_s, db_path=db_path,
+    )
+    conn = open_conn(db_path)
+    try:
+        for lbl in labels:
+            n = recompute_for_label(lbl, conn, now_s=now_s)
+            print(f"[predict:{lbl}] gate recompute touched {n} rows")
+    finally:
+        conn.close()
+
     return counts
 
 
@@ -94,12 +124,15 @@ def predict_label_into_parquet(
     parquet_path: Path = Path("data/cache/framing_detections.parquet"),
     model_path: Optional[Path] = None,
     unreliable_threshold: int = 30,
+    db_path: Optional[Path] = None,
+    models_dir: Optional[Path] = None,
 ) -> int:
     """Single-label predict — convenience wrapper. Prefer predict_labels_batched
     when updating multiple labels at once."""
     counts = predict_labels_batched(
         [label], parquet_path=parquet_path,
         unreliable_threshold=unreliable_threshold,
+        db_path=db_path, models_dir=models_dir,
     )
     return counts[label]
 
