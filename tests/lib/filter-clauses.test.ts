@@ -30,8 +30,11 @@ const base: FilterState = {
 // Drizzle's sqlite dialect serializes user-supplied values as `?`
 // placeholders — exactly what we want for an injection-safety check.
 const dialect = new SQLiteSyncDialect();
-function renderWhere(state: FilterState): { sql: string; params: unknown[] } {
-  const clauses = buildFilterClauses(state);
+function renderWhere(
+  state: FilterState,
+  alias: "i" | "images" = "i",
+): { sql: string; params: unknown[] } {
+  const clauses = buildFilterClauses(state, alias);
   const q = dialect.sqlToQuery(sql.join(clauses, sql` AND `));
   return { sql: q.sql, params: q.params };
 }
@@ -60,6 +63,16 @@ describe("buildFilterClauses", () => {
     expect(textI).toContain("gate_decisions");
     expect(textI).toContain("decision = 'reject'");
     expect(textI).toMatch(/i\.image_id/);
+  });
+
+  it("renders the gate clause with 'images' alias for session path", () => {
+    // session.ts:buildSessionPool / countSessionPool call buildFilterClauses
+    // with alias="images" (drizzle's QueryBuilder leaves the table un-aliased).
+    // Make sure the gate NOT EXISTS correlates on `images.image_id` in that path.
+    const { sql: textImages } = renderWhere(base, "images");
+    expect(textImages).toContain("gate_decisions");
+    expect(textImages).toMatch(/images\.image_id/);
+    expect(textImages).not.toMatch(/\bi\.image_id\b/);
   });
 
   it("stacks all axes when several are active", () => {

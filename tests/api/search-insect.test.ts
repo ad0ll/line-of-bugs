@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { GET } from "@/app/api/search/insect/route";
 import { sqlite } from "@/db";
 import { markRejected } from "../fixtures/init-db";
@@ -17,6 +17,13 @@ async function call(q: string): Promise<{ results: ResultRow[] }> {
 }
 
 describe("GET /api/search/insect", () => {
+  // Reset gate_decisions before every test — keeps tests order-independent
+  // and prevents leaks between the autocomplete tests (which mutate the
+  // table) and the basic-behavior tests above (which assume empty state).
+  beforeEach(() => {
+    sqlite.prepare("DELETE FROM gate_decisions").run();
+  });
+
   it("typing 'but' returns the butterflies group AND any matching species", async () => {
     const data = await call("but");
     const kinds = new Set(data.results.map((r) => r.kind));
@@ -41,9 +48,6 @@ describe("GET /api/search/insect", () => {
   });
 
   it("excludes a rejected image from group counts", async () => {
-    // Reset gate_decisions to a known state.
-    sqlite.prepare("DELETE FROM gate_decisions").run();
-
     const before = await GET(
       new Request("http://localhost/api/search/insect?q=butterf"),
     );
@@ -67,8 +71,6 @@ describe("GET /api/search/insect", () => {
   });
 
   it("excludes rejected images from species autocomplete counts", async () => {
-    sqlite.prepare("DELETE FROM gate_decisions").run();
-
     const before = await GET(
       new Request("http://localhost/api/search/insect?q=Testus"),
     );

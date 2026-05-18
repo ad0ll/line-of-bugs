@@ -28,11 +28,15 @@ Expected: total count > 0 (Plan 1 backfilled), reject count > 0 (some images fla
 - `lib/queries/session.ts:61-77` — `getImage` direct-id-lookup gets the same clause
 - `lib/queries/gallery.ts:122-139` — `listInstitutions` raw SQL gets the same clause
 - `lib/queries/gallery.ts:150-179` — `searchSpecies` raw SQL gets the same clause
+- `app/api/search/insect/route.ts:26-53` — autocomplete raw SQL (Task 6, group + species)
 - `tests/fixtures/init-db.ts` — add `gate_decisions` CREATE TABLE + `markRejected()` helper
 - `tests/lib/filter-clauses.test.ts` — unit test the new clause; update existing count assertions (2 → 3)
+- `tests/api/search-insect.test.ts` — append Task 6 coverage for autocomplete gate filtering
+- `vitest.config.ts` — alias `next/cache` to `tests/stubs/next-cache.ts` for the node test project
 
 **Created:**
 - `tests/lib/gate-decisions-filter.test.ts` — focused integration tests proving rejected images are excluded from gallery/session/count/getImage/listInstitutions/searchSpecies
+- `tests/stubs/next-cache.ts` — no-op `cacheTag`/`cacheLife`/`revalidateTag` for the Vitest node harness (real `next/cache` requires `cacheComponents` config only honored by Next.js dev/build)
 
 ---
 

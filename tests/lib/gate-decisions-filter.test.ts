@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { sqlite } from "@/db";
 import { markRejected, markKept } from "../fixtures/init-db";
 import { searchGallery } from "@/lib/queries/gallery";
@@ -83,13 +83,22 @@ describe("gate_decisions filter integration", () => {
   });
 
   it("getImage returns null for a rejected image", async () => {
-    const { getImage } = await import("@/lib/queries/session");
-    const before = await getImage("test-005");
+    // Defensive: getImage is wrapped in React's cache(). In the non-server-
+    // components React bundle (what Vitest resolves today) cache() is a
+    // transparent no-op, but if bundle resolution ever changes the memoization
+    // would make the post-mark call return the stale pre-mark result and the
+    // test would silently always pass. vi.resetModules() before each await
+    // import re-evaluates the module so we get a fresh cache() wrapper.
+    vi.resetModules();
+    const sess1 = await import("@/lib/queries/session");
+    const before = await sess1.getImage("test-005");
     expect(before).toBeDefined();
     expect(before?.imageId).toBe("test-005");
 
     markRejected("test-005", "rule:bbox-content_no-bug");
-    const after = await getImage("test-005");
+    vi.resetModules();
+    const sess2 = await import("@/lib/queries/session");
+    const after = await sess2.getImage("test-005");
     expect(after).toBeFalsy();   // null or undefined — both mean "not served"
   });
 

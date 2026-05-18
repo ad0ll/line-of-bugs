@@ -83,6 +83,8 @@ CREATE TABLE IF NOT EXISTS gate_decisions (
 );
 CREATE INDEX IF NOT EXISTS idx_gate_decisions_decision
   ON gate_decisions (decision);
+CREATE INDEX IF NOT EXISTS idx_gate_decisions_reason_source
+  ON gate_decisions (reason_source);
 
 CREATE TABLE IF NOT EXISTS species_metadata (
   taxon_species text PRIMARY KEY NOT NULL,

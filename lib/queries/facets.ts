@@ -73,6 +73,10 @@ export async function getUnfilteredFacets(): Promise<FacetSnapshot> {
   "use cache";
   cacheTag("images-stats");
   cacheLife("days");
+  // CACHE STALENESS NOTE: gate_decisions changes don't invalidate this tag.
+  // Only report submit/hide/delete actions do. The unfiltered total + per-
+  // axis baselines can lag by up to cacheLife("days") after a recompute_gate
+  // run or model retrain. See cf-frontend plan → Out of scope.
   return getFacetCounts({
     subjectType: "all",
     views: [],
