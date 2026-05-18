@@ -81,4 +81,15 @@ describe("gate_decisions filter integration", () => {
     // 32 fixture images, all should be visible.
     expect(result.totalCount).toBe(32);
   });
+
+  it("getImage returns null for a rejected image", async () => {
+    const { getImage } = await import("@/lib/queries/session");
+    const before = await getImage("test-005");
+    expect(before).toBeDefined();
+    expect(before?.imageId).toBe("test-005");
+
+    markRejected("test-005", "rule:bbox-content_no-bug");
+    const after = await getImage("test-005");
+    expect(after).toBeFalsy();   // null or undefined — both mean "not served"
+  });
 });

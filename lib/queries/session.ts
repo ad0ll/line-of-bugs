@@ -71,6 +71,11 @@ export const getImage = cache(async (imageId: string) => {
           WHERE ${schema.reports.imageId} = ${schema.images.imageId}
             AND ${schema.reports.resolvedAt} IS NULL
         )`,
+        sql`NOT EXISTS (
+          SELECT 1 FROM gate_decisions g
+          WHERE g.image_id = ${schema.images.imageId}
+            AND g.decision = 'reject'
+        )`,
       ),
     )
     .get();
