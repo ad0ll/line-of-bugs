@@ -539,6 +539,31 @@ async function loadLabelsFromServer() {
   }
 }
 
+// Pull fresh predicted_*_p / _unreliable values from the server and merge
+// into DATA in place. The HTML embeds predictions at build time, which goes
+// stale the moment predict.py runs again. Fetching here means a retrain
+// + repredict shows up on the next page refresh without a build_html.
+async function loadPredictionsFromServer() {
+  try {
+    const res = await fetch("/api/predictions", { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const preds = await res.json();
+    if (!preds || typeof preds !== "object") return;
+    let touched = 0;
+    for (const row of DATA) {
+      const fresh = preds[row.image_id];
+      if (!fresh) continue;
+      for (const [k, v] of Object.entries(fresh)) {
+        if (row[k] !== v) { row[k] = v; touched++; }
+      }
+    }
+    if (touched > 0) console.log(`[predictions] merged ${touched} fresh values from /api/predictions`);
+  } catch (e) {
+    // Non-fatal — fall back to whatever was baked into the HTML
+    console.warn("[predictions] fetch failed, using HTML-embedded values:", e.message);
+  }
+}
+
 // Coalesce concurrent saves: while one POST is in flight, new mutations
 // just queue a re-send when it returns. This keeps the file write rate
 // at one-per-click max even with very fast typing.
@@ -1187,7 +1212,12 @@ document.addEventListener("keydown", function(e) {
 // rendering is independent of label data — both refresh on arrival.
 render();
 updateSaveStatus();
-Promise.all([loadLabelsFromServer(), loadMaskContours(), loadMLMetrics()]).then(() => {
+Promise.all([
+  loadLabelsFromServer(),
+  loadMaskContours(),
+  loadMLMetrics(),
+  loadPredictionsFromServer(),
+]).then(() => {
   render();
   updateSaveStatus();
 });

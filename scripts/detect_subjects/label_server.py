@@ -48,6 +48,43 @@ def _read_labels() -> dict:
         return {}
 
 
+def _read_predictions() -> dict:
+    """{image_id: {predicted_<label>_p: ..., predicted_<label>_unreliable: ...}}
+    for every sam3__sam3 row that has any predicted column. Called by the UI
+    on load + after retrain so fresh probs show without an HTML rebuild.
+
+    We re-read the parquet on every request — it's small (<2MB) and the file
+    OS-cache hit makes the read sub-10ms. Avoids any in-memory staleness.
+    """
+    parquet_path = PROJECT_ROOT / "data" / "cache" / "framing_detections.parquet"
+    if not parquet_path.exists():
+        return {}
+    try:
+        import polars as pl
+        import math
+        df = pl.read_parquet(parquet_path).filter(pl.col("variant") == "sam3__sam3")
+        pred_cols = [c for c in df.columns if c.startswith("predicted_")]
+        if not pred_cols:
+            return {}
+        out: dict = {}
+        for row in df.select(["image_id", *pred_cols]).iter_rows(named=True):
+            iid = row["image_id"]
+            cleaned = {}
+            for c in pred_cols:
+                v = row[c]
+                # JSON can't carry NaN — convert to None so JS sees null,
+                # matching the existing UI filter (p != null && !isNaN(p)).
+                if isinstance(v, float) and math.isnan(v):
+                    cleaned[c] = None
+                else:
+                    cleaned[c] = v
+            out[iid] = cleaned
+        return out
+    except Exception as e:
+        print(f"[label_server] /api/predictions failed: {type(e).__name__}: {e}")
+        return {}
+
+
 def _atomic_write_labels(data: dict) -> None:
     LABELS_PATH.parent.mkdir(parents=True, exist_ok=True)
     # Write to a sibling temp file in the same dir, then atomic rename. A
@@ -91,6 +128,9 @@ class LabelServerHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path == "/api/labels":
             self._send_json(HTTPStatus.OK, _read_labels())
+            return
+        if self.path == "/api/predictions":
+            self._send_json(HTTPStatus.OK, _read_predictions())
             return
         super().do_GET()
 
