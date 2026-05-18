@@ -10,18 +10,29 @@
 
 ---
 
-## Investigation findings (already done)
+## Investigation findings (already done — including Task 0 probe)
 
 These are facts, not guesses — gathered via direct probing:
 
 - **SAM3 vision encoder = `Sam3VisionModel`** (454M params, the bulk of the 840M total).
 - **Forward output:**
-  - `last_hidden_state`: shape `(batch, 5184, 1024)` for 1008×1008 input. 5184 = 72×72 patch grid, 14px per patch, 1024-dim embeddings.
-  - `fpn_hidden_states`: 4-scale FPN at `(256, 288×288)`, `(256, 144×144)`, `(256, 72×72)`, `(256, 36×36)`. We'll use `last_hidden_state` first — simpler, higher-dim. FPN is a future option for spatial-precision tasks.
+  - `last_hidden_state`: shape `(batch, 5184, 1024)`. 5184 = 72×72 patch grid, 14px per patch in the 1008×1008 input, 1024-dim per patch.
+  - `fpn_hidden_states`: 4-scale FPN at `(256, 288×288)`, `(256, 144×144)`, `(256, 72×72)`, `(256, 36×36)`. We use `last_hidden_state` first — simpler, higher per-patch dim. FPN is a fallback if classification needs finer spatial detail (Task 6 alt).
   - `pooler_output`: `None` (no built-in CLS-style pooled vector — we pool manually).
-- **Latency**: vision_encoder alone takes ~1.8s on M5 Max MPS. Today's `Sam3Detector.detect()` includes this same encoder pass internally → **capturing the embedding during detect is ~free** (just a `.cpu()` + pool, ~50ms). Running it standalone (re-pass over existing parquet rows) costs ~1.8s/image.
+- **Latency**: vision_encoder alone takes ~1.8s on M5 Max MPS. Today's `Sam3Detector.detect()` includes this same encoder pass internally → **capturing the embedding during detect is ~free** (just a `.cpu()` + pool, ~50ms). Running it standalone (backfill over existing rows) costs ~1.8s/image.
 - **Storage cost**: 1024-dim float16 per image = 2KB. 1500 images = 3MB. Float32 = 6MB. Trivial.
-- **Pooling alignment**: input is resized/padded to 1008×1008 by the processor. The predicted mask is in *original* image coords. We need to know the processor's exact resize+pad transform to align mask → patch grid. The processor exposes this via `image_processor.preprocess(...).pixel_values` and a `do_pad`/`do_resize` config; need to confirm via probe (Task 0).
+
+### Pooling alignment — RESOLVED by Task 0 probe (`tools/probe_sam3_patch_alignment.py`):
+
+**The processor STRETCHES to 1008×1008 — it does not pad.** Every aspect ratio probed (0.50, 1.33, 1.50, 2.00) → output aspect 1.00, no letterboxing. Config: `size=(1008, 1008)`, `do_pad: None`, `do_resize: True`, `resample: 2` (bilinear), normalize mean/std = (0.5, 0.5, 0.5).
+
+**Consequence:** mask→patch-grid alignment is trivial. The mask is (H, W) in original coords; the encoder sees the image stretched to 1008×1008 and tokenizes into a 72×72 grid. To map: `cv2.resize(mask, (72, 72), INTER_AREA)` then threshold at 0.5. No padding region to ignore, no aspect math, no boundary edge cases. The pooling code in Task 1 is correct as written — only the rationale comment needs to say "stretch" not "pad".
+
+**Knock-on:** the original-image aspect distortion at the encoder is somewhat lossy (a 2:1 image becomes 1:1) but SAM3 was trained this way, so the encoder features are calibrated for the stretched view. We don't try to "fix" the aspect when pooling.
+
+**Patch grid confirmed:** 72×72 = 5184 patches, square, 14px per patch in stretched coords.
+
+**Task 0 is now considered done** — outputs above are sufficient. The probe script remains in the repo for future reproducibility.
 
 ---
 
@@ -60,51 +71,11 @@ The bet: SAM3's encoder, trained to handle blur/contrast/noise for accurate segm
 
 ---
 
-## Task 0: Verify processor → patch-grid alignment
+## Task 0: ✅ DONE — see "Investigation findings" above
 
-**Files:**
-- Probe only: `tools/probe_sam3_patch_alignment.py`
-
-- [ ] **Step 1: Write the probe**
-
-```python
-"""Confirm exactly how the processor transforms a PIL image → 1008×1008
-pixel_values, so we can map a mask in original image coords → patch indices.
-"""
-from PIL import Image
-import numpy as np
-from scripts.detect_subjects._sam3_shared import get_shared_sam3
-
-model, processor = get_shared_sam3()
-
-# Try a few aspect ratios — square, tall, wide
-for size in [(800, 800), (600, 1200), (1200, 600), (1500, 1000)]:
-    im = Image.new("RGB", size, (128, 128, 128))
-    out = processor(images=im, text="x", return_tensors="pt")
-    pv = out["pixel_values"]  # (1, 3, H, W)
-    print(f"input {size} → pixel_values {tuple(pv.shape)}")
-
-# Inspect image_processor config
-print("image_processor.size:", processor.image_processor.size)
-print("do_pad:", getattr(processor.image_processor, "do_pad", None))
-print("do_resize:", getattr(processor.image_processor, "do_resize", None))
-print("do_normalize:", getattr(processor.image_processor, "do_normalize", None))
-```
-
-- [ ] **Step 2: Run and record findings**
-
-```bash
-.venv/bin/python -m tools.probe_sam3_patch_alignment > /tmp/sam3_align.txt
-cat /tmp/sam3_align.txt
-```
-
-- [ ] **Step 3: Decide the pooling alignment strategy**
-
-Based on output, write a 2-line comment in `embedding_pool.py` describing the rule. Two likely outcomes:
-- (a) processor pads-and-resizes to fixed 1008×1008 → reverse-engineer the transform, apply to mask, then bin to 72×72 patch grid.
-- (b) processor preserves aspect ratio with padding → mask straight-resizes to 72×72 then we ignore pad pixels (which are 0 in the mask anyway).
-
-**Expected:** likely (a). The exact transform parameters are needed for Task 2.
+Probe script lives at `tools/probe_sam3_patch_alignment.py`. Key results:
+processor stretches to 1008×1008 (no pad), 72×72 patch grid of 14px tiles,
+pooling is a straight `cv2.resize(mask, (72, 72), INTER_AREA) > 0.5`.
 
 ---
 
@@ -159,15 +130,16 @@ Expected: ImportError on `scripts.detect_subjects.embedding_pool`.
 ```python
 """Pool patch-level SAM3 embeddings into per-image vectors.
 
-The vision encoder emits (B, P, D) where P = patch_grid[0] * patch_grid[1].
-We pool to (B, D) either globally (average all patches) or mask-aware
-(average only patches inside the predicted segmentation mask).
+The vision encoder emits (B, P, D) where P = patch_grid[0] * patch_grid[1]
+(72x72 = 5184 for 1008x1008 input). We pool to (B, D) either globally
+(average all patches) or mask-aware (average only patches inside the
+predicted segmentation mask).
 
-Mask alignment: input mask is in ORIGINAL image coordinates. The processor
-resized/padded the image to 1008x1008 before passing to the encoder, so
-the patch grid covers the processed image, not the original. We resize
-the mask to the patch grid via average-pooling — a patch is "in" if more
-than 50% of its area falls inside the mask.
+Mask alignment (probed in Task 0): the processor STRETCHES the input to
+1008x1008 — no padding, no aspect preservation. So the mask in original
+coords maps to the 72x72 patch grid via plain cv2.resize(...,INTER_AREA)
+then threshold at 0.5. A patch is "in" if >50% of its area is masked
+after the stretch.
 """
 from __future__ import annotations
 import numpy as np
@@ -1013,12 +985,24 @@ The Task 7 benchmark is the gate. Don't be tempted to ship the embedding arm "be
 
 ---
 
-## Estimate
+## Estimate (updated post-probe)
 
-- Tasks 0-4 (capture pipeline): 2-3h
-- Task 5 (backfill 1500 rows): 30min coding + 10-15min run
-- Task 6 (train_embed): 1h
-- Task 7 (benchmark): 30min coding + 5min run
-- Task 8 (production wire, IF gains justify): 1h
+- Task 0 (alignment probe): **DONE** (5 min)
+- Task 1 (pooling primitive + tests): 30 min
+- Task 2 (detect_batch captures embeds): 1 h (signature change + back-compat)
+- Task 3 (sidecar parquet IO + tests): 30 min
+- Task 4 (wire into classify): 45 min (batched + sequential paths)
+- Task 5 (backfill 1500 rows): 30 min coding + ~11 min run
+- Task 6 (train_embed): 1 h
+- Task 7 (benchmark + write report): 30 min coding + ~3 min run
+- Task 8 (production wire, IF gains justify the bar): 45 min
 
-**Total: 5-7h focused work, with a clear decision gate at Task 7 that prevents over-investment.**
+**Total: ~5 h focused work + 15 min waiting on backfill, with a clear
+decision gate at Task 7 that prevents over-investment.**
+
+Refinements added in this pass:
+- Task 0 done (probe ran, alignment is "stretch to 1008×1008", trivial).
+- Pooling code simplified — no padding region to handle.
+- FPN multi-scale features added as explicit Task 6 alternative if
+  last_hidden_state at 72×72 underperforms (e.g., for fine blur).
+- Original estimate didn't break out tasks discretely; this one does.
