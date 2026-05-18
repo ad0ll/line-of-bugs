@@ -181,6 +181,14 @@ def main(argv: list[str] | None = None) -> int:
     first_skip_at_n: int | None = None
     first_skip_at_elapsed_s: float | None = None
     first_skip_status: object = None
+    # Recovery detection: track the most recent skip, and how many consecutive
+    # successes we've seen since. If Sketchfab's WAF flips back off mid-run,
+    # the recovery line surfaces that — distinguishes "permanent lockdown for
+    # the rest of the run" from "transient burst-then-recover-then-burst".
+    last_skip_at_n: int | None = None
+    consecutive_successes_after_skip = 0
+    RECOVERY_THRESHOLD = 50  # consecutive 200s after a skip → flag as recovery
+    PERIODIC_HIST_EVERY = 250  # dump rolling histogram every N attempts
     attempts = 0
 
     with ThreadPoolExecutor(max_workers=args.workers) as ex:
@@ -207,16 +215,36 @@ def main(argv: list[str] | None = None) -> int:
                         "FIRST SKIP at attempt #%d (status=%s) — %.1fs into run",
                         first_skip_at_n, first_skip_status, first_skip_at_elapsed_s,
                     )
-                continue
-            status_counts[200] += 1
-            buffered.append(result_to_row(sci, result))
-            classified += 1
-            if len(buffered) >= args.batch_size:
-                flush()
-            if classified % 100 == 0:
-                rate = classified / (time.time() - t0)
-                log.info("  %d/%d classified, %d upserted, %d skipped, %.1f/s",
-                         classified, len(pairs), upserted_total, skipped, rate)
+                last_skip_at_n = attempts
+                consecutive_successes_after_skip = 0
+            else:
+                status_counts[200] += 1
+                if last_skip_at_n is not None:
+                    consecutive_successes_after_skip += 1
+                    if consecutive_successes_after_skip == RECOVERY_THRESHOLD:
+                        log.info(
+                            "RECOVERY: %d consecutive 200s after last skip at attempt #%d (now at attempt #%d, %.1fs in)",
+                            RECOVERY_THRESHOLD, last_skip_at_n, attempts, time.time() - t0,
+                        )
+                buffered.append(result_to_row(sci, result))
+                classified += 1
+                if len(buffered) >= args.batch_size:
+                    flush()
+                if classified % 100 == 0:
+                    rate = classified / (time.time() - t0)
+                    log.info("  %d/%d classified, %d upserted, %d skipped, %.1f/s",
+                             classified, len(pairs), upserted_total, skipped, rate)
+            # Periodic rolling histogram — every PERIODIC_HIST_EVERY attempts —
+            # so the gradient (200s vs 405s vs 429s over time) is visible in
+            # the log without grep'ing/parsing. Reveals e.g. "200=200 405=0
+            # for the first 250, then 200=18 405=232 for attempts 250-500"
+            # which is the burst-budget transition we keep trying to pin down.
+            if attempts % PERIODIC_HIST_EVERY == 0:
+                hist = ", ".join(
+                    f"{k}={v}" for k, v in sorted(status_counts.items(), key=lambda kv: (-kv[1], str(kv[0])))
+                )
+                log.info("[%d/%d attempts, %.1fs] histogram: %s",
+                         attempts, len(pairs), time.time() - t0, hist)
 
     flush()
 

@@ -132,16 +132,20 @@ def _query(q: str, api_key: str, count: int = 24) -> list[dict]:
         raise RateLimitedError(f"network error: {e}") from e
 
     if r.status_code != 200:
-        # Capture enough breadcrumbs to diagnose 405-vs-429-vs-other later
-        # without re-running. cf-id uniquely identifies a CloudFront edge
-        # response so Sketchfab support can look up the request if asked.
-        cf_id = r.headers.get("x-amz-cf-id", "")
-        cf_pop = r.headers.get("x-amz-cf-pop", "")
-        cf_cache = r.headers.get("x-cache", "")
-        body_preview = (r.text or "")[:200].replace("\n", " ").replace("\r", " ")
+        # Capture the full Sketchfab response, not just a preview, so we never
+        # need to re-run a probe to figure out what was different about this
+        # failure. cf-id uniquely identifies a CloudFront edge response —
+        # Sketchfab support can look up the request if asked. Headers other
+        # than the noisy CSP-report-only one go in verbatim; body capped at
+        # 1024 chars (Sketchfab error bodies are tiny JSON in practice).
+        headers_for_log = {
+            k: v for k, v in r.headers.items()
+            if k.lower() != "content-security-policy-report-only"
+        }
+        body_capture = (r.text or "")[:1024].replace("\n", " ").replace("\r", " ")
         log.warning(
-            "query %r → HTTP %d cf-pop=%s cf-cache=%r body=%r cf-id=%s",
-            q, r.status_code, cf_pop, cf_cache, body_preview, cf_id,
+            "query %r → HTTP %d headers=%s body=%r",
+            q, r.status_code, headers_for_log, body_capture,
         )
         raise RateLimitedError(f"HTTP {r.status_code}", status=r.status_code)
 
