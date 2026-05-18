@@ -95,7 +95,7 @@ N_METRICS_PROCESSES = 16
 # in isolation. See classify.py:_run_batched_loop.
 DETECT_BATCH_SIZE = 1
 SEGMENT_BATCH_SIZE = 1
-PARQUET_WRITE_BATCH = 50
+PARQUET_WRITE_BATCH = 10
 
 # ─── Pipeline component selection ─────────────────────────────────
 # These names look up classes in detectors/__init__.py and segmenters/__init__.py.

@@ -40,6 +40,11 @@ def _load_xy_for_label(
         # to learn from, so we exclude it from training entirely.
         if lbl.get("unsure"):
             continue
+        # too_small cards never reach the gallery (gate rejects them before
+        # students see them). Including them in training would teach the
+        # classifier to fire on cards that won't appear in production.
+        if row.get("framing_quality") == "bug_too_small":
+            continue
         # Determine label class — accept both new schema (col3) and legacy
         # schema (flags array) as sources of positives.
         col3_or_flags = (lbl.get("col3") or []) + (lbl.get("flags") or [])

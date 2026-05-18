@@ -256,6 +256,9 @@
   <label style="margin-left:12px;font-size:12px;color:#aaa;cursor:pointer;font-family:'JetBrains Mono',monospace;">
     <input type="checkbox" id="showUnsure" style="vertical-align:middle;margin-right:4px"> show unsure
   </label>
+  <label style="margin-left:12px;font-size:12px;color:#aaa;cursor:pointer;font-family:'JetBrains Mono',monospace;">
+    <input type="checkbox" id="showTooSmall" style="vertical-align:middle;margin-right:4px"> show too-small
+  </label>
   <button id="snapshotMoreBtn" style="display:none;margin-left:4px;font-size:11px;padding:1px 6px" title="Add newly-reviewed cards to the hidden set">↻ hide <span id="snapshotMoreCount">0</span> more</button>
   <button id="showHiddenBtn" style="display:none;margin-left:4px;font-size:11px;padding:1px 6px" title="Clear the snapshot — formerly-hidden cards reappear">show <span id="showHiddenCount">0</span> hidden</button>
   <button id="retrainBtn" style="margin-left:auto;background:#ef4444;color:#fff;border-color:#ef4444;display:none">retrain selected</button>
@@ -371,6 +374,10 @@ let hideReviewed = false;
 // `showUnsure` to bring them back into the visible set (e.g., to revisit).
 // Use the Status=unsure filter to see ONLY unsure cards.
 let showUnsure = false;
+// too_small cards (framing_quality == 'bug_too_small') get filtered out at
+// the gallery's drawability gate — students never see them. Labeling them
+// is low-value, so hide by default. Toggle to inspect / verify the rule.
+let showTooSmall = false;
 // Tri-state ML sort. criterion = 'prob' | 'uncertainty' | null. direction =
 // 'asc' | 'desc' | null. Only one button is non-off at a time. When set, this
 // overrides the dropdown sort. Resets on tab change.
@@ -400,6 +407,9 @@ function _refreshTabStrip() {
     const probKey = `predicted_${label}_p`;
     let unreviewed = 0, unsure = 0;
     for (const r of DATA) {
+      // Mirror the visible set: don't count too_small (hidden by default) in
+      // the per-tab unreviewed count, or the user sees "Nu" but no cards.
+      if (!showTooSmall && r.framing_quality === "bug_too_small") continue;
       const lbl = LABELS[r.image_id];
       const isReviewed = lbl && lbl.reviewed_at;
       const isUnsure = lbl && lbl.unsure;
@@ -832,6 +842,12 @@ function render() {
       const lbl = labels[r.image_id];
       return !(lbl && lbl.unsure);
     });
+  }
+  // too_small cards are hidden by default — they never reach the gallery
+  // since the drawability gate rejects them. Hiding focuses labeling effort
+  // on cards the student will actually see.
+  if (!showTooSmall) {
+    rows = rows.filter(r => r.framing_quality !== "bug_too_small");
   }
   if (rf !== "all") {
     rows = rows.filter(r => {
@@ -1305,6 +1321,10 @@ document.getElementById('hideReviewed').addEventListener('change', (e) => {
 });
 document.getElementById('showUnsure').addEventListener('change', (e) => {
   showUnsure = e.target.checked;
+  render();
+});
+document.getElementById('showTooSmall').addEventListener('change', (e) => {
+  showTooSmall = e.target.checked;
   render();
 });
 document.getElementById('snapshotMoreBtn').addEventListener('click', () => {
