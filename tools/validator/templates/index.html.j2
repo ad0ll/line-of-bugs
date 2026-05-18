@@ -958,7 +958,7 @@ function render() {
     const isStale = !!(lbl.reviewed_at && lblVariant !== rowVariant);
     const staleHTML = isStale
       ? '<div class="stale-warning visible">\u26a0 Label set against variant <b>' + lblVariant + '</b>; current is <b>' + rowVariant + '</b> \u2014 re-review recommended.</div>'
-      : '<div class="stale-warning"></div>';
+      : '';
 
     // Build primary bbox — no inline label (caused truncation + concealed subject);
     // phrase/conf info lives in the phrase-summary line below the images instead.
