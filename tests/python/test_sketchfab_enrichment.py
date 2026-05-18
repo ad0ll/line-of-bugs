@@ -200,9 +200,33 @@ def test_query_200_empty_results_returns_empty_list():
 
 
 def test_classify_species_skips_on_rate_limit():
-    with patch("scripts.sketchfab_enrichment._query", side_effect=RateLimitedError("HTTP 429")):
+    with patch("scripts.sketchfab_enrichment._query",
+               side_effect=RateLimitedError("HTTP 429", status=429)):
         result = classify_species("Apis mellifera", "honey bee", api_key="k")
     assert result.rate_limited is True
     assert result.has_models is False
     assert result.hit_count == 0
     assert result.hits == []
+    assert result.skip_status == 429
+
+
+def test_rate_limited_error_carries_status():
+    e = RateLimitedError("HTTP 429", status=429)
+    assert e.status == 429
+    # network/parse exceptions have no HTTP status — must still work
+    e2 = RateLimitedError("network error: timeout")
+    assert e2.status is None
+
+
+@pytest.mark.parametrize("status", [405, 429, 500])
+def test_query_attaches_status_to_raised_error(status):
+    fake_resp = MagicMock(status_code=status)
+    fake_resp.text = '{"detail":"test"}'
+    fake_resp.headers = {}
+    with patch("scripts.sketchfab_enrichment.requests.get", return_value=fake_resp):
+        try:
+            _query("Apis mellifera", api_key="k")
+        except RateLimitedError as e:
+            assert e.status == status
+        else:
+            raise AssertionError("expected RateLimitedError")
