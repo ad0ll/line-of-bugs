@@ -1,0 +1,14 @@
+{
+  "label": "mask_bad-photo-quality",
+  "n_total": 272,
+  "n_positives": 32,
+  "arm_scalar": {
+    "mcc_mean": 0.04347148409932092,
+    "mcc_std": 0.14411638428475543,
+    "pr_auc_mean": 0.232025363086571,
+    "brier_mean": 0.13806545974234807,
+    "n_folds": 25
+  },
+  "trained_at": 1779111071,
+  "cv_elapsed_s": 13.5
+}

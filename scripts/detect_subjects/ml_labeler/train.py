@@ -58,11 +58,16 @@ def _load_xy_for_label(
 def _scalar_clf_factory():
     """Fresh HistGradientBoostingClassifier per CV fold.
 
-    HGB handles NaN natively, needs no license token, and is competitive
-    with TabPFN-v2 below ~500 samples (TabPFN-v2 deferred pending license token).
+    class_weight='balanced' is load-bearing: bad-photo-quality is 32/240 and
+    poor-contrast is similar — without rebalancing the unweighted loss lets
+    the model predict ~0 for the minority class and call it a day (P≈1, R≈0).
+    Weighted loss penalizes minority misses ~7x more, restoring usable recall
+    at low-precision targets.
     """
     from sklearn.ensemble import HistGradientBoostingClassifier
-    return HistGradientBoostingClassifier(random_state=42, max_iter=200)
+    return HistGradientBoostingClassifier(
+        random_state=42, max_iter=200, class_weight="balanced",
+    )
 
 
 def train_label(

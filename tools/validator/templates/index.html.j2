@@ -206,7 +206,7 @@
   <label>Source <select id="source"><option value="all">all</option>{% for s in sources %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></label>
   <label>Predicted <select id="quality"><option value="all">all</option><option value="good">good</option><option value="tight">tight</option><option value="wide">wide</option><option value="no_bug">no_bug</option><option value="bug_too_small">bug_too_small</option><option value="multi_bug">multi_bug</option><option value="poor_contrast">poor_contrast</option></select></label>
   <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="flagged">any flag</option></select></label>
-  <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="ml_prob_asc">ML p ↑ (least likely first)</option><option value="ml_prob_desc">ML p ↓ (most likely first)</option><option value="random">random</option></select></label>
+  <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="ml_uncertainty">ML uncertainty (closest to 0.5 first)</option><option value="ml_prob_asc">ML p ↑ (least likely first)</option><option value="ml_prob_desc">ML p ↓ (most likely first)</option><option value="random">random</option></select></label>
   <span class="totals" id="totals">{{ total }} images</span>
   <span id="saveStatus" title="Each click is saved to data/cache/labels.json on the server"></span>
 </header>
@@ -220,6 +220,9 @@
   <label id="hideConfidentWrap" style="display:none;margin-left:12px;font-size:12px;color:#aaa;cursor:pointer;font-family:'JetBrains Mono',monospace;">
     <input type="checkbox" id="hideConfident" style="vertical-align:middle;margin-right:4px"> hide confident
     <span style="color:#666">(|p−0.5|&gt;0.4)</span>
+  </label>
+  <label style="margin-left:12px;font-size:12px;color:#aaa;cursor:pointer;font-family:'JetBrains Mono',monospace;">
+    <input type="checkbox" id="hideReviewed" style="vertical-align:middle;margin-right:4px"> hide reviewed
   </label>
   <button id="retrainBtn" style="margin-left:auto;background:#ef4444;color:#fff;border-color:#ef4444;display:none">retrain selected</button>
 </div>
@@ -307,6 +310,7 @@ async function loadMLMetrics() {
 // |predicted_p - 0.5| > 0.4 (model is very confident; relabeling these gives
 // little marginal information). Reduces low-leverage labeling cycles.
 let hideConfident = false;
+let hideReviewed = false;
 const HIDE_CONFIDENT_THRESHOLD = 0.4;
 
 // Render tab strip labels with live counts. Called from render() so they
@@ -719,6 +723,14 @@ function render() {
       return Math.abs(p - 0.5) <= HIDE_CONFIDENT_THRESHOLD;
     });
   }
+  // Hide-reviewed filter — works regardless of active tab. Drops any card
+  // with a reviewed_at timestamp so user sees only unreviewed work.
+  if (hideReviewed) {
+    rows = rows.filter(r => {
+      const lbl = labels[r.image_id];
+      return !lbl || !lbl.reviewed_at;
+    });
+  }
   if (rf !== "all") {
     rows = rows.filter(r => {
       const lbl = labels[r.image_id];
@@ -733,9 +745,11 @@ function render() {
       return true;
     });
   }
-  if (activeLabel) {
-    // Active label: sort by uncertainty (|p - 0.5| ascending = most uncertain first)
-    const probKey = "predicted_" + activeLabel + "_p";
+  if (sortBy === "ml_uncertainty") {
+    // Sort by |p - 0.5| ascending = most uncertain first. Defaults to the
+    // active tab's label, or the first tier-1 label if no tab is active.
+    const label = activeLabel || TIER1_LABELS[0];
+    const probKey = "predicted_" + label + "_p";
     rows.sort((a, b) => {
       const pa = a[probKey] ?? 0.5;
       const pb = b[probKey] ?? 0.5;
@@ -1039,12 +1053,23 @@ document.getElementById('tabStrip').addEventListener('click', (e) => {
   }
   document.getElementById('retrainBtn').style.display = activeLabel ? 'inline-block' : 'none';
   document.getElementById('hideConfidentWrap').style.display = activeLabel ? 'inline-block' : 'none';
+  // When activating a tab, default to ml_uncertainty sort (the labeling-flow
+  // ergonomic). User can still pick a different sort and it'll stick.
+  if (activeLabel) {
+    document.getElementById('sort').value = 'ml_uncertainty';
+  }
   render();
 });
 
 // Hide-confident checkbox handler: re-render to apply/lift the filter.
 document.getElementById('hideConfident').addEventListener('change', (e) => {
   hideConfident = e.target.checked;
+  render();
+});
+
+// Hide-reviewed checkbox handler.
+document.getElementById('hideReviewed').addEventListener('change', (e) => {
+  hideReviewed = e.target.checked;
   render();
 });
 

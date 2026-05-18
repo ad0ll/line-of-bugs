@@ -1,0 +1,14 @@
+{
+  "label": "mask_poor-contrast",
+  "n_total": 272,
+  "n_positives": 23,
+  "arm_scalar": {
+    "mcc_mean": 0.3264672353794163,
+    "mcc_std": 0.19502386040451383,
+    "pr_auc_mean": 0.4144714837492257,
+    "brier_mean": 0.09477532029781806,
+    "n_folds": 25
+  },
+  "trained_at": 1779111071,
+  "cv_elapsed_s": 13.6
+}
