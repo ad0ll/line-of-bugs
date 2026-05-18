@@ -30,6 +30,16 @@ export function StartSessionButton({
   async function start() {
     setPending(true);
     setError(null);
+    // Phase F (2026-05-17) safety: if the POST succeeds but router.push
+    // silently fails (back-navigation mid-flight, network race during page
+    // nav), pending=true would stick forever and the button would read
+    // "starting…" indefinitely. 12s is well over the worst-case happy
+    // path; longer than this we assume something has gone wrong and
+    // reset so the user can retry.
+    const safety = window.setTimeout(() => {
+      setPending(false);
+      setError("took too long — please try again");
+    }, 12_000);
     try {
       const res = await fetch("/api/session/start", {
         method: "POST",
@@ -41,17 +51,20 @@ export function StartSessionButton({
         }),
       });
       if (!res.ok) {
+        window.clearTimeout(safety);
         setError(await res.text());
         setPending(false);
         return;
       }
       const data = (await res.json()) as { sessionId: string };
+      window.clearTimeout(safety);
       router.push(`/session?session=${encodeURIComponent(data.sessionId)}&interval=${intervalSec}`);
       // Intentionally do NOT clear pending here — the component unmounts on
       // successful navigation. If the user back-navigates before /session
       // renders, React Suspense will re-render this component with pending=true
       // which is harmless (button is just disabled; user can click again).
     } catch (e) {
+      window.clearTimeout(safety);
       setError(String(e));
       setPending(false);
     }
