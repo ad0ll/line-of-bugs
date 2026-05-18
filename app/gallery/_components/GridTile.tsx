@@ -1,8 +1,10 @@
-import Image from 'next/image';
+"use client";
+import { useState } from 'react';
 import type { GalleryRow } from '@/lib/queries/gallery';
 import { isOrderOnlyId, titleCaseCommonName } from '@/lib/text-format';
 import { TileActions } from '@/app/components/gallery/TileActions';
 import { OrderBadge } from '@/app/components/ui/OrderBadge';
+import { BugNotFoundThumb } from '@/app/components/gallery/BugNotFoundThumb';
 
 function basename(p: string): string {
   return p.split('/').pop() ?? p;
@@ -15,6 +17,11 @@ function sourceName(source: string): string {
 }
 
 export function GridTile({ row }: { row: GalleryRow }) {
+  // Plain <img> instead of next/image so we can swap to the placeholder on
+  // load failure without next/image's own error handling kicking in.
+  // Trade-off: lose responsive srcset, but thumbs are already 512px and our
+  // breakpoints serve a single tier, so the loss is negligible.
+  const [thumbBroken, setThumbBroken] = useState(false);
   const thumbName = basename(row.thumbnail_filename);
   const mediumName = basename(row.medium_filename);
   const commonName = titleCaseCommonName(row.common_name);
@@ -26,13 +33,18 @@ export function GridTile({ row }: { row: GalleryRow }) {
       data-image-path={row.medium_filename}
     >
       <div className="grid-item-image">
-        <Image
-          src={`/api/thumb/${thumbName}`}
-          alt={commonName || row.taxon_species || (row.taxon_order ? `${row.taxon_order} specimen` : 'specimen')}
-          fill
-          sizes="(min-width: 1024px) 240px, (min-width: 600px) 200px, 50vw"
-          style={{ objectFit: 'cover' }}
-        />
+        {thumbBroken ? (
+          <BugNotFoundThumb />
+        ) : (
+          <img
+            src={`/api/thumb/${thumbName}`}
+            alt={commonName || row.taxon_species || (row.taxon_order ? `${row.taxon_order} specimen` : 'specimen')}
+            loading="lazy"
+            decoding="async"
+            onError={() => setThumbBroken(true)}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+        )}
         {row.collection_size > 1 && (
           <span className="grid-item-badge">
             {row.collection_index} / {row.collection_size}
