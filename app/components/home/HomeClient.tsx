@@ -225,7 +225,7 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
             "counting…"
           ) : poolCount === 0 ? (
             <span className="home-pool-empty">
-              <WiltedFlower size={22} /> no insects match — try broadening the filters
+              <WiltedFlower size={22} /> no bugs found with those filters
             </span>
           ) : (() => {
             const [before, after] = poolCopyTemplate.current.split("{n}");

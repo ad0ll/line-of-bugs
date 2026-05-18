@@ -11,7 +11,7 @@ test.describe("home redesign", () => {
 
   test("filter rows render with all-or-chips empty state", async ({ page }) => {
     await page.goto("/");
-    // The "what is bug?" row replaces the old "bug type" + "species" rows; its
+    // The "what bug" row replaces the old "bug type" + "species" rows; its
     // empty-state combobox label still includes "all bug types" so the same
     // selector matches.
     for (const label of ["all photo types", "all bug types", "all views", "all life stages", "all sexes"]) {
@@ -25,7 +25,7 @@ test.describe("home redesign", () => {
     const before = await poolText();
     // WhatIsBugFilter combobox: click it, type a partial query, pick the group.
     await page.getByRole("combobox", { name: /all bug types/i }).click();
-    await page.getByPlaceholder(/type a bug type or species/i).fill("butter");
+    await page.getByPlaceholder(/type to search bugs/i).fill("butter");
     await page.waitForResponse((r) => r.url().includes("/api/search/insect"));
     await page.getByRole("option").filter({ hasText: /butterflies/i }).first().click();
     // Wait for facets to refetch
@@ -38,7 +38,7 @@ test.describe("home redesign", () => {
   test("WhatIsBugFilter autocomplete shows groups + species", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("combobox", { name: /all bug types/i }).click();
-    await page.getByPlaceholder(/type a bug type or species/i).fill("but");
+    await page.getByPlaceholder(/type to search bugs/i).fill("but");
     await page.waitForResponse((r) => r.url().includes("/api/search/insect"));
     // Result list should populate with at least one option.
     await expect(page.getByRole("option").first()).toBeVisible();

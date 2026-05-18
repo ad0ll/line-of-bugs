@@ -26,7 +26,7 @@ export async function GalleryGrid({
     return (
       <div className="gallery-empty">
         <WiltedFlower size={56} className="gallery-empty-icon" />
-        <p className="gallery-empty-title">no insects match — try broadening the filters</p>
+        <p className="gallery-empty-title">no bugs found with those filters</p>
         <Link href="/gallery" className="gallery-load-more is-inline">
           clear filters
         </Link>

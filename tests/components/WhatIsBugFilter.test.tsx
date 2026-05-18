@@ -26,7 +26,7 @@ describe("WhatIsBugFilter empty state", () => {
       />,
     );
     await screen.getByRole("combobox").click();
-    await expect.element(screen.getByPlaceholder(/type a bug type or species/i)).toBeInTheDocument();
+    await expect.element(screen.getByPlaceholder(/type to search bugs/i)).toBeInTheDocument();
   });
 });
 

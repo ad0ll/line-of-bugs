@@ -176,7 +176,7 @@ export function WhatIsBugFilter({
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="type a bug type or species…"
+              placeholder="type to search bugs…"
               className={styles.search}
               onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
             />
