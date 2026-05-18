@@ -33,8 +33,19 @@ describe("GET /api/search/insect", () => {
     expect(data.results.some((r) => r.kind === "species" && /moth/i.test(r.label))).toBe(true);
   });
 
-  it("empty query returns empty results", async () => {
+  it("empty query returns all groups sorted by count desc", async () => {
     const data = await call("");
-    expect(data.results).toEqual([]);
+    expect(data.results.length).toBeGreaterThan(0);
+    // Every result is a group (no species without a search query)
+    expect(data.results.every((r) => r.kind === "group")).toBe(true);
+    // Counts are sorted desc
+    for (let i = 1; i < data.results.length; i++) {
+      expect(data.results[i]!.count).toBeLessThanOrEqual(data.results[i - 1]!.count);
+    }
+    // The "butterflies" group should be in the list with a positive count
+    // (fixture seeds plenty of butterfly rows)
+    const butterflies = data.results.find((r) => r.value === "butterflies");
+    expect(butterflies).toBeDefined();
+    expect(butterflies!.count).toBeGreaterThan(0);
   });
 });

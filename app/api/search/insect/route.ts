@@ -16,7 +16,29 @@ interface ResultRow {
 export async function GET(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const q = (url.searchParams.get("q") ?? "").trim().toLowerCase();
-  if (!q) return Response.json({ results: [] });
+  if (!q) {
+    // Picker default: all groups by count desc — so the dropdown shows
+    // candidates as soon as it opens, matching AllOrChipsFilter behavior.
+    const groupResults: ResultRow[] = TAXON_GROUPS.map((g) => {
+      const counts = db.all<{ c: number }>(sql`
+        SELECT COUNT(*) AS c FROM images
+        WHERE hidden = 0 AND taxon_subgroup IN (${sql.join(
+          g.dbValues.map((v) => sql`${v}`),
+          sql`, `,
+        )})
+      `);
+      return {
+        kind: "group" as const,
+        value: g.key,
+        label: g.label,
+        count: counts[0]?.c ?? 0,
+      };
+    }).sort((a, b) => b.count - a.count);
+    return Response.json(
+      { results: groupResults },
+      { headers: { "Cache-Control": "public, max-age=60" } },
+    );
+  }
 
   // Group matches: substring match against the chip's user-facing label.
   const groupResults: ResultRow[] = [];
