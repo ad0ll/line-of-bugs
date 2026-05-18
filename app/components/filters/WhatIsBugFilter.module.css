@@ -83,6 +83,57 @@
 
 .empty { padding: var(--s6); text-align: center; opacity: 0.6; font-size: var(--text-sm); }
 
+/* New summary-chip state — paint matches .empty visually but the
+   border-color is the lilac of a populated selection. Audit re-check
+   needed under /audit. */
+.chip.selectedSummary {
+  background: var(--accent-lilac-soft);
+  border-color: var(--accent-lilac-border);
+  color: var(--text-primary);
+}
+.chip.selectedSummary:hover { border-color: var(--accent-lilac); }
+
+/* Selections zone inside the picker — listed above the search input. */
+.selectionsZone {
+  margin-bottom: var(--s4);
+  padding-bottom: var(--s4);
+  border-bottom: 1px solid var(--surface-2);
+}
+.selectionsHeader {
+  font-size: var(--text-xs);
+  text-transform: lowercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  margin-bottom: var(--s3);
+  font-style: italic;
+}
+.selectionsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s3);
+}
+.selectionChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s2) var(--s5);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--accent-lilac-border);
+  background: var(--accent-lilac-soft);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
+.candidatesHeader {
+  font-size: var(--text-xs);
+  text-transform: lowercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  margin-top: var(--s4);
+  margin-bottom: var(--s3);
+  font-style: italic;
+}
+
 /* Bottom-sheet on narrow viewports — audit C1. */
 @media (max-width: 640px) {
   .picker {

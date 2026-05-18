@@ -61,3 +61,75 @@ describe("WhatIsBugFilter picker — default candidates", () => {
     }
   });
 });
+
+describe("WhatIsBugFilter summary chip", () => {
+  it("renders a single chip with combined count when selections exist", async () => {
+    const screen = await render(
+      <WhatIsBugFilter
+        selectedGroups={["butterflies", "moths"]}
+        selectedSpecies={["Monarch"]}
+        onGroupsChange={vi.fn()}
+        onSpeciesChange={vi.fn()}
+      />,
+    );
+    await expect.element(
+      screen.getByRole("combobox", { name: /3 bug types/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("uses singular wording for exactly one selection", async () => {
+    const screen = await render(
+      <WhatIsBugFilter
+        selectedGroups={["butterflies"]}
+        selectedSpecies={[]}
+        onGroupsChange={vi.fn()}
+        onSpeciesChange={vi.fn()}
+      />,
+    );
+    await expect.element(
+      screen.getByRole("combobox", { name: /1 bug type$/i }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("WhatIsBugFilter picker — selections zone", () => {
+  it("shows selected chips inside the picker, removable via ×", async () => {
+    const onGroupsChange = vi.fn();
+    const onSpeciesChange = vi.fn();
+    const screen = await render(
+      <WhatIsBugFilter
+        selectedGroups={["butterflies", "moths"]}
+        selectedSpecies={["Monarch"]}
+        onGroupsChange={onGroupsChange}
+        onSpeciesChange={onSpeciesChange}
+      />,
+    );
+    await screen.getByRole("combobox").click();
+    // Selections zone header
+    await expect.element(screen.getByText(/selected \(3\)/i)).toBeInTheDocument();
+    // Remove butterflies
+    await screen.getByRole("button", { name: /remove butterflies/i }).click();
+    expect(onGroupsChange).toHaveBeenCalledWith(["moths"]);
+    // Remove Monarch
+    await screen.getByRole("button", { name: /remove Monarch/i }).click();
+    expect(onSpeciesChange).toHaveBeenCalledWith([]);
+  });
+
+  it("does not render the selections zone when nothing is selected", async () => {
+    const screen = await render(
+      <WhatIsBugFilter
+        selectedGroups={[]}
+        selectedSpecies={[]}
+        onGroupsChange={vi.fn()}
+        onSpeciesChange={vi.fn()}
+      />,
+    );
+    await screen.getByRole("combobox").click();
+    // No "selected (N)" header
+    const screenAll = screen.container.querySelectorAll("*");
+    const hasHeader = Array.from(screenAll).some((el) =>
+      /^selected \(/.test(el.textContent ?? ""),
+    );
+    expect(hasHeader).toBe(false);
+  });
+});

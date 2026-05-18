@@ -34,6 +34,13 @@ export interface WhatIsBugFilterProps {
   onSpeciesChange: (next: string[]) => void;
 }
 
+function summaryLabel(groups: string[], species: string[]): string {
+  const n = groups.length + species.length;
+  if (n === 0) return "all bug types";
+  if (n === 1) return "1 bug type";
+  return `${n} bug types`;
+}
+
 export function WhatIsBugFilter({
   selectedGroups,
   selectedSpecies,
@@ -82,17 +89,14 @@ export function WhatIsBugFilter({
     return () => { clearTimeout(handle); controller.abort(); };
   }, [query, open]);
 
-  const isEmpty = selectedGroups.length === 0 && selectedSpecies.length === 0;
+  const totalSelected = selectedGroups.length + selectedSpecies.length;
+  const chipLabel = summaryLabel(selectedGroups, selectedSpecies);
 
   function pickResult(r: SearchResult) {
     if (r.kind === "group") {
-      if (!selectedGroups.includes(r.value)) {
-        onGroupsChange([...selectedGroups, r.value]);
-      }
+      if (!selectedGroups.includes(r.value)) onGroupsChange([...selectedGroups, r.value]);
     } else {
-      if (!selectedSpecies.includes(r.value)) {
-        onSpeciesChange([...selectedSpecies, r.value]);
-      }
+      if (!selectedSpecies.includes(r.value)) onSpeciesChange([...selectedSpecies, r.value]);
     }
     setQuery("");
     inputRef.current?.focus();
@@ -107,46 +111,61 @@ export function WhatIsBugFilter({
 
   return (
     <div ref={containerRef} className={styles.wrap}>
-      {isEmpty ? (
-        <button
-          type="button"
-          role="combobox"
-          aria-expanded={open}
-          aria-haspopup="listbox"
-          aria-label="all bug types"
-          className={`${styles.chip} ${styles.empty} ${open ? styles.open : ""}`}
-          onClick={() => setOpen((o) => !o)}
-        >
-          all bug types
-          <ChevronDown />
-        </button>
-      ) : (
-        <div className={styles.chipWall}>
-          {selectedGroups.map((g) => (
-            <span key={`g-${g}`} className={`${styles.chip} ${styles.selectedGroup}`}>
-              <span className={styles.kindBadge}>group</span>
-              <span>{g}</span>
-              <button type="button" aria-label={`remove ${g}`} className={styles.removeBtn} onClick={() => removeGroup(g)}>×</button>
-            </span>
-          ))}
-          {selectedSpecies.map((s) => (
-            <span key={`s-${s}`} className={`${styles.chip} ${styles.selectedSpecies}`}>
-              <span className={styles.kindBadge}>species</span>
-              <span>{s}</span>
-              <button type="button" aria-label={`remove ${s}`} className={styles.removeBtn} onClick={() => removeSpecies(s)}>×</button>
-            </span>
-          ))}
-          <button type="button" aria-label="add another" className={`${styles.chip} ${styles.addBtn}`} onClick={() => setOpen(true)}>
-            + add another
-          </button>
-        </div>
-      )}
+      <button
+        type="button"
+        role="combobox"
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        aria-label={chipLabel}
+        className={`${styles.chip} ${totalSelected === 0 ? styles.empty : styles.selectedSummary} ${open ? styles.open : ""}`}
+        onClick={() => setOpen((o) => !o)}
+      >
+        {chipLabel}
+        <ChevronDown />
+      </button>
 
       {open && (
         <>
           <div className={styles.scrim} onClick={() => setOpen(false)} aria-hidden="true" />
           <div className={styles.picker} role="dialog">
             <div className={styles.sheetHandle} aria-hidden="true" />
+
+            {totalSelected > 0 && (
+              <div className={styles.selectionsZone}>
+                <div className={styles.selectionsHeader}>selected ({totalSelected})</div>
+                <div className={styles.selectionsList}>
+                  {selectedGroups.map((g) => (
+                    <span key={`g-${g}`} className={`${styles.selectionChip} ${styles.selectedGroup}`}>
+                      <span className={styles.kindBadge}>group</span>
+                      <span>{g}</span>
+                      <button
+                        type="button"
+                        aria-label={`remove ${g}`}
+                        className={styles.removeBtn}
+                        onClick={() => removeGroup(g)}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                  {selectedSpecies.map((s) => (
+                    <span key={`s-${s}`} className={`${styles.selectionChip} ${styles.selectedSpecies}`}>
+                      <span className={styles.kindBadge}>species</span>
+                      <span>{s}</span>
+                      <button
+                        type="button"
+                        aria-label={`remove ${s}`}
+                        className={styles.removeBtn}
+                        onClick={() => removeSpecies(s)}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <input
               ref={inputRef}
               type="text"
@@ -157,20 +176,30 @@ export function WhatIsBugFilter({
               className={styles.search}
               onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
             />
+
+            <div className={styles.candidatesHeader}>
+              {query ? "search results" : "bug types"}
+            </div>
             <ul role="listbox" className={styles.list}>
-              {results.map((r) => (
-                <li
-                  key={`${r.kind}-${r.value}`}
-                  role="option"
-                  aria-selected={false}
-                  className={styles.row}
-                  onClick={() => pickResult(r)}
-                >
-                  <span className={styles.kindBadge}>{r.kind}</span>
-                  <span className={styles.rowLabel}>{r.label}</span>
-                  <span className={styles.rowCount}>{r.count.toLocaleString()}</span>
-                </li>
-              ))}
+              {results.map((r) => {
+                const alreadySelected =
+                  (r.kind === "group" && selectedGroups.includes(r.value)) ||
+                  (r.kind === "species" && selectedSpecies.includes(r.value));
+                if (alreadySelected) return null;
+                return (
+                  <li
+                    key={`${r.kind}-${r.value}`}
+                    role="option"
+                    aria-selected={false}
+                    className={styles.row}
+                    onClick={() => pickResult(r)}
+                  >
+                    <span className={styles.kindBadge}>{r.kind}</span>
+                    <span className={styles.rowLabel}>{r.label}</span>
+                    <span className={styles.rowCount}>{r.count.toLocaleString()}</span>
+                  </li>
+                );
+              })}
               {results.length === 0 && (
                 <li className={styles.empty}>
                   {query ? "no matches" : "loading…"}
