@@ -167,17 +167,17 @@ def recompute_for_label(
     label: str, conn: sqlite3.Connection, *, now_s: int,
 ) -> int:
     """Recompute every image with a prediction row for `label`. Returns count."""
-    rows = conn.execute(
-        "SELECT image_id FROM predictions WHERE label = ?",
-        (label,),
-    ).fetchall()
     conn.execute("BEGIN")
     try:
+        rows = conn.execute(
+            "SELECT image_id FROM predictions WHERE label = ?",
+            (label,),
+        ).fetchall()
         for (image_id,) in rows:
             recompute_for_image(image_id, conn, now_s=now_s)
         conn.commit()
     except Exception:
-        conn.rollback()
+        conn.execute("ROLLBACK")
         raise
     return len(rows)
 
@@ -185,11 +185,11 @@ def recompute_for_label(
 def recompute_all(conn: sqlite3.Connection, *, now_s: int) -> dict:
     """Recompute every image in `images`. Returns {kept, rejected, elapsed_s}."""
     t0 = time.perf_counter()
-    image_ids = [r[0] for r in conn.execute("SELECT image_id FROM images")]
-    kept = 0
-    rejected = 0
     conn.execute("BEGIN")
     try:
+        image_ids = [r[0] for r in conn.execute("SELECT image_id FROM images")]
+        kept = 0
+        rejected = 0
         for image_id in image_ids:
             row = recompute_for_image(image_id, conn, now_s=now_s)
             if row["decision"] == "keep":
@@ -198,7 +198,7 @@ def recompute_all(conn: sqlite3.Connection, *, now_s: int) -> dict:
                 rejected += 1
         conn.commit()
     except Exception:
-        conn.rollback()
+        conn.execute("ROLLBACK")
         raise
     elapsed = time.perf_counter() - t0
     print(f"[recompute_gate] {len(image_ids)} images: "
