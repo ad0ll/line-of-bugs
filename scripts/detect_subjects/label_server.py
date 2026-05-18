@@ -138,19 +138,19 @@ def _write_labels_and_recompute(payload: dict) -> dict:
     now_s = int(time.time())
     conn = open_conn()
     try:
-        existing_ids = {
-            r[0] for r in conn.execute("SELECT image_id FROM image_labels")
-        }
-        if not payload and existing_ids:
-            raise _StompGuardError(
-                f"refusing to clear {len(existing_ids)} image_labels rows "
-                "via empty POST payload (likely UI bug; use sqlite3 directly "
-                "for intentional wipes)"
-            )
-        keep_ids = set(payload.keys())
-        deleted_ids = existing_ids - keep_ids
         conn.execute("BEGIN")
         try:
+            existing_ids = {
+                r[0] for r in conn.execute("SELECT image_id FROM image_labels")
+            }
+            if not payload and existing_ids:
+                raise _StompGuardError(
+                    f"refusing to clear {len(existing_ids)} image_labels rows "
+                    "via empty POST payload (likely UI bug; use sqlite3 directly "
+                    "for intentional wipes)"
+                )
+            keep_ids = set(payload.keys())
+            deleted_ids = existing_ids - keep_ids
             deleted = delete_labels_not_in(conn, keep_ids)
             for image_id, record in payload.items():
                 upsert_label(conn, image_id, record)
@@ -159,16 +159,16 @@ def _write_labels_and_recompute(payload: dict) -> dict:
             for image_id in deleted_ids:
                 recompute_for_image(image_id, conn, now_s=now_s)
             conn.commit()
+            return {
+                "upserted": len(payload),
+                "deleted": deleted,
+                "recomputed": len(keep_ids) + len(deleted_ids),
+            }
         except Exception:
-            conn.rollback()
+            conn.execute("ROLLBACK")
             raise
     finally:
         conn.close()
-    return {
-        "upserted": len(payload),
-        "deleted": deleted,
-        "recomputed": len(keep_ids) + len(deleted_ids),
-    }
 
 
 class LabelServerHandler(SimpleHTTPRequestHandler):
