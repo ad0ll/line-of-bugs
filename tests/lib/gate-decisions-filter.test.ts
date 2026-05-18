@@ -92,4 +92,38 @@ describe("gate_decisions filter integration", () => {
     const after = await getImage("test-005");
     expect(after).toBeFalsy();   // null or undefined — both mean "not served"
   });
+
+  it("listInstitutions excludes counts from rejected images", async () => {
+    // First seed an institution string on two fixture images (the base
+    // fixture doesn't populate `institution`).
+    sqlite
+      .prepare("UPDATE images SET institution = ? WHERE image_id IN (?, ?)")
+      .run("Test Museum", "test-006", "test-007");
+    const { listInstitutions } = await import("@/lib/queries/gallery");
+    const before = await listInstitutions();
+    const beforeRow = before.find((r) => r.name === "Test Museum");
+    expect(beforeRow?.count).toBe(2);
+
+    markRejected("test-006");
+    const after = await listInstitutions();
+    const afterRow = after.find((r) => r.name === "Test Museum");
+    expect(afterRow?.count).toBe(1);
+  });
+
+  it("searchSpecies excludes rejected images from autocomplete counts", async () => {
+    const { searchSpecies } = await import("@/lib/queries/gallery");
+    const before = await searchSpecies("butterfly");
+    const beforeTotal = before.reduce((s, r) => s + r.count, 0);
+    expect(beforeTotal).toBeGreaterThan(0);
+
+    // Pick any butterfly and mark it rejected.
+    const butterfly = sqlite
+      .prepare("SELECT image_id FROM images WHERE taxon_subgroup = 'butterfly' LIMIT 1")
+      .get() as { image_id: string };
+    markRejected(butterfly.image_id);
+
+    const after = await searchSpecies("butterfly");
+    const afterTotal = after.reduce((s, r) => s + r.count, 0);
+    expect(afterTotal).toBe(beforeTotal - 1);
+  });
 });

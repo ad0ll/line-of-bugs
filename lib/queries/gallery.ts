@@ -133,6 +133,10 @@ export async function listInstitutions(): Promise<InstitutionRow[]> {
         SELECT 1 FROM reports r
         WHERE r.image_id = i.image_id AND r.resolved_at IS NULL
       )
+      AND NOT EXISTS (
+        SELECT 1 FROM gate_decisions g
+        WHERE g.image_id = i.image_id AND g.decision = 'reject'
+      )
     GROUP BY i.institution
     ORDER BY count DESC, name ASC
   `);
@@ -168,6 +172,10 @@ export async function searchSpecies(q: string): Promise<SpeciesRow[]> {
         AND NOT EXISTS (
           SELECT 1 FROM reports r
           WHERE r.image_id = i.image_id AND r.resolved_at IS NULL
+        )
+        AND NOT EXISTS (
+          SELECT 1 FROM gate_decisions g
+          WHERE g.image_id = i.image_id AND g.decision = 'reject'
         )
     )
     SELECT common_name, taxon_species, taxon_order, COUNT(*) AS count
