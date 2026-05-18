@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import styles from "./WhatIsBugFilter.module.css";
 
 function ChevronDown() {
@@ -47,6 +47,7 @@ export function WhatIsBugFilter({
   onGroupsChange,
   onSpeciesChange,
 }: WhatIsBugFilterProps) {
+  const pickerId = useId();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -104,9 +105,11 @@ export function WhatIsBugFilter({
 
   function removeGroup(v: string) {
     onGroupsChange(selectedGroups.filter((g) => g !== v));
+    requestAnimationFrame(() => inputRef.current?.focus());
   }
   function removeSpecies(v: string) {
     onSpeciesChange(selectedSpecies.filter((s) => s !== v));
+    requestAnimationFrame(() => inputRef.current?.focus());
   }
 
   return (
@@ -116,6 +119,7 @@ export function WhatIsBugFilter({
         role="combobox"
         aria-expanded={open}
         aria-haspopup="listbox"
+        aria-controls={pickerId}
         aria-label={chipLabel}
         className={`${styles.chip} ${totalSelected === 0 ? styles.empty : styles.selectedSummary} ${open ? styles.open : ""}`}
         onClick={() => setOpen((o) => !o)}
@@ -127,7 +131,7 @@ export function WhatIsBugFilter({
       {open && (
         <>
           <div className={styles.scrim} onClick={() => setOpen(false)} aria-hidden="true" />
-          <div className={styles.picker} role="dialog">
+          <div className={styles.picker} id={pickerId} role="dialog">
             <div className={styles.sheetHandle} aria-hidden="true" />
 
             {totalSelected > 0 && (
@@ -135,7 +139,7 @@ export function WhatIsBugFilter({
                 <div className={styles.selectionsHeader}>selected ({totalSelected})</div>
                 <div className={styles.selectionsList}>
                   {selectedGroups.map((g) => (
-                    <span key={`g-${g}`} className={`${styles.selectionChip} ${styles.selectedGroup}`}>
+                    <span key={`g-${g}`} className={styles.selectionChip}>
                       <span className={styles.kindBadge}>group</span>
                       <span>{g}</span>
                       <button
@@ -149,7 +153,7 @@ export function WhatIsBugFilter({
                     </span>
                   ))}
                   {selectedSpecies.map((s) => (
-                    <span key={`s-${s}`} className={`${styles.selectionChip} ${styles.selectedSpecies}`}>
+                    <span key={`s-${s}`} className={styles.selectionChip}>
                       <span className={styles.kindBadge}>species</span>
                       <span>{s}</span>
                       <button
