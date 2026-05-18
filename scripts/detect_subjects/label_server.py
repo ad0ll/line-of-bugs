@@ -38,6 +38,7 @@ from scripts.detect_subjects.image_labels_io import (
 from scripts.detect_subjects.recompute_gate import recompute_for_image
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+PARQUET_PATH = PROJECT_ROOT / "data" / "cache" / "framing_detections.parquet"
 
 # Tunable via env so the same port can be reused after a crash without
 # stale-listener "address already in use" pain.
@@ -86,7 +87,7 @@ def _read_predictions() -> dict:
     mirrors them to the predictions table but the UI still reads here for the
     `predicted_p` badge contract.
     """
-    parquet_path = PROJECT_ROOT / "data" / "cache" / "framing_detections.parquet"
+    parquet_path = PARQUET_PATH
     if not parquet_path.exists():
         return {}
     try:

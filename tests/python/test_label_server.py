@@ -200,6 +200,42 @@ def test_post_empty_dict_against_existing_rows_is_rejected(server_url, tmp_db):
     assert n == 1
 
 
+def test_get_predictions_returns_dict_from_parquet(server_url, tmp_db, tmp_path, monkeypatch):
+    """GET /api/predictions reads predicted_*_p columns from parquet and
+    returns {image_id: {predicted_<label>_p, predicted_<label>_unreliable}}."""
+    import polars as pl
+    parquet_path = tmp_path / "framing_detections.parquet"
+    df = pl.DataFrame({
+        "image_id": ["img-1", "img-2"],
+        "variant": ["sam3__sam3", "sam3__sam3"],
+        "predicted_mask_blur_unusable_p": [0.85, 0.20],
+        "predicted_mask_blur_unusable_unreliable": [False, False],
+    })
+    df.write_parquet(parquet_path)
+    monkeypatch.setattr(
+        "scripts.detect_subjects.label_server.PARQUET_PATH", parquet_path,
+    )
+    resp = urllib.request.urlopen(f"{server_url}/api/predictions")
+    assert resp.status == 200
+    body = json.loads(resp.read())
+    assert "img-1" in body
+    assert body["img-1"]["predicted_mask_blur_unusable_p"] == 0.85
+    assert body["img-1"]["predicted_mask_blur_unusable_unreliable"] is False
+
+
+def test_get_predictions_returns_empty_when_parquet_missing(server_url, monkeypatch, tmp_path):
+    """If the parquet doesn't exist, /api/predictions returns an empty
+    dict rather than crashing."""
+    monkeypatch.setattr(
+        "scripts.detect_subjects.label_server.PARQUET_PATH",
+        tmp_path / "does-not-exist.parquet",
+    )
+    resp = urllib.request.urlopen(f"{server_url}/api/predictions")
+    assert resp.status == 200
+    body = json.loads(resp.read())
+    assert body == {}
+
+
 def test_post_deletes_rows_not_in_payload(server_url, tmp_db):
     """If a key is absent from the POST body, its row is removed — matches
     the legacy labels.json overwrite behavior the UI relies on for 'un-mark'."""
