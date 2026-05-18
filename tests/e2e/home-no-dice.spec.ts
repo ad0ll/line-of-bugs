@@ -6,6 +6,6 @@ test.describe("home — no DiceRoll", () => {
     // Wait for the filter section to be visible so we know rendering is done
     await expect(page.getByRole("combobox", { name: /all bug types/i })).toBeVisible();
     // Regression guard: dice lives on /gallery only.
-    expect(await page.locator(".dice-roll").count()).toBe(0);
+    await expect(page.locator(".dice-roll")).toHaveCount(0);
   });
 });
