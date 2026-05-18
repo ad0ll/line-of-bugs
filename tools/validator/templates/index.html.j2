@@ -13,6 +13,15 @@
   .totals { margin-left: auto; font-size: 13px; color: #aaa; }
   #saveStatus { font-size: 12px; color: #666; margin-left: 8px; }
 
+  .tab-strip { display: flex; gap: 4px; flex-wrap: wrap; padding: 4px 24px; background: #16141a; border-bottom: 1px solid #28252e; }
+  .tab-strip button {
+    background: #1a1820; color: #aaa; border: 1px solid #444;
+    border-radius: 4px; padding: 4px 10px; font-size: 12px; cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .tab-strip button.active { background: #4ac64a; color: #0d0c10; border-color: #4ac64a; font-weight: 600; }
+  .tab-strip button:hover { color: #f5f5f5; border-color: #666; }
+
   .help { font-size: 12px; color: #aaa; padding: 8px 24px; background: #1a1820; border-bottom: 1px solid #28252e; line-height: 1.6; }
   .help code { background: #0d0c10; padding: 1px 6px; border-radius: 3px; color: #FF6EC7; font-family: 'JetBrains Mono', monospace; }
   .help b { color: #f5f5f5; }
@@ -194,6 +203,11 @@
   <span id="saveStatus" title="Each click is saved to data/cache/labels.json on the server"></span>
 </header>
 
+<div class="tab-strip" id="tabStrip">
+  <button data-label="" class="active">all</button>
+  <button data-label="mask_blur_unusable">blur_unusable</button>
+</div>
+
 <div class="help">
   <b>4-column label vocabulary:</b>
   <span style="color:#4ac64a">Col 1 BBox:</span> Did the detector pick the right region? ·
@@ -251,6 +265,9 @@ let savePending = 0;
 // by scripts/compute_sam3_mask_contours.py. {image_id: [[x,y], ...]}
 // in normalized [0,1] coords. Missing image_ids render no overlay.
 let MASK_CONTOURS = {};
+// Active label tab — null shows all cards; otherwise filters + sorts by
+// uncertainty (|predicted_p - 0.5| ascending = most-uncertain first).
+let activeLabel = null;
 async function loadMaskContours() {
   try {
     const res = await fetch('./sam3_mask_contours.json', { cache: 'no-store' });
@@ -893,6 +910,16 @@ updateSaveStatus();
 Promise.all([loadLabelsFromServer(), loadMaskContours()]).then(() => {
   render();
   updateSaveStatus();
+});
+
+document.getElementById('tabStrip').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-label]');
+  if (!btn) return;
+  activeLabel = btn.dataset.label || null;
+  for (const b of document.querySelectorAll('#tabStrip button')) {
+    b.classList.toggle('active', b === btn);
+  }
+  render();
 });
 
 // Mouse-follow zoom popup with bbox-on-original preservation.
