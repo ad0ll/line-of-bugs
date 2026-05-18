@@ -85,6 +85,22 @@ def test_predict_writes_to_predictions_and_triggers_gate(tmp_path):
         computed_at INTEGER NOT NULL,
         model_version TEXT, threshold_v INTEGER
       );
+      CREATE TABLE reports (
+        report_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        image_id TEXT NOT NULL REFERENCES images(image_id) ON DELETE CASCADE,
+        category TEXT NOT NULL,
+        reported_at INTEGER NOT NULL,
+        resolved_at INTEGER
+      );
+      CREATE TABLE detections (
+        image_id TEXT PRIMARY KEY REFERENCES images(image_id) ON DELETE CASCADE,
+        variant TEXT NOT NULL,
+        suggested_labels TEXT,
+        gate TEXT,
+        has_bbox INTEGER NOT NULL DEFAULT 0,
+        bbox_x REAL, bbox_y REAL, bbox_w REAL, bbox_h REAL,
+        mask_area_ratio REAL, lab_delta_e REAL
+      );
     """)
     conn.commit()
     conn.close()
@@ -92,6 +108,13 @@ def test_predict_writes_to_predictions_and_triggers_gate(tmp_path):
     out_dir = tmp_path / "models" / "mask_blur_unusable"
     train_label(label="mask_blur_unusable", parquet_path=parquet_path,
                 db_path=db_path, out_dir=out_dir, random_state=42)
+    # Clear hand labels so the gate's ML tier can actually fire (hand pre-empts
+    # ML in recompute_for_image). Training is already done; predict only needs
+    # the parquet features + model.
+    conn = sqlite3.connect(db_path)
+    conn.execute("DELETE FROM image_labels")
+    conn.commit()
+    conn.close()
     predict_labels_batched(
         labels=["mask_blur_unusable"], parquet_path=parquet_path,
         models_dir=tmp_path / "models", db_path=db_path,
@@ -100,6 +123,10 @@ def test_predict_writes_to_predictions_and_triggers_gate(tmp_path):
     conn = sqlite3.connect(db_path)
     n_preds = conn.execute("SELECT COUNT(*) FROM predictions").fetchone()[0]
     n_gates = conn.execute("SELECT COUNT(*) FROM gate_decisions").fetchone()[0]
+    n_ml_rejects = conn.execute(
+        "SELECT COUNT(*) FROM gate_decisions WHERE reason_source='ml' AND decision='reject'"
+    ).fetchone()[0]
     conn.close()
     assert n_preds == 80
     assert n_gates >= 1
+    assert n_ml_rejects > 0, "ML tier should have fired for at least some images"
