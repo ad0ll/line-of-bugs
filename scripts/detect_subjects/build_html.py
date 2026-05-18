@@ -103,6 +103,8 @@ def build_html_for_variant(
             "offcenter": row["offcenter"],
             "n_distinct_detections": row["n_distinct_detections"],
             "gt_iou": row["gt_iou"],
+            "predicted_mask_blur_unusable_p": row.get("predicted_mask_blur_unusable_p"),
+            "predicted_mask_blur_unusable_unreliable": row.get("predicted_mask_blur_unusable_unreliable"),
             "common_name": mrow.get("common_name", ""),
             "taxon_species": mrow.get("taxon_species", ""),
             # HTML now at tools/validator/<variant>.html; data/ is 2 levels up.
