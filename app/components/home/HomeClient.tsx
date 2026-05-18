@@ -9,7 +9,6 @@ import { HeroBlock } from "@/app/components/home/HeroBlock";
 import { SocialRow } from "@/app/components/home/SocialRow";
 import { AllOrChipsFilter, type AllOrChipsOption } from "@/app/components/filters/AllOrChipsFilter";
 import { WhatIsBugFilter } from "@/app/components/filters/WhatIsBugFilter";
-import { DiceRoll, type DiceRollState } from "@/app/components/filters/DiceRoll";
 import { Tooltip } from "@/app/components/ui/Tooltip";
 import { GalleryIcon, WiltedFlower } from "@/app/components/icons";
 import { TOOLTIPS } from "@/lib/tooltips";
@@ -173,10 +172,7 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
                   onChange={setSubjects}
                 />
               </FilterRow>
-              <FilterRow
-                label="what is bug?"
-                trailing={<DiceRoll onRoll={(s) => applyDiceRoll(s, { setGroups, setViews, setLife, setSubjects })} />}
-              >
+              <FilterRow label="what bug">
                 <WhatIsBugFilter
                   selectedGroups={groups}
                   selectedSpecies={species}
@@ -267,34 +263,13 @@ export function HomeClient({ initialInterval, initialSubject, initialRepeat, ini
   );
 }
 
-function FilterRow({ label, children, trailing }: { label: string; children: React.ReactNode; trailing?: React.ReactNode }) {
+function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="home-filter-row">
       <span className="home-filter-row-label">{label}</span>
       <div className="home-filter-row-control">{children}</div>
-      {trailing ? <div className="home-filter-row-trailing">{trailing}</div> : null}
     </div>
   );
-}
-
-/**
- * Apply a DiceRoll state into the home / gallery filter setters.
- * Absent keys are left alone (no clobber of existing chips), which keeps
- * the dice feeling additive rather than destructive.
- */
-function applyDiceRoll(
-  state: DiceRollState,
-  setters: {
-    setGroups?: (v: string[]) => void;
-    setViews?: (v: string[]) => void;
-    setLife?: (v: string[]) => void;
-    setSubjects?: (v: string[]) => void;
-  },
-) {
-  if (state.groups !== undefined) setters.setGroups?.(state.groups);
-  if (state.views !== undefined) setters.setViews?.(state.views);
-  if (state.lifeStages !== undefined) setters.setLife?.(state.lifeStages);
-  if (state.subjects !== undefined) setters.setSubjects?.(state.subjects);
 }
 
 function noveltyToParam(m: RepeatMode): string {

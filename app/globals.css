@@ -1426,14 +1426,6 @@ body { font-family: var(--font-sans), system-ui, sans-serif; font-weight: 500; }
   min-width: 0;
 }
 
-/* Phase F (2026-05-17) — trailing slot for the dice-roll button next to
-   the "what is bug?" row, also used for any future row-level affordance. */
-.home-filter-row-trailing {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-}
-
 /* Mobile: stack label above control. The 6rem label rail crowds the chip
    below 540px viewport. */
 @media (max-width: 540px) {
