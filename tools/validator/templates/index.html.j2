@@ -105,6 +105,27 @@
   .review-row button.mark-reviewed.active { background: #2d4a2d; color: #a8e6a8; border-color: #4a7a4a; }
   .review-row button.unsure-button.active { background: #28252e; color: #aaa; border-color: #666; }
 
+  /* Tab controls: tri-state sort buttons + probability range slider. */
+  .tab-controls { display: none; padding: 6px 12px; gap: 12px; align-items: center;
+    border-bottom: 1px solid #28252e; background: #14131a; font-size: 12px; color: #aaa;
+    font-family: 'JetBrains Mono', monospace; }
+  .tab-controls.visible { display: flex; }
+  .tab-controls .group { display: inline-flex; gap: 4px; align-items: center; }
+  .tab-controls .label { color: #777; }
+  .tab-controls button.sort-btn { padding: 4px 10px; border: 1px solid #444; background: #1a1820;
+    color: #aaa; border-radius: 4px; cursor: pointer; font-size: 12px; font-family: inherit;
+    font-weight: 600; transition: background 0.08s, border-color 0.08s; }
+  .tab-controls button.sort-btn:hover { color: #f5f5f5; border-color: #666; }
+  .tab-controls button.sort-btn[data-state="asc"],
+  .tab-controls button.sort-btn[data-state="desc"] {
+    background: #2d4a4a; color: #a8e6e6; border-color: #4a7a7a;
+  }
+  .prob-range { display: inline-flex; gap: 6px; align-items: center; min-width: 240px; }
+  .prob-range input[type="range"] { width: 80px; margin: 0; accent-color: #67D4E6; }
+  .prob-range .value { color: #67D4E6; font-weight: 600; min-width: 38px; text-align: center; }
+  .prob-range button.range-reset { padding: 2px 6px; font-size: 11px; background: #28252e;
+    border: 1px solid #444; color: #aaa; border-radius: 3px; cursor: pointer; }
+
   .pred-badge { font-size: 9px; color: #67D4E6; font-weight: 400; margin-left: 6px; font-family: 'JetBrains Mono', monospace; }
   .pred-badge.unreliable { color: #888; }
   /* Per-label ML probability chip — shown inline on each col3 button next to
@@ -214,7 +235,7 @@
   <label>Source <select id="source"><option value="all">all</option>{% for s in sources %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></label>
   <label>Predicted <select id="quality"><option value="all">all</option><option value="good">good</option><option value="tight">tight</option><option value="wide">wide</option><option value="no_bug">no_bug</option><option value="bug_too_small">bug_too_small</option><option value="multi_bug">multi_bug</option><option value="poor_contrast">poor_contrast</option></select></label>
   <label>Status <select id="reviewStatus"><option value="all">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="unsure">unsure</option><option value="flagged">any flag</option></select></label>
-  <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">detector conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="ml_uncertainty">ML uncertainty (closest to 0.5 first)</option><option value="ml_confidence_desc">ML confidence (most confident either way first)</option><option value="ml_prob_asc">ML p ↑ (least likely first)</option><option value="ml_prob_desc">ML p ↓ (most likely first)</option><option value="random">random</option></select></label>
+  <label>Sort <select id="sort"><option value="bbox_area">area ↑</option><option value="bbox_long_edge">long-edge px ↑</option><option value="bbox_min_edge">short-edge px ↑</option><option value="confidence">detector conf ↑</option><option value="lab_delta_e">ΔE ↑</option><option value="subject_sharpness">sharpness ↑</option><option value="random">random</option></select></label>
   <span class="totals" id="totals">{{ total }} images</span>
   <span id="saveStatus" title="Each click is saved to data/cache/labels.json on the server"></span>
 </header>
@@ -235,6 +256,28 @@
   <button id="snapshotMoreBtn" style="display:none;margin-left:4px;font-size:11px;padding:1px 6px" title="Add newly-reviewed cards to the hidden set">↻ hide <span id="snapshotMoreCount">0</span> more</button>
   <button id="showHiddenBtn" style="display:none;margin-left:4px;font-size:11px;padding:1px 6px" title="Clear the snapshot — formerly-hidden cards reappear">show <span id="showHiddenCount">0</span> hidden</button>
   <button id="retrainBtn" style="margin-left:auto;background:#ef4444;color:#fff;border-color:#ef4444;display:none">retrain selected</button>
+</div>
+
+<!-- Tab-specific controls: tri-state sort + probability range. Visible only
+     when a label tab is active. Sort buttons cycle off → asc → desc → off;
+     only one is in a non-off state at any time. Range filter restricts the
+     visible set to cards whose predicted_p falls within [min, max]. -->
+<div class="tab-controls" id="tabControls">
+  <div class="group">
+    <span class="label">sort:</span>
+    <button class="sort-btn" id="sortProbBtn" data-criterion="prob" data-state="off"
+            title="Tri-state: off → low p first → high p first">prob ↕</button>
+    <button class="sort-btn" id="sortUncBtn" data-criterion="uncertainty" data-state="off"
+            title="Tri-state: off → most uncertain first → most confident first">uncertainty ↕</button>
+  </div>
+  <div class="group prob-range">
+    <span class="label">range:</span>
+    <span class="value" id="probMinLabel">0.00</span>
+    <input type="range" id="probMin" min="0" max="100" step="1" value="0">
+    <input type="range" id="probMax" min="0" max="100" step="1" value="100">
+    <span class="value" id="probMaxLabel">1.00</span>
+    <button class="range-reset" id="probRangeReset" title="Reset to [0.00, 1.00]">reset</button>
+  </div>
 </div>
 
 <div class="help">
@@ -321,6 +364,14 @@ async function loadMLMetrics() {
 // little marginal information). Reduces low-leverage labeling cycles.
 let hideConfident = false;
 let hideReviewed = false;
+// Tri-state ML sort. criterion = 'prob' | 'uncertainty' | null. direction =
+// 'asc' | 'desc' | null. Only one button is non-off at a time. When set, this
+// overrides the dropdown sort. Resets on tab change.
+let mlSortState = { criterion: null, direction: null };
+// Probability range filter — applies only when a tab is active. Cards whose
+// predicted_p for the active label falls outside this range are hidden.
+// [0, 1] = no filter. Resets on tab change.
+let probRange = [0, 1];
 // Snapshot of image_ids hidden by hide-reviewed. Snapshot is taken on toggle
 // ON and explicit refresh. Live edits (corrections that mark reviewed_at) do
 // NOT auto-add to the snapshot — so the card the user just corrected stays
@@ -778,34 +829,40 @@ function render() {
       return true;
     });
   }
-  if (sortBy === "ml_uncertainty") {
-    // Sort by |p - 0.5| ascending = most uncertain first. Defaults to the
-    // active tab's label, or the first tier-1 label if no tab is active.
-    const label = activeLabel || TIER1_LABELS[0];
-    const probKey = "predicted_" + label + "_p";
-    rows.sort((a, b) => {
-      const pa = a[probKey] ?? 0.5;
-      const pb = b[probKey] ?? 0.5;
-      return Math.abs(pa - 0.5) - Math.abs(pb - 0.5);
+  // Probability range filter — applies only when a tab is active. Cards
+  // whose predicted_p falls outside the range are hidden. Cards without a
+  // prediction are kept (they're not in the model's universe).
+  if (activeLabel && (probRange[0] > 0 || probRange[1] < 1)) {
+    const probKey = "predicted_" + activeLabel + "_p";
+    rows = rows.filter(r => {
+      const p = r[probKey];
+      if (p == null) return true;
+      return p >= probRange[0] && p <= probRange[1];
     });
-  } else if (sortBy === "ml_confidence_desc") {
-    // |p - 0.5| descending → most confident predictions first (high p OR low p).
-    // Tracks the active tab's label, or first tier-1 label if no tab.
-    const label = activeLabel || TIER1_LABELS[0];
-    const probKey = "predicted_" + label + "_p";
-    rows.sort((a, b) => {
-      const pa = a[probKey] ?? 0.5;
-      const pb = b[probKey] ?? 0.5;
-      return Math.abs(pb - 0.5) - Math.abs(pa - 0.5);
-    });
-  } else if (sortBy === "ml_prob_asc" || sortBy === "ml_prob_desc") {
-    // Sort by ML predicted probability for the active label, or for the first
-    // tier-1 label if no tab is active. Useful for browsing "most-likely-blur"
-    // before deciding which need review.
-    const label = activeLabel || TIER1_LABELS[0];
-    const probKey = "predicted_" + label + "_p";
-    const dir = sortBy === "ml_prob_asc" ? 1 : -1;
-    rows.sort((a, b) => dir * ((a[probKey] ?? 0.5) - (b[probKey] ?? 0.5)));
+  }
+  // ML sort buttons override dropdown when active. Tracks the active tab.
+  // Tiebreakers (so equal-p cards don't shuffle randomly):
+  //   prob asc/desc: secondary by detector confidence desc (stable signal)
+  //   uncertainty asc: tiebreak by detector confidence desc
+  //   uncertainty desc: tiebreak by detector confidence desc
+  if (activeLabel && mlSortState.criterion) {
+    const probKey = "predicted_" + activeLabel + "_p";
+    const dir = mlSortState.direction === 'asc' ? 1 : -1;
+    if (mlSortState.criterion === 'prob') {
+      rows.sort((a, b) => {
+        const diff = dir * ((a[probKey] ?? 0.5) - (b[probKey] ?? 0.5));
+        if (diff !== 0) return diff;
+        return (b.confidence ?? 0) - (a.confidence ?? 0);
+      });
+    } else if (mlSortState.criterion === 'uncertainty') {
+      rows.sort((a, b) => {
+        const da = Math.abs((a[probKey] ?? 0.5) - 0.5);
+        const db = Math.abs((b[probKey] ?? 0.5) - 0.5);
+        const diff = dir * (da - db);
+        if (diff !== 0) return diff;
+        return (b.confidence ?? 0) - (a.confidence ?? 0);
+      });
+    }
   } else if (sortBy === "random") rows.sort(() => Math.random() - 0.5);
   else if (sortBy === "bbox_area") rows.sort((a, b) => (a.bbox_area_ratio ?? 0) - (b.bbox_area_ratio ?? 0));
   else if (sortBy === "bbox_long_edge") rows.sort((a, b) => (a.bbox_long_edge_px ?? 0) - (b.bbox_long_edge_px ?? 0));
@@ -1096,11 +1153,77 @@ document.getElementById('tabStrip').addEventListener('click', (e) => {
   }
   document.getElementById('retrainBtn').style.display = activeLabel ? 'inline-block' : 'none';
   document.getElementById('hideConfidentWrap').style.display = activeLabel ? 'inline-block' : 'none';
-  // When activating a tab, default to ml_uncertainty sort (the labeling-flow
-  // ergonomic). User can still pick a different sort and it'll stick.
-  if (activeLabel) {
-    document.getElementById('sort').value = 'ml_uncertainty';
+  // Show/hide tab-controls row (sort buttons + prob range slider).
+  document.getElementById('tabControls').classList.toggle('visible', !!activeLabel);
+  // Reset tab-local sort/filter state when switching tabs — keeps semantics
+  // clear ("range I set for label A doesn't carry over to label B").
+  mlSortState = { criterion: null, direction: null };
+  for (const sb of document.querySelectorAll('#tabControls button.sort-btn')) {
+    _setSortBtnState(sb, 'off');
   }
+  probRange = [0, 1];
+  document.getElementById('probMin').value = 0;
+  document.getElementById('probMax').value = 100;
+  document.getElementById('probMinLabel').textContent = '0.00';
+  document.getElementById('probMaxLabel').textContent = '1.00';
+  // Default sort intent for a fresh tab: most uncertain first. Easier than
+  // expecting the user to click 3 things to start labeling.
+  if (activeLabel) {
+    mlSortState = { criterion: 'uncertainty', direction: 'asc' };
+    _setSortBtnState(document.getElementById('sortUncBtn'), 'asc');
+  }
+  render();
+});
+
+// Tri-state sort buttons. Cycle: off → asc → desc → off. Only one
+// button at a time can be in a non-off state.
+const SORT_CYCLE = { off: 'asc', asc: 'desc', desc: 'off' };
+const SORT_ICONS = { off: '↕', asc: '↑', desc: '↓' };
+function _setSortBtnState(btn, state) {
+  btn.dataset.state = state;
+  const crit = btn.dataset.criterion;
+  btn.textContent = crit + ' ' + SORT_ICONS[state];
+}
+function _onSortBtnClick(e) {
+  const btn = e.currentTarget;
+  const next = SORT_CYCLE[btn.dataset.state];
+  // Reset siblings to off — single-button-active invariant.
+  for (const other of document.querySelectorAll('#tabControls button.sort-btn')) {
+    if (other !== btn) _setSortBtnState(other, 'off');
+  }
+  _setSortBtnState(btn, next);
+  mlSortState = next === 'off'
+    ? { criterion: null, direction: null }
+    : { criterion: btn.dataset.criterion, direction: next };
+  render();
+}
+document.getElementById('sortProbBtn').addEventListener('click', _onSortBtnClick);
+document.getElementById('sortUncBtn').addEventListener('click', _onSortBtnClick);
+
+// Probability range slider — two thumbs, mutually constrained.
+function _updateProbRangeLabels() {
+  document.getElementById('probMinLabel').textContent = probRange[0].toFixed(2);
+  document.getElementById('probMaxLabel').textContent = probRange[1].toFixed(2);
+}
+document.getElementById('probMin').addEventListener('input', (e) => {
+  let v = parseInt(e.target.value, 10) / 100;
+  if (v > probRange[1]) { v = probRange[1]; e.target.value = String(Math.round(v * 100)); }
+  probRange[0] = v;
+  _updateProbRangeLabels();
+  render();
+});
+document.getElementById('probMax').addEventListener('input', (e) => {
+  let v = parseInt(e.target.value, 10) / 100;
+  if (v < probRange[0]) { v = probRange[0]; e.target.value = String(Math.round(v * 100)); }
+  probRange[1] = v;
+  _updateProbRangeLabels();
+  render();
+});
+document.getElementById('probRangeReset').addEventListener('click', () => {
+  probRange = [0, 1];
+  document.getElementById('probMin').value = 0;
+  document.getElementById('probMax').value = 100;
+  _updateProbRangeLabels();
   render();
 });
 

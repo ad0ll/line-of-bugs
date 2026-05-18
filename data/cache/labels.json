@@ -104,17 +104,6 @@
     "user_edited": true,
     "variant_tag": "sam3__sam3"
   },
-  "bugwood-1267032": {
-    "col1": null,
-    "col2_count": "bbox-content_single",
-    "col2_flags": [],
-    "col3": [],
-    "col4": [],
-    "reviewed_at": 1779041914909,
-    "unsure": true,
-    "user_edited": true,
-    "variant_tag": "sam3__sam3"
-  },
   "bugwood-1326013": {
     "col1": "bbox_correct-subject_not-clipped",
     "col2_count": "bbox-content_single",
@@ -1303,13 +1292,14 @@
       "bbox-content_subject-too-small"
     ],
     "col3": [
-      "mask_poor-contrast"
+      "mask_poor-contrast",
+      "mask_blur_unusable"
     ],
     "flags": [
       "bbox-content_subject-too-small"
     ],
     "preference": null,
-    "reviewed_at": 1779039477852,
+    "reviewed_at": 1779113130822,
     "unsure": false,
     "user_edited": true,
     "variant_tag": "sam3__sam3"
@@ -2227,9 +2217,11 @@
       "bbox-content_subject-too-small",
       "bbox-content_image-multi-bug"
     ],
-    "col3": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
     "col4": [],
-    "reviewed_at": 1779037997176,
+    "reviewed_at": 1779113124776,
     "unsure": false,
     "user_edited": true,
     "variant_tag": "sam3__sam3"
@@ -2886,9 +2878,11 @@
       "bbox-content_subject-too-small",
       "bbox-content_partially-concealed"
     ],
-    "col3": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
     "col4": [],
-    "reviewed_at": 1779042378378,
+    "reviewed_at": 1779113165960,
     "unsure": false,
     "user_edited": true,
     "variant_tag": "sam3__sam3"
@@ -4011,6 +4005,19 @@
     "col4": [],
     "unsure": false,
     "reviewed_at": 1779112774372,
+    "user_edited": true,
+    "variant_tag": "sam3__sam3"
+  },
+  "inat-9103162": {
+    "col1": "bbox_correct-subject_not-clipped",
+    "col2_count": "bbox-content_single",
+    "col2_flags": [],
+    "col3": [
+      "mask_blur_unusable"
+    ],
+    "col4": [],
+    "unsure": false,
+    "reviewed_at": 1779113113235,
     "user_edited": true,
     "variant_tag": "sam3__sam3"
   }
