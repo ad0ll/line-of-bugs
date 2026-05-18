@@ -209,6 +209,7 @@
 <div class="tab-strip" id="tabStrip">
   <button data-label="" class="active">all</button>
   <button data-label="mask_blur_unusable">blur_unusable</button>
+  <button id="retrainBtn" style="margin-left:auto;background:#ef4444;color:#fff;border-color:#ef4444;display:none">retrain selected</button>
 </div>
 
 <div class="help">
@@ -930,11 +931,34 @@ Promise.all([loadLabelsFromServer(), loadMaskContours()]).then(() => {
 document.getElementById('tabStrip').addEventListener('click', (e) => {
   const btn = e.target.closest('button[data-label]');
   if (!btn) return;
+  if (btn.id === 'retrainBtn') return;  // handled by separate listener below
   activeLabel = btn.dataset.label || null;
   for (const b of document.querySelectorAll('#tabStrip button')) {
     b.classList.toggle('active', b === btn);
   }
+  document.getElementById('retrainBtn').style.display = activeLabel ? 'inline-block' : 'none';
   render();
+});
+
+document.getElementById('retrainBtn').addEventListener('click', async () => {
+  if (!activeLabel) return;
+  const btn = document.getElementById('retrainBtn');
+  btn.disabled = true;
+  btn.textContent = `retraining ${activeLabel}...`;
+  try {
+    const res = await fetch(`/api/retrain/${activeLabel}`, { method: 'POST' });
+    const body = await res.json();
+    if (res.ok) {
+      btn.textContent = `done — reload page`;
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      btn.textContent = `failed: ${body.error || 'unknown'}`;
+      btn.disabled = false;
+    }
+  } catch (e) {
+    btn.textContent = `error: ${e.message}`;
+    btn.disabled = false;
+  }
 });
 
 // Mouse-follow zoom popup with bbox-on-original preservation.

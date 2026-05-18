@@ -95,6 +95,40 @@ class LabelServerHandler(SimpleHTTPRequestHandler):
         super().do_GET()
 
     def do_POST(self):
+        if self.path.startswith("/api/retrain/"):
+            label = self.path.split("/api/retrain/", 1)[1]
+            import subprocess
+            try:
+                # Run training in subprocess so server stays responsive
+                proc = subprocess.run(
+                    [".venv/bin/python", "-m", "scripts.detect_subjects.ml_labeler.train", label],
+                    cwd=str(PROJECT_ROOT), capture_output=True, text=True, timeout=600,
+                )
+                if proc.returncode != 0:
+                    self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {
+                        "error": "train failed", "stderr": proc.stderr[-2000:],
+                    })
+                    return
+                # After training, run inference to update parquet
+                proc2 = subprocess.run(
+                    [".venv/bin/python", "-m", "scripts.detect_subjects.ml_labeler.predict", label],
+                    cwd=str(PROJECT_ROOT), capture_output=True, text=True, timeout=300,
+                )
+                if proc2.returncode != 0:
+                    self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {
+                        "error": "predict failed", "stderr": proc2.stderr[-2000:],
+                    })
+                    return
+                # Rebuild HTML so updated probabilities surface
+                subprocess.run(
+                    [".venv/bin/python", "-m", "scripts.detect_subjects.build_html", "sam3__sam3"],
+                    cwd=str(PROJECT_ROOT), capture_output=True, text=True, timeout=60,
+                )
+                self._send_json(HTTPStatus.OK, {"ok": True, "label": label, "stdout": proc.stdout[-500:]})
+            except subprocess.TimeoutExpired:
+                self._send_json(HTTPStatus.GATEWAY_TIMEOUT, {"error": "training timeout"})
+            return
+
         if self.path != "/api/labels":
             self.send_error(HTTPStatus.NOT_FOUND, "no such endpoint")
             return
