@@ -124,7 +124,7 @@ function runColumnCounts(
   return rows.map((r) => ({ name: r.name ?? "unknown", count: r.c }));
 }
 
-function runTaxonGroupCounts(filters: FilterState): FacetCount[] {
+export function runTaxonGroupCounts(filters: FilterState): FacetCount[] {
   const cleared: FilterState = { ...filters, groups: [] };
   const clauses = buildFilterClauses(cleared);
   const whereClause = sql.join(clauses, sql` AND `);

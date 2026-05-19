@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { TAXON_GROUPS } from "@/lib/taxonomy";
 import { buildFtsTag } from "@/lib/queries/filter-clauses";
+import { runTaxonGroupCounts } from "@/lib/queries/facets";
 import { sql } from "drizzle-orm";
 
 interface ResultRow {
@@ -20,40 +21,27 @@ export async function GET(req: Request): Promise<Response> {
     // Picker default: all groups by count desc — so the dropdown shows
     // candidates as soon as it opens, matching AllOrChipsFilter behavior.
     //
-    // The "weird" group has catchesNull: true and must also include rows
-    // where taxon_subgroup IS NULL (mirrors lib/queries/facets.ts:
-    // runTaxonGroupCounts). One extra query for the NULL bucket; folded
-    // in below for any group with catchesNull set.
-    const nullRow = db.all<{ c: number }>(sql`
-      SELECT COUNT(*) AS c FROM images
-      WHERE hidden = 0 AND taxon_subgroup IS NULL
-        AND NOT EXISTS (
-          SELECT 1 FROM gate_decisions g
-          WHERE g.image_id = images.image_id AND g.decision = 'reject'
-        )
-    `);
-    const nullCount = nullRow[0]?.c ?? 0;
-    const groupResults: ResultRow[] = TAXON_GROUPS.map((g) => {
-      const counts = db.all<{ c: number }>(sql`
-        SELECT COUNT(*) AS c FROM images
-        WHERE hidden = 0 AND taxon_subgroup IN (${sql.join(
-          g.dbValues.map((v) => sql`${v}`),
-          sql`, `,
-        )})
-          AND NOT EXISTS (
-            SELECT 1 FROM gate_decisions g
-            WHERE g.image_id = images.image_id AND g.decision = 'reject'
-          )
-      `);
-      let count = counts[0]?.c ?? 0;
-      if (g.catchesNull) count += nullCount;
-      return {
+    // Uses the canonical aggregation in lib/queries/facets.ts (single
+    // GROUP BY taxon_subgroup with the catchesNull rollup + gate_decisions
+    // reject filter already baked in via buildFilterClauses). One query
+    // instead of 22 individual COUNT(*)s, and one place to maintain the
+    // group-counting invariant (audit W-4 — was N+1 + drift risk).
+    const taxonCounts = runTaxonGroupCounts({
+      subjectType: "all",
+      views: [],
+      lifeStages: [],
+      sexes: [],
+      groups: [],
+    });
+    const labelByKey = new Map(TAXON_GROUPS.map((g) => [g.key, g.label]));
+    const groupResults: ResultRow[] = taxonCounts
+      .map((c) => ({
         kind: "group" as const,
-        value: g.key,
-        label: g.label,
-        count,
-      };
-    }).sort((a, b) => b.count - a.count);
+        value: c.name,
+        label: labelByKey.get(c.name) ?? c.name,
+        count: c.count,
+      }))
+      .sort((a, b) => b.count - a.count);
     return Response.json(
       { results: groupResults },
       { headers: { "Cache-Control": "public, max-age=60" } },
