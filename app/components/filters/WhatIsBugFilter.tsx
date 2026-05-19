@@ -51,6 +51,10 @@ export function WhatIsBugFilter({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
+  // Keyboard-nav cursor into the visible candidate list (W-1 a11y). -1
+  // means no row is active yet; Arrow keys walk through visibleResults
+  // and Enter picks the active row.
+  const [activeIdx, setActiveIdx] = useState(-1);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -62,6 +66,16 @@ export function WhatIsBugFilter({
     }
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
+  }, [open]);
+
+  // Reset search query + cursor when the picker closes (W-7). Without
+  // this, reopening with a prior query value briefly flashes stale
+  // search results instead of the default all-groups list.
+  useEffect(() => {
+    if (!open) {
+      setQuery("");
+      setActiveIdx(-1);
+    }
   }, [open]);
 
   // Lock body scroll on the mobile bottom sheet (audit re-check). Gated on
@@ -93,6 +107,20 @@ export function WhatIsBugFilter({
   const totalSelected = selectedGroups.length + selectedSpecies.length;
   const chipLabel = summaryLabel(selectedGroups, selectedSpecies);
 
+  // Hide already-selected rows from the dropdown so the keyboard cursor
+  // doesn't have to skip them and so the visible index matches activeIdx.
+  const visibleResults = results.filter(
+    (r) =>
+      (r.kind === "group" && !selectedGroups.includes(r.value)) ||
+      (r.kind === "species" && !selectedSpecies.includes(r.value)),
+  );
+
+  // Reset cursor when the visible list size changes (e.g., user typed,
+  // results refetched, or a selection just removed a row).
+  useEffect(() => {
+    setActiveIdx((i) => (i >= visibleResults.length ? -1 : i));
+  }, [visibleResults.length]);
+
   function pickResult(r: SearchResult) {
     if (r.kind === "group") {
       if (!selectedGroups.includes(r.value)) onGroupsChange([...selectedGroups, r.value]);
@@ -100,7 +128,26 @@ export function WhatIsBugFilter({
       if (!selectedSpecies.includes(r.value)) onSpeciesChange([...selectedSpecies, r.value]);
     }
     setQuery("");
+    setActiveIdx(-1);
     inputRef.current?.focus();
+  }
+
+  function onDialogKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Escape") { setOpen(false); return; }
+    if (e.key === "ArrowDown") {
+      if (visibleResults.length === 0) return;
+      e.preventDefault();
+      setActiveIdx((i) => Math.min(i + 1, visibleResults.length - 1));
+    } else if (e.key === "ArrowUp") {
+      if (visibleResults.length === 0) return;
+      e.preventDefault();
+      setActiveIdx((i) => (i <= 0 ? 0 : i - 1));
+    } else if (e.key === "Enter") {
+      if (activeIdx >= 0 && activeIdx < visibleResults.length) {
+        e.preventDefault();
+        pickResult(visibleResults[activeIdx]!);
+      }
+    }
   }
 
   function removeGroup(v: string) {
@@ -131,7 +178,12 @@ export function WhatIsBugFilter({
       {open && (
         <>
           <div className={styles.scrim} onClick={() => setOpen(false)} aria-hidden="true" />
-          <div className={styles.picker} id={pickerId} role="dialog">
+          <div
+            className={styles.picker}
+            id={pickerId}
+            role="dialog"
+            onKeyDown={onDialogKeyDown}
+          >
             <div className={styles.sheetHandle} aria-hidden="true" />
 
             {totalSelected > 0 && (
@@ -178,33 +230,27 @@ export function WhatIsBugFilter({
               onChange={(e) => setQuery(e.target.value)}
               placeholder="type to search bugs…"
               className={styles.search}
-              onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}
             />
 
             <div className={styles.candidatesHeader}>
               {query ? "search results" : "bug types"}
             </div>
             <ul role="listbox" className={styles.list}>
-              {results.map((r) => {
-                const alreadySelected =
-                  (r.kind === "group" && selectedGroups.includes(r.value)) ||
-                  (r.kind === "species" && selectedSpecies.includes(r.value));
-                if (alreadySelected) return null;
-                return (
-                  <li
-                    key={`${r.kind}-${r.value}`}
-                    role="option"
-                    aria-selected={false}
-                    className={styles.row}
-                    onClick={() => pickResult(r)}
-                  >
-                    <span className={styles.kindBadge}>{r.kind}</span>
-                    <span className={styles.rowLabel}>{r.label}</span>
-                    <span className={styles.rowCount}>{r.count.toLocaleString()}</span>
-                  </li>
-                );
-              })}
-              {results.length === 0 && (
+              {visibleResults.map((r, idx) => (
+                <li
+                  key={`${r.kind}-${r.value}`}
+                  role="option"
+                  aria-selected={idx === activeIdx}
+                  className={`${styles.row} ${idx === activeIdx ? styles.rowActive : ""}`}
+                  onClick={() => pickResult(r)}
+                  onMouseEnter={() => setActiveIdx(idx)}
+                >
+                  <span className={styles.kindBadge}>{r.kind}</span>
+                  <span className={styles.rowLabel}>{r.label}</span>
+                  <span className={styles.rowCount}>{r.count.toLocaleString()}</span>
+                </li>
+              ))}
+              {visibleResults.length === 0 && (
                 <li className={styles.empty}>
                   {query ? "no matches" : "loading…"}
                 </li>

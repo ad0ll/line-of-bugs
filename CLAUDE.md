@@ -44,6 +44,26 @@ re-import. Don't paper over drift with phantom journal rows.
 - Never `git reset --hard`, `git push --force`, `git commit --amend`, or
   `git rebase` without explicit user permission.
 
+## Replacing or renaming a UI affordance — kill its tests in the same commit
+
+When you replace or rename a filter chip, button, popover, or any other
+visible affordance, audit `tests/e2e/**` and `tests/components/**` for
+specs that reference the old text, ARIA name, class, or role-shape.
+Either rewrite them against the new affordance or delete them in the
+same commit. Leaving stale specs behind rots the CI signal — by the
+2026-05-18 filter-and-dice-redesign audit, 30+ e2e tests were red-but-
+ignored because three prior generations of gallery filter UI had each
+left their specs behind.
+
+The grep heuristic before merging a UI swap:
+
+```bash
+git grep -E "<the old text or class or role-name>" tests/
+```
+
+If the grep returns hits, fix or delete them. Don't ship a UI rev that
+leaves the suite worse than you found it.
+
 ## Source-of-truth conventions
 
 - SQLite is the source of truth for everything except image bytes.

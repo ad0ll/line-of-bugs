@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render } from "vitest-browser-react";
-import { DiceRoll } from "@/app/components/filters/DiceRoll";
+import { DiceRoll, GROUPS_POOL } from "@/app/components/filters/DiceRoll";
+import { TAXON_GROUPS } from "@/lib/taxonomy";
 
 describe("DiceRoll", () => {
   beforeEach(() => {
@@ -89,5 +90,14 @@ describe("DiceRoll", () => {
     await btn.click();
     expect((btn.element() as HTMLElement).classList.contains("is-rolling")).toBe(true);
     vi.advanceTimersByTime(600);
+  });
+
+  it("every GROUPS_POOL key resolves to a TAXON_GROUPS entry (W-3 drift guard)", () => {
+    // If lib/taxonomy.ts renames a group key, this assertion surfaces it
+    // before the dice silently rolls onto a key that no longer matches
+    // any DB row. Update GROUPS_POOL in lockstep with TAXON_GROUPS keys.
+    const taxonKeys = new Set(TAXON_GROUPS.map((g) => g.key));
+    const orphans = GROUPS_POOL.filter((k) => !taxonKeys.has(k));
+    expect(orphans).toEqual([]);
   });
 });

@@ -25,7 +25,9 @@ interface DiceRollProps {
 // Curated pool — the 9 most photogenic / recognizable bug types for a
 // gesture-drawing student. Skipping aphids/mosquitoes/etc. that would
 // land as low-info silhouettes most of the time.
-const GROUPS_POOL = [
+// Exported for tests/components/DiceRoll.test.tsx to assert every key
+// still resolves to a TAXON_GROUPS entry (W-3 — taxonomy drift guard).
+export const GROUPS_POOL = [
   "butterflies",
   "moths",
   "beetles",
@@ -37,9 +39,18 @@ const GROUPS_POOL = [
   "stick_insects",
 ];
 
+// Fisher-Yates partial shuffle. `arr.sort(() => Math.random() - 0.5)`
+// is the JS shuffle anti-pattern: V8's TimSort is non-uniform when the
+// comparator is non-transitive, so first/last positions get biased.
+// Small-array bias here is a few percentage points per element — not
+// user-visible at n≤9, but the test-suite shouldn't memorialize the bug.
 function pick<T>(arr: readonly T[], n: number): T[] {
-  const shuffled = [...arr].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, n);
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j]!, out[i]!];
+  }
+  return out.slice(0, n);
 }
 
 export function DiceRoll({ onRoll, className }: DiceRollProps) {

@@ -70,7 +70,8 @@
   display: flex; align-items: center; gap: var(--s4);
   padding: var(--s4) var(--s6); border-radius: var(--r-md); cursor: pointer; font-size: var(--text-md);
 }
-.row:hover { background: color-mix(in srgb, var(--accent-lilac) 14%, transparent); }
+.row:hover,
+.row.rowActive { background: color-mix(in srgb, var(--accent-lilac) 14%, transparent); }
 .rowLabel { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rowCount { font-variant-numeric: tabular-nums; opacity: 0.7; font-size: var(--text-sm); }
 
